@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuthStore } from "../../stores/authStore";
+import { useChatStore } from "../../stores/chatStore";
 
 const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete }) => {
     const [mobileDropdown, setMobileDropdown] = useState(false);
     const { user } = useAuthStore();
+    const { toggleStarMessage, markViewOnceAsViewed } = useChatStore();
     const status = message?.status ?? "sent";
     const outerRef = useRef(null);
 
@@ -13,6 +15,8 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
     const isDeletedForMe = message.deletedFor?.some(
         (id) => id === user?._id || id?.toString() === user?._id
     );
+
+    const [tempVisible, setTempVisible] = useState(false);
 
     useEffect(() => {
         if (!mobileDropdown) return;
@@ -24,6 +28,13 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
         document.addEventListener("touchstart", handleOutside);
         return () => document.removeEventListener("touchstart", handleOutside);
     }, [mobileDropdown]);
+
+    const handleViewOnce = () => {
+        if (!tempVisible) {
+            setTempVisible(true);
+            markViewOnceAsViewed(message._id, message.chatId);
+        }
+    };
 
     if (message.deletedForEveryone) {
         return (
@@ -47,6 +58,10 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
 
     if (isDeletedForMe) return null;
 
+    const isViewOnce = message.isViewOnce;
+    const isViewedByMe = message.viewedBy?.includes(user?._id);
+    const isViewedByAnyone = message.viewedBy?.length > 0;
+
     return (
         <div className={`message-row ${isMe ? "mine" : "theirs"}`}>
             {!isMe && showAvatar && (
@@ -62,15 +77,38 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
 
             <div className="message-bubble-outer" ref={outerRef}>
                 <div
-                    className={`message-bubble ${isMe ? `mine status-${status}` : "theirs"}`}
+                    className={`message-bubble ${isMe ? `mine status-${status}` : "theirs"} ${isViewOnce ? "view-once" : ""}`}
                     onClick={() => {
-                        if (isMe && !window.matchMedia("(hover: hover)").matches) {
+                        if (!isMe && !window.matchMedia("(hover: hover)").matches) {
                             setMobileDropdown((p) => !p);
                         }
                     }}
                 >
-                    <span className="message-text">{message.content}</span>
+                    {isViewOnce && !isMe && !isViewedByMe && !tempVisible ? (
+                        <div className="view-once-placeholder" onClick={handleViewOnce}>
+                            <span>👁️ View once media</span>
+                        </div>
+                    ) : isViewOnce && !isMe && (isViewedByMe || isViewedByAnyone) && !tempVisible ? (
+                        <div className="view-once-placeholder viewed">
+                            <span>🚫 Media viewed</span>
+                        </div>
+                    ) : (
+                        <>
+                            {(message.type === "image" || message.type === "video") && message.mediaUrl && (
+                                <div className="message-media-wrap">
+                                    {message.type === "image" ? (
+                                        <img src={message.mediaUrl} alt="Sent image" className="message-image" loading="lazy" />
+                                    ) : (
+                                        <video src={message.mediaUrl} controls className="message-video" style={{ maxWidth: '100%', borderRadius: '8px' }} />
+                                    )}
+                                </div>
+                            )}
+                            {message.content && <span className="message-text">{message.content}</span>}
+                        </>
+                    )}
+                    
                     <div className="message-meta">
+                        {message.starredBy?.includes(user?._id) && <span className="starred-icon">⭐</span>}
                         {message.isEdited && <span className="message-edited-label">(edited)</span>}
                         <span className="message-time">
                             {new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -78,24 +116,28 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                     </div>
                 </div>
 
-                {isMe && (
-                    <div className={`message-dropdown ${mobileDropdown ? "mobile-visible" : ""}`}>
-                        {isWithinEditWindow && (
-                            <button
-                                className="message-dropdown-item"
-                                onMouseDown={(e) => { e.preventDefault(); setMobileDropdown(false); onEdit(message); }}
-                            >
-                                ✏️ Edit
-                            </button>
-                        )}
+                <div className={`message-dropdown ${mobileDropdown ? "mobile-visible" : ""} ${!isMe ? "theirs-dropdown" : ""}`}>
+                    <button
+                        className="message-dropdown-item"
+                        onMouseDown={(e) => { e.preventDefault(); setMobileDropdown(false); toggleStarMessage(message._id, message.chatId); }}
+                    >
+                        {message.starredBy?.includes(user?._id) ? "❌ Unstar" : "⭐ Star"}
+                    </button>
+                    {isMe && isWithinEditWindow && (
                         <button
-                            className="message-dropdown-item delete"
-                            onMouseDown={(e) => { e.preventDefault(); setMobileDropdown(false); onDelete(message); }}
+                            className="message-dropdown-item"
+                            onMouseDown={(e) => { e.preventDefault(); setMobileDropdown(false); onEdit(message); }}
                         >
-                            🗑️ Delete
+                            ✏️ Edit
                         </button>
-                    </div>
-                )}
+                    )}
+                    <button
+                        className="message-dropdown-item delete"
+                        onMouseDown={(e) => { e.preventDefault(); setMobileDropdown(false); onDelete(message); }}
+                    >
+                        🗑️ Delete
+                    </button>
+                </div>
             </div>
         </div>
     );

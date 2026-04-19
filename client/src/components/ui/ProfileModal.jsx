@@ -1,16 +1,21 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useAuthStore } from "../../stores/authStore";
+import { useChatStore } from "../../stores/chatStore";
 import { requestNotificationPermission } from "../../utils/firebase";
 
 const ProfileModal = ({ isOpen, onClose }) => {
     const { user, updateProfile, isLoading } = useAuthStore();
+    const { chats, messages } = useChatStore();
     
     const [username, setUsername] = useState(user?.username || "");
+    const [fullName, setFullName] = useState(user?.fullName || "");
     const [email, setEmail] = useState(user?.email || "");
     const [password, setPassword] = useState("");
     const [avatarFile, setAvatarFile] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(user?.avatar || "");
+    const [onlineVisibility, setOnlineVisibility] = useState(user?.privacySettings?.onlineStatus || "everyone");
+    const [nameVisibility, setNameVisibility] = useState(user?.privacySettings?.fullName || "everyone");
     const [error, setError] = useState("");
     
     const fileInputRef = useRef(null);
@@ -18,9 +23,12 @@ const ProfileModal = ({ isOpen, onClose }) => {
     useEffect(() => {
         if (isOpen && user) {
             setUsername(user.username || "");
+            setFullName(user.fullName || "");
             setEmail(user.email || "");
             setPassword("");
             setAvatarPreview(user.avatar || "");
+            setOnlineVisibility(user.privacySettings?.onlineStatus || "everyone");
+            setNameVisibility(user.privacySettings?.fullName || "everyone");
             setAvatarFile(null);
             setError("");
         }
@@ -46,14 +54,16 @@ const ProfileModal = ({ isOpen, onClose }) => {
         
         const formData = new FormData();
         if (username !== user.username) formData.append("username", username);
+        if (fullName !== user.fullName) formData.append("fullName", fullName);
         if (email !== user.email) formData.append("email", email);
         if (password) formData.append("password", password);
         if (avatarFile) formData.append("avatar", avatarFile);
         
-        if (Array.from(formData.keys()).length === 0) {
-            onClose();
-            return;
-        }
+        const privacySettings = {
+            onlineStatus: onlineVisibility,
+            fullName: nameVisibility
+        };
+        formData.append("privacySettings", JSON.stringify(privacySettings));
 
         const res = await updateProfile(formData);
         if (res.success) {
@@ -61,6 +71,29 @@ const ProfileModal = ({ isOpen, onClose }) => {
         } else {
             setError(res.message);
         }
+    };
+
+    const handleExport = () => {
+        const exportData = {
+            chats: chats.map(c => ({
+                id: c._id,
+                updatedAt: c.updatedAt,
+                messages: messages[c._id]?.map(m => ({
+                    sender: m.senderId?.username || m.senderId,
+                    content: m.content,
+                    type: m.type,
+                    media: m.mediaUrl ? "media missing" : null,
+                    createdAt: m.createdAt
+                })) || []
+            }))
+        };
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `zenchat_export_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
     };
 
     const handleSubscribe = async () => {
@@ -77,8 +110,6 @@ const ProfileModal = ({ isOpen, onClose }) => {
     };
 
     const getInitials = (name) => name ? name.slice(0, 2).toUpperCase() : "??";
-
-    // Only consider "Subscribed" if the browser has permission AND we have a token in the DB
     const isSubscribedInBrowser = Notification.permission === "granted" && user?.fcmToken;
 
     return createPortal(
@@ -90,7 +121,7 @@ const ProfileModal = ({ isOpen, onClose }) => {
                         <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                 </button>
-                <h2>Edit Profile</h2>
+                <h2>Profile & Settings</h2>
                 
                 {error && <div className="error-message">{error}</div>}
                 
@@ -112,103 +143,68 @@ const ProfileModal = ({ isOpen, onClose }) => {
                                 </svg>
                             </div>
                         </div>
-                        <input 
-                            type="file" 
-                            accept="image/*" 
-                            ref={fileInputRef} 
-                            style={{ display: "none" }} 
-                            onChange={handleFileChange}
-                        />
+                        <input type="file" accept="image/*" ref={fileInputRef} style={{ display: "none" }} onChange={handleFileChange} />
                     </div>
 
-                    <div className="form-group">
-                        <label>Username</label>
-                        <input 
-                            type="text" 
-                            value={username} 
-                            onChange={(e) => setUsername(e.target.value)}
-                            minLength={3}
-                            maxLength={20}
-                            required 
-                        />
+                    <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div className="form-group">
+                            <label>Username</label>
+                            <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} required />
+                        </div>
+                        <div className="form-group">
+                            <label>Full Name</label>
+                            <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Display name" />
+                        </div>
                     </div>
                     
                     <div className="form-group">
                         <label>Email</label>
-                        <input 
-                            type="email" 
-                            value={email} 
-                            onChange={(e) => setEmail(e.target.value)}
-                            required 
-                        />
-                    </div>
-                    
-                    <div className="form-group">
-                        <label>New Password (optional)</label>
-                        <input 
-                            type="password" 
-                            value={password} 
-                            onChange={(e) => setPassword(e.target.value)}
-                            minLength={6}
-                            placeholder="Leave blank to keep current" 
-                        />
+                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                     </div>
 
-                    <div className="profile-setting-item" style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
-                        <div className="profile-setting-info" style={{ marginBottom: '1rem' }}>
-                            <span className="profile-setting-label" style={{ display: 'block', fontWeight: '600', marginBottom: '0.25rem' }}>Push Notifications</span>
-                            <span className="profile-setting-desc" style={{ fontSize: '0.8rem', opacity: 0.7 }}>Get notified of new messages when the app is closed</span>
+                    <div className="privacy-section" style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1rem' }}>
+                        <h3 style={{ fontSize: '0.9rem', marginBottom: '0.75rem', color: 'var(--color-primary)' }}>Privacy Visibility</h3>
+                        <div className="form-group">
+                            <label>Show Online Status to:</label>
+                            <select value={onlineVisibility} onChange={(e) => setOnlineVisibility(e.target.value)}>
+                                <option value="everyone">Everyone</option>
+                                <option value="contacts">Contacts Only</option>
+                                <option value="nobody">Nobody</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Show Full Name to:</label>
+                            <select value={nameVisibility} onChange={(e) => setNameVisibility(e.target.value)}>
+                                <option value="everyone">Everyone</option>
+                                <option value="contacts">Contacts Only</option>
+                                <option value="nobody">Nobody</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="actions-section" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+                        <button type="button" className="btn btn-outline" onClick={handleExport} style={{ flex: 1, fontSize: '0.8rem' }}>
+                            📤 Export Chats
+                        </button>
+                        <button type="button" className="btn btn-outline" onClick={() => alert("Import function coming soon in next update!")} style={{ flex: 1, fontSize: '0.8rem' }}>
+                            📥 Import Chats
+                        </button>
+                    </div>
+
+                    <div className="profile-setting-item" style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
+                        <div className="profile-setting-info" style={{ marginBottom: '0.5rem' }}>
+                            <span className="profile-setting-label" style={{ display: 'block', fontWeight: '600', fontSize: '0.85rem' }}>Notifications</span>
                         </div>
                         {isSubscribedInBrowser ? (
-                            <button
-                                type="button"
-                                className="profile-subscribed-btn"
-                                disabled
-                                style={{
-                                    width: '100%',
-                                    background: "rgba(16, 185, 129, 0.1)",
-                                    color: "#10b981",
-                                    border: "1px solid rgba(16, 185, 129, 0.2)",
-                                    padding: "10px",
-                                    borderRadius: "8px",
-                                    fontSize: "0.875rem",
-                                    fontWeight: "600",
-                                    cursor: "default",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    gap: "8px"
-                                }}
-                            >
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                </svg>
-                                Subscribed in this browser
-                            </button>
+                            <div style={{ color: "#10b981", fontSize: "0.8rem", textAlign: 'center' }}>✓ Subscribed in this browser</div>
                         ) : (
-                            <button
-                                type="button"
-                                className="profile-subscribe-btn"
-                                onClick={handleSubscribe}
-                                style={{
-                                    width: '100%',
-                                    background: "#3b82f6",
-                                    color: "white",
-                                    border: "none",
-                                    padding: "10px",
-                                    borderRadius: "8px",
-                                    fontSize: "0.875rem",
-                                    fontWeight: "600",
-                                    cursor: "pointer",
-                                    transition: "all 0.2s"
-                                }}
-                            >
-                                Enable Notifications
+                            <button type="button" className="profile-subscribe-btn" onClick={handleSubscribe} style={{ width: '100%', background: "#3b82f6", color: "white", border: "none", padding: "8px", borderRadius: "8px", fontSize: "0.8rem" }}>
+                                Enable Push Notifications
                             </button>
                         )}
                     </div>
 
-                    <button type="submit" className="btn btn-primary" disabled={isLoading} style={{ width: '100%' }}>
+                    <button type="submit" className="btn btn-primary" disabled={isLoading} style={{ width: '100%', marginTop: '1rem' }}>
                         {isLoading ? "Saving..." : "Save Changes"}
                     </button>
                 </form>

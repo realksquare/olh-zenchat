@@ -53,6 +53,22 @@ const messageSchema = new mongoose.Schema(
                 ref: "User",
             },
         ],
+        starredBy: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
+        isViewOnce: {
+            type: Boolean,
+            default: false,
+        },
+        viewedBy: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
     },
     { timestamps: true }
 );

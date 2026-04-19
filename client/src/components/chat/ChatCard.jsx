@@ -126,17 +126,6 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
             </div>
 
             <div className="chat-card-actions" onClick={(e) => e.stopPropagation()} style={{ display: "flex", alignItems: "center" }}>
-                {onPin && !showMenu && (
-                    <button
-                        className={`chat-card-pin ${isPinned ? "pinned" : ""}`}
-                        onClick={(e) => { e.stopPropagation(); onPin(); }}
-                        aria-label={isPinned ? "Unpin chat" : "Pin chat"}
-                        title={isPinned ? "Unpin" : "Pin"}
-                    >
-                        📌
-                    </button>
-                )}
-                
                 <button 
                     className="chat-card-menu-btn"
                     onClick={(e) => {
@@ -179,6 +168,26 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                     }}
                 >
                     <button 
+                        onClick={(e) => { e.stopPropagation(); onPin(); setShowMenu(false); }}
+                        style={{
+                            background: "transparent",
+                            border: "none",
+                            color: isPinned ? "#3da5d9" : "#94a3b8",
+                            padding: "8px 12px",
+                            cursor: "pointer",
+                            width: "100%",
+                            textAlign: "left",
+                            borderRadius: "4px",
+                            fontSize: "13px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px"
+                        }}
+                    >
+                        <span>📌</span>
+                        {isPinned ? "Unpin Chat" : "Pin Chat"}
+                    </button>
+                    <button 
                         onClick={handleDelete}
                         style={{
                             background: "transparent",
@@ -192,7 +201,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                             fontSize: "13px",
                             display: "flex",
                             alignItems: "center",
-                            gap: "6px"
+                            gap: "6px",
+                            borderTop: "1px solid #334155"
                         }}
                     >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

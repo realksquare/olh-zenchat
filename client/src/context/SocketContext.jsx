@@ -113,28 +113,62 @@ export const SocketProvider = ({ children }) => {
         socketRef.current?.emit("leave_chat", { chatId });
     }, []);
 
-    const sendMessage = useCallback((chatId, content, type = "text", mediaUrl = "", replyTo = null) => {
-        socketRef.current?.emit("send_message", { chatId, content, type, mediaUrl, replyTo });
+    const offlineQueueRef = useRef([]);
+
+    useEffect(() => {
+        const handleOnline = () => {
+            if (offlineQueueRef.current.length > 0 && socketRef.current?.connected) {
+                console.log(`[OfflineQueue] Flushing ${offlineQueueRef.current.length} messages...`);
+                while (offlineQueueRef.current.length > 0) {
+                    const msg = offlineQueueRef.current.shift();
+                    socketRef.current.emit("send_message", msg);
+                }
+            }
+        };
+
+        window.addEventListener("online", handleOnline);
+        return () => window.removeEventListener("online", handleOnline);
+    }, []);
+
+    const sendMessage = useCallback((chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false) => {
+        const payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce };
+        
+        if (socketRef.current?.connected && navigator.onLine) {
+            socketRef.current.emit("send_message", payload);
+        } else {
+            console.log("[OfflineQueue] Socket disconnected or offline, queuing message...");
+            offlineQueueRef.current.push(payload);
+        }
     }, []);
 
     const startTyping = useCallback((chatId) => {
-        socketRef.current?.emit("typing_start", { chatId });
+        if (socketRef.current?.connected) {
+            socketRef.current.emit("typing_start", { chatId });
+        }
     }, []);
 
     const stopTyping = useCallback((chatId) => {
-        socketRef.current?.emit("typing_stop", { chatId });
+        if (socketRef.current?.connected) {
+            socketRef.current.emit("typing_stop", { chatId });
+        }
     }, []);
 
     const markAsRead = useCallback((chatId) => {
-        socketRef.current?.emit("message_read", { chatId });
+        if (socketRef.current?.connected) {
+            socketRef.current.emit("message_read", { chatId });
+        }
     }, []);
 
     const editMessage = useCallback((chatId, messageId, newContent) => {
-        socketRef.current?.emit("edit_message", { chatId, messageId, newContent });
+        if (socketRef.current?.connected) {
+            socketRef.current.emit("edit_message", { chatId, messageId, newContent });
+        }
     }, []);
 
     const deleteMessage = useCallback((chatId, messageId, deleteFor = "everyone") => {
-        socketRef.current?.emit("delete_message", { chatId, messageId, deleteFor });
+        if (socketRef.current?.connected) {
+            socketRef.current.emit("delete_message", { chatId, messageId, deleteFor });
+        }
     }, []);
 
     return (
@@ -143,6 +177,7 @@ export const SocketProvider = ({ children }) => {
             joinChat, leaveChat, sendMessage,
             startTyping, stopTyping, markAsRead,
             editMessage, deleteMessage,
+            isOnline: navigator.onLine
         }}>
             {children}
         </SocketContext.Provider>

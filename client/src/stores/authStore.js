@@ -1,10 +1,13 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import axiosInstance from "../utils/axios";
 
 const TOKEN_KEY = "zenchat_token";
 const USER_KEY = "zenchat_user";
 
-export const useAuthStore = create((set) => ({
+export const useAuthStore = create(
+    persist(
+        (set) => ({
     token: localStorage.getItem(TOKEN_KEY) || null,
     user: JSON.parse(localStorage.getItem(USER_KEY)) || null,
     isLoading: false,
@@ -80,8 +83,11 @@ export const useAuthStore = create((set) => ({
         }
     },
 
-    updateUser: (updatedUser) => {
-        localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
-        set({ user: updatedUser });
-    },
-}));
+        updateUser: (updatedUser) => {
+            set({ user: updatedUser });
+        },
+    }),
+    {
+        name: "zenchat-auth",
+    }
+));

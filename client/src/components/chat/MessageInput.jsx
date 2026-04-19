@@ -1,11 +1,17 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSocket } from "../../context/SocketContext";
 import { playSendSound } from "../../utils/audio";
+import axiosInstance from "../../utils/axios";
+
+const VULGAR_WORDS = ["offensive", "vulgar", "badword1", "badword2"]; // Add more as needed
 
 const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
     const [content, setContent] = useState("");
+    const [isViewOnce, setIsViewOnce] = useState(false);
+    const [uploading, setUploading] = useState(false);
     const { sendMessage, startTyping, stopTyping, editMessage } = useSocket();
     const textareaRef = useRef(null);
+    const fileInputRef = useRef(null);
     const typingTimeoutRef = useRef(null);
     const isTypingRef = useRef(false);
 
@@ -55,21 +61,31 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
         if (!editingMessage) handleTypingStart();
     };
 
-    const handleSend = () => {
-        const trimmed = content.trim();
-        if (!trimmed) return;
+    const filterOffensive = (text) => {
+        let filtered = text;
+        VULGAR_WORDS.forEach(word => {
+            const regex = new RegExp(word, "gi");
+            filtered = filtered.replace(regex, "****");
+        });
+        return filtered;
+    };
+
+    const handleSend = async () => {
+        const filteredContent = filterOffensive(content.trim());
+        if (!filteredContent && !uploading) return;
 
         if (editingMessage) {
-            if (trimmed !== editingMessage.content) {
-                editMessage(chatId, editingMessage._id, trimmed);
+            if (filteredContent !== editingMessage.content) {
+                editMessage(chatId, editingMessage._id, filteredContent);
             }
             onCancelEdit();
         } else {
-            sendMessage(chatId, trimmed);
+            sendMessage(chatId, filteredContent, "text", "", null, isViewOnce);
             playSendSound();
         }
 
         setContent("");
+        setIsViewOnce(false);
         clearTimeout(typingTimeoutRef.current);
         isTypingRef.current = false;
         stopTyping(chatId);
@@ -86,6 +102,40 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
         }
     };
 
+    const handleFileSelect = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const isImage = file.type.startsWith("image/");
+        const isVideo = file.type.startsWith("video/");
+        const maxSize = isImage ? 3 * 1024 * 1024 : 7 * 1024 * 1024;
+
+        if (file.size > maxSize) {
+            alert(`File too large. Max ${isImage ? "3MB for images" : "7MB for videos"}.`);
+            return;
+        }
+
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const { data } = await axiosInstance.post(`/messages/${chatId}/upload`, formData, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+            
+            sendMessage(chatId, "", isImage ? "image" : "video", data.mediaUrl, null, isViewOnce);
+            playSendSound();
+            setIsViewOnce(false);
+        } catch (error) {
+            console.error("Upload failed:", error);
+            alert("Failed to upload media.");
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    };
+
     return (
         <div className="message-input-wrap">
             {editingMessage && (
@@ -97,23 +147,53 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
                 </div>
             )}
             <div className="message-input-box">
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileSelect}
+                    style={{ display: "none" }}
+                    accept="image/*,video/*"
+                />
+                <button
+                    className="attachment-btn"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    title="Attach image or video"
+                >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                    </svg>
+                </button>
+
                 <textarea
                     ref={textareaRef}
                     className="message-textarea"
-                    placeholder={editingMessage ? "Edit your message..." : "Type a message..."}
+                    placeholder={uploading ? "Uploading..." : editingMessage ? "Edit your message..." : "Type a message..."}
                     value={content}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
+                    disabled={uploading}
                     rows={1}
                     aria-label="Message input"
                 />
+
                 <button
-                    className={`send-btn ${content.trim() ? "send-btn-active" : ""}`}
+                    className={`view-once-btn ${isViewOnce ? "active" : ""}`}
+                    onClick={() => setIsViewOnce(!isViewOnce)}
+                    title="Toggle View Once"
+                >
+                    👁️
+                </button>
+
+                <button
+                    className={`send-btn ${(content.trim() || uploading) ? "send-btn-active" : ""}`}
                     onClick={handleSend}
-                    disabled={!content.trim()}
+                    disabled={(!content.trim() && !uploading) || uploading}
                     aria-label={editingMessage ? "Save edit" : "Send message"}
                 >
-                    {editingMessage ? (
+                    {uploading ? (
+                        <div className="loader-sm" />
+                    ) : editingMessage ? (
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="20 6 9 17 4 12" />
                         </svg>
@@ -125,7 +205,10 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
                     )}
                 </button>
             </div>
-            <span className="input-hint">Enter to send · Shift+Enter for new line{editingMessage ? " · Esc to cancel" : ""}</span>
+            <span className="input-hint">
+                {isViewOnce ? "👁️ View Once enabled" : "Enter to send · Shift+Enter for new line"}
+                {editingMessage ? " · Esc to cancel" : ""}
+            </span>
         </div>
     );
 };

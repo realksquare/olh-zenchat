@@ -163,6 +163,17 @@ router.put(
                 user.avatar = req.file.path;
             }
 
+            if (req.body.fullName !== undefined) {
+                user.fullName = req.body.fullName;
+            }
+
+            if (req.body.privacySettings) {
+                const settings = typeof req.body.privacySettings === 'string' 
+                    ? JSON.parse(req.body.privacySettings) 
+                    : req.body.privacySettings;
+                user.privacySettings = { ...user.privacySettings, ...settings };
+            }
+
             await user.save();
             res.json({ user: user.toPublicJSON() });
         } catch (err) {

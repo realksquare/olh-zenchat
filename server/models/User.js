@@ -43,6 +43,26 @@ const userSchema = new mongoose.Schema(
             type: Date,
             default: Date.now,
         },
+        fullName: {
+            type: String,
+            default: "",
+        },
+        contacts: [
+            {
+                userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+                tag: { 
+                    type: String, 
+                    enum: ["general", "close_circle", "family", "workplace"],
+                    default: "general"
+                },
+                isBlocked: { type: Boolean, default: false }
+            }
+        ],
+        privacySettings: {
+            onlineStatus: { type: String, enum: ["everyone", "contacts", "family", "close_circle", "nobody"], default: "everyone" },
+            fullName: { type: String, enum: ["everyone", "contacts", "family", "close_circle", "nobody"], default: "everyone" },
+            avatar: { type: String, enum: ["everyone", "contacts", "nobody"], default: "everyone" }
+        }
     },
     { timestamps: true }
 );
@@ -63,10 +83,13 @@ userSchema.methods.toPublicJSON = function () {
         username: this.username,
         email: this.email,
         avatar: this.avatar,
+        fullName: this.fullName,
         isOnline: this.isOnline,
         lastSeen: this.lastSeen,
         notificationsEnabled: this.notificationsEnabled,
         fcmToken: this.fcmToken,
+        contacts: this.contacts,
+        privacySettings: this.privacySettings,
     };
 };
 

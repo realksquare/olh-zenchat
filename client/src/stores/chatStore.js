@@ -1,16 +1,19 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import axiosInstance from "../utils/axios";
 import { useAuthStore } from "./authStore";
 
-export const useChatStore = create((set, get) => ({
-    chats: [],
-    activeChat: null,
-    messages: {},
-    typingUsers: {},
-    onlineUsers: new Set(),
-    unreadCounts: {},
-    isLoadingChats: false,
-    isLoadingMessages: false,
+export const useChatStore = create(
+    persist(
+        (set, get) => ({
+            chats: [],
+            activeChat: null,
+            messages: {},
+            typingUsers: {},
+            onlineUsers: new Set(),
+            unreadCounts: {},
+            isLoadingChats: false,
+            isLoadingMessages: false,
 
     fetchChats: async () => {
         set({ isLoadingChats: true });
@@ -445,4 +448,56 @@ export const useChatStore = create((set, get) => ({
             return { success: false, message: error.response?.data?.message || "Error deleting chat" };
         }
     },
-}));
+
+    toggleStarMessage: async (messageId, chatId) => {
+        const { user } = useAuthStore.getState();
+        const chatMessages = get().messages[chatId] || [];
+        const msg = chatMessages.find(m => m._id === messageId);
+        if (!msg) return;
+
+        const isStarred = msg.starredBy?.includes(user._id);
+        const endpoint = isStarred ? `/messages/${messageId}/unstar` : `/messages/${messageId}/star`;
+
+        try {
+            await axiosInstance.post(endpoint);
+            set((state) => {
+                const updatedMessages = (state.messages[chatId] || []).map(m => {
+                    if (m._id !== messageId) return m;
+                    const starredBy = m.starredBy || [];
+                    const newStarredBy = isStarred 
+                        ? starredBy.filter(id => id !== user._id)
+                        : [...starredBy, user._id];
+                    return { ...m, starredBy: newStarredBy };
+                });
+                return { messages: { ...state.messages, [chatId]: updatedMessages } };
+            });
+        } catch (error) {
+            console.error("Failed to star message:", error);
+        }
+    },
+
+    markViewOnceAsViewed: async (messageId, chatId) => {
+        const { user } = useAuthStore.getState();
+        try {
+            await axiosInstance.post(`/messages/${messageId}/view`);
+            set((state) => {
+                const updatedMessages = (state.messages[chatId] || []).map(m => {
+                    if (m._id !== messageId) return m;
+                    const viewedBy = m.viewedBy || [];
+                    if (viewedBy.includes(user._id)) return m;
+                    return { ...m, viewedBy: [...viewedBy, user._id] };
+                });
+                return { messages: { ...state.messages, [chatId]: updatedMessages } };
+            });
+        } catch (error) {
+            console.error("Failed to mark as viewed:", error);
+        }
+    }),
+    {
+        name: "zenchat-chats",
+        partialize: (state) => {
+            const { onlineUsers, typingUsers, isLoadingChats, isLoadingMessages, ...rest } = state;
+            return rest;
+        },
+    }
+));

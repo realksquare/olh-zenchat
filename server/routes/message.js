@@ -38,6 +38,15 @@ router.get("/:chatId", async (req, res) => {
     }
 });
 
+router.post("/:chatId/upload", upload.single("file"), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+        res.json({ mediaUrl: req.file.path });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 router.post("/:chatId", async (req, res) => {
     try {
         const chat = await Chat.findOne({
@@ -49,7 +58,7 @@ router.post("/:chatId", async (req, res) => {
             return res.status(404).json({ message: "Chat not found" });
         }
 
-        const { content, type, mediaUrl, replyTo } = req.body;
+        const { content, type, mediaUrl, replyTo, isViewOnce } = req.body;
 
         if (!content && !mediaUrl) {
             return res.status(400).json({ message: "Message cannot be empty" });
@@ -62,6 +71,7 @@ router.post("/:chatId", async (req, res) => {
             type: type || "text",
             mediaUrl: mediaUrl || "",
             replyTo: replyTo || null,
+            isViewOnce: isViewOnce === true || isViewOnce === "true",
         });
 
         await Chat.findByIdAndUpdate(req.params.chatId, {
@@ -91,6 +101,44 @@ router.patch("/:chatId/read", async (req, res) => {
         );
 
         res.json({ message: "Messages marked as read" });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.post("/:messageId/star", async (req, res) => {
+    try {
+        await Message.findByIdAndUpdate(req.params.messageId, {
+            $addToSet: { starredBy: req.user._id }
+        });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.post("/:messageId/unstar", async (req, res) => {
+    try {
+        await Message.findByIdAndUpdate(req.params.messageId, {
+            $pull: { starredBy: req.user._id }
+        });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.post("/:messageId/view", async (req, res) => {
+    try {
+        const message = await Message.findById(req.params.messageId);
+        if (message && message.isViewOnce && !message.viewedBy.includes(req.user._id)) {
+            await Message.findByIdAndUpdate(req.params.messageId, {
+                $addToSet: { viewedBy: req.user._id }
+            });
+            // Optional: If both participants have viewed (in 1-on-1), we could delete it, 
+            // but for now we just mark it as viewed on the client.
+        }
+        res.json({ success: true });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }
