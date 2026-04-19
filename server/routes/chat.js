@@ -11,7 +11,10 @@ router.use(authMiddleware);
 
 router.get("/", async (req, res) => {
     try {
-        const chats = await Chat.find({ participants: req.user._id })
+        const chats = await Chat.find({ 
+            participants: req.user._id,
+            deletedBy: { $ne: req.user._id }
+        })
             .populate("participants", "username avatar isOnline lastSeen")
             .populate({
                 path: "lastMessage",
@@ -148,6 +151,33 @@ router.get("/:chatId", async (req, res) => {
         }
 
         res.json({ chat });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.delete("/:chatId", async (req, res) => {
+    try {
+        const chat = await Chat.findOne({
+            _id: req.params.chatId,
+            participants: req.user._id,
+        });
+
+        if (!chat) {
+            return res.status(404).json({ message: "Chat not found" });
+        }
+
+        await Chat.findByIdAndUpdate(req.params.chatId, {
+            $addToSet: { deletedBy: req.user._id }
+        });
+
+        // Optionally, clear existing messages from view for this user
+        await Message.updateMany(
+            { chatId: req.params.chatId, deletedFor: { $ne: req.user._id } },
+            { $addToSet: { deletedFor: req.user._id } }
+        );
+
+        res.json({ success: true, message: "Chat deleted successfully" });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }

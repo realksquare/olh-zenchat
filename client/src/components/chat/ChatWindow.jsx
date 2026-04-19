@@ -60,7 +60,7 @@ const ChatWindow = ({ onBack }) => {
 
     const getStatusText = () => {
         if (!otherUser) return "";
-        const isCurrentlyOnline = otherUser.isOnline || onlineUsers.has(otherUser?._id);
+        const isCurrentlyOnline = otherUser.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString());
         if (isCurrentlyOnline) return "Online";
         if (otherUser.lastSeen) {
             return `Last seen ${formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true })}`;

@@ -408,4 +408,17 @@ export const useChatStore = create((set, get) => ({
         const { typingUsers } = get();
         return typingUsers[chatId]?.has(userId) || false;
     },
+
+    deleteChatForUser: async (chatId) => {
+        try {
+            await axiosInstance.delete(`/chats/${chatId}`);
+            set((state) => ({
+                chats: state.chats.filter((c) => c._id !== chatId),
+                activeChat: state.activeChat?._id === chatId ? null : state.activeChat,
+            }));
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.message || "Error deleting chat" };
+        }
+    },
 }));
