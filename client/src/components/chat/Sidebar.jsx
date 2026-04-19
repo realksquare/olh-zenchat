@@ -213,7 +213,8 @@ const Sidebar = ({ onChatSelect }) => {
 
             <ProfileModal 
                 isOpen={isProfileOpen} 
-                onClose={() => setIsProfileOpen(false)} 
+                onClose={() => setIsProfileOpen(false)}
+                onSave={() => setIsProfileOpen(false)}
             />
         </div>
     );

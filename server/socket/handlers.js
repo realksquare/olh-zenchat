@@ -254,19 +254,38 @@ const registerSocketHandlers = (io) => {
 
         socket.on("message_read", async ({ chatId }) => {
             try {
-                await Message.updateMany(
+                // Update all unread messages in this chat not sent by the current reader
+                const result = await Message.updateMany(
                     { chatId: new mongoose.Types.ObjectId(chatId), senderId: { $ne: new mongoose.Types.ObjectId(userId) }, status: { $ne: "read" } },
                     { status: "read" }
                 );
+
+                if (result.modifiedCount === 0) return; // Nothing changed, skip
+
                 const chat = await Chat.findById(chatId);
-                chat.participants.filter(p => p.toString() !== userId).forEach(participantId => {
-                    const userData = onlineUsers.get(participantId.toString());
-                    if (userData && userData.sockets) {
-                        userData.sockets.forEach((dType, socketId) => {
+                if (!chat) return;
+
+                // Notify all OTHER participants (the senders) so they see double-ticks
+                chat.participants
+                    .filter(p => p.toString() !== userId)
+                    .forEach(participantId => {
+                        const userData = onlineUsers.get(participantId.toString());
+                        if (userData && userData.sockets) {
+                            userData.sockets.forEach((dType, socketId) => {
+                                io.to(socketId).emit("messages_read", { chatId: chatId.toString(), readBy: userId });
+                            });
+                        }
+                    });
+
+                // Also sync reader's own OTHER devices (multi-device)
+                const myData = onlineUsers.get(userId);
+                if (myData && myData.sockets) {
+                    myData.sockets.forEach((dType, socketId) => {
+                        if (socketId !== socket.id) {
                             io.to(socketId).emit("messages_read", { chatId: chatId.toString(), readBy: userId });
-                        });
-                    }
-                });
+                        }
+                    });
+                }
             } catch (err) {
                 socket.emit("message_error", { error: "Failed to update read status" });
             }

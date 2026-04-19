@@ -8,7 +8,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const storage = new CloudinaryStorage({
+// Storage for avatar images only (profile pictures)
+const avatarStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'zenchat_avatars',
@@ -17,6 +18,30 @@ const storage = new CloudinaryStorage({
   }
 });
 
-const upload = multer({ storage: storage });
+// Storage for chat media (images + videos)
+const mediaStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    const isVideo = file.mimetype.startsWith('video/');
+    return {
+      folder: 'zenchat_media',
+      resource_type: isVideo ? 'video' : 'image',
+      allowed_formats: isVideo
+        ? ['mp4', 'mov', 'webm', 'mkv']
+        : ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+      transformation: isVideo
+        ? [{ quality: 'auto' }]
+        : [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }]
+    };
+  }
+});
 
-module.exports = { cloudinary, upload };
+const upload = multer({ storage: avatarStorage });
+const uploadMedia = multer({
+  storage: mediaStorage,
+  limits: {
+    fileSize: 7 * 1024 * 1024 // 7 MB max
+  }
+});
+
+module.exports = { cloudinary, upload, uploadMedia };

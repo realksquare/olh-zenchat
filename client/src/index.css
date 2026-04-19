@@ -1634,3 +1634,32 @@ select {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* -- Input hint row -------------------------------------------------------- */
+
+.input-hint-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  margin-top: 4px;
+  min-height: 18px;
+}
+
+.input-hint {
+  font-size: 0.7rem;
+  color: #ffffff;
+  opacity: 0.65;
+}
+
+/* Hide the hint text on mobile/touch devices */
+@media (hover: none), (max-width: 640px) {
+  .desktop-only {
+    display: none;
+  }
+}
+
+/* Ensure chat header has a solid background when sticky */
+.chat-header {
+  background: var(--color-bg-primary, #0e1117);
+}

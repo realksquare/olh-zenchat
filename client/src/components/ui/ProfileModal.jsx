@@ -4,7 +4,7 @@ import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import { requestNotificationPermission } from "../../utils/firebase";
 
-const ProfileModal = ({ isOpen, onClose }) => {
+const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const { user, updateProfile, isLoading } = useAuthStore();
     const { chats, messages } = useChatStore();
     
@@ -67,7 +67,8 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
         const res = await updateProfile(formData);
         if (res.success) {
-            window.location.reload();
+            onSave?.();
+            onClose();
         } else {
             setError(res.message);
         }

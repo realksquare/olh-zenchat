@@ -15,32 +15,35 @@ try {
     const messaging = firebase.messaging();
 
     messaging.onBackgroundMessage(async (payload) => {
-        console.log('[firebase-messaging-sw.js] Received background message ', payload);
+        // Get any existing ZenChat notification with the same tag
+        const existingNotifs = await self.registration.getNotifications({ tag: 'zenchat-notif' });
         
-        // Aggregation logic
-        const notifications = await self.registration.getNotifications();
         let count = 1;
         let title = payload.notification?.title || 'New Message';
         let body = payload.notification?.body || '';
 
-        // If it's a view-once media, mask the content
+        // Mask view-once media content
         if (payload.data?.isViewOnce === "true") {
             body = "📷 Sent a view-once media";
         }
 
-        const existingNotification = notifications.find(n => n.tag === 'zenchat-notif');
-        if (existingNotification) {
-            count = (existingNotification.data?.count || 1) + 1;
+        // If there's already a pending notification, collapse them
+        if (existingNotifs.length > 0) {
+            const prev = existingNotifs[0];
+            count = (prev.data?.count || 1) + 1;
             title = 'ZenChat';
             body = `${count} new messages`;
-            existingNotification.close();
+            // Close the old one so the new one replaces it
+            prev.close();
         }
 
         const notificationOptions = {
             body: body,
             icon: '/favicon.svg',
+            badge: '/favicon.svg',
             tag: 'zenchat-notif',
             renotify: true,
+            silent: false,
             data: {
                 count: count,
                 url: payload.fcmOptions?.link || payload.data?.url || '/'

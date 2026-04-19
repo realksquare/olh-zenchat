@@ -3,7 +3,7 @@ import { useSocket } from "../../context/SocketContext";
 import { playSendSound } from "../../utils/audio";
 import axiosInstance from "../../utils/axios";
 
-const VULGAR_WORDS = ["offensive", "vulgar", "badword1", "badword2"]; // Add more as needed
+const VULGAR_WORDS = ["offensive", "vulgar", "badword1", "badword2"];
 
 const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
     const [content, setContent] = useState("");
@@ -22,9 +22,7 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
         el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
     };
 
-    useEffect(() => {
-        adjustHeight();
-    }, [content]);
+    useEffect(() => { adjustHeight(); }, [content]);
 
     useEffect(() => {
         if (editingMessage) {
@@ -50,9 +48,7 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
     useEffect(() => {
         return () => {
             clearTimeout(typingTimeoutRef.current);
-            if (isTypingRef.current) {
-                stopTyping(chatId);
-            }
+            if (isTypingRef.current) stopTyping(chatId);
         };
     }, [chatId]);
 
@@ -64,8 +60,7 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
     const filterOffensive = (text) => {
         let filtered = text;
         VULGAR_WORDS.forEach(word => {
-            const regex = new RegExp(word, "gi");
-            filtered = filtered.replace(regex, "****");
+            filtered = filtered.replace(new RegExp(word, "gi"), "****");
         });
         return filtered;
     };
@@ -73,6 +68,8 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
     const handleSend = async () => {
         const filteredContent = filterOffensive(content.trim());
         if (!filteredContent && !uploading) return;
+        // If view-once is active but no media uploaded yet, block send
+        if (isViewOnce && !filteredContent) return;
 
         if (editingMessage) {
             if (filteredContent !== editingMessage.content) {
@@ -80,7 +77,6 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
             }
             onCancelEdit();
         } else {
-            // View once only applies to media, so we pass false here for text
             sendMessage(chatId, filteredContent, "text", "", null, false);
             playSendSound();
         }
@@ -98,9 +94,7 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
             e.preventDefault();
             handleSend();
         }
-        if (e.key === "Escape" && editingMessage) {
-            onCancelEdit();
-        }
+        if (e.key === "Escape" && editingMessage) onCancelEdit();
     };
 
     const handleFileSelect = async (e) => {
@@ -124,27 +118,29 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
             const { data } = await axiosInstance.post(`/messages/${chatId}/upload`, formData, {
                 headers: { "Content-Type": "multipart/form-data" }
             });
-            
             sendMessage(chatId, "", isImage ? "image" : "video", data.mediaUrl, null, isViewOnce);
             playSendSound();
             setIsViewOnce(false);
         } catch (error) {
             console.error("Upload failed:", error);
-            alert("Failed to upload media.");
+            alert("Failed to upload media. Please try again.");
         } finally {
             setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";
         }
     };
 
+    // Send button is disabled when:
+    // 1. No text AND not uploading (normal empty state)
+    // 2. View-once is ON but no text typed (must use file upload, not text send)
+    const sendDisabled = uploading || (!content.trim() && !uploading) || (isViewOnce && !content.trim());
+
     return (
         <div className="message-input-wrap">
             {editingMessage && (
                 <div className="editing-banner">
                     <span>✏️ Editing message</span>
-                    <button className="editing-cancel-btn" onClick={onCancelEdit}>
-                        ✕ Cancel
-                    </button>
+                    <button className="editing-cancel-btn" onClick={onCancelEdit}>✕ Cancel</button>
                 </div>
             )}
             <div className="message-input-box">
@@ -155,45 +151,48 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
                     style={{ display: "none" }}
                     accept="image/*,video/*"
                 />
-                
-                <div className="input-actions-left" style={{ display: 'flex', gap: '4px' }}>
-                    <button
-                        className="attachment-btn"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploading}
-                        title="Attach image or video"
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-                        </svg>
-                    </button>
 
-                    <button
-                        className={`view-once-btn ${isViewOnce ? "active" : ""}`}
-                        onClick={() => setIsViewOnce(!isViewOnce)}
-                        disabled={uploading}
-                        title="Toggle View Once for next media upload"
-                    >
-                        👁️
-                    </button>
-                </div>
+                <button
+                    className="attachment-btn"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    title="Attach image or video"
+                >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                    </svg>
+                </button>
+
+                <button
+                    className={`view-once-btn ${isViewOnce ? "active" : ""}`}
+                    onClick={() => setIsViewOnce(!isViewOnce)}
+                    disabled={uploading}
+                    title={isViewOnce ? "View-Once ON (for next upload)" : "Enable View-Once for next media upload"}
+                >
+                    👁️
+                </button>
 
                 <textarea
                     ref={textareaRef}
                     className="message-textarea"
-                    placeholder={uploading ? "Uploading..." : editingMessage ? "Edit your message..." : "Type a message..."}
+                    placeholder={
+                        uploading ? "Uploading..." :
+                        isViewOnce ? "Upload a file to send view-once media..." :
+                        editingMessage ? "Edit your message..." :
+                        "Type a message..."
+                    }
                     value={content}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
-                    disabled={uploading}
+                    disabled={uploading || isViewOnce}
                     rows={1}
                     aria-label="Message input"
                 />
 
                 <button
-                    className={`send-btn ${(content.trim() || uploading) ? "send-btn-active" : ""}`}
+                    className={`send-btn ${!sendDisabled ? "send-btn-active" : ""}`}
                     onClick={handleSend}
-                    disabled={(!content.trim() && !uploading) || uploading}
+                    disabled={sendDisabled}
                     aria-label={editingMessage ? "Save edit" : "Send message"}
                 >
                     {uploading ? (
@@ -210,15 +209,14 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
                     )}
                 </button>
             </div>
-            <div className="input-hint-wrap" style={{ display: 'flex', justifyContent: 'space-between', padding: '0 4px', marginTop: '4px' }}>
-                <span className="input-hint" style={{ fontSize: '0.7rem', opacity: 0.6 }}>
+
+            <div className="input-hint-row">
+                <span className="input-hint desktop-only">
                     Enter to send · Shift+Enter for new line
                     {editingMessage ? " · Esc to cancel" : ""}
                 </span>
                 {isViewOnce && (
-                    <span className="view-once-hint">
-                        👁️ View Once Media Enabled
-                    </span>
+                    <span className="view-once-hint">👁️ View Once — upload a file</span>
                 )}
             </div>
         </div>

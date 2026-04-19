@@ -2,7 +2,7 @@ const express = require("express");
 const Message = require("../models/Message");
 const Chat = require("../models/Chat");
 const authMiddleware = require("../middleware/auth");
-const { upload } = require("../utils/cloudinary");
+const { uploadMedia } = require("../utils/cloudinary");
 
 const router = express.Router();
 
@@ -39,7 +39,7 @@ router.get("/:chatId", async (req, res) => {
     }
 });
 
-router.post("/:chatId/upload", upload.single("file"), async (req, res) => {
+router.post("/:chatId/upload", uploadMedia.single("file"), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ message: "No file uploaded" });
         res.json({ mediaUrl: req.file.path });

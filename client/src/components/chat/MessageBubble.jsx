@@ -136,7 +136,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                         className="message-dropdown-item"
                         onMouseDown={(e) => { e.preventDefault(); setMobileDropdown(false); toggleStarMessage(message._id, message.chatId); }}
                     >
-                        {message.starredBy?.includes(user?._id) ? "❌ Unstar" : "⭐ Star"}
+                        {message.starredBy?.includes(user?._id) ? "❌ Remove Fav" : "⭐ Fav"}
                     </button>
                     {isMe && isWithinEditWindow && (
                         <button
