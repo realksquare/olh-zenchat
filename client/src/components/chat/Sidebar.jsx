@@ -5,7 +5,6 @@ import axiosInstance from "../../utils/axios";
 import ChatCard from "./ChatCard";
 import ProfileModal from "../ui/ProfileModal";
 
-
 const Sidebar = ({ onChatSelect }) => {
     const { user, logout } = useAuthStore();
     const { chats, activeChat, setActiveChat, addChat, isLoadingChats, togglePinChat } = useChatStore();
@@ -13,6 +12,7 @@ const Sidebar = ({ onChatSelect }) => {
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState("everyone"); // "everyone" | "contacts"
 
     useEffect(() => {
         const delayDebounce = setTimeout(async () => {
@@ -36,8 +36,7 @@ const Sidebar = ({ onChatSelect }) => {
         try {
             const { data } = await axiosInstance.post("/chats", { userId });
             addChat(data.chat);
-            const freshChat =
-                useChatStore.getState().chats.find((c) => c._id === data.chat._id) || data.chat;
+            const freshChat = useChatStore.getState().chats.find((c) => c._id === data.chat._id) || data.chat;
             setActiveChat(freshChat);
             setSearch("");
             setSearchResults([]);
@@ -46,26 +45,40 @@ const Sidebar = ({ onChatSelect }) => {
     };
 
     const handleSelectChat = (chat) => {
-        const freshChat =
-            useChatStore.getState().chats.find((c) => c._id === chat._id) || chat;
+        const freshChat = useChatStore.getState().chats.find((c) => c._id === chat._id) || chat;
         setActiveChat(freshChat);
         onChatSelect();
     };
 
-    const pinnedChats = chats.filter((c) => c.pinnedBy?.includes(user?._id));
-    const unpinnedChats = chats.filter((c) => !c.pinnedBy?.includes(user?._id));
+    const getInitials = (name) => name ? name.slice(0, 2).toUpperCase() : "??";
+    const getOtherParticipant = (chat) => chat.participants?.find((p) => p._id !== user?._id);
 
-    const getInitials = (name) =>
-        name ? name.slice(0, 2).toUpperCase() : "??";
+    // Filter chats based on active tab
+    const isContactChat = (chat) => {
+        const other = getOtherParticipant(chat);
+        if (!other) return false;
+        return user?.contacts?.some(
+            c => c.userId?.toString() === other._id?.toString() || c.userId === other._id
+        );
+    };
 
-    const getOtherParticipant = (chat) =>
-        chat.participants?.find((p) => p._id !== user?._id);
+    const filteredChats = activeTab === "contacts" ? chats.filter(isContactChat) : chats;
+
+    // Filter contacts in search results too
+    const filteredSearchResults = activeTab === "contacts"
+        ? searchResults.filter(u => user?.contacts?.some(
+            c => c.userId?.toString() === u._id?.toString() || c.userId === u._id
+          ))
+        : searchResults;
+
+    const pinnedChats = filteredChats.filter((c) => c.pinnedBy?.includes(user?._id));
+    const unpinnedChats = filteredChats.filter((c) => !c.pinnedBy?.includes(user?._id));
 
     return (
         <div className="sidebar">
             <div className="sidebar-profile">
-                <div 
-                    className="avatar avatar-sm" 
+                <div
+                    className="avatar avatar-sm"
                     onClick={() => setIsProfileOpen(true)}
                     style={{ cursor: "pointer" }}
                     title="Edit Profile"
@@ -79,12 +92,7 @@ const Sidebar = ({ onChatSelect }) => {
                 <span className="sidebar-username" onClick={() => setIsProfileOpen(true)} style={{ cursor: "pointer" }} title="Edit Profile">
                     {user?.username}
                 </span>
-                <button
-                    className="sidebar-logout"
-                    onClick={logout}
-                    aria-label="Sign out"
-                    title="Sign out"
-                >
+                <button className="sidebar-logout" onClick={logout} aria-label="Sign out" title="Sign out">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                         <polyline points="16 17 21 12 16 7" />
@@ -96,60 +104,73 @@ const Sidebar = ({ onChatSelect }) => {
             <div className="sidebar-search-wrap">
                 <div className="sidebar-search">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="11" cy="11" r="8" />
-                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
                     </svg>
                     <input
                         type="text"
-                        placeholder="Search users..."
+                        placeholder={activeTab === "contacts" ? "Search contacts..." : "Search users..."}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         aria-label="Search users"
                     />
                     {search && (
-                        <button
-                            onClick={() => {
-                                setSearch("");
-                                setSearch("");
-                                setSearchResults([]);
-                            }}
-                            aria-label="Clear search"
-                        >
+                        <button onClick={() => { setSearch(""); setSearchResults([]); }} aria-label="Clear search">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
+                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                             </svg>
                         </button>
                     )}
                 </div>
 
+                {/* Tab switcher */}
+                <div className="sidebar-tabs">
+                    <button
+                        className={`sidebar-tab ${activeTab === "everyone" ? "active" : ""}`}
+                        onClick={() => setActiveTab("everyone")}
+                    >
+                        Everyone
+                    </button>
+                    <button
+                        className={`sidebar-tab ${activeTab === "contacts" ? "active" : ""}`}
+                        onClick={() => setActiveTab("contacts")}
+                    >
+                        ✨ Contacts
+                        {user?.contacts?.length > 0 && (
+                            <span className="sidebar-tab-badge">{user.contacts.length}</span>
+                        )}
+                    </button>
+                </div>
+
                 {search.trim().length >= 2 && (
                     <div className="search-results">
-                        {isSearching && (
-                            <div className="search-status">Searching...</div>
+                        {isSearching && <div className="search-status">Searching...</div>}
+                        {!isSearching && filteredSearchResults.length === 0 && (
+                            <div className="search-status">
+                                {activeTab === "contacts" ? "No contacts match" : "No users found"}
+                            </div>
                         )}
-                        {!isSearching && searchResults.length === 0 && (
-                            <div className="search-status">No users found</div>
-                        )}
-                        {searchResults.map((u) => (
-                            <button
-                                key={u._id}
-                                className="search-result-item"
-                                onClick={() => handleSelectUser(u._id)}
-                            >
-                                <div className="avatar avatar-sm">
-                                    {u.avatar ? (
-                                        <img src={u.avatar} alt={u.username} />
-                                    ) : (
-                                        <span>{getInitials(u.username)}</span>
-                                    )}
-                                </div>
-                                <div className="search-result-info">
-                                    <span className="search-result-name">{u.username}</span>
-                                    {u.isOnline && <span className="online-badge">Online</span>}
-                                </div>
-                            </button>
-                        ))}
+                        {filteredSearchResults.map((u) => {
+                            const isUserContact = user?.contacts?.some(
+                                c => c.userId?.toString() === u._id?.toString() || c.userId === u._id
+                            );
+                            return (
+                                <button key={u._id} className="search-result-item" onClick={() => handleSelectUser(u._id)}>
+                                    <div className="avatar avatar-sm">
+                                        {u.avatar ? (
+                                            <img src={u.avatar} alt={u.username} />
+                                        ) : (
+                                            <span>{getInitials(u.username)}</span>
+                                        )}
+                                    </div>
+                                    <div className="search-result-info">
+                                        <span className="search-result-name">
+                                            {isUserContact ? `${u.username} ✨` : u.username}
+                                        </span>
+                                        {u.isOnline && <span className="online-badge">Online</span>}
+                                    </div>
+                                </button>
+                            );
+                        })}
                     </div>
                 )}
             </div>
@@ -169,10 +190,19 @@ const Sidebar = ({ onChatSelect }) => {
                     </div>
                 )}
 
-                {!isLoadingChats && chats.length === 0 && (
+                {!isLoadingChats && filteredChats.length === 0 && (
                     <div className="chats-empty">
-                        <p>No conversations yet</p>
-                        <span>Search for a user to start chatting</span>
+                        {activeTab === "contacts" ? (
+                            <>
+                                <p>No contacts yet</p>
+                                <span>Tag users as contacts from the three-dot menu on any chat</span>
+                            </>
+                        ) : (
+                            <>
+                                <p>No conversations yet</p>
+                                <span>Search for a user to start chatting</span>
+                            </>
+                        )}
                     </div>
                 )}
 
@@ -211,8 +241,8 @@ const Sidebar = ({ onChatSelect }) => {
                 )}
             </div>
 
-            <ProfileModal 
-                isOpen={isProfileOpen} 
+            <ProfileModal
+                isOpen={isProfileOpen}
                 onClose={() => setIsProfileOpen(false)}
                 onSave={() => setIsProfileOpen(false)}
             />

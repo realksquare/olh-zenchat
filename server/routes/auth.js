@@ -182,4 +182,38 @@ router.put(
     }
 );
 
+// ── Contacts ────────────────────────────────────────────
+router.post("/contacts/:targetId", authMiddleware, async (req, res) => {
+    try {
+        const { targetId } = req.params;
+        const me = await User.findById(req.user._id);
+        if (!me) return res.status(404).json({ message: "User not found" });
+        if (targetId === req.user._id.toString()) {
+            return res.status(400).json({ message: "Cannot add yourself" });
+        }
+        const already = me.contacts.find(c => c.userId?.toString() === targetId);
+        if (already) {
+            return res.json({ user: me.toPublicJSON() }); // idempotent
+        }
+        me.contacts.push({ userId: targetId, tag: "general" });
+        await me.save();
+        res.json({ user: me.toPublicJSON() });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.delete("/contacts/:targetId", authMiddleware, async (req, res) => {
+    try {
+        const { targetId } = req.params;
+        const me = await User.findById(req.user._id);
+        if (!me) return res.status(404).json({ message: "User not found" });
+        me.contacts = me.contacts.filter(c => c.userId?.toString() !== targetId);
+        await me.save();
+        res.json({ user: me.toPublicJSON() });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 module.exports = router;

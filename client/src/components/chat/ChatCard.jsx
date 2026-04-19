@@ -4,7 +4,7 @@ import { useAuthStore } from "../../stores/authStore";
 import { formatDistanceToNow } from "date-fns";
 
 const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
-    const { user } = useAuthStore();
+    const { user, toggleContact } = useAuthStore();
     const typingUsers = useChatStore((s) => s.typingUsers);
     const onlineUsers = useChatStore((s) => s.onlineUsers);
     const unreadCount = useChatStore((s) => s.unreadCounts[chat._id] || 0);
@@ -12,11 +12,20 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const liveChat = useChatStore((s) => s.chats.find((c) => c._id === chat._id)) || chat;
 
     const [showMenu, setShowMenu] = useState(false);
+    const [contactLoading, setContactLoading] = useState(false);
     const pressTimer = useRef(null);
 
     const otherUser = liveChat.participants?.find((p) => p._id !== user?._id);
     const isTyping = typingUsers[liveChat._id]?.has(otherUser?._id) || typingUsers[liveChat._id]?.has(otherUser?._id?.toString());
     const isOnline = otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString());
+
+    // Check if this user is a contact
+    const isContact = user?.contacts?.some(
+        c => c.userId?.toString() === otherUser?._id?.toString() || c.userId === otherUser?._id
+    );
+
+    // Display name: contact name gets ✨ suffix
+    const displayName = isContact ? `${otherUser?.username} ✨` : otherUser?.username;
 
     const isLastMessageFromThem =
         liveChat.lastMessage?.senderId !== user?._id &&
@@ -27,32 +36,27 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
 
     const getPreview = () => {
         if (isTyping) return { text: "typing...", isUnread: true };
-
         if (hasUnread) {
             if (displayUnreadCount === 1 && liveChat.lastMessage?.content) {
                 return { text: liveChat.lastMessage.content, isUnread: true };
             }
             if (displayUnreadCount <= 3) {
-                const word = displayUnreadCount === 1 ? "message" : "messages";
-                return { text: `${displayUnreadCount} new ${word}`, isUnread: true };
+                return { text: `${displayUnreadCount} new ${displayUnreadCount === 1 ? "message" : "messages"}`, isUnread: true };
             }
             return { text: "3+ new messages", isUnread: true };
         }
-
         if (!liveChat.lastMessage) return { text: "No messages yet", isUnread: false };
         const { content, type, senderId } = liveChat.lastMessage;
         const isMe = senderId?._id === user?._id || senderId === user?._id;
         if (type === "image") return { text: isMe ? "You sent an image 📷" : "Sent an image 📷", isUnread: false };
+        if (type === "video") return { text: isMe ? "You sent a video 🎥" : "Sent a video 🎥", isUnread: false };
         return { text: isMe ? `You: ${content}` : content, isUnread: false };
     };
 
     const preview = getPreview();
 
     const handleClick = () => {
-        if (showMenu) {
-            setShowMenu(false);
-            return;
-        }
+        if (showMenu) { setShowMenu(false); return; }
         if (typeof onSelect === "function") onSelect(chat);
     };
 
@@ -61,9 +65,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     };
 
     const handleTouchStart = () => {
-        pressTimer.current = setTimeout(() => {
-            setShowMenu(true);
-        }, 500);
+        pressTimer.current = setTimeout(() => setShowMenu(true), 500);
     };
 
     const handleTouchEnd = () => {
@@ -72,10 +74,32 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
 
     const handleDelete = async (e) => {
         e.stopPropagation();
-        if (window.confirm("Are you sure you want to delete this chat?")) {
+        if (window.confirm("Delete this chat?")) {
             await deleteChatForUser(chat._id);
         }
         setShowMenu(false);
+    };
+
+    const handleToggleContact = async (e) => {
+        e.stopPropagation();
+        setContactLoading(true);
+        await toggleContact(otherUser?._id);
+        setContactLoading(false);
+        setShowMenu(false);
+    };
+
+    const menuBtnStyle = {
+        background: "transparent",
+        border: "none",
+        padding: "8px 12px",
+        cursor: "pointer",
+        width: "100%",
+        textAlign: "left",
+        borderRadius: "4px",
+        fontSize: "13px",
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
     };
 
     return (
@@ -104,110 +128,56 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
 
             <div className="chat-card-info">
                 <div className="chat-card-row">
-                    <span className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""}`}>
-                        {otherUser?.username}
+                    <span className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`}>
+                        {displayName}
                     </span>
                     <span className="chat-card-time">
-                        {liveChat.updatedAt
-                            ? formatDistanceToNow(new Date(liveChat.updatedAt), { addSuffix: false })
-                            : ""}
+                        {liveChat.updatedAt ? formatDistanceToNow(new Date(liveChat.updatedAt), { addSuffix: false }) : ""}
                     </span>
                 </div>
                 <div className="chat-card-bottom-row">
-                    <span className={`chat-card-preview ${preview.isTyping ? "preview-typing" : ""} ${hasUnread ? "preview-unread" : ""}`}>
+                    <span className={`chat-card-preview ${isTyping ? "preview-typing" : ""} ${hasUnread ? "preview-unread" : ""}`}>
                         {preview.text}
                     </span>
                     {hasUnread && !showMenu && (
-                        <span className="unread-badge">
-                            {displayUnreadCount > 3 ? "3+" : displayUnreadCount}
-                        </span>
+                        <span className="unread-badge">{displayUnreadCount > 3 ? "3+" : displayUnreadCount}</span>
                     )}
                 </div>
             </div>
 
-            <div className="chat-card-actions" onClick={(e) => e.stopPropagation()} style={{ display: "flex", alignItems: "center" }}>
-                <button 
+            <div className="chat-card-actions" onClick={(e) => e.stopPropagation()}>
+                <button
                     className="chat-card-menu-btn"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setShowMenu(!showMenu);
-                    }}
-                    style={{
-                        background: "transparent",
-                        border: "none",
-                        color: "#94a3b8",
-                        cursor: "pointer",
-                        padding: "4px",
-                        display: "flex",
-                        alignItems: "center",
-                        marginLeft: "4px",
-                        opacity: showMenu ? 1 : 0.4
-                    }}
+                    onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
+                    style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", marginLeft: "4px", opacity: showMenu ? 1 : 0.45 }}
                 >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="1"></circle>
-                        <circle cx="12" cy="5" r="1"></circle>
-                        <circle cx="12" cy="19" r="1"></circle>
+                        <circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" />
                     </svg>
                 </button>
             </div>
 
             {showMenu && (
-                <div 
-                    className="chat-card-menu"
-                    style={{
-                        position: "absolute",
-                        right: "10px",
-                        top: "40px",
-                        background: "#1e293b",
-                        border: "1px solid #334155",
-                        borderRadius: "8px",
-                        padding: "4px",
-                        zIndex: 10,
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.5)"
-                    }}
-                >
-                    <button 
-                        onClick={(e) => { e.stopPropagation(); onPin(); setShowMenu(false); }}
-                        style={{
-                            background: "transparent",
-                            border: "none",
-                            color: isPinned ? "#3da5d9" : "#94a3b8",
-                            padding: "8px 12px",
-                            cursor: "pointer",
-                            width: "100%",
-                            textAlign: "left",
-                            borderRadius: "4px",
-                            fontSize: "13px",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px"
-                        }}
-                    >
+                <div className="chat-card-menu">
+                    {/* Pin/Unpin */}
+                    <button onClick={(e) => { e.stopPropagation(); onPin(); setShowMenu(false); }}
+                        style={{ ...menuBtnStyle, color: isPinned ? "var(--color-primary)" : "#94a3b8" }}>
                         <span>📌</span>
                         {isPinned ? "Unpin Chat" : "Pin Chat"}
                     </button>
-                    <button 
-                        onClick={handleDelete}
-                        style={{
-                            background: "transparent",
-                            border: "none",
-                            color: "#ef4444",
-                            padding: "8px 12px",
-                            cursor: "pointer",
-                            width: "100%",
-                            textAlign: "left",
-                            borderRadius: "4px",
-                            fontSize: "13px",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            borderTop: "1px solid #334155"
-                        }}
-                    >
+
+                    {/* Tag as Contact */}
+                    <button onClick={handleToggleContact} disabled={contactLoading}
+                        style={{ ...menuBtnStyle, color: isContact ? "#f59e0b" : "#94a3b8" }}>
+                        <span>{isContact ? "💛" : "✨"}</span>
+                        {contactLoading ? "..." : isContact ? "Remove Contact" : "Tag as Contact"}
+                    </button>
+
+                    {/* Delete */}
+                    <button onClick={handleDelete}
+                        style={{ ...menuBtnStyle, color: "#ef4444", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                         </svg>
                         Delete Chat
                     </button>

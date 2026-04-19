@@ -68,7 +68,6 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
     const handleSend = async () => {
         const filteredContent = filterOffensive(content.trim());
         if (!filteredContent && !uploading) return;
-        // If view-once is active but no media uploaded yet, block send
         if (isViewOnce && !filteredContent) return;
 
         if (editingMessage) {
@@ -130,9 +129,6 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
         }
     };
 
-    // Send button is disabled when:
-    // 1. No text AND not uploading (normal empty state)
-    // 2. View-once is ON but no text typed (must use file upload, not text send)
     const sendDisabled = uploading || (!content.trim() && !uploading) || (isViewOnce && !content.trim());
 
     return (
@@ -177,9 +173,9 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
                     className="message-textarea"
                     placeholder={
                         uploading ? "Uploading..." :
-                        isViewOnce ? "Upload a file to send view-once media..." :
-                        editingMessage ? "Edit your message..." :
-                        "Type a message..."
+                            isViewOnce ? "Upload a file to send view-once media..." :
+                                editingMessage ? "Edit your message..." :
+                                    "Type a message..."
                     }
                     value={content}
                     onChange={handleChange}
@@ -212,11 +208,11 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
 
             <div className="input-hint-row">
                 <span className="input-hint desktop-only">
-                    Enter to send · Shift+Enter for new line
+                    Enter to send | Shift+Enter for new line
                     {editingMessage ? " · Esc to cancel" : ""}
                 </span>
                 {isViewOnce && (
-                    <span className="view-once-hint">👁️ View Once — upload a file</span>
+                    <span className="view-once-hint">👁️ View Once - upload a file</span>
                 )}
             </div>
         </div>

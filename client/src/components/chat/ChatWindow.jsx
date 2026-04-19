@@ -11,6 +11,8 @@ const EMPTY_MESSAGES = [];
 
 const ChatWindow = ({ onBack }) => {
     const { user } = useAuthStore();
+    // Get the contacts list from auth store to show ✨ for contacts
+    const contacts = useAuthStore((s) => s.user?.contacts || []);
     const activeChat = useChatStore((s) => s.activeChat);
     const fetchMessages = useChatStore((s) => s.fetchMessages);
     const isLoadingMessages = useChatStore((s) => s.isLoadingMessages);
@@ -32,11 +34,21 @@ const ChatWindow = ({ onBack }) => {
     const otherUser = activeChat?.participants?.find((p) => p._id !== user?._id);
     const isTyping = activeChat ? isUserTypingInChat(activeChat._id, otherUser?._id) : false;
 
+    // Contact display name (append ✨ if tagged as contact)
+    const isContact = contacts.some(
+        c => c.userId?.toString() === otherUser?._id?.toString() || c.userId === otherUser?._id
+    );
+    const displayName = isContact ? `${otherUser?.username} ✨` : otherUser?.username;
+
     useEffect(() => {
         if (!activeChat) return;
 
         joinChat(activeChat._id);
-        fetchMessages(activeChat._id);
+        fetchMessages(activeChat._id).then(() => {
+            // After messages load, mark them read immediately
+            markChatAsRead(activeChat._id);
+            markAsRead(activeChat._id);
+        });
         markChatAsRead(activeChat._id);
 
         const timer = setTimeout(() => {
@@ -115,7 +127,7 @@ const ChatWindow = ({ onBack }) => {
                 </div>
 
                 <div className="chat-header-info">
-                    <span className="chat-header-name">{otherUser?.username}</span>
+                    <span className="chat-header-name">{displayName}</span>
                     <span className={`chat-header-status ${(otherUser?.isOnline || onlineUsers.has(otherUser?._id)) ? "status-online" : ""}`}>
                         {getStatusText()}
                     </span>

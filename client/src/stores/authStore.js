@@ -86,6 +86,22 @@ export const useAuthStore = create(
         updateUser: (updatedUser) => {
             set({ user: updatedUser });
         },
+
+        toggleContact: async (targetUserId) => {
+            const { user } = useAuthStore.getState();
+            if (!user) return;
+            const isContact = user.contacts?.some(c => c.userId?.toString() === targetUserId || c.userId === targetUserId);
+            try {
+                const { data } = isContact
+                    ? await axiosInstance.delete(`/auth/contacts/${targetUserId}`)
+                    : await axiosInstance.post(`/auth/contacts/${targetUserId}`);
+                localStorage.setItem("zenchat_user", JSON.stringify(data.user));
+                set({ user: data.user });
+                return data.user;
+            } catch (err) {
+                console.error("Failed to toggle contact:", err);
+            }
+        },
     }),
     {
         name: "zenchat-auth",

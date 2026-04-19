@@ -125,7 +125,13 @@ const registerSocketHandlers = (io) => {
                         User.findById(participantId).then(offlineUser => {
                             if (offlineUser && offlineUser.notificationsEnabled && offlineUser.fcmToken) {
                                 const senderName = populated.senderId.username;
-                                const title = `New message from ${senderName}`;
+                                
+                                // Check if the sender is in the receiver's contacts → add ✨
+                                const senderIsContact = offlineUser.contacts?.some(
+                                    c => c.userId?.toString() === userId
+                                );
+                                const notifSenderName = senderIsContact ? `${senderName} ✨` : senderName;
+                                const title = `New message from ${notifSenderName}`;
                                 
                                 let body = messagePayload.content;
                                 if (messagePayload.isViewOnce) {

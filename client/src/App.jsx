@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
 import InstallPWA from "./components/ui/InstallPWA";
+import { primeAudioContext } from "./utils/audio";
 
 const ProtectedRoute = ({ children }) => {
   const token = useAuthStore((state) => state.token);
@@ -18,6 +19,11 @@ const GuestRoute = ({ children }) => {
 
 const App = () => {
   useEffect(() => {
+    // Prime AudioContext on first user interaction (required by browsers/PWA)
+    const prime = () => { primeAudioContext(); };
+    window.addEventListener('touchstart', prime, { once: true });
+    window.addEventListener('mousedown', prime, { once: true });
+
     const handleFocus = () => {
       if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_NOTIFICATIONS' });
@@ -25,10 +31,11 @@ const App = () => {
     };
 
     window.addEventListener('focus', handleFocus);
-    // Initial clear
     handleFocus();
 
-    return () => window.removeEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   return (
