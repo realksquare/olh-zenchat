@@ -25,7 +25,16 @@ export const SocketProvider = ({ children }) => {
 
         const socket = socketRef.current;
 
-        const handleReceiveMessage = ({ message }) => {
+        const handleReceiveMessage = async ({ message }) => {
+            const existingChat = useChatStore.getState().chats.find(
+                (c) => c._id?.toString() === message.chatId?.toString()
+            );
+
+            // If this message is from a brand-new chat we haven't loaded yet, fetch all chats
+            if (!existingChat) {
+                await useChatStore.getState().fetchChats();
+            }
+
             useChatStore.getState().addMessage(message.chatId, message);
 
             const activeChat = useChatStore.getState().activeChat;

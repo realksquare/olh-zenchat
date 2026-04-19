@@ -50,20 +50,21 @@ const ProfileModal = ({ isOpen, onClose }) => {
         if (username !== user.username) formData.append("username", username);
         if (email !== user.email) formData.append("email", email);
         if (password) formData.append("password", password);
-        if (notificationsEnabled !== user.notificationsEnabled) {
-            formData.append("notificationsEnabled", notificationsEnabled);
-            if (notificationsEnabled) {
-                const token = await requestNotificationPermission();
-                if (token) {
-                    formData.append("fcmToken", token);
-                } else {
-                    setError("Failed to enable push notifications. Permission denied.");
-                    return;
-                }
+
+        // Always handle notification state so FCM token stays fresh
+        formData.append("notificationsEnabled", notificationsEnabled);
+        if (notificationsEnabled) {
+            const token = await requestNotificationPermission();
+            if (token) {
+                formData.append("fcmToken", token);
             } else {
-                formData.append("fcmToken", ""); // clear token if disabled
+                setError("Failed to enable push notifications. Permission denied.");
+                return;
             }
+        } else {
+            formData.append("fcmToken", ""); // clear token if disabled
         }
+
         if (avatarFile) formData.append("avatar", avatarFile);
         
         if (Array.from(formData.keys()).length === 0) {
@@ -73,8 +74,8 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
         const res = await updateProfile(formData);
         if (res.success) {
-            onClose();
-            setPassword("");
+            // Close modal and refresh the whole app so all state is fresh
+            window.location.reload();
         } else {
             setError(res.message);
         }

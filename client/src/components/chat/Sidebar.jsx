@@ -4,7 +4,7 @@ import { useChatStore } from "../../stores/chatStore";
 import axiosInstance from "../../utils/axios";
 import ChatCard from "./ChatCard";
 import ProfileModal from "../ui/ProfileModal";
-import InstallPWA from "../ui/InstallPWA";
+
 
 const Sidebar = ({ onChatSelect }) => {
     const { user, logout } = useAuthStore();
@@ -89,10 +89,9 @@ const Sidebar = ({ onChatSelect }) => {
                         <span>{getInitials(user?.username)}</span>
                     )}
                 </div>
-                <span className="sidebar-username" onClick={() => setIsProfileOpen(true)} style={{ cursor: "pointer", flex: 1 }} title="Edit Profile">
+                <span className="sidebar-username" onClick={() => setIsProfileOpen(true)} style={{ cursor: "pointer" }} title="Edit Profile">
                     {user?.username}
                 </span>
-                <InstallPWA />
                 <button
                     className="sidebar-logout"
                     onClick={logout}
