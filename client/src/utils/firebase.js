@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { getMessaging, getToken, onMessage, deleteToken } from "firebase/messaging";
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -42,6 +42,17 @@ export const requestNotificationPermission = async () => {
     } catch (err) {
         console.error("An error occurred while retrieving token: ", err);
         return null;
+    }
+};
+
+export const disableNotificationPermission = async () => {
+    try {
+        if (!messaging) return false;
+        await deleteToken(messaging);
+        return true;
+    } catch (err) {
+        console.error("Error deleting FCM token:", err);
+        return false;
     }
 };
 

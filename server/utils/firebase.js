@@ -21,7 +21,9 @@ try {
     console.error("Firebase admin initialization error:", error);
 }
 
-const sendPushNotification = async (fcmToken, title, body, data = {}) => {
+const User = require("../models/User");
+
+const sendPushNotification = async (userId, fcmToken, title, body, data = {}) => {
     if (!isFirebaseInitialized || !fcmToken) return;
 
     try {
@@ -43,6 +45,12 @@ const sendPushNotification = async (fcmToken, title, body, data = {}) => {
         console.log("Successfully sent message:", response);
     } catch (error) {
         console.error("Error sending message:", error);
+        if (error.errorInfo?.code === 'messaging/registration-token-not-registered') {
+            console.log(`Token unregistered for user ${userId}. Clearing from DB...`);
+            if (userId) {
+                await User.findByIdAndUpdate(userId, { fcmToken: "" }).exec();
+            }
+        }
     }
 };
 

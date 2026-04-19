@@ -122,7 +122,7 @@ const registerSocketHandlers = (io) => {
                                 const senderName = populated.senderId.username;
                                 const title = `New message from ${senderName}`;
                                 const body = messagePayload.type === 'image' ? '📷 Image' : messagePayload.content;
-                                sendPushNotification(offlineUser.fcmToken, title, body, {
+                                sendPushNotification(offlineUser._id, offlineUser.fcmToken, title, body, {
                                     chatId: chatId.toString(),
                                     type: 'new_message'
                                 });

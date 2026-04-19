@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useAuthStore } from "../../stores/authStore";
-import { requestNotificationPermission } from "../../utils/firebase";
+import { requestNotificationPermission, disableNotificationPermission } from "../../utils/firebase";
 
 const ProfileModal = ({ isOpen, onClose }) => {
     const { user, updateProfile, isLoading } = useAuthStore();
@@ -62,7 +62,8 @@ const ProfileModal = ({ isOpen, onClose }) => {
                 return;
             }
         } else {
-            formData.append("fcmToken", ""); // clear token if disabled
+            await disableNotificationPermission(); // invalidates old token in browser
+            formData.append("fcmToken", ""); // clear token from db
         }
 
         if (avatarFile) formData.append("avatar", avatarFile);
