@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useAuthStore } from "../../stores/authStore";
-import { requestNotificationPermission, disableNotificationPermission } from "../../utils/firebase";
+import { requestNotificationPermission } from "../../utils/firebase";
 
 const ProfileModal = ({ isOpen, onClose }) => {
     const { user, updateProfile, isLoading } = useAuthStore();
@@ -9,7 +9,6 @@ const ProfileModal = ({ isOpen, onClose }) => {
     const [username, setUsername] = useState(user?.username || "");
     const [email, setEmail] = useState(user?.email || "");
     const [password, setPassword] = useState("");
-    const [notificationsEnabled, setNotificationsEnabled] = useState(user?.notificationsEnabled || false);
     const [avatarFile, setAvatarFile] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(user?.avatar || "");
     const [error, setError] = useState("");
@@ -21,7 +20,6 @@ const ProfileModal = ({ isOpen, onClose }) => {
             setUsername(user.username || "");
             setEmail(user.email || "");
             setPassword("");
-            setNotificationsEnabled(user.notificationsEnabled || false);
             setAvatarPreview(user.avatar || "");
             setAvatarFile(null);
             setError("");
@@ -50,22 +48,6 @@ const ProfileModal = ({ isOpen, onClose }) => {
         if (username !== user.username) formData.append("username", username);
         if (email !== user.email) formData.append("email", email);
         if (password) formData.append("password", password);
-
-        // Always handle notification state so FCM token stays fresh
-        formData.append("notificationsEnabled", notificationsEnabled);
-        if (notificationsEnabled) {
-            const token = await requestNotificationPermission();
-            if (token) {
-                formData.append("fcmToken", token);
-            } else {
-                setError("Failed to enable push notifications. Permission denied.");
-                return;
-            }
-        } else {
-            await disableNotificationPermission(); // invalidates old token in browser
-            formData.append("fcmToken", ""); // clear token from db
-        }
-
         if (avatarFile) formData.append("avatar", avatarFile);
         
         if (Array.from(formData.keys()).length === 0) {
@@ -75,14 +57,28 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
         const res = await updateProfile(formData);
         if (res.success) {
-            // Close modal and refresh the whole app so all state is fresh
             window.location.reload();
         } else {
             setError(res.message);
         }
     };
 
+    const handleSubscribe = async () => {
+        const token = await requestNotificationPermission();
+        if (token) {
+            const formData = new FormData();
+            formData.append("notificationsEnabled", "true");
+            formData.append("fcmToken", token);
+            await updateProfile(formData);
+            window.location.reload();
+        } else {
+            setError("Failed to enable notifications. Permission denied or error occurred.");
+        }
+    };
+
     const getInitials = (name) => name ? name.slice(0, 2).toUpperCase() : "??";
+
+    const isSubscribedInBrowser = Notification.permission === "granted";
 
     return createPortal(
         <div className="modal-overlay" onClick={onClose}>
@@ -157,37 +153,61 @@ const ProfileModal = ({ isOpen, onClose }) => {
                         />
                     </div>
 
-                    <div className="form-group" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', marginBottom: '1rem' }}>
-                        <label style={{ fontSize: '14px', color: '#e2e8f0', cursor: 'pointer' }} onClick={() => setNotificationsEnabled(!notificationsEnabled)}>
-                            Enable Push Notifications
-                        </label>
-                        <div 
-                            onClick={() => setNotificationsEnabled(!notificationsEnabled)}
-                            style={{
-                                width: '40px',
-                                height: '24px',
-                                background: notificationsEnabled ? '#3da5d9' : '#334155',
-                                borderRadius: '12px',
-                                position: 'relative',
-                                cursor: 'pointer',
-                                transition: 'background 0.3s ease'
-                            }}
-                        >
-                            <div style={{
-                                width: '18px',
-                                height: '18px',
-                                background: '#fff',
-                                borderRadius: '50%',
-                                position: 'absolute',
-                                top: '3px',
-                                left: notificationsEnabled ? '19px' : '3px',
-                                transition: 'left 0.3s ease',
-                                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                            }} />
+                    <div className="profile-setting-item" style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
+                        <div className="profile-setting-info" style={{ marginBottom: '1rem' }}>
+                            <span className="profile-setting-label" style={{ display: 'block', fontWeight: '600', marginBottom: '0.25rem' }}>Push Notifications</span>
+                            <span className="profile-setting-desc" style={{ fontSize: '0.8rem', opacity: 0.7 }}>Get notified of new messages when the app is closed</span>
                         </div>
+                        {isSubscribedInBrowser ? (
+                            <button
+                                type="button"
+                                className="profile-subscribed-btn"
+                                disabled
+                                style={{
+                                    width: '100%',
+                                    background: "rgba(16, 185, 129, 0.1)",
+                                    color: "#10b981",
+                                    border: "1px solid rgba(16, 185, 129, 0.2)",
+                                    padding: "10px",
+                                    borderRadius: "8px",
+                                    fontSize: "0.875rem",
+                                    fontWeight: "600",
+                                    cursor: "default",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "8px"
+                                }}
+                            >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                Subscribed in this browser
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                className="profile-subscribe-btn"
+                                onClick={handleSubscribe}
+                                style={{
+                                    width: '100%',
+                                    background: "#3b82f6",
+                                    color: "white",
+                                    border: "none",
+                                    padding: "10px",
+                                    borderRadius: "8px",
+                                    fontSize: "0.875rem",
+                                    fontWeight: "600",
+                                    cursor: "pointer",
+                                    transition: "all 0.2s"
+                                }}
+                            >
+                                Enable Notifications
+                            </button>
+                        )}
                     </div>
 
-                    <button type="submit" className="btn btn-primary" disabled={isLoading}>
+                    <button type="submit" className="btn btn-primary" disabled={isLoading} style={{ width: '100%' }}>
                         {isLoading ? "Saving..." : "Save Changes"}
                     </button>
                 </form>

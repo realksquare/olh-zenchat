@@ -103,10 +103,13 @@ const registerSocketHandlers = (io) => {
 
                 otherParticipants.forEach((participantId) => {
                     const participantSockets = onlineUsers.get(participantId.toString());
+                    console.log(`[DEBUG] Participant ${participantId} sockets count:`, participantSockets?.size || 0);
+
                     if (participantSockets && participantSockets.size > 0) {
                         participantSockets.forEach(socketId => {
                             const room = io.sockets.adapter.rooms.get(chatId);
                             const isInRoom = room?.has(socketId);
+                            console.log(`[DEBUG] Participant ${participantId} in room ${chatId}:`, isInRoom);
 
                             if (!isInRoom) {
                                 io.to(socketId).emit("receive_message", { message: messagePayload });
@@ -117,11 +120,19 @@ const registerSocketHandlers = (io) => {
                         deliveredToAtLeastOne = true;
                     } else {
                         // User is offline, send push notification
+                        console.log(`[DEBUG] Participant ${participantId} is offline, attempting push notification...`);
                         User.findById(participantId).then(offlineUser => {
+                            console.log(`[DEBUG] OfflineUser ${participantId} details:`, {
+                                exists: !!offlineUser,
+                                notificationsEnabled: offlineUser?.notificationsEnabled,
+                                hasFcmToken: !!offlineUser?.fcmToken
+                            });
+
                             if (offlineUser && offlineUser.notificationsEnabled && offlineUser.fcmToken) {
                                 const senderName = populated.senderId.username;
                                 const title = `New message from ${senderName}`;
                                 const body = messagePayload.type === 'image' ? '📷 Image' : messagePayload.content;
+                                console.log(`[DEBUG] Sending push notification to ${participantId}...`);
                                 sendPushNotification(offlineUser._id, offlineUser.fcmToken, title, body, {
                                     chatId: chatId.toString(),
                                     type: 'new_message'
@@ -218,11 +229,13 @@ const registerSocketHandlers = (io) => {
                     });
                 }
             } catch (err) {
+                console.error("[DEBUG] Error editing message:", err);
                 socket.emit("message_error", { error: "Failed to edit message" });
             }
         });
 
         socket.on("delete_message", async ({ chatId, messageId, deleteFor }) => {
+            console.log(`[DEBUG] Deleting message ${messageId} in chat ${chatId} (for: ${deleteFor})`);
             try {
                 const message = await Message.findById(messageId);
 
