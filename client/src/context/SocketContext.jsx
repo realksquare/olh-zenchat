@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useCallback } from "react
 import { io } from "socket.io-client";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
+import { playReceiveSound } from "../utils/audio";
 
 const SocketContext = createContext(null);
 
@@ -36,6 +37,9 @@ export const SocketProvider = ({ children }) => {
             if (activeChat?._id?.toString() === message.chatId?.toString() && !isFromMe) {
                 socketRef.current?.emit("message_read", { chatId: message.chatId });
                 useChatStore.getState().markChatAsRead(message.chatId);
+            }
+            if (!isFromMe) {
+                playReceiveSound();
             }
         };
 

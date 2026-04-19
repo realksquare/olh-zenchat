@@ -27,3 +27,12 @@ try {
 } catch (e) {
     console.log(e);
 }
+
+self.addEventListener('fetch', function(event) {
+    // Basic pass-through fetch handler to satisfy PWA requirements
+    event.respondWith(
+        fetch(event.request).catch(function() {
+            return new Response('You are offline.');
+        })
+    );
+});

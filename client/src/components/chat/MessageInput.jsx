@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSocket } from "../../context/SocketContext";
+import { playSendSound } from "../../utils/audio";
 
 const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
     const [content, setContent] = useState("");
@@ -65,6 +66,7 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
             onCancelEdit();
         } else {
             sendMessage(chatId, trimmed);
+            playSendSound();
         }
 
         setContent("");
