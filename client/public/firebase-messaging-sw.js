@@ -14,22 +14,73 @@ try {
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
-    messaging.onBackgroundMessage((payload) => {
+    messaging.onBackgroundMessage(async (payload) => {
         console.log('[firebase-messaging-sw.js] Received background message ', payload);
-        const notificationTitle = payload.notification?.title || 'New Message';
+        
+        // Aggregation logic
+        const notifications = await self.registration.getNotifications();
+        let count = 1;
+        let title = payload.notification?.title || 'New Message';
+        let body = payload.notification?.body || '';
+
+        // If it's a view-once media, mask the content
+        if (payload.data?.isViewOnce === "true") {
+            body = "📷 Sent a view-once media";
+        }
+
+        const existingNotification = notifications.find(n => n.tag === 'zenchat-notif');
+        if (existingNotification) {
+            count = (existingNotification.data?.count || 1) + 1;
+            title = 'ZenChat';
+            body = `${count} new messages`;
+            existingNotification.close();
+        }
+
         const notificationOptions = {
-            body: payload.notification?.body,
-            icon: '/favicon.svg'
+            body: body,
+            icon: '/favicon.svg',
+            tag: 'zenchat-notif',
+            renotify: true,
+            data: {
+                count: count,
+                url: payload.fcmOptions?.link || payload.data?.url || '/'
+            }
         };
 
-        self.registration.showNotification(notificationTitle, notificationOptions);
+        return self.registration.showNotification(title, notificationOptions);
     });
 } catch (e) {
     console.log(e);
 }
 
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            if (clientList.length > 0) {
+                let client = clientList[0];
+                for (let i = 0; i < clientList.length; i++) {
+                    if (clientList[i].focused) {
+                        client = clientList[i];
+                    }
+                }
+                return client.focus();
+            }
+            return clients.openWindow(event.notification.data?.url || '/');
+        })
+    );
+});
+
+// Clear notifications when the app is opened/focused
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'CLEAR_NOTIFICATIONS') {
+        self.registration.getNotifications().then((notifications) => {
+            notifications.forEach((notification) => notification.close());
+        });
+    }
+});
+
 self.addEventListener('fetch', function(event) {
-    // Basic pass-through fetch handler to satisfy PWA requirements
     event.respondWith(
         fetch(event.request).catch(function() {
             return new Response('You are offline.');

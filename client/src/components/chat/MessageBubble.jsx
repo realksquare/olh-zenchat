@@ -19,6 +19,16 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
     const [tempVisible, setTempVisible] = useState(false);
 
     useEffect(() => {
+        const handleVisibility = () => {
+            if (document.visibilityState === "hidden") {
+                setTempVisible(false);
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibility);
+        return () => document.removeEventListener("visibilitychange", handleVisibility);
+    }, []);
+
+    useEffect(() => {
         if (!mobileDropdown) return;
         const handleOutside = (e) => {
             if (outerRef.current && !outerRef.current.contains(e.target)) {
@@ -28,6 +38,11 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
         document.addEventListener("touchstart", handleOutside);
         return () => document.removeEventListener("touchstart", handleOutside);
     }, [mobileDropdown]);
+
+    const getThumbnailUrl = (url) => {
+        if (!url || !url.includes("cloudinary.com")) return url;
+        return url.replace("/upload/", "/upload/c_limit,w_1000,q_auto,f_auto/");
+    };
 
     const handleViewOnce = () => {
         if (!tempVisible) {
@@ -97,7 +112,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                             {(message.type === "image" || message.type === "video") && message.mediaUrl && (
                                 <div className="message-media-wrap">
                                     {message.type === "image" ? (
-                                        <img src={message.mediaUrl} alt="Sent image" className="message-image" loading="lazy" />
+                                        <img src={getThumbnailUrl(message.mediaUrl)} alt="Sent image" className="message-image" loading="lazy" />
                                     ) : (
                                         <video src={message.mediaUrl} controls className="message-video" style={{ maxWidth: '100%', borderRadius: '8px' }} />
                                     )}

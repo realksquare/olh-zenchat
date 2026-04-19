@@ -15,8 +15,13 @@ export const SocketProvider = ({ children }) => {
         if (!token || !user) return;
 
         const serverUrl = import.meta.env.VITE_API_URL || "/";
+        const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+
         socketRef.current = io(serverUrl, {
-            auth: { userId: user._id },
+            auth: { 
+                userId: user._id,
+                deviceType: isPWA ? "pwa" : "browser"
+            },
             extraHeaders: { Authorization: `Bearer ${token}` },
             reconnectionAttempts: 5,
             reconnectionDelay: 2000,
@@ -25,7 +30,18 @@ export const SocketProvider = ({ children }) => {
 
         const socket = socketRef.current;
 
+        const getThumbnailUrl = (url) => {
+            if (!url || !url.includes("cloudinary.com")) return url;
+            // Use Cloudinary auto format and quality, and limit width for thumbnails
+            return url.replace("/upload/", "/upload/c_limit,w_800,q_auto,f_auto/");
+        };
+
         const handleReceiveMessage = async ({ message }) => {
+            // Optimize mediaUrl if present
+            if (message.mediaUrl) {
+                message.mediaUrl = getThumbnailUrl(message.mediaUrl);
+            }
+
             const existingChat = useChatStore.getState().chats.find(
                 (c) => c._id?.toString() === message.chatId?.toString()
             );

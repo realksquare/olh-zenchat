@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./stores/authStore";
 import LoginPage from "./pages/LoginPage";
@@ -16,6 +17,20 @@ const GuestRoute = ({ children }) => {
 };
 
 const App = () => {
+  useEffect(() => {
+    const handleFocus = () => {
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_NOTIFICATIONS' });
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    // Initial clear
+    handleFocus();
+
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
   return (
     <>
       <InstallPWA />

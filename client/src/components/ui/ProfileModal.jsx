@@ -162,49 +162,56 @@ const ProfileModal = ({ isOpen, onClose }) => {
                         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                     </div>
 
-                    <div className="privacy-section" style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1rem' }}>
-                        <h3 style={{ fontSize: '0.9rem', marginBottom: '0.75rem', color: 'var(--color-primary)' }}>Privacy Visibility</h3>
-                        <div className="form-group">
-                            <label>Show Online Status to:</label>
-                            <select value={onlineVisibility} onChange={(e) => setOnlineVisibility(e.target.value)}>
-                                <option value="everyone">Everyone</option>
-                                <option value="contacts">Contacts Only</option>
-                                <option value="nobody">Nobody</option>
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label>Show Full Name to:</label>
-                            <select value={nameVisibility} onChange={(e) => setNameVisibility(e.target.value)}>
-                                <option value="everyone">Everyone</option>
-                                <option value="contacts">Contacts Only</option>
-                                <option value="nobody">Nobody</option>
-                            </select>
+                    <div className="form-group">
+                        <label>New Password (optional)</label>
+                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Leave blank to keep current" minLength={6} />
+                    </div>
+
+                    <div className="privacy-section" style={{ marginTop: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '1.25rem' }}>
+                        <h3 style={{ fontSize: '0.85rem', marginBottom: '1rem', color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Privacy Visibility</h3>
+                        <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div className="form-group">
+                                <label>Online Status</label>
+                                <select value={onlineVisibility} onChange={(e) => setOnlineVisibility(e.target.value)}>
+                                    <option value="everyone">Everyone</option>
+                                    <option value="contacts">Contacts Only</option>
+                                    <option value="nobody">Nobody</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Full Name</label>
+                                <select value={nameVisibility} onChange={(e) => setNameVisibility(e.target.value)}>
+                                    <option value="everyone">Everyone</option>
+                                    <option value="contacts">Contacts Only</option>
+                                    <option value="nobody">Nobody</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
                     <div className="actions-section" style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
-                        <button type="button" className="btn btn-outline" onClick={handleExport} style={{ flex: 1, fontSize: '0.8rem' }}>
-                            📤 Export Chats
+                        <button type="button" className="btn btn-outline" onClick={handleExport} style={{ flex: 1, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                            <span>📤</span> Export Chats
                         </button>
-                        <button type="button" className="btn btn-outline" onClick={() => alert("Import function coming soon in next update!")} style={{ flex: 1, fontSize: '0.8rem' }}>
-                            📥 Import Chats
+                        <button type="button" className="btn btn-outline" onClick={() => alert("Import function coming soon in next update!")} style={{ flex: 1, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                            <span>📥</span> Import Chats
                         </button>
                     </div>
 
-                    <div className="profile-setting-item" style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
-                        <div className="profile-setting-info" style={{ marginBottom: '0.5rem' }}>
-                            <span className="profile-setting-label" style={{ display: 'block', fontWeight: '600', fontSize: '0.85rem' }}>Notifications</span>
+                    <div className="profile-setting-item" style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                        <div className="profile-setting-info" style={{ marginBottom: '0.75rem' }}>
+                            <span className="profile-setting-label" style={{ display: 'block', fontWeight: '600', fontSize: '0.85rem' }}>Push Notifications</span>
                         </div>
                         {isSubscribedInBrowser ? (
-                            <div style={{ color: "#10b981", fontSize: "0.8rem", textAlign: 'center' }}>✓ Subscribed in this browser</div>
+                            <div style={{ color: "#10b981", fontSize: "0.8rem", textAlign: 'center', fontWeight: '500' }}>✓ Subscribed in this browser</div>
                         ) : (
-                            <button type="button" className="profile-subscribe-btn" onClick={handleSubscribe} style={{ width: '100%', background: "#3b82f6", color: "white", border: "none", padding: "8px", borderRadius: "8px", fontSize: "0.8rem" }}>
+                            <button type="button" className="profile-subscribe-btn" onClick={handleSubscribe} style={{ width: '100%', background: "#3b82f6", color: "white", border: "none", padding: "10px", borderRadius: "8px", fontSize: "0.85rem", fontWeight: '600' }}>
                                 Enable Push Notifications
                             </button>
                         )}
                     </div>
 
-                    <button type="submit" className="btn btn-primary" disabled={isLoading} style={{ width: '100%', marginTop: '1rem' }}>
+                    <button type="submit" className="btn btn-primary" disabled={isLoading} style={{ width: '100%', marginTop: '1rem', padding: '12px' }}>
                         {isLoading ? "Saving..." : "Save Changes"}
                     </button>
                 </form>

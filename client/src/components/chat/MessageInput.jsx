@@ -80,7 +80,8 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
             }
             onCancelEdit();
         } else {
-            sendMessage(chatId, filteredContent, "text", "", null, isViewOnce);
+            // View once only applies to media, so we pass false here for text
+            sendMessage(chatId, filteredContent, "text", "", null, false);
             playSendSound();
         }
 
@@ -154,16 +155,28 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
                     style={{ display: "none" }}
                     accept="image/*,video/*"
                 />
-                <button
-                    className="attachment-btn"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    title="Attach image or video"
-                >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-                    </svg>
-                </button>
+                
+                <div className="input-actions-left" style={{ display: 'flex', gap: '4px' }}>
+                    <button
+                        className="attachment-btn"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        title="Attach image or video"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                        </svg>
+                    </button>
+
+                    <button
+                        className={`view-once-btn ${isViewOnce ? "active" : ""}`}
+                        onClick={() => setIsViewOnce(!isViewOnce)}
+                        disabled={uploading}
+                        title="Toggle View Once for next media upload"
+                    >
+                        👁️
+                    </button>
+                </div>
 
                 <textarea
                     ref={textareaRef}
@@ -176,14 +189,6 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
                     rows={1}
                     aria-label="Message input"
                 />
-
-                <button
-                    className={`view-once-btn ${isViewOnce ? "active" : ""}`}
-                    onClick={() => setIsViewOnce(!isViewOnce)}
-                    title="Toggle View Once"
-                >
-                    👁️
-                </button>
 
                 <button
                     className={`send-btn ${(content.trim() || uploading) ? "send-btn-active" : ""}`}
@@ -205,10 +210,17 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
                     )}
                 </button>
             </div>
-            <span className="input-hint">
-                {isViewOnce ? "👁️ View Once enabled" : "Enter to send · Shift+Enter for new line"}
-                {editingMessage ? " · Esc to cancel" : ""}
-            </span>
+            <div className="input-hint-wrap" style={{ display: 'flex', justifyContent: 'space-between', padding: '0 4px', marginTop: '4px' }}>
+                <span className="input-hint" style={{ fontSize: '0.7rem', opacity: 0.6 }}>
+                    Enter to send · Shift+Enter for new line
+                    {editingMessage ? " · Esc to cancel" : ""}
+                </span>
+                {isViewOnce && (
+                    <span className="view-once-hint">
+                        👁️ View Once Media Enabled
+                    </span>
+                )}
+            </div>
         </div>
     );
 };

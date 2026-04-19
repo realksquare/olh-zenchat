@@ -8,14 +8,17 @@ const onlineUsers = new Map();
 
 const registerSocketHandlers = (io) => {
     io.on("connection", (socket) => {
-        const userId = socket.handshake.auth.userId;
+        const { userId, deviceType } = socket.handshake.auth;
 
         if (userId) {
             if (!onlineUsers.has(userId)) {
-                onlineUsers.set(userId, new Set());
+                onlineUsers.set(userId, { sockets: new Map(), hasPWA: false });
             }
-            const isFirstConnection = onlineUsers.get(userId).size === 0;
-            onlineUsers.get(userId).add(socket.id);
+            const userData = onlineUsers.get(userId);
+            userData.sockets.set(socket.id, deviceType || "browser");
+            userData.hasPWA = Array.from(userData.sockets.values()).includes("pwa");
+
+            const isFirstConnection = userData.sockets.size === 1;
 
             if (isFirstConnection) {
                 User.findByIdAndUpdate(userId, { isOnline: true }).exec();
@@ -41,8 +44,8 @@ const registerSocketHandlers = (io) => {
 
                         pendingMessages.forEach((msg) => {
                             const senderSockets = onlineUsers.get(msg.senderId.toString());
-                            if (senderSockets && senderSockets.size > 0) {
-                                senderSockets.forEach(socketId => {
+                            if (senderSockets && senderSockets.sockets) {
+                                senderSockets.sockets.forEach((dType, socketId) => {
                                     io.to(socketId).emit("message_delivered", {
                                         messageId: msg._id.toString(),
                                         chatId: msg.chatId.toString(),
@@ -81,7 +84,7 @@ const registerSocketHandlers = (io) => {
                 await Chat.findByIdAndUpdate(chatId, {
                     lastMessage: message._id,
                     updatedAt: new Date(),
-                    deletedBy: [], // Re-show chat to anyone who deleted it
+                    deletedBy: [], 
                 });
 
                 const populated = await Message.findById(message._id)
@@ -103,15 +106,13 @@ const registerSocketHandlers = (io) => {
                 let deliveredToAtLeastOne = false;
 
                 otherParticipants.forEach((participantId) => {
-                    const participantSockets = onlineUsers.get(participantId.toString());
-                    console.log(`[DEBUG] Participant ${participantId} sockets count:`, participantSockets?.size || 0);
+                    const userData = onlineUsers.get(participantId.toString());
+                    const participantSockets = userData?.sockets;
 
                     if (participantSockets && participantSockets.size > 0) {
-                        participantSockets.forEach(socketId => {
+                        participantSockets.forEach((dType, socketId) => {
                             const room = io.sockets.adapter.rooms.get(chatId);
                             const isInRoom = room?.has(socketId);
-                            console.log(`[DEBUG] Participant ${participantId} in room ${chatId}:`, isInRoom);
-
                             if (!isInRoom) {
                                 io.to(socketId).emit("receive_message", { message: messagePayload });
                             }
@@ -120,33 +121,35 @@ const registerSocketHandlers = (io) => {
                         Message.findByIdAndUpdate(message._id, { status: "delivered" }).exec();
                         deliveredToAtLeastOne = true;
                     } else {
-                        // User is offline, send push notification
-                        console.log(`[DEBUG] Participant ${participantId} is offline, attempting push notification...`);
+                        // User is offline or not in this chat, send push notification
                         User.findById(participantId).then(offlineUser => {
-                            console.log(`[DEBUG] OfflineUser ${participantId} details:`, {
-                                exists: !!offlineUser,
-                                notificationsEnabled: offlineUser?.notificationsEnabled,
-                                hasFcmToken: !!offlineUser?.fcmToken
-                            });
-
                             if (offlineUser && offlineUser.notificationsEnabled && offlineUser.fcmToken) {
                                 const senderName = populated.senderId.username;
                                 const title = `New message from ${senderName}`;
-                                const body = messagePayload.type === 'image' ? '📷 Image' : messagePayload.content;
-                                console.log(`[DEBUG] Sending push notification to ${participantId}...`);
+                                
+                                let body = messagePayload.content;
+                                if (messagePayload.isViewOnce) {
+                                    body = "📷 Sent a view-once media";
+                                } else if (messagePayload.type === 'image') {
+                                    body = "📷 Image";
+                                } else if (messagePayload.type === 'video') {
+                                    body = "🎥 Video";
+                                }
+
                                 sendPushNotification(offlineUser._id, offlineUser.fcmToken, title, body, {
                                     chatId: chatId.toString(),
-                                    type: 'new_message'
+                                    type: 'new_message',
+                                    isViewOnce: messagePayload.isViewOnce ? "true" : "false"
                                 });
                             }
                         }).catch(console.error);
                     }
                 });
 
-                // Sync the sent message back to the sender's other active devices
-                const mySockets = onlineUsers.get(userId);
-                if (mySockets) {
-                    mySockets.forEach(socketId => {
+                // Sync to sender's other devices
+                const myData = onlineUsers.get(userId);
+                if (myData && myData.sockets) {
+                    myData.sockets.forEach((dType, socketId) => {
                         if (socketId !== socket.id) {
                             io.to(socketId).emit("receive_message", { message: messagePayload });
                         }
@@ -154,10 +157,8 @@ const registerSocketHandlers = (io) => {
                 }
 
                 if (deliveredToAtLeastOne) {
-                    // Send to all other devices of the sender as well (for syncing)
-                    const mySockets = onlineUsers.get(userId);
-                    if (mySockets) {
-                        mySockets.forEach(socketId => {
+                    if (myData && myData.sockets) {
+                        myData.sockets.forEach((dType, socketId) => {
                             io.to(socketId).emit("message_delivered", {
                                 messageId: message._id.toString(),
                                 chatId: chatId.toString(),
@@ -173,147 +174,70 @@ const registerSocketHandlers = (io) => {
         socket.on("edit_message", async ({ chatId, messageId, newContent }) => {
             try {
                 const message = await Message.findById(messageId);
-
                 if (!message || message.senderId.toString() !== userId) return;
-                if (message.deletedForEveryone) return;
-
-                const tenMinutes = 10 * 60 * 1000;
-                if (Date.now() - new Date(message.createdAt).getTime() > tenMinutes) {
-                    socket.emit("message_error", { error: "Edit window has expired" });
-                    return;
-                }
-
+                
                 const updated = await Message.findByIdAndUpdate(
                     messageId,
                     { content: newContent.trim(), isEdited: true, editedAt: new Date() },
                     { new: true }
-                )
-                    .populate("senderId", "username avatar")
-                    .populate("replyTo");
+                ).populate("senderId", "username avatar").populate("replyTo");
 
-                const editPayload = {
-                    ...updated.toObject(),
-                    chatId: chatId.toString(),
-                };
-
-                const chat = await Chat.findById(chatId);
-                if (chat && chat.lastMessage?.toString() === messageId) {
-                    await Chat.findByIdAndUpdate(chatId, { updatedAt: new Date() });
-                }
-
+                const editPayload = { ...updated.toObject(), chatId: chatId.toString() };
                 io.to(chatId).emit("message_edited", { message: editPayload });
 
-                const otherParticipants = chat.participants.filter(
-                    (p) => p.toString() !== userId
-                );
-
-                otherParticipants.forEach((participantId) => {
-                    const participantSockets = onlineUsers.get(participantId.toString());
-                    if (participantSockets && participantSockets.size > 0) {
-                        participantSockets.forEach(socketId => {
+                const chat = await Chat.findById(chatId);
+                chat.participants.filter(p => p.toString() !== userId).forEach(participantId => {
+                    const userData = onlineUsers.get(participantId.toString());
+                    if (userData && userData.sockets) {
+                        userData.sockets.forEach((dType, socketId) => {
                             const room = io.sockets.adapter.rooms.get(chatId);
-                            const isInRoom = room?.has(socketId);
-                            if (!isInRoom) {
+                            if (!room?.has(socketId)) {
                                 io.to(socketId).emit("message_edited", { message: editPayload });
                             }
                         });
                     }
                 });
                 
-                // Sync to sender's other devices
-                const mySockets = onlineUsers.get(userId);
-                if (mySockets) {
-                    mySockets.forEach(socketId => {
-                        if (socketId !== socket.id) {
-                            io.to(socketId).emit("message_edited", { message: editPayload });
-                        }
+                const myData = onlineUsers.get(userId);
+                if (myData && myData.sockets) {
+                    myData.sockets.forEach((dType, socketId) => {
+                        if (socketId !== socket.id) io.to(socketId).emit("message_edited", { message: editPayload });
                     });
                 }
             } catch (err) {
-                console.error("[DEBUG] Error editing message:", err);
                 socket.emit("message_error", { error: "Failed to edit message" });
             }
         });
 
         socket.on("delete_message", async ({ chatId, messageId, deleteFor }) => {
-            console.log(`[DEBUG] Deleting message ${messageId} in chat ${chatId} (for: ${deleteFor})`);
             try {
                 const message = await Message.findById(messageId);
-
                 if (!message || message.senderId.toString() !== userId) return;
 
                 if (deleteFor === "everyone") {
-                    await Message.findByIdAndUpdate(messageId, {
-                        deletedForEveryone: true,
-                        content: "",
-                        mediaUrl: "",
-                    });
-
+                    await Message.findByIdAndUpdate(messageId, { deletedForEveryone: true, content: "", mediaUrl: "" });
+                    io.to(chatId).emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "everyone" });
+                    
                     const chat = await Chat.findById(chatId);
-
-                    if (chat && chat.lastMessage?.toString() === messageId) {
-                        const prevMessage = await Message.findOne({
-                            chatId,
-                            _id: { $ne: messageId },
-                            deletedForEveryone: false,
-                        }).sort({ createdAt: -1 });
-
-                        await Chat.findByIdAndUpdate(chatId, {
-                            lastMessage: prevMessage?._id || null,
-                            updatedAt: new Date(),
-                        });
-                    }
-
-                    io.to(chatId).emit("message_deleted", {
-                        messageId: messageId.toString(),
-                        chatId: chatId.toString(),
-                        deleteFor: "everyone",
-                    });
-
-                    const otherParticipants = chat.participants.filter(
-                        (p) => p.toString() !== userId
-                    );
-
-                    otherParticipants.forEach((participantId) => {
-                        const participantSockets = onlineUsers.get(participantId.toString());
-                        if (participantSockets && participantSockets.size > 0) {
-                            participantSockets.forEach(socketId => {
+                    chat.participants.filter(p => p.toString() !== userId).forEach(participantId => {
+                        const userData = onlineUsers.get(participantId.toString());
+                        if (userData && userData.sockets) {
+                            userData.sockets.forEach((dType, socketId) => {
                                 const room = io.sockets.adapter.rooms.get(chatId);
-                                const isInRoom = room?.has(socketId);
-                                if (!isInRoom) {
-                                    io.to(socketId).emit("message_deleted", {
-                                        messageId: messageId.toString(),
-                                        chatId: chatId.toString(),
-                                        deleteFor: "everyone",
-                                    });
-                                }
+                                if (!room?.has(socketId)) io.to(socketId).emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "everyone" });
                             });
                         }
                     });
-                    
-                    // Sync to sender's other devices
-                    const mySockets = onlineUsers.get(userId);
-                    if (mySockets) {
-                        mySockets.forEach(socketId => {
-                            if (socketId !== socket.id) {
-                                io.to(socketId).emit("message_deleted", {
-                                    messageId: messageId.toString(),
-                                    chatId: chatId.toString(),
-                                    deleteFor: "everyone",
-                                });
-                            }
+
+                    const myData = onlineUsers.get(userId);
+                    if (myData && myData.sockets) {
+                        myData.sockets.forEach((dType, socketId) => {
+                            if (socketId !== socket.id) io.to(socketId).emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "everyone" });
                         });
                     }
                 } else {
-                    await Message.findByIdAndUpdate(messageId, {
-                        $addToSet: { deletedFor: userId },
-                    });
-
-                    socket.emit("message_deleted", {
-                        messageId: messageId.toString(),
-                        chatId: chatId.toString(),
-                        deleteFor: "self",
-                    });
+                    await Message.findByIdAndUpdate(messageId, { $addToSet: { deletedFor: userId } });
+                    socket.emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "self" });
                 }
             } catch (err) {
                 socket.emit("message_error", { error: "Failed to delete message" });
@@ -331,27 +255,15 @@ const registerSocketHandlers = (io) => {
         socket.on("message_read", async ({ chatId }) => {
             try {
                 await Message.updateMany(
-                    {
-                        chatId: new mongoose.Types.ObjectId(chatId),
-                        senderId: { $ne: new mongoose.Types.ObjectId(userId) },
-                        status: { $ne: "read" },
-                    },
+                    { chatId: new mongoose.Types.ObjectId(chatId), senderId: { $ne: new mongoose.Types.ObjectId(userId) }, status: { $ne: "read" } },
                     { status: "read" }
                 );
-
                 const chat = await Chat.findById(chatId);
-                const otherParticipants = chat.participants.filter(
-                    (p) => p.toString() !== userId
-                );
-
-                otherParticipants.forEach((participantId) => {
-                    const participantSockets = onlineUsers.get(participantId.toString());
-                    if (participantSockets && participantSockets.size > 0) {
-                        participantSockets.forEach(socketId => {
-                            io.to(socketId).emit("messages_read", {
-                                chatId: chatId.toString(),
-                                readBy: userId,
-                            });
+                chat.participants.filter(p => p.toString() !== userId).forEach(participantId => {
+                    const userData = onlineUsers.get(participantId.toString());
+                    if (userData && userData.sockets) {
+                        userData.sockets.forEach((dType, socketId) => {
+                            io.to(socketId).emit("messages_read", { chatId: chatId.toString(), readBy: userId });
                         });
                     }
                 });
@@ -362,10 +274,11 @@ const registerSocketHandlers = (io) => {
 
         socket.on("disconnect", async () => {
             if (userId) {
-                const userSockets = onlineUsers.get(userId);
-                if (userSockets) {
-                    userSockets.delete(socket.id);
-                    if (userSockets.size === 0) {
+                const userData = onlineUsers.get(userId);
+                if (userData) {
+                    userData.sockets.delete(socket.id);
+                    userData.hasPWA = Array.from(userData.sockets.values()).includes("pwa");
+                    if (userData.sockets.size === 0) {
                         onlineUsers.delete(userId);
                         const lastSeen = new Date();
                         await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen });
