@@ -8,13 +8,10 @@ import ProfileModal from "../ui/ProfileModal";
 
 const Sidebar = ({ onChatSelect }) => {
     const { user, logout } = useAuthStore();
-    const { chats, activeChat, setActiveChat, addChat, isLoadingChats } = useChatStore();
+    const { chats, activeChat, setActiveChat, addChat, isLoadingChats, togglePinChat } = useChatStore();
     const [search, setSearch] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
-    const [pinnedChatId, setPinnedChatId] = useState(
-        localStorage.getItem("zenchat_pinned") || null
-    );
     const [isProfileOpen, setIsProfileOpen] = useState(false);
 
     useEffect(() => {
@@ -55,18 +52,8 @@ const Sidebar = ({ onChatSelect }) => {
         onChatSelect();
     };
 
-    const handlePin = (chatId) => {
-        const newPinned = pinnedChatId === chatId ? null : chatId;
-        setPinnedChatId(newPinned);
-        if (newPinned) {
-            localStorage.setItem("zenchat_pinned", newPinned);
-        } else {
-            localStorage.removeItem("zenchat_pinned");
-        }
-    };
-
-    const pinnedChat = chats.find((c) => c._id === pinnedChatId);
-    const unpinnedChats = chats.filter((c) => c._id !== pinnedChatId);
+    const pinnedChats = chats.filter((c) => c.pinnedBy?.includes(user?._id));
+    const unpinnedChats = chats.filter((c) => !c.pinnedBy?.includes(user?._id));
 
     const getInitials = (name) =>
         name ? name.slice(0, 2).toUpperCase() : "??";
@@ -122,6 +109,7 @@ const Sidebar = ({ onChatSelect }) => {
                     {search && (
                         <button
                             onClick={() => {
+                                setSearch("");
                                 setSearch("");
                                 setSearchResults([]);
                             }}
@@ -188,23 +176,26 @@ const Sidebar = ({ onChatSelect }) => {
                     </div>
                 )}
 
-                {pinnedChat && (
+                {pinnedChats.length > 0 && (
                     <div className="chats-section">
                         <span className="chats-section-label">Pinned</span>
-                        <ChatCard
-                            chat={pinnedChat}
-                            isActive={activeChat?._id === pinnedChat._id}
-                            isPinned
-                            currentUserId={user?._id}
-                            onSelect={() => handleSelectChat(pinnedChat)}
-                            onPin={() => handlePin(pinnedChat._id)}
-                        />
+                        {pinnedChats.map((chat) => (
+                            <ChatCard
+                                key={chat._id}
+                                chat={chat}
+                                isActive={activeChat?._id === chat._id}
+                                isPinned={true}
+                                currentUserId={user?._id}
+                                onSelect={() => handleSelectChat(chat)}
+                                onPin={() => togglePinChat(chat._id)}
+                            />
+                        ))}
                     </div>
                 )}
 
                 {unpinnedChats.length > 0 && (
                     <div className="chats-section">
-                        {pinnedChat && <span className="chats-section-label">Recent</span>}
+                        {pinnedChats.length > 0 && <span className="chats-section-label">Recent</span>}
                         {unpinnedChats.map((chat) => (
                             <ChatCard
                                 key={chat._id}
@@ -213,7 +204,7 @@ const Sidebar = ({ onChatSelect }) => {
                                 isPinned={false}
                                 currentUserId={user?._id}
                                 onSelect={() => handleSelectChat(chat)}
-                                onPin={() => handlePin(chat._id)}
+                                onPin={() => togglePinChat(chat._id)}
                             />
                         ))}
                     </div>

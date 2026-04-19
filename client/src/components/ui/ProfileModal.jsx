@@ -78,7 +78,8 @@ const ProfileModal = ({ isOpen, onClose }) => {
 
     const getInitials = (name) => name ? name.slice(0, 2).toUpperCase() : "??";
 
-    const isSubscribedInBrowser = Notification.permission === "granted";
+    // Only consider "Subscribed" if the browser has permission AND we have a token in the DB
+    const isSubscribedInBrowser = Notification.permission === "granted" && user?.fcmToken;
 
     return createPortal(
         <div className="modal-overlay" onClick={onClose}>

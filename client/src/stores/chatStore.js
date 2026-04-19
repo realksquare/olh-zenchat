@@ -17,12 +17,9 @@ export const useChatStore = create((set, get) => ({
         try {
             const { data } = await axiosInstance.get("/chats");
             const initialUnread = {};
-            const currentUserId = useAuthStore.getState().user?._id;
-
             data.chats.forEach(chat => {
                 initialUnread[chat._id] = chat.unreadCount || 0;
             });
-
             set({ chats: data.chats, unreadCounts: initialUnread, isLoadingChats: false });
         } catch (_) {
             set({ isLoadingChats: false });
@@ -36,6 +33,33 @@ export const useChatStore = create((set, get) => ({
                 ? { ...state.unreadCounts, [chat._id]: 0 }
                 : state.unreadCounts,
         }));
+    },
+
+    togglePinChat: async (chatId) => {
+        const { user } = useAuthStore.getState();
+        if (!user) return;
+        
+        const chat = get().chats.find(c => c._id === chatId);
+        if (!chat) return;
+        
+        const isCurrentlyPinned = chat.pinnedBy?.includes(user._id);
+        const endpoint = isCurrentlyPinned ? `/chats/${chatId}/unpin` : `/chats/${chatId}/pin`;
+        
+        try {
+            await axiosInstance.post(endpoint);
+            set((state) => ({
+                chats: state.chats.map((c) => {
+                    if (c._id !== chatId) return c;
+                    const pinnedBy = c.pinnedBy || [];
+                    const newPinnedBy = isCurrentlyPinned 
+                        ? pinnedBy.filter(id => id !== user._id)
+                        : [...pinnedBy, user._id];
+                    return { ...c, pinnedBy: newPinnedBy };
+                })
+            }));
+        } catch (error) {
+            console.error("Failed to toggle pin:", error);
+        }
     },
 
     fetchMessages: async (chatId) => {

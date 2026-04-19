@@ -19,8 +19,15 @@ router.get("/", async (req, res) => {
             .populate({
                 path: "lastMessage",
                 populate: { path: "senderId", select: "username" },
-            })
-            .sort({ updatedAt: -1 });
+            });
+
+        const sortedChats = chats.sort((a, b) => {
+            const aPinned = a.pinnedBy?.includes(req.user._id);
+            const bPinned = b.pinnedBy?.includes(req.user._id);
+            if (aPinned && !bPinned) return -1;
+            if (!aPinned && bPinned) return 1;
+            return new Date(b.updatedAt) - new Date(a.updatedAt);
+        });
 
         const userObjectId = new mongoose.Types.ObjectId(req.user._id);
         const unreadAgg = await Message.aggregate([
@@ -41,7 +48,7 @@ router.get("/", async (req, res) => {
             unreadMap[u._id.toString()] = u.count;
         });
 
-        const chatsWithUnread = await Promise.all(chats.map(async (chat) => {
+        const chatsWithUnread = await Promise.all(sortedChats.map(async (chat) => {
             let lm = chat.lastMessage;
             if (lm && (lm.deletedForEveryone || (lm.deletedFor && lm.deletedFor.includes(req.user._id)))) {
                 const realLast = await Message.findOne({
@@ -60,6 +67,7 @@ router.get("/", async (req, res) => {
 
         res.json({ chats: chatsWithUnread });
     } catch (err) {
+        console.error("Fetch chats error:", err);
         res.status(500).json({ message: "Server error" });
     }
 });
@@ -178,6 +186,28 @@ router.delete("/:chatId", async (req, res) => {
         );
 
         res.json({ success: true, message: "Chat deleted successfully" });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.post("/:chatId/pin", async (req, res) => {
+    try {
+        await Chat.findByIdAndUpdate(req.params.chatId, {
+            $addToSet: { pinnedBy: req.user._id }
+        });
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.post("/:chatId/unpin", async (req, res) => {
+    try {
+        await Chat.findByIdAndUpdate(req.params.chatId, {
+            $pull: { pinnedBy: req.user._id }
+        });
+        res.json({ success: true });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }

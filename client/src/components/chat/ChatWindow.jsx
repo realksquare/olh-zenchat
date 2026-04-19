@@ -58,6 +58,13 @@ const ChatWindow = ({ onBack }) => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages.length, isTyping]);
 
+    const [tick, setTick] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => setTick(t => t + 1), 60000);
+        return () => clearInterval(interval);
+    }, []);
+
     const getStatusText = () => {
         if (!otherUser) return "";
         const isCurrentlyOnline = otherUser.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString());
