@@ -13,7 +13,8 @@ export const SocketProvider = ({ children }) => {
     useEffect(() => {
         if (!token || !user) return;
 
-        socketRef.current = io("/", {
+        const serverUrl = import.meta.env.VITE_API_URL || "/";
+        socketRef.current = io(serverUrl, {
             auth: { userId: user._id },
             extraHeaders: { Authorization: `Bearer ${token}` },
             reconnectionAttempts: 5,
