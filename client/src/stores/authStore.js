@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import axiosInstance from "../utils/axios";
 
 const TOKEN_KEY = "zenchat_token";
 const USER_KEY = "zenchat_user";
@@ -13,7 +13,7 @@ export const useAuthStore = create((set) => ({
     register: async (username, email, password) => {
         set({ isLoading: true, error: null });
         try {
-            const { data } = await axios.post("/api/auth/register", {
+            const { data } = await axiosInstance.post("/auth/register", {
                 username,
                 email,
                 password,
@@ -32,7 +32,7 @@ export const useAuthStore = create((set) => ({
     login: async (email, password) => {
         set({ isLoading: true, error: null });
         try {
-            const { data } = await axios.post("/api/auth/login", { email, password });
+            const { data } = await axiosInstance.post("/auth/login", { email, password });
             localStorage.setItem(TOKEN_KEY, data.token);
             localStorage.setItem(USER_KEY, JSON.stringify(data.user));
             set({ token: data.token, user: data.user, isLoading: false });
@@ -47,8 +47,8 @@ export const useAuthStore = create((set) => ({
     logout: async () => {
         try {
             const token = localStorage.getItem(TOKEN_KEY);
-            await axios.post(
-                "/api/auth/logout",
+            await axiosInstance.post(
+                "/auth/logout",
                 {},
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -64,7 +64,7 @@ export const useAuthStore = create((set) => ({
         set({ isLoading: true, error: null });
         try {
             const token = localStorage.getItem(TOKEN_KEY);
-            const { data } = await axios.put("/api/auth/me", formData, {
+            const { data } = await axiosInstance.put("/auth/me", formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "multipart/form-data",
