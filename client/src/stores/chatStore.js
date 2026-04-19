@@ -492,7 +492,8 @@ export const useChatStore = create(
         } catch (error) {
             console.error("Failed to mark as viewed:", error);
         }
-    }),
+    },
+}),
     {
         name: "zenchat-chats",
         partialize: (state) => {

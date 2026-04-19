@@ -2,6 +2,7 @@ const express = require("express");
 const Message = require("../models/Message");
 const Chat = require("../models/Chat");
 const authMiddleware = require("../middleware/auth");
+const { upload } = require("../utils/cloudinary");
 
 const router = express.Router();
 
