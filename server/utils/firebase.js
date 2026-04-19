@@ -32,6 +32,11 @@ const sendPushNotification = async (fcmToken, title, body, data = {}) => {
             },
             data,
             token: fcmToken,
+            webpush: {
+                headers: {
+                    Urgency: "high"
+                }
+            }
         };
 
         const response = await admin.messaging().send(message);
