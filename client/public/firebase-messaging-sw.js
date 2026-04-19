@@ -19,7 +19,7 @@ try {
         const notificationTitle = payload.notification?.title || 'New Message';
         const notificationOptions = {
             body: payload.notification?.body,
-            icon: '/vite.svg'
+            icon: '/favicon.svg'
         };
 
         self.registration.showNotification(notificationTitle, notificationOptions);

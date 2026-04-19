@@ -26,8 +26,13 @@ export const requestNotificationPermission = async () => {
         
         const permission = await Notification.requestPermission();
         if (permission === "granted") {
+            if (!import.meta.env.VITE_FIREBASE_VAPID_KEY) {
+                console.error("VITE_FIREBASE_VAPID_KEY is missing from environment variables!");
+            }
+            const registration = await navigator.serviceWorker.ready;
             const token = await getToken(messaging, {
                 vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+                serviceWorkerRegistration: registration,
             });
             return token;
         } else {
