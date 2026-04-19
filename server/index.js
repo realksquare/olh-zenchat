@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
+const compression = require("compression");
 const { Server } = require("socket.io");
 const connectDB = require("./utils/db");
 const authRoutes = require("./routes/auth");
@@ -21,6 +22,7 @@ const io = new Server(server, {
 });
 
 app.use(cors({ origin: process.env.CLIENT_URL }));
+app.use(compression());
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);

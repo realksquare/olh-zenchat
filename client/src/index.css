@@ -1749,3 +1749,218 @@ select {
   display: flex;
   align-items: center;
 }
+
+/* ── Media Upload Popup ──────────────────────────────── */
+
+.media-upload-popup {
+  background: #131921;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 1.5rem;
+  width: 340px;
+  max-width: 92vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+  animation: popupIn 0.2s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes popupIn {
+  from { opacity: 0; transform: scale(0.94) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.media-upload-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.media-upload-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.media-upload-close {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.15s;
+}
+
+.media-upload-close:hover {
+  color: #f1f5f9;
+}
+
+.media-upload-hint {
+  font-size: 0.72rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 0.25rem;
+}
+
+.media-upload-limit {
+  font-size: 0.72rem;
+  color: #3da5d9;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.media-upload-dropzone {
+  border: 2px dashed rgba(61,165,217,0.3);
+  border-radius: 12px;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #64748b;
+  font-size: 0.82rem;
+  text-align: center;
+  user-select: none;
+}
+
+.media-upload-dropzone:hover,
+.media-upload-dropzone.dragover {
+  border-color: var(--color-primary);
+  background: rgba(61,165,217,0.06);
+  color: #94a3b8;
+}
+
+.media-upload-sub {
+  font-size: 0.7rem;
+  color: #475569;
+}
+
+/* ── Media Preview Strip ─────────────────────────────── */
+
+.media-preview-strip {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.media-preview-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.media-preview-item {
+  position: relative;
+  flex-shrink: 0;
+  width: 68px;
+  border-radius: 8px;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.media-preview-thumb {
+  width: 68px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1.5px solid rgba(61,165,217,0.3);
+  display: block;
+}
+
+.media-preview-name {
+  font-size: 0.65rem;
+  color: #64748b;
+  max-width: 68px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.media-preview-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 2px solid #131921;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: background 0.15s;
+}
+
+.media-preview-remove:hover {
+  background: #dc2626;
+}
+
+/* Attachment badge */
+.attachment-btn {
+  position: relative;
+}
+
+.attachment-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 2px;
+  pointer-events: none;
+}
+
+/* ── Toggle Switch ───────────────────────────────────── */
+
+.toggle-btn {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.toggle-btn.toggle-on {
+  background: var(--color-primary);
+}
+
+.toggle-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  display: block;
+  transform: translateX(0);
+  transition: transform 0.2s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.toggle-btn.toggle-on .toggle-thumb {
+  transform: translateX(20px);
+}

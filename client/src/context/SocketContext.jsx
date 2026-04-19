@@ -32,12 +32,10 @@ export const SocketProvider = ({ children }) => {
 
         const getThumbnailUrl = (url) => {
             if (!url || !url.includes("cloudinary.com")) return url;
-            // Use Cloudinary auto format and quality, and limit width for thumbnails
             return url.replace("/upload/", "/upload/c_limit,w_800,q_auto,f_auto/");
         };
 
         const handleReceiveMessage = async ({ message }) => {
-            // Optimize mediaUrl if present
             if (message.mediaUrl) {
                 message.mediaUrl = getThumbnailUrl(message.mediaUrl);
             }
@@ -46,7 +44,6 @@ export const SocketProvider = ({ children }) => {
                 (c) => c._id?.toString() === message.chatId?.toString()
             );
 
-            // If this message is from a brand-new chat we haven't loaded yet, fetch all chats
             if (!existingChat) {
                 await useChatStore.getState().fetchChats();
             }
@@ -64,7 +61,8 @@ export const SocketProvider = ({ children }) => {
                 useChatStore.getState().markChatAsRead(message.chatId);
             }
             if (!isFromMe) {
-                playReceiveSound();
+                const { soundEnabled } = useAuthStore.getState();
+                if (soundEnabled) playReceiveSound();
             }
         };
 

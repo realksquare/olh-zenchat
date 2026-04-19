@@ -12,6 +12,7 @@ export const useAuthStore = create(
     user: JSON.parse(localStorage.getItem(USER_KEY)) || null,
     isLoading: false,
     error: null,
+    soundEnabled: true,
 
     register: async (username, email, password) => {
         set({ isLoading: true, error: null });
@@ -85,6 +86,10 @@ export const useAuthStore = create(
 
         updateUser: (updatedUser) => {
             set({ user: updatedUser });
+        },
+
+        toggleSound: () => {
+            set((s) => ({ soundEnabled: !s.soundEnabled }));
         },
 
         toggleContact: async (targetUserId) => {

@@ -1,17 +1,145 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useSocket } from "../../context/SocketContext";
+import { useAuthStore } from "../../stores/authStore";
 import { playSendSound } from "../../utils/audio";
 import axiosInstance from "../../utils/axios";
 
+const ACCEPTED_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const ACCEPTED_VIDEO = ["video/mp4", "video/quicktime", "video/webm", "video/mpeg", "video/x-msvideo"];
+const ACCEPTED_ALL = [...ACCEPTED_IMAGE, ...ACCEPTED_VIDEO];
+const MAX_FILES = 3;
+
 const VULGAR_WORDS = ["offensive", "vulgar", "badword1", "badword2"];
+
+const formatFileSize = (bytes) => {
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const MediaUploadPopup = ({ onClose, onFilesSelected }) => {
+    const fileInputRef = useRef(null);
+    const [dragOver, setDragOver] = useState(false);
+
+    const validate = (files) => {
+        const valid = [];
+        const errors = [];
+        for (const file of files) {
+            if (!ACCEPTED_ALL.includes(file.type)) {
+                errors.push(`${file.name}: unsupported format`);
+                continue;
+            }
+            const isVideo = ACCEPTED_VIDEO.includes(file.type);
+            const limit = isVideo ? 7 * 1024 * 1024 : 3 * 1024 * 1024;
+            if (file.size > limit) {
+                errors.push(`${file.name}: exceeds ${isVideo ? "7 MB" : "3 MB"} limit`);
+                continue;
+            }
+            valid.push(file);
+        }
+        return { valid, errors };
+    };
+
+    const handleFiles = (files) => {
+        const list = Array.from(files).slice(0, MAX_FILES);
+        const { valid, errors } = validate(list);
+        if (errors.length) alert("Some files were skipped:\n" + errors.join("\n"));
+        if (valid.length) onFilesSelected(valid);
+        onClose();
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setDragOver(false);
+        handleFiles(e.dataTransfer.files);
+    };
+
+    return createPortal(
+        <div className="modal-overlay" onClick={onClose}>
+            <div
+                className="media-upload-popup"
+                onClick={(e) => e.stopPropagation()}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+            >
+                <div className="media-upload-header">
+                    <span className="media-upload-title">Media Upload</span>
+                    <button className="media-upload-close" onClick={onClose}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+
+                <p className="media-upload-hint">
+                    Supported: JPG, PNG, WEBP, GIF (max 3 MB) &bull; MP4, MOV, WEBM, MPEG, AVI (max 7 MB)
+                </p>
+                <p className="media-upload-limit">Up to {MAX_FILES} files per message</p>
+
+                <div
+                    className={`media-upload-dropzone ${dragOver ? "dragover" : ""}`}
+                    onClick={() => fileInputRef.current?.click()}
+                >
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5, marginBottom: 8 }}>
+                        <rect x="3" y="3" width="18" height="18" rx="3" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                    <span>Click or drag & drop to upload</span>
+                    <span className="media-upload-sub">Select up to {MAX_FILES} files</span>
+                </div>
+
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept={ACCEPTED_ALL.join(",")}
+                    style={{ display: "none" }}
+                    onChange={(e) => handleFiles(e.target.files)}
+                />
+            </div>
+        </div>,
+        document.body
+    );
+};
+
+const MediaPreview = ({ files, onRemove }) => {
+    if (!files.length) return null;
+    return (
+        <div className="media-preview-strip">
+            {files.map((f, i) => {
+                const isVideo = ACCEPTED_VIDEO.includes(f.type);
+                const url = URL.createObjectURL(f);
+                return (
+                    <div key={i} className="media-preview-item">
+                        {isVideo ? (
+                            <video src={url} className="media-preview-thumb" muted />
+                        ) : (
+                            <img src={url} alt={f.name} className="media-preview-thumb" />
+                        )}
+                        <span className="media-preview-name">{formatFileSize(f.size)}</span>
+                        <button className="media-preview-remove" onClick={() => onRemove(i)} title="Remove">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
 
 const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
     const [content, setContent] = useState("");
     const [isViewOnce, setIsViewOnce] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [showMediaPopup, setShowMediaPopup] = useState(false);
+    const [stagedFiles, setStagedFiles] = useState([]);
     const { sendMessage, startTyping, stopTyping, editMessage } = useSocket();
+    const soundEnabled = useAuthStore((s) => s.soundEnabled);
     const textareaRef = useRef(null);
-    const fileInputRef = useRef(null);
     const typingTimeoutRef = useRef(null);
     const isTypingRef = useRef(false);
 
@@ -65,9 +193,42 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
         return filtered;
     };
 
+    const uploadAndSend = async (files, textContent) => {
+        setUploading(true);
+        try {
+            for (const file of files) {
+                const isVideo = ACCEPTED_VIDEO.includes(file.type);
+                const formData = new FormData();
+                formData.append("file", file);
+                const { data } = await axiosInstance.post(`/messages/${chatId}/upload`, formData, {
+                    headers: { "Content-Type": "multipart/form-data" }
+                });
+                sendMessage(chatId, "", isVideo ? "video" : "image", data.mediaUrl, null, isViewOnce);
+            }
+            if (soundEnabled) playSendSound();
+        } catch {
+            alert("Failed to upload media. Please try again.");
+        } finally {
+            setUploading(false);
+            setStagedFiles([]);
+            setIsViewOnce(false);
+        }
+    };
+
     const handleSend = async () => {
         const filteredContent = filterOffensive(content.trim());
-        if (!filteredContent && !uploading) return;
+
+        if (stagedFiles.length > 0) {
+            await uploadAndSend(stagedFiles, filteredContent);
+            if (filteredContent) {
+                sendMessage(chatId, filteredContent, "text", "", null, false);
+            }
+            setContent("");
+            clearTyping();
+            return;
+        }
+
+        if (!filteredContent) return;
         if (isViewOnce && !filteredContent) return;
 
         if (editingMessage) {
@@ -77,15 +238,19 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
             onCancelEdit();
         } else {
             sendMessage(chatId, filteredContent, "text", "", null, false);
-            playSendSound();
+            if (soundEnabled) playSendSound();
         }
 
         setContent("");
         setIsViewOnce(false);
+        clearTyping();
+        textareaRef.current?.focus();
+    };
+
+    const clearTyping = () => {
         clearTimeout(typingTimeoutRef.current);
         isTypingRef.current = false;
         stopTyping(chatId);
-        textareaRef.current?.focus();
     };
 
     const handleKeyDown = (e) => {
@@ -96,74 +261,51 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
         if (e.key === "Escape" && editingMessage) onCancelEdit();
     };
 
-    const handleFileSelect = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const isImage = file.type.startsWith("image/");
-        const isVideo = file.type.startsWith("video/");
-        const maxSize = isImage ? 3 * 1024 * 1024 : 7 * 1024 * 1024;
-
-        if (file.size > maxSize) {
-            alert(`File too large. Max ${isImage ? "3MB for images" : "7MB for videos"}.`);
-            return;
-        }
-
-        setUploading(true);
-        const formData = new FormData();
-        formData.append("file", file);
-
-        try {
-            const { data } = await axiosInstance.post(`/messages/${chatId}/upload`, formData, {
-                headers: { "Content-Type": "multipart/form-data" }
-            });
-            sendMessage(chatId, "", isImage ? "image" : "video", data.mediaUrl, null, isViewOnce);
-            playSendSound();
-            setIsViewOnce(false);
-        } catch (error) {
-            console.error("Upload failed:", error);
-            alert("Failed to upload media. Please try again.");
-        } finally {
-            setUploading(false);
-            if (fileInputRef.current) fileInputRef.current.value = "";
-        }
+    const handleFilesSelected = (files) => {
+        setStagedFiles(prev => {
+            const combined = [...prev, ...files];
+            return combined.slice(0, MAX_FILES);
+        });
     };
 
-    const sendDisabled = uploading || (!content.trim() && !uploading) || (isViewOnce && !content.trim());
+    const removeFile = (index) => {
+        setStagedFiles(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const hasMedia = stagedFiles.length > 0;
+    const sendDisabled = uploading || (!content.trim() && !hasMedia) || (isViewOnce && !hasMedia);
 
     return (
         <div className="message-input-wrap">
             {editingMessage && (
                 <div className="editing-banner">
-                    <span>✏️ Editing message</span>
-                    <button className="editing-cancel-btn" onClick={onCancelEdit}>✕ Cancel</button>
+                    <span>Editing message</span>
+                    <button className="editing-cancel-btn" onClick={onCancelEdit}>Cancel</button>
                 </div>
             )}
-            <div className="message-input-box">
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileSelect}
-                    style={{ display: "none" }}
-                    accept="image/*,video/*"
-                />
 
+            {hasMedia && (
+                <MediaPreview files={stagedFiles} onRemove={removeFile} />
+            )}
+
+            <div className="message-input-box">
                 <button
                     className="attachment-btn"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    title="Attach image or video"
+                    onClick={() => setShowMediaPopup(true)}
+                    disabled={uploading || hasMedia >= MAX_FILES}
+                    title="Attach media"
                 >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                     </svg>
+                    {hasMedia && <span className="attachment-badge">{stagedFiles.length}</span>}
                 </button>
 
                 <button
                     className={`view-once-btn ${isViewOnce ? "active" : ""}`}
                     onClick={() => setIsViewOnce(!isViewOnce)}
                     disabled={uploading}
-                    title={isViewOnce ? "View-Once ON (for next upload)" : "Enable View-Once for next media upload"}
+                    title={isViewOnce ? "View-Once ON - for uploaded media" : "Enable View-Once for media"}
                 >
                     👁️
                 </button>
@@ -173,14 +315,15 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
                     className="message-textarea"
                     placeholder={
                         uploading ? "Uploading..." :
-                            isViewOnce ? "Upload a file to send view-once media..." :
-                                editingMessage ? "Edit your message..." :
-                                    "Type a message..."
+                            hasMedia ? "Add a caption (optional)..." :
+                                isViewOnce ? "Upload a file to send view-once media..." :
+                                    editingMessage ? "Edit your message..." :
+                                        "Type a message..."
                     }
                     value={content}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
-                    disabled={uploading || isViewOnce}
+                    disabled={uploading || (isViewOnce && !hasMedia)}
                     rows={1}
                     aria-label="Message input"
                 />
@@ -209,12 +352,19 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
             <div className="input-hint-row">
                 <span className="input-hint desktop-only">
                     Enter to send | Shift+Enter for new line
-                    {editingMessage ? " · Esc to cancel" : ""}
+                    {editingMessage ? " | Esc to cancel" : ""}
                 </span>
                 {isViewOnce && (
-                    <span className="view-once-hint">👁️ View Once - upload a file</span>
+                    <span className="view-once-hint">View Once - upload a file</span>
                 )}
             </div>
+
+            {showMediaPopup && (
+                <MediaUploadPopup
+                    onClose={() => setShowMediaPopup(false)}
+                    onFilesSelected={handleFilesSelected}
+                />
+            )}
         </div>
     );
 };

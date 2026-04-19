@@ -121,12 +121,10 @@ const registerSocketHandlers = (io) => {
                         Message.findByIdAndUpdate(message._id, { status: "delivered" }).exec();
                         deliveredToAtLeastOne = true;
                     } else {
-                        // User is offline or not in this chat, send push notification
                         User.findById(participantId).then(offlineUser => {
                             if (offlineUser && offlineUser.notificationsEnabled && offlineUser.fcmToken) {
                                 const senderName = populated.senderId.username;
                                 
-                                // Check if the sender is in the receiver's contacts → add ✨
                                 const senderIsContact = offlineUser.contacts?.some(
                                     c => c.userId?.toString() === userId
                                 );
@@ -152,7 +150,6 @@ const registerSocketHandlers = (io) => {
                     }
                 });
 
-                // Sync to sender's other devices
                 const myData = onlineUsers.get(userId);
                 if (myData && myData.sockets) {
                     myData.sockets.forEach((dType, socketId) => {
@@ -260,18 +257,16 @@ const registerSocketHandlers = (io) => {
 
         socket.on("message_read", async ({ chatId }) => {
             try {
-                // Update all unread messages in this chat not sent by the current reader
                 const result = await Message.updateMany(
                     { chatId: new mongoose.Types.ObjectId(chatId), senderId: { $ne: new mongoose.Types.ObjectId(userId) }, status: { $ne: "read" } },
                     { status: "read" }
                 );
 
-                if (result.modifiedCount === 0) return; // Nothing changed, skip
+                if (result.modifiedCount === 0) return;
 
                 const chat = await Chat.findById(chatId);
                 if (!chat) return;
 
-                // Notify all OTHER participants (the senders) so they see double-ticks
                 chat.participants
                     .filter(p => p.toString() !== userId)
                     .forEach(participantId => {
@@ -283,7 +278,6 @@ const registerSocketHandlers = (io) => {
                         }
                     });
 
-                // Also sync reader's own OTHER devices (multi-device)
                 const myData = onlineUsers.get(userId);
                 if (myData && myData.sockets) {
                     myData.sockets.forEach((dType, socketId) => {
