@@ -9,10 +9,23 @@ const router = express.Router();
 router.get("/test-cloudinary", async (req, res) => {
     try {
         const { cloudinary } = require("../utils/cloudinary");
+        const envCheck = {
+            cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? "SET" : "MISSING",
+            api_key: process.env.CLOUDINARY_API_KEY ? "SET" : "MISSING",
+            api_secret: process.env.CLOUDINARY_API_SECRET ? "SET" : "MISSING"
+        };
         const result = await cloudinary.api.ping();
-        res.json({ success: true, result });
+        res.json({ success: true, envCheck, result });
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        res.status(500).json({ 
+            success: false, 
+            envCheck: {
+                cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? "SET" : "MISSING",
+                api_key: process.env.CLOUDINARY_API_KEY ? "SET" : "MISSING",
+                api_secret: process.env.CLOUDINARY_API_SECRET ? "SET" : "MISSING"
+            },
+            error: err.message 
+        });
     }
 });
 
