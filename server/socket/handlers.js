@@ -158,26 +158,7 @@ const registerSocketHandlers = (io) => {
                             );
                             const notifSenderName = senderIsContact ? `${senderName} ✨` : senderName;
                             const title = `New message from ${notifSenderName}`;
-                            
-                            // Sync: Mark all previous 'sent' messages in this chat from sender as 'delivered'
-                            // since we are about to trigger a push notification for them.
-                            await Message.updateMany(
-                                { chatId, senderId: userId, status: "sent" },
-                                { status: "delivered" }
-                            );
-
-                            const unreadCount = await Message.countDocuments({
-                                chatId,
-                                senderId: userId,
-                                status: { $ne: "read" }
-                            });
-
-                            let bodyText = messagePayload.content;
-                            if (messagePayload.isViewOnce) bodyText = "📷 Sent a view-once media";
-                            else if (messagePayload.type === 'image') bodyText = "📷 Image";
-                            else if (messagePayload.type === 'video') bodyText = "🎥 Video";
-
-                            const body = unreadCount > 1 ? `(${unreadCount}) ${bodyText}` : bodyText;
+                            const body = "You have new messages!";
 
                             const pwaTokens = tokens.filter(t => t.deviceType === 'pwa');
                             const browserTokens = tokens.filter(t => t.deviceType === 'browser');

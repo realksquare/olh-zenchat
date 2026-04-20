@@ -23,15 +23,9 @@ const avatarStorage = new CloudinaryStorage({
 
 const mediaStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: (req, file) => {
-    const isVideo = file.mimetype && file.mimetype.startsWith("video/");
-    return {
-      folder: "zenchat_media",
-      resource_type: isVideo ? "video" : "auto", // 'auto' is safer than 'image' for mixed media
-      allowed_formats: isVideo
-        ? ["mp4", "mov", "webm", "mpeg", "avi", "mkv", "m4v"]
-        : ["jpg", "jpeg", "png", "webp", "gif", "avif"],
-    };
+  params: {
+    folder: "zenchat_media",
+    resource_type: "auto",
   }
 });
 

@@ -8,6 +8,16 @@ const router = express.Router();
 
 router.use(authMiddleware);
 
+router.get("/test-cloudinary", async (req, res) => {
+    try {
+        const { cloudinary } = require("../utils/cloudinary");
+        const result = await cloudinary.api.ping();
+        res.json({ success: true, result });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 router.get("/:chatId", async (req, res) => {
     try {
         const chat = await Chat.findOne({
