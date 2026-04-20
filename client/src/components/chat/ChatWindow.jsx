@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, memo } from "react";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import { useSocket } from "../../context/SocketContext";
@@ -80,7 +80,7 @@ const ChatWindow = ({ onBack }) => {
         return () => clearInterval(interval);
     }, []);
 
-    const getStatusText = () => {
+    const statusText = useMemo(() => {
         if (!otherUser) return "";
         const isCurrentlyOnline = otherUser.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString());
         if (isCurrentlyOnline) return "Online";
@@ -88,7 +88,9 @@ const ChatWindow = ({ onBack }) => {
             return `Last seen ${formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true })}`;
         }
         return "Offline";
-    };
+    }, [otherUser, onlineUsers, tick]);
+
+    const getStatusText = () => statusText;
 
     const handleDeleteConfirm = (deleteFor) => {
         if (!deletingMessage) return;

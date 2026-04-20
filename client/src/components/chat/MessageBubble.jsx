@@ -162,4 +162,4 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
     );
 };
 
-export default MessageBubble;
+export default memo(MessageBubble);

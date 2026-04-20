@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import axiosInstance from "../../utils/axios";
@@ -54,25 +54,27 @@ const Sidebar = ({ onChatSelect }) => {
     const getOtherParticipant = (chat) => chat.participants?.find((p) => p._id !== user?._id);
 
     // Filter chats based on active tab
-    const isContactChat = (chat) => {
-        const other = getOtherParticipant(chat);
-        if (!other) return false;
-        return user?.contacts?.some(
-            c => c.userId?.toString() === other._id?.toString() || c.userId === other._id
-        );
-    };
-
-    const filteredChats = activeTab === "contacts" ? chats.filter(isContactChat) : chats;
+    const filteredChats = useMemo(() => {
+        const isContactChat = (chat) => {
+            const other = chat.participants?.find((p) => p._id !== user?._id);
+            if (!other) return false;
+            return user?.contacts?.some(
+                c => c.userId?.toString() === other._id?.toString() || c.userId === other._id
+            );
+        };
+        return activeTab === "contacts" ? chats.filter(isContactChat) : chats;
+    }, [chats, activeTab, user?._id, user?.contacts]);
 
     // Filter contacts in search results too
-    const filteredSearchResults = activeTab === "contacts"
-        ? searchResults.filter(u => user?.contacts?.some(
+    const filteredSearchResults = useMemo(() => {
+        if (activeTab !== "contacts") return searchResults;
+        return searchResults.filter(u => user?.contacts?.some(
             c => c.userId?.toString() === u._id?.toString() || c.userId === u._id
-          ))
-        : searchResults;
+        ));
+    }, [searchResults, activeTab, user?.contacts]);
 
-    const pinnedChats = filteredChats.filter((c) => c.pinnedBy?.includes(user?._id));
-    const unpinnedChats = filteredChats.filter((c) => !c.pinnedBy?.includes(user?._id));
+    const pinnedChats = useMemo(() => filteredChats.filter((c) => c.pinnedBy?.includes(user?._id)), [filteredChats, user?._id]);
+    const unpinnedChats = useMemo(() => filteredChats.filter((c) => !c.pinnedBy?.includes(user?._id)), [filteredChats, user?._id]);
 
     return (
         <div className="sidebar">
@@ -256,4 +258,4 @@ const Sidebar = ({ onChatSelect }) => {
     );
 };
 
-export default Sidebar;
+export default memo(Sidebar);

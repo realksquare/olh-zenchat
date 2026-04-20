@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, memo, useMemo } from "react";
 import { useChatStore } from "../../stores/chatStore";
 import { useAuthStore } from "../../stores/authStore";
 import { formatDistanceToNow } from "date-fns";
@@ -187,4 +187,4 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     );
 };
 
-export default ChatCard;
+export default memo(ChatCard);
