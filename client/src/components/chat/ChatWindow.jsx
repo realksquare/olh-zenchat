@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import { useSocket } from "../../context/SocketContext";
@@ -20,10 +20,15 @@ const ChatWindow = ({ onBack }) => {
     const markChatAsRead = useChatStore((s) => s.markChatAsRead);
     const onlineUsers = useChatStore((s) => s.onlineUsers);
 
+    const [showOnlyStarred, setShowOnlyStarred] = useState(false);
     const rawMessages = useChatStore((s) =>
         activeChat && s.messages[activeChat._id] ? s.messages[activeChat._id] : EMPTY_MESSAGES
     );
-    const messages = [...rawMessages];
+    
+    const messages = useMemo(() => {
+        if (!showOnlyStarred) return rawMessages;
+        return rawMessages.filter(m => m.starredBy?.includes(user?._id));
+    }, [rawMessages, showOnlyStarred, user?._id]);
 
     const { joinChat, leaveChat, markAsRead, deleteMessage } = useSocket();
     const messagesEndRef = useRef(null);
@@ -41,25 +46,23 @@ const ChatWindow = ({ onBack }) => {
     const displayName = isContact ? `${otherUser?.username} ✨` : otherUser?.username;
 
     useEffect(() => {
-        if (!activeChat) return;
+        if (!activeChat?._id) return;
 
         joinChat(activeChat._id);
         fetchMessages(activeChat._id).then(() => {
-            // After messages load, mark them read immediately
             markChatAsRead(activeChat._id);
             markAsRead(activeChat._id);
         });
-        markChatAsRead(activeChat._id);
 
         const timer = setTimeout(() => {
             markAsRead(activeChat._id);
-        }, 300);
+        }, 500);
 
         return () => {
             clearTimeout(timer);
             leaveChat(activeChat._id);
         };
-    }, [activeChat?._id]);
+    }, [activeChat?._id, joinChat, leaveChat, fetchMessages, markChatAsRead, markAsRead]);
 
     useEffect(() => {
         setEditingMessage(null);
@@ -123,14 +126,36 @@ const ChatWindow = ({ onBack }) => {
                             <span>{otherUser?.username?.slice(0, 2).toUpperCase()}</span>
                         )}
                     </div>
-                    {(otherUser?.isOnline || onlineUsers.has(otherUser?._id)) && <span className="online-dot" />}
+                    {(otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) && <span className="online-dot" />}
                 </div>
 
                 <div className="chat-header-info">
                     <span className="chat-header-name">{displayName}</span>
-                    <span className={`chat-header-status ${(otherUser?.isOnline || onlineUsers.has(otherUser?._id)) ? "status-online" : ""}`}>
+                    <span className={`chat-header-status ${(otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) ? "status-online" : ""}`}>
                         {getStatusText()}
                     </span>
+                </div>
+
+                <div className="chat-header-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+                    <button 
+                        className={`header-action-btn ${showOnlyStarred ? 'active' : ''}`}
+                        onClick={() => setShowOnlyStarred(!showOnlyStarred)}
+                        title={showOnlyStarred ? "Show all messages" : "Show only favorites"}
+                        style={{ 
+                            background: showOnlyStarred ? 'rgba(234, 179, 8, 0.15)' : 'transparent',
+                            color: showOnlyStarred ? '#eab308' : '#94a3b8',
+                            padding: '8px',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s ease'
+                        }}
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill={showOnlyStarred ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                    </button>
                 </div>
             </div>
 

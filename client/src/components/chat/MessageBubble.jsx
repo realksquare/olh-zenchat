@@ -138,20 +138,24 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                     >
                         {message.starredBy?.includes(user?._id) ? "❌ Remove Fav" : "⭐ Fav"}
                     </button>
-                    {isMe && isWithinEditWindow && (
-                        <button
-                            className="message-dropdown-item"
-                            onMouseDown={(e) => { e.preventDefault(); setMobileDropdown(false); onEdit(message); }}
-                        >
-                            ✏️ Edit
-                        </button>
+                    {isMe && (
+                        <>
+                            {isWithinEditWindow && (
+                                <button
+                                    className="message-dropdown-item"
+                                    onMouseDown={(e) => { e.preventDefault(); setMobileDropdown(false); onEdit(message); }}
+                                >
+                                    ✏️ Edit
+                                </button>
+                            )}
+                            <button
+                                className="message-dropdown-item delete"
+                                onMouseDown={(e) => { e.preventDefault(); setMobileDropdown(false); onDelete(message); }}
+                            >
+                                🗑️ Delete
+                            </button>
+                        </>
                     )}
-                    <button
-                        className="message-dropdown-item delete"
-                        onMouseDown={(e) => { e.preventDefault(); setMobileDropdown(false); onDelete(message); }}
-                    >
-                        🗑️ Delete
-                    </button>
                 </div>
             </div>
         </div>

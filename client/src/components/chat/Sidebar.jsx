@@ -135,9 +135,15 @@ const Sidebar = ({ onChatSelect }) => {
                         onClick={() => setActiveTab("contacts")}
                     >
                         ✨ Contacts
-                        {user?.contacts?.length > 0 && (
-                            <span className="sidebar-tab-badge">{user.contacts.length}</span>
-                        )}
+                        {(() => {
+                            const onlineContactsCount = user?.contacts?.filter(c => {
+                                const uid = c.userId?._id?.toString() || c.userId?.toString();
+                                return onlineUsers.has(uid);
+                            }).length;
+                            return onlineContactsCount > 0 ? (
+                                <span className="sidebar-tab-badge online">{onlineContactsCount}</span>
+                            ) : null;
+                        })()}
                     </button>
                 </div>
 
