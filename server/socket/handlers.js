@@ -97,6 +97,9 @@ const registerSocketHandlers = (io) => {
                 };
 
                 io.to(chatId).emit("receive_message", { message: messagePayload });
+                
+                // Extra assurance: emit to sender's current socket
+                socket.emit("receive_message", { message: messagePayload });
 
                 const chat = await Chat.findById(chatId);
                 const otherParticipants = chat.participants.filter(

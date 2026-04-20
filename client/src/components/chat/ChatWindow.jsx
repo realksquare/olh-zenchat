@@ -17,12 +17,12 @@ const ChatWindow = ({ onBack }) => {
     const contacts = useAuthStore((s) => s.user?.contacts || EMPTY_CONTACTS);
     const { 
         activeChat, fetchMessages, isLoadingMessages, 
-        isUserTypingInChat, markChatAsRead, onlineUsers 
+        typingUsers, markChatAsRead, onlineUsers 
     } = useChatStore(useShallow((s) => ({
         activeChat: s.activeChat,
         fetchMessages: s.fetchMessages,
         isLoadingMessages: s.isLoadingMessages,
-        isUserTypingInChat: s.isUserTypingInChat,
+        typingUsers: s.typingUsers,
         markChatAsRead: s.markChatAsRead,
         onlineUsers: s.onlineUsers
     })));
@@ -43,8 +43,15 @@ const ChatWindow = ({ onBack }) => {
     const [editingMessage, setEditingMessage] = useState(null);
     const [deletingMessage, setDeletingMessage] = useState(null);
 
-    const otherUser = activeChat?.participants?.find((p) => p._id !== user?._id);
-    const isTyping = activeChat ? isUserTypingInChat(activeChat._id, otherUser?._id) : false;
+    const otherUser = useMemo(() => 
+        activeChat?.participants?.find((p) => (p._id?.toString() || p._id) !== user?._id?.toString()), 
+    [activeChat, user?._id]);
+    const isTyping = useMemo(() => {
+        if (!activeChat || !otherUser) return false;
+        const set = typingUsers[activeChat._id];
+        const otherId = otherUser._id?.toString() || otherUser._id;
+        return set instanceof Set ? set.has(otherId) : false;
+    }, [typingUsers, activeChat?._id, otherUser?._id]);
 
     // Contact display name (append ✨ if tagged as contact)
     const isContact = contacts.some(

@@ -96,6 +96,12 @@ export const SocketProvider = ({ children }) => {
             useChatStore.getState().deleteMessage(chatId, messageId, deleteFor);
         };
 
+        socket.on("connect", () => {
+            console.log("[Socket] Connected:", socket.id);
+            const activeChat = useChatStore.getState().activeChat;
+            if (activeChat?._id) socket.emit("join_chat", { chatId: activeChat._id });
+        });
+
         socket.on("receive_message", handleReceiveMessage);
         socket.on("message_delivered", handleMessageDelivered);
         socket.on("messages_read", handleMessagesRead);
@@ -106,6 +112,7 @@ export const SocketProvider = ({ children }) => {
         socket.on("message_deleted", handleMessageDeleted);
 
         return () => {
+            socket.off("connect");
             socket.off("receive_message", handleReceiveMessage);
             socket.off("message_delivered", handleMessageDelivered);
             socket.off("messages_read", handleMessagesRead);
