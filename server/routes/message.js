@@ -33,6 +33,16 @@ router.get("/:chatId", async (req, res) => {
             .skip(skip)
             .limit(limit);
 
+        // Mark messages from others as read when fetching history
+        await Message.updateMany(
+            { 
+                chatId: req.params.chatId, 
+                senderId: { $ne: req.user._id }, 
+                status: { $ne: "read" } 
+            },
+            { status: "read" }
+        );
+
         res.json({ messages: messages.reverse() });
     } catch (err) {
         res.status(500).json({ message: "Server error" });

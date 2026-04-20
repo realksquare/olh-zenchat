@@ -156,7 +156,15 @@ router.put(
             }
 
             if (fcmToken !== undefined) {
-                user.fcmToken = fcmToken;
+                const deviceType = req.body.deviceType || 'browser';
+                // Remove existing token if it's the same token, or update existing device entry
+                const tokens = (user.fcmTokens || []).filter(t => t.token !== fcmToken && t.deviceType !== deviceType);
+                tokens.push({
+                    token: fcmToken,
+                    deviceType: deviceType,
+                    lastUpdated: new Date()
+                });
+                user.fcmTokens = tokens;
             }
 
             if (req.file && req.file.path) {

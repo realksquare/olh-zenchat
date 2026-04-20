@@ -82,7 +82,9 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
         if (error.errorInfo?.code === 'messaging/registration-token-not-registered') {
             console.log(`[Firebase] Token unregistered — clearing for user ${userId}`);
             if (userId) {
-                await User.findByIdAndUpdate(userId, { fcmToken: "" }).exec();
+                await User.findByIdAndUpdate(userId, { 
+                    $pull: { fcmTokens: { token: fcmToken } } 
+                }).exec();
             }
         }
     }

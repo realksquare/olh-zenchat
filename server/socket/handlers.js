@@ -103,8 +103,7 @@ const registerSocketHandlers = (io) => {
                     (p) => p.toString() !== userId
                 );
 
-                let deliveredToAtLeastOne = false;
-
+                let isDelivered = false;
                 otherParticipants.forEach((participantId) => {
                     const userData = onlineUsers.get(participantId.toString());
                     const participantSockets = userData?.sockets;
@@ -117,14 +116,11 @@ const registerSocketHandlers = (io) => {
                                 io.to(socketId).emit("receive_message", { message: messagePayload });
                             }
                         });
-
-                        Message.findByIdAndUpdate(message._id, { status: "delivered" }).exec();
-                        deliveredToAtLeastOne = true;
+                        isDelivered = true;
                     } else {
                         User.findById(participantId).then(offlineUser => {
-                            if (offlineUser && offlineUser.notificationsEnabled && offlineUser.fcmToken) {
+                            if (offlineUser && offlineUser.notificationsEnabled && (offlineUser.fcmTokens?.length > 0 || offlineUser.fcmToken)) {
                                 const senderName = populated.senderId.username;
-                                
                                 const senderIsContact = offlineUser.contacts?.some(
                                     c => c.userId?.toString() === userId
                                 );
@@ -140,15 +136,40 @@ const registerSocketHandlers = (io) => {
                                     body = "🎥 Video";
                                 }
 
-                                sendPushNotification(offlineUser._id, offlineUser.fcmToken, title, body, {
-                                    chatId: chatId.toString(),
-                                    type: 'new_message',
-                                    isViewOnce: messagePayload.isViewOnce ? "true" : "false"
+                                const tokens = offlineUser.fcmTokens || [];
+                                const pwaTokens = tokens.filter(t => t.deviceType === 'pwa');
+                                const browserTokens = tokens.filter(t => t.deviceType === 'browser');
+                                
+                                let targetTokens = [];
+                                if (pwaTokens.length > 0) {
+                                    targetTokens = pwaTokens.map(t => t.token);
+                                } else if (browserTokens.length > 0) {
+                                    targetTokens = browserTokens.map(t => t.token);
+                                } else if (offlineUser.fcmToken) {
+                                    targetTokens = [offlineUser.fcmToken];
+                                }
+
+                                targetTokens.forEach(token => {
+                                    sendPushNotification(offlineUser._id, token, title, body, {
+                                        chatId: chatId.toString(),
+                                        type: 'new_message',
+                                        isViewOnce: messagePayload.isViewOnce ? "true" : "false"
+                                    });
                                 });
                             }
                         }).catch(console.error);
                     }
                 });
+
+                if (isDelivered) {
+                    await Message.findByIdAndUpdate(message._id, { status: "delivered" });
+                    const senderData = onlineUsers.get(userId);
+                    if (senderData && senderData.sockets) {
+                        senderData.sockets.forEach((dType, sId) => {
+                            io.to(sId).emit("message_delivered", { chatId: chatId.toString(), messageId: message._id.toString() });
+                        });
+                    }
+                }
 
                 const myData = onlineUsers.get(userId);
                 if (myData && myData.sockets) {
@@ -257,12 +278,13 @@ const registerSocketHandlers = (io) => {
 
         socket.on("message_read", async ({ chatId }) => {
             try {
+                const senderIdCriteria = { $ne: new mongoose.Types.ObjectId(userId) };
+                const chatIdCriteria = new mongoose.Types.ObjectId(chatId);
+
                 const result = await Message.updateMany(
-                    { chatId: new mongoose.Types.ObjectId(chatId), senderId: { $ne: new mongoose.Types.ObjectId(userId) }, status: { $ne: "read" } },
+                    { chatId: chatIdCriteria, senderId: senderIdCriteria, status: { $ne: "read" } },
                     { status: "read" }
                 );
-
-                if (result.modifiedCount === 0) return;
 
                 const chat = await Chat.findById(chatId);
                 if (!chat) return;
@@ -287,6 +309,7 @@ const registerSocketHandlers = (io) => {
                     });
                 }
             } catch (err) {
+                console.error("[DEBUG] message_read error:", err);
                 socket.emit("message_error", { error: "Failed to update read status" });
             }
         });

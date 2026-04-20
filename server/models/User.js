@@ -27,10 +27,13 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
-        fcmToken: {
-            type: String,
-            default: "",
-        },
+        fcmTokens: [
+            {
+                token: { type: String, required: true },
+                deviceType: { type: String, enum: ["browser", "pwa"], required: true },
+                lastUpdated: { type: Date, default: Date.now }
+            }
+        ],
         isOnline: {
             type: Boolean,
             default: false,
@@ -87,7 +90,7 @@ userSchema.methods.toPublicJSON = function () {
         isOnline: this.isOnline,
         lastSeen: this.lastSeen,
         notificationsEnabled: this.notificationsEnabled,
-        fcmToken: this.fcmToken,
+        fcmTokens: this.fcmTokens,
         contacts: this.contacts,
         privacySettings: this.privacySettings,
     };

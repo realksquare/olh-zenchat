@@ -95,6 +95,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             const formData = new FormData();
             formData.append("notificationsEnabled", "true");
             formData.append("fcmToken", token);
+            const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+            formData.append("deviceType", isPWA ? "pwa" : "browser");
             await updateProfile(formData);
             window.location.reload();
         } else {
@@ -103,7 +105,10 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     };
 
     const getInitials = (name) => name ? name.slice(0, 2).toUpperCase() : "??";
-    const isSubscribedInBrowser = Notification.permission === "granted" && user?.fcmToken;
+    const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+    const currentDeviceType = isPWA ? "pwa" : "browser";
+    const isSubscribedInBrowser = Notification.permission === "granted" && 
+                                  user?.fcmTokens?.some(t => t.deviceType === currentDeviceType);
 
     return createPortal(
         <div className="modal-overlay" onClick={onClose}>
