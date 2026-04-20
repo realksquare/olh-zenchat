@@ -6,26 +6,29 @@ const { uploadMedia } = require("../utils/cloudinary");
 
 const router = express.Router();
 
-router.get("/test-cloudinary", async (req, res) => {
+router.get("/test-cloudinary", (req, res) => {
+    const envCheck = {
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? "SET" : "MISSING",
+        api_key: process.env.CLOUDINARY_API_KEY ? "SET" : "MISSING",
+        api_secret: process.env.CLOUDINARY_API_SECRET ? "SET" : "MISSING"
+    };
+    res.send(`
+        <h1>Cloudinary Diagnostic</h1>
+        <pre>${JSON.stringify(envCheck, null, 2)}</pre>
+        <p>If you see this, the route is working. Next, try to ping Cloudinary below:</p>
+        <form action="/api/messages/ping-cloudinary" method="POST">
+            <button type="submit">Ping Cloudinary API</button>
+        </form>
+    `);
+});
+
+router.post("/ping-cloudinary", async (req, res) => {
     try {
         const { cloudinary } = require("../utils/cloudinary");
-        const envCheck = {
-            cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? "SET" : "MISSING",
-            api_key: process.env.CLOUDINARY_API_KEY ? "SET" : "MISSING",
-            api_secret: process.env.CLOUDINARY_API_SECRET ? "SET" : "MISSING"
-        };
         const result = await cloudinary.api.ping();
-        res.json({ success: true, envCheck, result });
+        res.json({ success: true, result });
     } catch (err) {
-        res.status(500).json({ 
-            success: false, 
-            envCheck: {
-                cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? "SET" : "MISSING",
-                api_key: process.env.CLOUDINARY_API_KEY ? "SET" : "MISSING",
-                api_secret: process.env.CLOUDINARY_API_SECRET ? "SET" : "MISSING"
-            },
-            error: err.message 
-        });
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
