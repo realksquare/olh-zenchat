@@ -183,7 +183,7 @@ const registerSocketHandlers = (io) => {
                             }
                         }).catch(console.error);
                     }
-                });        });
+                });
 
                 if (isDelivered) {
                     await Message.findByIdAndUpdate(message._id, { status: "delivered" });

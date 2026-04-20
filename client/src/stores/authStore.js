@@ -111,4 +111,4 @@ export const useAuthStore = create(
     {
         name: "zenchat-auth",
     }
-);
+));
