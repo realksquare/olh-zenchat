@@ -34,7 +34,7 @@ registerSocketHandlers(io);
 const PORT = process.env.PORT || 5000;
 
 connectDB().then(async () => {
-    await User.updateMany({}, { $set: { isOnline: false, lastSeen: new Date() } });
+    await User.updateMany({}, { $set: { isOnline: false } });
     console.log("🧹 Ghost users swept offline");
 
     server.listen(PORT, () => {
