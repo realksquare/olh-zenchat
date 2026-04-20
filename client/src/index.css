@@ -979,15 +979,18 @@ select {
 }
 
 .message-bubble.mine.status-sent {
-  background: #3a3d4a;
+  background: #334155; /* Refined Grey */
+  transition: background 0.4s ease;
 }
 
 .message-bubble.mine.status-delivered {
-  background: #1565a0;
+  background: #0369a1; /* Vibrant Zen Blue */
+  transition: background 0.4s ease;
 }
 
 .message-bubble.mine.status-read {
-  background: #1a6b3f;
+  background: #15803d; /* Vibrant Zen Green */
+  transition: background 0.4s ease;
 }
 
 .message-text {

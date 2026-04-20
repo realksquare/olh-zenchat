@@ -77,6 +77,7 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
     try {
         const response = await admin.messaging().send(message);
         console.log(`[Firebase] Push sent to user ${userId}:`, response);
+        return true;
     } catch (error) {
         console.error(`[Firebase] Error sending push to user ${userId}:`, error.message);
         if (error.errorInfo?.code === 'messaging/registration-token-not-registered') {
@@ -87,6 +88,7 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
                 }).exec();
             }
         }
+        return false;
     }
 };
 

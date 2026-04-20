@@ -118,7 +118,8 @@ const registerSocketHandlers = (io) => {
                         });
                         isDelivered = true;
                     } else {
-                        User.findById(participantId).then(offlineUser => {
+                        // User is offline: Try Push Notification
+                        User.findById(participantId).then(async (offlineUser) => {
                             if (offlineUser && offlineUser.notificationsEnabled && (offlineUser.fcmTokens?.length > 0 || offlineUser.fcmToken)) {
                                 const senderName = populated.senderId.username;
                                 const senderIsContact = offlineUser.contacts?.some(
@@ -127,8 +128,17 @@ const registerSocketHandlers = (io) => {
                                 const notifSenderName = senderIsContact ? `${senderName} ✨` : senderName;
                                 const title = `New message from ${notifSenderName}`;
                                 
+                                // Aggregation logic: check for other unread messages in this chat
+                                const unreadCount = await Message.countDocuments({
+                                    chatId,
+                                    senderId: userId,
+                                    status: { $ne: "read" }
+                                });
+
                                 let body = messagePayload.content;
-                                if (messagePayload.isViewOnce) {
+                                if (unreadCount > 1) {
+                                    body = `${unreadCount} new messages`;
+                                } else if (messagePayload.isViewOnce) {
                                     body = "📷 Sent a view-once media";
                                 } else if (messagePayload.type === 'image') {
                                     body = "📷 Image";
@@ -149,17 +159,31 @@ const registerSocketHandlers = (io) => {
                                     targetTokens = [offlineUser.fcmToken];
                                 }
 
-                                targetTokens.forEach(token => {
-                                    sendPushNotification(offlineUser._id, token, title, body, {
+                                // Send to all target tokens
+                                let pushSuccess = false;
+                                for (const tkn of targetTokens) {
+                                    const success = await sendPushNotification(offlineUser._id, tkn, title, body, {
                                         chatId: chatId.toString(),
                                         type: 'new_message',
                                         isViewOnce: messagePayload.isViewOnce ? "true" : "false"
                                     });
-                                });
+                                    if (success) pushSuccess = true;
+                                }
+
+                                // If push reached Google servers, mark as delivered
+                                if (pushSuccess) {
+                                    await Message.findByIdAndUpdate(message._id, { status: "delivered" });
+                                    const senderData = onlineUsers.get(userId);
+                                    if (senderData && senderData.sockets) {
+                                        senderData.sockets.forEach((dType, sId) => {
+                                            io.to(sId).emit("message_delivered", { chatId: chatId.toString(), messageId: message._id.toString() });
+                                        });
+                                    }
+                                }
                             }
                         }).catch(console.error);
                     }
-                });
+                });        });
 
                 if (isDelivered) {
                     await Message.findByIdAndUpdate(message._id, { status: "delivered" });

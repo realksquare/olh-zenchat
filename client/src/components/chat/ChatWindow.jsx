@@ -58,9 +58,8 @@ const ChatWindow = ({ onBack }) => {
 
         joinChat(chatId);
         fetchMessages(chatId).then(() => {
-            // Temporarily disabled to prevent Error #185 loop
-            // markChatAsRead(chatId);
-            // markAsRead(chatId);
+            markChatAsRead(chatId);
+            markAsRead(chatId);
         });
 
         // Simplified: only one passive attempt after a delay
@@ -235,4 +234,4 @@ const ChatWindow = ({ onBack }) => {
     );
 };
 
-export default ChatWindow;
+export default memo(ChatWindow);
