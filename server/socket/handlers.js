@@ -103,7 +103,10 @@ const registerSocketHandlers = (io) => {
 
                 const chat = await Chat.findById(chatId);
                 const otherParticipants = chat.participants.filter(
-                    (p) => p.toString() !== userId
+                    (p) => {
+                        const pid = p._id?.toString() || p.toString();
+                        return pid !== userId?.toString();
+                    }
                 );
 
                 let isDelivered = false;
@@ -122,69 +125,83 @@ const registerSocketHandlers = (io) => {
                         isDelivered = true;
                     } else {
                         // User is offline: Try Push Notification
-                        User.findById(participantId).then(async (offlineUser) => {
-                            if (offlineUser && offlineUser.notificationsEnabled && (offlineUser.fcmTokens?.length > 0 || offlineUser.fcmToken)) {
-                                const senderName = populated.senderId.username;
-                                const senderIsContact = offlineUser.contacts?.some(
-                                    c => c.userId?.toString() === userId
-                                );
-                                const notifSenderName = senderIsContact ? `${senderName} ✨` : senderName;
-                                const title = `New message from ${notifSenderName}`;
-                                
-                                // Aggregation logic: check for other unread messages in this chat
-                                const unreadCount = await Message.countDocuments({
-                                    chatId,
-                                    senderId: userId,
-                                    status: { $ne: "read" }
+                        const pIdStr = participantId._id?.toString() || participantId.toString();
+                        console.log(`[Push] User ${pIdStr} is offline, checking for push...`);
+                        
+                        User.findById(pIdStr).then(async (offlineUser) => {
+                            if (!offlineUser) {
+                                console.warn(`[Push] User ${pIdStr} not found in DB.`);
+                                return;
+                            }
+                            
+                            if (!offlineUser.notificationsEnabled) {
+                                console.log(`[Push] User ${pIdStr} has notifications DISABLED.`);
+                                return;
+                            }
+
+                            const tokens = offlineUser.fcmTokens || [];
+                            if (tokens.length === 0 && !offlineUser.fcmToken) {
+                                console.log(`[Push] User ${pIdStr} has NO valid FCM tokens.`);
+                                return;
+                            }
+
+                            const senderName = populated.senderId.username;
+                            const senderIsContact = offlineUser.contacts?.some(
+                                c => c.userId?.toString() === userId?.toString()
+                            );
+                            const notifSenderName = senderIsContact ? `${senderName} ✨` : senderName;
+                            const title = `New message from ${notifSenderName}`;
+                            
+                            const unreadCount = await Message.countDocuments({
+                                chatId,
+                                senderId: userId,
+                                status: { $ne: "read" }
+                            });
+
+                            let body = messagePayload.content;
+                            if (unreadCount > 1) {
+                                body = `${unreadCount} new messages`;
+                            } else if (messagePayload.isViewOnce) {
+                                body = "📷 Sent a view-once media";
+                            } else if (messagePayload.type === 'image') {
+                                body = "📷 Image";
+                            } else if (messagePayload.type === 'video') {
+                                body = "🎥 Video";
+                            }
+
+                            const pwaTokens = tokens.filter(t => t.deviceType === 'pwa');
+                            const browserTokens = tokens.filter(t => t.deviceType === 'browser');
+                            
+                            let targetTokens = [];
+                            if (pwaTokens.length > 0) {
+                                targetTokens = pwaTokens.map(t => t.token);
+                            } else if (browserTokens.length > 0) {
+                                targetTokens = browserTokens.map(t => t.token);
+                            } else if (offlineUser.fcmToken) {
+                                targetTokens = [offlineUser.fcmToken];
+                            }
+
+                            console.log(`[Push] Sending to ${targetTokens.length} tokens for user ${pIdStr}...`);
+                            let pushSuccess = false;
+                            for (const tkn of targetTokens) {
+                                const success = await sendPushNotification(offlineUser._id, tkn, title, body, {
+                                    chatId: chatId.toString(),
+                                    type: 'new_message',
+                                    isViewOnce: messagePayload.isViewOnce ? "true" : "false"
                                 });
+                                if (success) pushSuccess = true;
+                            }
 
-                                let body = messagePayload.content;
-                                if (unreadCount > 1) {
-                                    body = `${unreadCount} new messages`;
-                                } else if (messagePayload.isViewOnce) {
-                                    body = "📷 Sent a view-once media";
-                                } else if (messagePayload.type === 'image') {
-                                    body = "📷 Image";
-                                } else if (messagePayload.type === 'video') {
-                                    body = "🎥 Video";
-                                }
-
-                                const tokens = offlineUser.fcmTokens || [];
-                                const pwaTokens = tokens.filter(t => t.deviceType === 'pwa');
-                                const browserTokens = tokens.filter(t => t.deviceType === 'browser');
-                                
-                                let targetTokens = [];
-                                if (pwaTokens.length > 0) {
-                                    targetTokens = pwaTokens.map(t => t.token);
-                                } else if (browserTokens.length > 0) {
-                                    targetTokens = browserTokens.map(t => t.token);
-                                } else if (offlineUser.fcmToken) {
-                                    targetTokens = [offlineUser.fcmToken];
-                                }
-
-                                // Send to all target tokens
-                                let pushSuccess = false;
-                                for (const tkn of targetTokens) {
-                                    const success = await sendPushNotification(offlineUser._id, tkn, title, body, {
-                                        chatId: chatId.toString(),
-                                        type: 'new_message',
-                                        isViewOnce: messagePayload.isViewOnce ? "true" : "false"
+                            if (pushSuccess) {
+                                await Message.findByIdAndUpdate(message._id, { status: "delivered" });
+                                const senderData = onlineUsers.get(userId);
+                                if (senderData && senderData.sockets) {
+                                    senderData.sockets.forEach((dType, sId) => {
+                                        io.to(sId).emit("message_delivered", { chatId: chatId.toString(), messageId: message._id.toString() });
                                     });
-                                    if (success) pushSuccess = true;
-                                }
-
-                                // If push reached Google servers, mark as delivered
-                                if (pushSuccess) {
-                                    await Message.findByIdAndUpdate(message._id, { status: "delivered" });
-                                    const senderData = onlineUsers.get(userId);
-                                    if (senderData && senderData.sockets) {
-                                        senderData.sockets.forEach((dType, sId) => {
-                                            io.to(sId).emit("message_delivered", { chatId: chatId.toString(), messageId: message._id.toString() });
-                                        });
-                                    }
                                 }
                             }
-                        }).catch(console.error);
+                        }).catch(err => console.error(`[Push] Error in handlers:`, err));
                     }
                 });
 

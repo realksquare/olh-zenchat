@@ -63,6 +63,11 @@ const ChatWindow = ({ onBack }) => {
         if (!activeChat?._id) return;
         const chatId = activeChat._id;
 
+        // Only mark as read if the chat window is actually visible in mobile layout
+        // or we are on desktop (where showChat is implicitly true/handled by layout)
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile && !onBack) return; // Basic check for visibility context
+
         joinChat(chatId);
         fetchMessages(chatId).then(() => {
             markChatAsRead(chatId);
@@ -88,8 +93,9 @@ const ChatWindow = ({ onBack }) => {
     }, [activeChat?._id]);
 
     useEffect(() => {
+        // Only auto-scroll on new messages, not typing status changes
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages.length, isTyping]);
+    }, [messages.length]);
 
     const [tick, setTick] = useState(0);
 

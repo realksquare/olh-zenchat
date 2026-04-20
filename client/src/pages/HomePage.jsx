@@ -17,11 +17,11 @@ const HomePage = () => {
     }, [token]);
 
     useEffect(() => {
-        if (!activeChat?._id) return;
-        setShowChat(true);
+        setShowChat(!!activeChat?._id);
     }, [activeChat?._id]);
 
     const handleBackToSidebar = () => {
+        useChatStore.getState().setActiveChat(null);
         setShowChat(false);
     };
 
