@@ -355,7 +355,7 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
                     {editingMessage ? " | Esc to cancel" : ""}
                 </span>
                 {isViewOnce && (
-                    <span className="view-once-hint">View Once - upload a file</span>
+                    <span className="view-once-hint">View Once is active (valid only for media)</span>
                 )}
             </div>
 

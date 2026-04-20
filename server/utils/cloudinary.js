@@ -2,6 +2,10 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
 
+if (!process.env.CLOUDINARY_CLOUD_NAME) {
+  console.error("[Cloudinary] CRITICAL: CLOUDINARY_CLOUD_NAME is missing!");
+}
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -19,17 +23,14 @@ const avatarStorage = new CloudinaryStorage({
 
 const mediaStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: async (req, file) => {
-    const isVideo = file.mimetype.startsWith("video/");
+  params: (req, file) => {
+    const isVideo = file.mimetype && file.mimetype.startsWith("video/");
     return {
       folder: "zenchat_media",
-      resource_type: isVideo ? "video" : "image",
+      resource_type: isVideo ? "video" : "auto", // 'auto' is safer than 'image' for mixed media
       allowed_formats: isVideo
         ? ["mp4", "mov", "webm", "mpeg", "avi", "mkv", "m4v"]
         : ["jpg", "jpeg", "png", "webp", "gif", "avif"],
-      transformation: isVideo
-        ? [{ quality: "auto" }]
-        : [{ width: 1200, crop: "limit", quality: "auto", fetch_format: "auto" }]
     };
   }
 });

@@ -159,6 +159,13 @@ const registerSocketHandlers = (io) => {
                             const notifSenderName = senderIsContact ? `${senderName} ✨` : senderName;
                             const title = `New message from ${notifSenderName}`;
                             
+                            // Sync: Mark all previous 'sent' messages in this chat from sender as 'delivered'
+                            // since we are about to trigger a push notification for them.
+                            await Message.updateMany(
+                                { chatId, senderId: userId, status: "sent" },
+                                { status: "delivered" }
+                            );
+
                             const unreadCount = await Message.countDocuments({
                                 chatId,
                                 senderId: userId,
