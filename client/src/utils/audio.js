@@ -34,7 +34,7 @@ function playTone({ startFreq, endFreq, duration = 0.12, type = "sine", volume =
 }
 
 export const playSendSound = () => {
-    playTone({ startFreq: 440, endFreq: 880, duration: 0.1, type: "sine", volume: 0.18 });
+    playTone({ startFreq: 440, endFreq: 880, duration: 0.1, type: "sine", volume: 0.06 });
 };
 
 export const playReceiveSound = () => {
@@ -47,7 +47,7 @@ export const playReceiveSound = () => {
         osc1.type = "sine";
         osc1.frequency.setValueAtTime(880, ctx.currentTime);
         osc1.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.09);
-        gain1.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain1.gain.setValueAtTime(0.05, ctx.currentTime);
         gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.09);
         osc1.start(ctx.currentTime);
         osc1.stop(ctx.currentTime + 0.1);
@@ -59,7 +59,7 @@ export const playReceiveSound = () => {
         osc2.type = "sine";
         osc2.frequency.setValueAtTime(660, ctx.currentTime + 0.1);
         osc2.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.2);
-        gain2.gain.setValueAtTime(0.12, ctx.currentTime + 0.1);
+        gain2.gain.setValueAtTime(0.04, ctx.currentTime + 0.1);
         gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
         osc2.start(ctx.currentTime + 0.1);
         osc2.stop(ctx.currentTime + 0.23);

@@ -13,7 +13,11 @@ const HomePage = () => {
     const [showChat, setShowChat] = useState(false);
 
     useEffect(() => {
-        if (token) fetchChats();
+        if (token) {
+            fetchChats();
+            // Force empty state on refresh
+            useChatStore.getState().setActiveChat(null);
+        }
     }, [token]);
 
     useEffect(() => {

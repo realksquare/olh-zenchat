@@ -66,13 +66,17 @@ const ChatWindow = ({ onBack }) => {
         // Only mark as read if the chat window is actually visible in mobile layout
         // or we are on desktop (where showChat is implicitly true/handled by layout)
         const isMobile = window.innerWidth <= 768;
-        if (isMobile && !onBack) return; // Basic check for visibility context
-
-        joinChat(chatId);
-        fetchMessages(chatId).then(() => {
+        const markIfVisible = () => {
+            if (isMobile && !onBack) return;
+            if (!isMobile && !document.hasFocus()) return;
             markChatAsRead(chatId);
             markAsRead(chatId);
-        });
+        };
+
+        joinChat(chatId);
+        fetchMessages(chatId).then(markIfVisible);
+        window.addEventListener('focus', markIfVisible);
+        return () => window.removeEventListener('focus', markIfVisible);
 
         // Simplified: only one passive attempt after a delay
         const timer = setTimeout(() => {

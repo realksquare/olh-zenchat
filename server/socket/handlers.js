@@ -165,16 +165,12 @@ const registerSocketHandlers = (io) => {
                                 status: { $ne: "read" }
                             });
 
-                            let body = messagePayload.content;
-                            if (unreadCount > 1) {
-                                body = `${unreadCount} new messages`;
-                            } else if (messagePayload.isViewOnce) {
-                                body = "📷 Sent a view-once media";
-                            } else if (messagePayload.type === 'image') {
-                                body = "📷 Image";
-                            } else if (messagePayload.type === 'video') {
-                                body = "🎥 Video";
-                            }
+                            let bodyText = messagePayload.content;
+                            if (messagePayload.isViewOnce) bodyText = "📷 Sent a view-once media";
+                            else if (messagePayload.type === 'image') bodyText = "📷 Image";
+                            else if (messagePayload.type === 'video') bodyText = "🎥 Video";
+
+                            const body = unreadCount > 1 ? `(${unreadCount}) ${bodyText}` : bodyText;
 
                             const pwaTokens = tokens.filter(t => t.deviceType === 'pwa');
                             const browserTokens = tokens.filter(t => t.deviceType === 'browser');
@@ -319,12 +315,26 @@ const registerSocketHandlers = (io) => {
             }
         });
 
-        socket.on("typing_start", ({ chatId }) => {
-            socket.to(chatId).emit("typing_status", { userId, chatId, isTyping: true });
+        socket.on("typing_start", async ({ chatId }) => {
+            const chat = await Chat.findById(chatId);
+            if (!chat) return;
+            chat.participants.forEach(pId => {
+                const pIdStr = pId.toString();
+                if (pIdStr !== userId) {
+                    io.to(pIdStr).emit("typing_status", { userId, chatId, isTyping: true });
+                }
+            });
         });
 
-        socket.on("typing_stop", ({ chatId }) => {
-            socket.to(chatId).emit("typing_status", { userId, chatId, isTyping: false });
+        socket.on("typing_stop", async ({ chatId }) => {
+            const chat = await Chat.findById(chatId);
+            if (!chat) return;
+            chat.participants.forEach(pId => {
+                const pIdStr = pId.toString();
+                if (pIdStr !== userId) {
+                    io.to(pIdStr).emit("typing_status", { userId, chatId, isTyping: false });
+                }
+            });
         });
 
         socket.on("message_read", async ({ chatId }) => {
@@ -373,8 +383,8 @@ const registerSocketHandlers = (io) => {
                     userData.hasPWA = Array.from(userData.sockets.values()).includes("pwa");
                     
                     if (userData.sockets.size === 0) {
-                        // Start 30s grace period
-                        console.log(`[GracePeriod] User ${userId} disconnected, starting 30s timer...`);
+                        // Start 7s grace period
+                        console.log(`[GracePeriod] User ${userId} disconnected, starting 7s timer...`);
                         const timeoutId = setTimeout(async () => {
                             const currentData = onlineUsers.get(userId);
                             if (currentData && currentData.sockets.size === 0) {
@@ -385,12 +395,12 @@ const registerSocketHandlers = (io) => {
                                 try {
                                     await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen });
                                     io.emit("user_offline", { userId, lastSeen });
-                                    console.log(`[GracePeriod] User ${userId} marked offline after 30s.`);
+                                    console.log(`[GracePeriod] User ${userId} marked offline after 7s.`);
                                 } catch (err) {
                                     console.error("[GracePeriod] Error marking offline:", err);
                                 }
                             }
-                        }, 30000);
+                        }, 7000);
                         
                         disconnectTimeouts.set(userId, timeoutId);
                     }
