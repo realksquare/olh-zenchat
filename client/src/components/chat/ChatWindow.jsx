@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useMemo, memo } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import { useSocket } from "../../context/SocketContext";
@@ -14,12 +15,17 @@ const ChatWindow = ({ onBack }) => {
     const { user } = useAuthStore();
     // Get the contacts list from auth store to show ✨ for contacts
     const contacts = useAuthStore((s) => s.user?.contacts || EMPTY_CONTACTS);
-    const activeChat = useChatStore((s) => s.activeChat);
-    const fetchMessages = useChatStore((s) => s.fetchMessages);
-    const isLoadingMessages = useChatStore((s) => s.isLoadingMessages);
-    const isUserTypingInChat = useChatStore((s) => s.isUserTypingInChat);
-    const markChatAsRead = useChatStore((s) => s.markChatAsRead);
-    const onlineUsers = useChatStore((s) => s.onlineUsers);
+    const { 
+        activeChat, fetchMessages, isLoadingMessages, 
+        isUserTypingInChat, markChatAsRead, onlineUsers 
+    } = useChatStore(useShallow((s) => ({
+        activeChat: s.activeChat,
+        fetchMessages: s.fetchMessages,
+        isLoadingMessages: s.isLoadingMessages,
+        isUserTypingInChat: s.isUserTypingInChat,
+        markChatAsRead: s.markChatAsRead,
+        onlineUsers: s.onlineUsers
+    })));
 
     const [showOnlyStarred, setShowOnlyStarred] = useState(false);
     const rawMessages = useChatStore((s) =>

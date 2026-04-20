@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, memo } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import axiosInstance from "../../utils/axios";
@@ -7,7 +8,18 @@ import ProfileModal from "../ui/ProfileModal";
 
 const Sidebar = ({ onChatSelect }) => {
     const { user, logout } = useAuthStore();
-    const { chats, activeChat, setActiveChat, addChat, isLoadingChats, togglePinChat } = useChatStore();
+    const { 
+        chats, activeChat, setActiveChat, 
+        addChat, isLoadingChats, togglePinChat, onlineUsers 
+    } = useChatStore(useShallow((s) => ({
+        chats: s.chats,
+        activeChat: s.activeChat,
+        setActiveChat: s.setActiveChat,
+        addChat: s.addChat,
+        isLoadingChats: s.isLoadingChats,
+        togglePinChat: s.togglePinChat,
+        onlineUsers: s.onlineUsers
+    })));
     const [search, setSearch] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
