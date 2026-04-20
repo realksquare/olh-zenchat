@@ -8,11 +8,12 @@ import TypingIndicator from "./TypingIndicator";
 import { formatDistanceToNow } from "date-fns";
 
 const EMPTY_MESSAGES = [];
+const EMPTY_CONTACTS = [];
 
 const ChatWindow = ({ onBack }) => {
     const { user } = useAuthStore();
     // Get the contacts list from auth store to show ✨ for contacts
-    const contacts = useAuthStore((s) => s.user?.contacts || []);
+    const contacts = useAuthStore((s) => s.user?.contacts || EMPTY_CONTACTS);
     const activeChat = useChatStore((s) => s.activeChat);
     const fetchMessages = useChatStore((s) => s.fetchMessages);
     const isLoadingMessages = useChatStore((s) => s.isLoadingMessages);

@@ -6,7 +6,9 @@ const TOKEN_KEY = "zenchat_token";
 const USER_KEY = "zenchat_user";
 
 export const useAuthStore = create(
+/*
     persist(
+*/
         (set) => ({
     token: localStorage.getItem(TOKEN_KEY) || null,
     user: JSON.parse(localStorage.getItem(USER_KEY)) || null,
@@ -107,8 +109,12 @@ export const useAuthStore = create(
                 console.error("Failed to toggle contact:", err);
             }
         },
-    }),
+    })
+/*
+    ,
     {
         name: "zenchat-auth",
     }
-));
+    )
+*/
+););
