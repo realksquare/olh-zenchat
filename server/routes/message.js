@@ -54,7 +54,8 @@ router.post("/:chatId/upload", uploadMedia.single("file"), async (req, res) => {
         if (!req.file) return res.status(400).json({ message: "No file uploaded" });
         res.json({ mediaUrl: req.file.path });
     } catch (err) {
-        res.status(500).json({ message: "Server error" });
+        console.error("[Upload] Media upload failed:", err);
+        res.status(500).json({ message: "Server error during upload", error: err.message });
     }
 });
 

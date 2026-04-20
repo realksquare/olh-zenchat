@@ -6,6 +6,8 @@ import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
 import InstallPWA from "./components/ui/InstallPWA";
 import { primeAudioContext } from "./utils/audio";
+import { requestNotificationPermission } from "./utils/firebase";
+import axiosInstance from "./utils/axios";
 
 const ProtectedRoute = ({ children }) => {
   const token = useAuthStore((state) => state.token);
@@ -18,15 +20,37 @@ const GuestRoute = ({ children }) => {
 };
 
 const App = () => {
+  const { user, token } = useAuthStore();
+
   useEffect(() => {
-    // Prime AudioContext on first user interaction (required by browsers/PWA)
+    // Prime AudioContext on first user interaction
     const prime = () => { primeAudioContext(); };
     window.addEventListener('touchstart', prime, { once: true });
     window.addEventListener('mousedown', prime, { once: true });
 
-    // Empty effect for focus management if needed later
+    // Handle FCM token registration
+    if (token && user) {
+      const registerFCM = async () => {
+        const fcmToken = await requestNotificationPermission();
+        if (fcmToken) {
+          try {
+            const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+            await axiosInstance.put("/auth/me", { 
+              fcmToken,
+              deviceType: isPWA ? "pwa" : "browser",
+              notificationsEnabled: true // Enable by default if they grant permission
+            });
+            console.log("[FCM] Token registered successfully");
+          } catch (err) {
+            console.error("[FCM] Failed to register token with backend", err);
+          }
+        }
+      };
+      registerFCM();
+    }
+
     return () => {};
-  }, []);
+  }, [token, user?._id]);
 
   return (
     <>

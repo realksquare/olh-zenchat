@@ -5,12 +5,19 @@ const mongoose = require("mongoose");
 const { sendPushNotification } = require("../utils/firebase");
 
 const onlineUsers = new Map();
+const disconnectTimeouts = new Map(); // For 30s grace period
 
 const registerSocketHandlers = (io) => {
     io.on("connection", (socket) => {
         const { userId, deviceType } = socket.handshake.auth;
 
         if (userId) {
+            // Cancel pending offline timer on reconnect
+            if (disconnectTimeouts.has(userId)) {
+                clearTimeout(disconnectTimeouts.get(userId));
+                disconnectTimeouts.delete(userId);
+            }
+
             if (!onlineUsers.has(userId)) {
                 onlineUsers.set(userId, { sockets: new Map(), hasPWA: false });
             }
@@ -364,11 +371,28 @@ const registerSocketHandlers = (io) => {
                 if (userData) {
                     userData.sockets.delete(socket.id);
                     userData.hasPWA = Array.from(userData.sockets.values()).includes("pwa");
+                    
                     if (userData.sockets.size === 0) {
-                        onlineUsers.delete(userId);
-                        const lastSeen = new Date();
-                        await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen });
-                        io.emit("user_offline", { userId, lastSeen });
+                        // Start 30s grace period
+                        console.log(`[GracePeriod] User ${userId} disconnected, starting 30s timer...`);
+                        const timeoutId = setTimeout(async () => {
+                            const currentData = onlineUsers.get(userId);
+                            if (currentData && currentData.sockets.size === 0) {
+                                onlineUsers.delete(userId);
+                                disconnectTimeouts.delete(userId);
+                                
+                                const lastSeen = new Date();
+                                try {
+                                    await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen });
+                                    io.emit("user_offline", { userId, lastSeen });
+                                    console.log(`[GracePeriod] User ${userId} marked offline after 30s.`);
+                                } catch (err) {
+                                    console.error("[GracePeriod] Error marking offline:", err);
+                                }
+                            }
+                        }, 30000);
+                        
+                        disconnectTimeouts.set(userId, timeoutId);
                     }
                 }
             }
