@@ -1,10 +1,5 @@
 const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
-
-if (!process.env.CLOUDINARY_CLOUD_NAME) {
-  console.error("[Cloudinary] CRITICAL: CLOUDINARY_CLOUD_NAME is missing!");
-}
 
 cloudinary.config({
   cloud_name: (process.env.CLOUDINARY_CLOUD_NAME || "").trim(),
@@ -12,29 +7,14 @@ cloudinary.config({
   api_secret: (process.env.CLOUDINARY_API_SECRET || "").trim()
 });
 
-const avatarStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'zenchat_avatars',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-    transformation: [{ width: 500, height: 500, crop: 'limit' }]
-  }
-});
+// Use memory storage to avoid middleware crashes
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-const mediaStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: "zenchat_media",
-    resource_type: "auto",
-  }
-});
-
-const upload = multer({ storage: avatarStorage });
+// Higher limit for media
 const uploadMedia = multer({
-  storage: mediaStorage,
-  limits: {
-    fileSize: 7 * 1024 * 1024
-  }
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 });
 
 module.exports = { cloudinary, upload, uploadMedia };

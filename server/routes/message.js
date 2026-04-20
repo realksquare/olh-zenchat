@@ -6,32 +6,6 @@ const { uploadMedia } = require("../utils/cloudinary");
 
 const router = express.Router();
 
-router.get("/test-cloudinary", (req, res) => {
-    const envCheck = {
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME ? "SET" : "MISSING",
-        api_key: process.env.CLOUDINARY_API_KEY ? "SET" : "MISSING",
-        api_secret: process.env.CLOUDINARY_API_SECRET ? "SET" : "MISSING"
-    };
-    res.send(`
-        <h1>Cloudinary Diagnostic</h1>
-        <pre>${JSON.stringify(envCheck, null, 2)}</pre>
-        <p>If you see this, the route is working. Next, try to ping Cloudinary below:</p>
-        <form action="/api/messages/ping-cloudinary" method="POST">
-            <button type="submit">Ping Cloudinary API</button>
-        </form>
-    `);
-});
-
-router.post("/ping-cloudinary", async (req, res) => {
-    try {
-        const { cloudinary } = require("../utils/cloudinary");
-        const result = await cloudinary.api.ping();
-        res.json({ success: true, result });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
-
 router.use(authMiddleware);
 
 router.get("/:chatId", async (req, res) => {
@@ -75,25 +49,39 @@ router.get("/:chatId", async (req, res) => {
     }
 });
 
-router.post("/:chatId/upload", (req, res, next) => {
-    uploadMedia.single("file")(req, res, (err) => {
-        if (err) {
-            console.error("[Upload] Error caught in middleware:", err);
-            return res.status(500).json({ 
-                message: "Upload middleware failed", 
-                error: err.message,
-                code: err.code
-            });
-        }
-        next();
-    });
-}, async (req, res) => {
+router.post("/:chatId/upload", uploadMedia.single("file"), async (req, res) => {
     try {
-        if (!req.file) return res.status(400).json({ message: "No file uploaded" });
-        res.json({ mediaUrl: req.file.path });
+        if (!req.file) {
+            return res.status(400).json({ message: "No file provided" });
+        }
+
+        const { cloudinary } = require("../utils/cloudinary");
+        
+        // Manual upload to Cloudinary using a buffer
+        const uploadToCloudinary = (fileBuffer) => {
+            return new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: "zenchat_media",
+                        resource_type: "auto"
+                    },
+                    (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    }
+                );
+                uploadStream.end(fileBuffer);
+            });
+        };
+
+        const result = await uploadToCloudinary(req.file.buffer);
+        res.json({ mediaUrl: result.secure_url });
     } catch (err) {
-        console.error("[Upload] Route handler error:", err);
-        res.status(500).json({ message: "Server error during upload completion" });
+        console.error("[Upload] Manual upload failed:", err);
+        res.status(500).json({ 
+            message: "Upload failed during Cloudinary processing", 
+            error: err.message 
+        });
     }
 });
 
