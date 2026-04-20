@@ -47,22 +47,27 @@ const ChatWindow = ({ onBack }) => {
 
     useEffect(() => {
         if (!activeChat?._id) return;
+        const chatId = activeChat._id;
 
-        joinChat(activeChat._id);
-        fetchMessages(activeChat._id).then(() => {
-            markChatAsRead(activeChat._id);
-            markAsRead(activeChat._id);
+        joinChat(chatId);
+        fetchMessages(chatId).then(() => {
+            // Temporarily disabled to prevent Error #185 loop
+            // markChatAsRead(chatId);
+            // markAsRead(chatId);
         });
 
+        // Simplified: only one passive attempt after a delay
         const timer = setTimeout(() => {
-            markAsRead(activeChat._id);
-        }, 500);
+            if (activeChat?._id === chatId) {
+                markAsRead(chatId);
+            }
+        }, 1000);
 
         return () => {
             clearTimeout(timer);
-            leaveChat(activeChat._id);
+            leaveChat(chatId);
         };
-    }, [activeChat?._id]); // Only re-run if chat ID changes
+    }, [activeChat?._id]); // STRICT dependency on ID only
 
     useEffect(() => {
         setEditingMessage(null);
