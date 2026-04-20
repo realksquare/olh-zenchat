@@ -117,7 +117,7 @@ export const SocketProvider = ({ children }) => {
             socket.disconnect();
             socketRef.current = null;
         };
-    }, [token, user]);
+    }, [token, user?._id]);
 
     const joinChat = useCallback((chatId) => {
         socketRef.current?.emit("join_chat", { chatId });

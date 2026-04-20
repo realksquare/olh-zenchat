@@ -24,18 +24,8 @@ const App = () => {
     window.addEventListener('touchstart', prime, { once: true });
     window.addEventListener('mousedown', prime, { once: true });
 
-    const handleFocus = () => {
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_NOTIFICATIONS' });
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-    handleFocus();
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
+    // Empty effect for focus management if needed later
+    return () => {};
   }, []);
 
   return (
