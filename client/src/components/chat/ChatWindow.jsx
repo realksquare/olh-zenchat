@@ -62,7 +62,7 @@ const ChatWindow = ({ onBack }) => {
             clearTimeout(timer);
             leaveChat(activeChat._id);
         };
-    }, [activeChat?._id, joinChat, leaveChat, fetchMessages, markChatAsRead, markAsRead]);
+    }, [activeChat?._id]); // Only re-run if chat ID changes
 
     useEffect(() => {
         setEditingMessage(null);

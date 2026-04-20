@@ -185,14 +185,21 @@ export const SocketProvider = ({ children }) => {
         }
     }, []);
 
+    const socketValue = useMemo(() => ({
+        socket: socketRef.current,
+        joinChat,
+        leaveChat,
+        sendMessage,
+        startTyping,
+        stopTyping,
+        markAsRead,
+        editMessage,
+        deleteMessage,
+        isOnline: navigator.onLine
+    }), [joinChat, leaveChat, sendMessage, startTyping, stopTyping, markAsRead, editMessage, deleteMessage]);
+
     return (
-        <SocketContext.Provider value={{
-            socket: socketRef.current,
-            joinChat, leaveChat, sendMessage,
-            startTyping, stopTyping, markAsRead,
-            editMessage, deleteMessage,
-            isOnline: navigator.onLine
-        }}>
+        <SocketContext.Provider value={socketValue}>
             {children}
         </SocketContext.Provider>
     );

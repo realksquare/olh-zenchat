@@ -17,11 +17,9 @@ const HomePage = () => {
     }, [token]);
 
     useEffect(() => {
-        if (!activeChat) return;
-        joinChat(activeChat._id);
+        if (!activeChat?._id) return;
         setShowChat(true);
-        return () => leaveChat(activeChat._id);
-    }, [activeChat]);
+    }, [activeChat?._id]);
 
     const handleBackToSidebar = () => {
         setShowChat(false);
