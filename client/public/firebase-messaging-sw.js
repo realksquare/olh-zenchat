@@ -1,3 +1,4 @@
+// ZenChat Service Worker v1.3 - Simple Notifications
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 
@@ -27,16 +28,7 @@ try {
             body = "📷 Sent a view-once media";
         }
 
-        // If there's already a pending notification, collapse them
-        if (existingNotifs.length > 0) {
-            const prev = existingNotifs[0];
-            count = (prev.data?.count || 1) + 1;
-            title = 'ZenChat';
-            body = `${count} new messages`;
-            // Close the old one so the new one replaces it
-            prev.close();
-        }
-
+        // Simple notification display
         const notificationOptions = {
             body: body,
             icon: '/favicon.svg',
@@ -45,7 +37,6 @@ try {
             renotify: true,
             silent: false,
             data: {
-                count: count,
                 url: payload.fcmOptions?.link || payload.data?.url || '/'
             }
         };
