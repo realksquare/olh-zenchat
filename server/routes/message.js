@@ -6,8 +6,6 @@ const { uploadMedia } = require("../utils/cloudinary");
 
 const router = express.Router();
 
-router.use(authMiddleware);
-
 router.get("/test-cloudinary", async (req, res) => {
     try {
         const { cloudinary } = require("../utils/cloudinary");
@@ -17,6 +15,8 @@ router.get("/test-cloudinary", async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
+router.use(authMiddleware);
 
 router.get("/:chatId", async (req, res) => {
     try {
