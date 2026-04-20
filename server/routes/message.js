@@ -59,13 +59,25 @@ router.get("/:chatId", async (req, res) => {
     }
 });
 
-router.post("/:chatId/upload", uploadMedia.single("file"), async (req, res) => {
+router.post("/:chatId/upload", (req, res, next) => {
+    uploadMedia.single("file")(req, res, (err) => {
+        if (err) {
+            console.error("[Upload] Error caught in middleware:", err);
+            return res.status(500).json({ 
+                message: "Upload middleware failed", 
+                error: err.message,
+                code: err.code
+            });
+        }
+        next();
+    });
+}, async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ message: "No file uploaded" });
         res.json({ mediaUrl: req.file.path });
     } catch (err) {
-        console.error("[Upload] Media upload failed:", err);
-        res.status(500).json({ message: "Server error during upload", error: err.message });
+        console.error("[Upload] Route handler error:", err);
+        res.status(500).json({ message: "Server error during upload completion" });
     }
 });
 

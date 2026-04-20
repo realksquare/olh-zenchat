@@ -156,9 +156,17 @@ const registerSocketHandlers = (io) => {
                             const senderIsContact = offlineUser.contacts?.some(
                                 c => c.userId?.toString() === userId?.toString()
                             );
+                            const unreadCount = await Message.countDocuments({
+                                chatId,
+                                senderId: userId,
+                                status: { $ne: "read" }
+                            });
+
                             const notifSenderName = senderIsContact ? `${senderName} ✨` : senderName;
-                            const title = `New message from ${notifSenderName}`;
-                            const body = "You have new messages!";
+                            const title = "ZenChat";
+                            let body = `New message from ${notifSenderName}!`;
+                            if (unreadCount === 1) body = `1 new message from ${notifSenderName}!`;
+                            else if (unreadCount > 1) body = `${unreadCount} new messages and media from ${notifSenderName}!`;
 
                             const pwaTokens = tokens.filter(t => t.deviceType === 'pwa');
                             const browserTokens = tokens.filter(t => t.deviceType === 'browser');
