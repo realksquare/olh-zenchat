@@ -45,6 +45,10 @@ router.get("/sign-upload", (req, res) => {
     }
 });
 
+router.get("/health", (req, res) => {
+    res.status(200).json({ status: "ok" });
+});
+
 router.use(authMiddleware);
 
 router.get("/:chatId", async (req, res) => {

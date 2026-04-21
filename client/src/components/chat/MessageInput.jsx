@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useSocket } from "../../context/SocketContext";
 import { useAuthStore } from "../../stores/authStore";
-import { playSendSound } from "../../utils/audio";
+import { useChatStore } from "../../stores/chatStore";
 import axiosInstance from "../../utils/axios";
 import axios from "axios";
 
@@ -132,14 +132,15 @@ const MediaPreview = ({ files, onRemove }) => {
     );
 };
 
-const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
+const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCancelReply }) => {
     const [content, setContent] = useState("");
     const [isViewOnce, setIsViewOnce] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [showMediaPopup, setShowMediaPopup] = useState(false);
     const [stagedFiles, setStagedFiles] = useState([]);
     const { sendMessage, startTyping, stopTyping, editMessage } = useSocket();
-    const soundEnabled = useAuthStore((s) => s.soundEnabled);
+    const { addMessage, updateMessage } = useChatStore();
+    const { user, soundEnabled } = useAuthStore();
     const textareaRef = useRef(null);
     const typingTimeoutRef = useRef(null);
     const isTypingRef = useRef(false);
@@ -202,6 +203,21 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
 
             for (const file of files) {
                 const isVideo = ACCEPTED_VIDEO.includes(file.type);
+                const tempId = `temp-${Date.now()}-${Math.random()}`;
+                
+                // Create optimistic message
+                addMessage(chatId, {
+                    _id: tempId,
+                    chatId,
+                    senderId: user?._id,
+                    content: files.length === 1 ? textContent : "", // Only add caption to first if single file
+                    type: isVideo ? "video" : "image",
+                    mediaUrl: URL.createObjectURL(file), // Local blob for preview
+                    status: "sending",
+                    progress: 0,
+                    replyTo: replyingTo?._id,
+                    createdAt: new Date().toISOString()
+                });
 
                 const formData = new FormData();
                 formData.append("file", file);
@@ -209,13 +225,23 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
 
                 const res = await axios.post(
                     `https://api.cloudinary.com/v1_1/${cloudName}/${isVideo ? 'video' : 'image'}/upload`,
-                    formData
+                    formData,
+                    {
+                        onUploadProgress: (p) => {
+                            const percent = Math.round((p.loaded * 100) / p.total);
+                            updateMessage(chatId, { _id: tempId, progress: percent });
+                        }
+                    }
                 );
 
                 const downloadURL = res.data.secure_url;
-                sendMessage(chatId, "", isVideo ? "video" : "image", downloadURL, null, isViewOnce);
+                // Replace temp message or just send real one
+                sendMessage(chatId, files.length === 1 ? textContent : "", isVideo ? "video" : "image", downloadURL, replyingTo?._id, isViewOnce);
+                // We'll let the socket event update/remove the temp message naturally if IDs match, 
+                // but usually the socket returns a new message. For now, we just send.
             }
             if (soundEnabled) playSendSound();
+            onCancelReply(); // Clear reply after sending
         } catch (error) {
             const errorDetail = error.response?.data?.error?.message || error.message;
             console.error("Cloudinary Detailed Error:", error.response?.data || error);
@@ -249,8 +275,9 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
             }
             onCancelEdit();
         } else {
-            sendMessage(chatId, filteredContent, "text", "", null, false);
+            sendMessage(chatId, filteredContent, "text", "", replyingTo?._id, false);
             if (soundEnabled) playSendSound();
+            onCancelReply();
         }
 
         setContent("");
@@ -291,8 +318,28 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
         <div className="message-input-wrap">
             {editingMessage && (
                 <div className="editing-banner">
-                    <span>Editing message</span>
+                    <span>✏️ Editing message</span>
                     <button className="editing-cancel-btn" onClick={onCancelEdit}>Cancel</button>
+                </div>
+            )}
+
+            {replyingTo && (
+                <div className="reply-preview-container">
+                    <div className="reply-info">
+                        <div className="reply-to-user">
+                            Replying to {replyingTo.senderId === user?._id ? "yourself" : "them"}
+                        </div>
+                        <div className="reply-to-text">
+                            {replyingTo.type === "image" ? "📷 Image" : 
+                             replyingTo.type === "video" ? "🎥 Video" : 
+                             replyingTo.content}
+                        </div>
+                    </div>
+                    <button className="reply-cancel-btn" onClick={onCancelReply}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
                 </div>
             )}
 

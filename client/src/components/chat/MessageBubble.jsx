@@ -5,9 +5,26 @@ import { useChatStore } from "../../stores/chatStore";
 const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete }) => {
     const [mobileDropdown, setMobileDropdown] = useState(false);
     const { user } = useAuthStore();
-    const { toggleStarMessage, markViewOnceAsViewed } = useChatStore();
+    const { toggleStarMessage, markViewOnceAsViewed, messages } = useChatStore();
     const status = message?.status ?? "sent";
+    const progress = message?.progress ?? 0;
     const outerRef = useRef(null);
+
+    const repliedToMessage = useMemo(() => {
+        if (!message.replyTo) return null;
+        // Search through all chats to find the message if it's not in the current active list
+        // but for simplicity we assume it's in the current chatId's messages
+        return messages[message.chatId]?.find(m => m._id === message.replyTo);
+    }, [message.replyTo, messages, message.chatId]);
+
+    const scrollToMessage = (msgId) => {
+        const el = document.getElementById(`msg-${msgId}`);
+        if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.classList.add("message-highlight");
+            setTimeout(() => el.classList.remove("message-highlight"), 2000);
+        }
+    };
 
     const isWithinEditWindow = isMe &&
         (Date.now() - new Date(message.createdAt).getTime() < 10 * 60 * 1000);
@@ -78,7 +95,11 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
     const isViewedByAnyone = message.viewedBy?.length > 0;
 
     return (
-        <div className={`message-row ${isMe ? "mine" : "theirs"}`}>
+        <div 
+            id={`msg-${message._id}`}
+            className={`message-row ${isMe ? "mine" : "theirs"}`}
+            onDoubleClick={() => !message.deletedForEveryone && onEdit({ action: "reply", ...message })}
+        >
             {!isMe && showAvatar && (
                 <div className="avatar avatar-sm">
                     {otherUser?.avatar ? (
@@ -109,6 +130,21 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                         </div>
                     ) : (
                         <>
+                            {repliedToMessage && (
+                                <div 
+                                    className="replied-message-preview" 
+                                    onClick={(e) => { e.stopPropagation(); scrollToMessage(message.replyTo); }}
+                                >
+                                    <div className="replied-sender">
+                                        {repliedToMessage.senderId === user?._id ? "You" : (otherUser?.username || "Someone")}
+                                    </div>
+                                    <div className="replied-content">
+                                        {repliedToMessage.type === "image" ? "📷 Image" : 
+                                         repliedToMessage.type === "video" ? "🎥 Video" : 
+                                         repliedToMessage.content}
+                                    </div>
+                                </div>
+                            )}
                             {(message.type === "image" || message.type === "video") && message.mediaUrl && (
                                 <div className="message-media-wrap">
                                     {message.type === "image" ? (
@@ -119,6 +155,12 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                                 </div>
                             )}
                             {message.content && <span className="message-text">{message.content}</span>}
+                            {status === "sending" && (
+                                <div className="message-progress-container">
+                                    <div className="message-progress-bar" style={{ width: `${progress}%` }}></div>
+                                    <span className="progress-text">{progress}%</span>
+                                </div>
+                            )}
                         </>
                     )}
                     

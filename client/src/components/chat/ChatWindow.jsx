@@ -41,7 +41,20 @@ const ChatWindow = ({ onBack }) => {
     const messagesEndRef = useRef(null);
 
     const [editingMessage, setEditingMessage] = useState(null);
+    const [replyingTo, setReplyingTo] = useState(null);
     const [deletingMessage, setDeletingMessage] = useState(null);
+
+    const handleMessageAction = (msg) => {
+        if (msg.action === "reply") {
+            // It's a reply action
+            setReplyingTo(msg);
+            setEditingMessage(null);
+        } else {
+            // It's a real edit action
+            setEditingMessage(msg);
+            setReplyingTo(null);
+        }
+    };
 
     const otherUser = useMemo(() => 
         activeChat?.participants?.find((p) => (p._id?.toString() || p._id) !== user?._id?.toString()), 
@@ -93,6 +106,7 @@ const ChatWindow = ({ onBack }) => {
 
     useEffect(() => {
         setEditingMessage(null);
+        setReplyingTo(null);
         setDeletingMessage(null);
     }, [activeChat?._id]);
 
@@ -213,7 +227,7 @@ const ChatWindow = ({ onBack }) => {
                         isMe={msg.senderId?._id === user?._id || msg.senderId === user?._id}
                         showAvatar={idx === 0 || messages[idx - 1]?.senderId?._id !== msg.senderId?._id}
                         otherUser={otherUser}
-                        onEdit={setEditingMessage}
+                        onEdit={handleMessageAction}
                         onDelete={setDeletingMessage}
                     />
                 ))}
@@ -225,7 +239,9 @@ const ChatWindow = ({ onBack }) => {
             <MessageInput
                 chatId={activeChat._id}
                 editingMessage={editingMessage}
+                replyingTo={replyingTo}
                 onCancelEdit={() => setEditingMessage(null)}
+                onCancelReply={() => setReplyingTo(null)}
             />
 
             {deletingMessage && (

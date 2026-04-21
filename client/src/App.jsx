@@ -9,6 +9,8 @@ import { primeAudioContext } from "./utils/audio";
 import { requestNotificationPermission } from "./utils/firebase";
 import axiosInstance from "./utils/axios";
 import NotificationPrompt from "./components/layout/NotificationPrompt";
+import SplashScreen from "./components/ui/SplashScreen";
+import { useState } from "react";
 
 const ProtectedRoute = ({ children }) => {
   const token = useAuthStore((state) => state.token);
@@ -22,8 +24,21 @@ const GuestRoute = ({ children }) => {
 
 const App = () => {
   const { user, token } = useAuthStore();
+  const [serverReady, setServerReady] = useState(false);
 
   useEffect(() => {
+    // Health check to wake up Render and hide splash screen
+    const checkHealth = async () => {
+      try {
+        await axiosInstance.get("/messages/health");
+        setServerReady(true);
+      } catch (err) {
+        // Retry every 3 seconds if server is still sleeping
+        setTimeout(checkHealth, 3000);
+      }
+    };
+    checkHealth();
+
     // Prime AudioContext on first user interaction
     const prime = () => { primeAudioContext(); };
     window.addEventListener('touchstart', prime, { once: true });
@@ -57,6 +72,7 @@ const App = () => {
 
   return (
     <>
+      <SplashScreen isReady={serverReady} />
       <InstallPWA />
       <NotificationPrompt />
       <Routes>
