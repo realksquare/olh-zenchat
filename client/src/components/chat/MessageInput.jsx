@@ -4,6 +4,7 @@ import { useSocket } from "../../context/SocketContext";
 import { useAuthStore } from "../../stores/authStore";
 import { playSendSound } from "../../utils/audio";
 import axiosInstance from "../../utils/axios";
+import axios from "axios";
 
 const ACCEPTED_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const ACCEPTED_VIDEO = ["video/mp4", "video/quicktime", "video/webm", "video/mpeg", "video/x-msvideo"];
@@ -196,31 +197,32 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
     const uploadAndSend = async (files, textContent) => {
         setUploading(true);
         try {
-            const { storage, ref, uploadBytesResumable, getDownloadURL } = await import("../../utils/firebase");
-            
+            // Get secure signature from server
+            const { data: signData } = await axiosInstance.get("/messages/sign-upload");
+            const { signature, timestamp, apiKey, cloudName, folder } = signData;
+
             for (const file of files) {
                 const isVideo = ACCEPTED_VIDEO.includes(file.type);
-                const fileExt = file.name.split('.').pop();
-                const fileName = `chat_${chatId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-                const storageRef = ref(storage, fileName);
                 
-                const uploadTask = uploadBytesResumable(storageRef, file);
-                
-                // Wait for upload to complete
-                await new Promise((resolve, reject) => {
-                    uploadTask.on('state_changed', 
-                        null, 
-                        (error) => reject(error), 
-                        () => resolve()
-                    );
-                });
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("api_key", apiKey);
+                formData.append("timestamp", timestamp);
+                formData.append("signature", signature);
+                formData.append("folder", folder);
 
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                // Upload directly to Cloudinary
+                const res = await axios.post(
+                    `https://api.cloudinary.com/v1_1/${cloudName}/${isVideo ? 'video' : 'image'}/upload`,
+                    formData
+                );
+
+                const downloadURL = res.data.secure_url;
                 sendMessage(chatId, "", isVideo ? "video" : "image", downloadURL, null, isViewOnce);
             }
             if (soundEnabled) playSendSound();
         } catch (error) {
-            console.error("Firebase upload error:", error);
+            console.error("Cloudinary upload error:", error);
             alert("Failed to upload media. Please try again.");
         } finally {
             setUploading(false);

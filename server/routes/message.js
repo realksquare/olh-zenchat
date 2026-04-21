@@ -24,6 +24,29 @@ router.get("/test-cloudinary", async (req, res) => {
     }
 });
 
+router.get("/sign-upload", (req, res) => {
+    try {
+        const { cloudinary } = require("../utils/cloudinary");
+        const timestamp = Math.round(new Date().getTime() / 1000);
+        const signature = cloudinary.utils.api_sign_request(
+            {
+                timestamp: timestamp,
+                folder: "zenchat_media",
+            },
+            process.env.CLOUDINARY_API_SECRET
+        );
+        res.json({
+            signature,
+            timestamp,
+            cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+            apiKey: process.env.CLOUDINARY_API_KEY,
+            folder: "zenchat_media"
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 router.use(authMiddleware);
 
 router.get("/:chatId", async (req, res) => {
