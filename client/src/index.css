@@ -2545,3 +2545,51 @@ select {
   color: #fff;
 }
 
+/* ── Dual Footer Bar ────────────────────────────────── */
+.sidebar-footer-dual {
+  margin: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.footer-btn {
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.admin-btn {
+  background: rgba(61, 165, 217, 0.1);
+  color: var(--color-primary);
+  border-color: rgba(61, 165, 217, 0.2);
+}
+
+.admin-btn:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.faq-btn {
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+}
+
+.faq-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.faq-item h3 {
+  letter-spacing: 0.02em;
+}
+
+
