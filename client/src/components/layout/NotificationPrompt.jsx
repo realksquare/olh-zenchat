@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { requestNotificationPermission } from "../utils/firebase";
-import { useAuthStore } from "../stores/authStore";
-import axiosInstance from "../utils/axios";
+import { requestNotificationPermission } from "../../utils/firebase";
+import { useAuthStore } from "../../stores/authStore";
+import axiosInstance from "../../utils/axios";
 
 const NotificationPrompt = () => {
     const [show, setShow] = useState(false);
