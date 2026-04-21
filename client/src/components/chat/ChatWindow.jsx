@@ -13,7 +13,7 @@ const EMPTY_CONTACTS = [];
 
 const ChatWindow = ({ onBack }) => {
     const { user } = useAuthStore();
-    // Get the contacts list from auth store to show ✨ for contacts
+    // Get the contacts list from auth store to show label for contacts
     const contacts = useAuthStore((s) => s.user?.contacts || EMPTY_CONTACTS);
     const { 
         activeChat, fetchMessages, isLoadingMessages, 
@@ -66,11 +66,11 @@ const ChatWindow = ({ onBack }) => {
         return set instanceof Set ? set.has(otherId) : false;
     }, [typingUsers, activeChat?._id, otherUser?._id]);
 
-    // Contact display name (append ✨ if tagged as contact)
+    // Contact display name (append label if tagged as contact)
     const isContact = contacts.some(
         c => c.userId?.toString() === otherUser?._id?.toString() || c.userId === otherUser?._id
     );
-    const displayName = isContact ? `${otherUser?.username} ✨` : otherUser?.username;
+    const displayName = isContact ? `${otherUser?.username} (Contact)` : otherUser?.username;
 
     useEffect(() => {
         if (!activeChat?._id) return;
@@ -216,7 +216,7 @@ const ChatWindow = ({ onBack }) => {
 
                 {!isLoadingMessages && messages.length === 0 && (
                     <div className="messages-empty">
-                        <span>No messages yet - say Hi! 👋</span>
+                        <span>No messages yet - say Hi!</span>
                     </div>
                 )}
 

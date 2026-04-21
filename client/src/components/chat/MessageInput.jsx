@@ -318,8 +318,10 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
         <div className="message-input-wrap">
             {editingMessage && (
                 <div className="editing-banner">
-                    <span>✏️ Editing message</span>
-                    <button className="editing-cancel-btn" onClick={onCancelEdit}>Cancel</button>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                    <span>Editing message</span>
                 </div>
             )}
 
@@ -330,8 +332,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                             Replying to {replyingTo.senderId === user?._id ? "yourself" : "them"}
                         </div>
                         <div className="reply-to-text">
-                            {replyingTo.type === "image" ? "📷 Image" : 
-                             replyingTo.type === "video" ? "🎥 Video" : 
+                            {replyingTo.type === "image" ? "Image" : 
+                             replyingTo.type === "video" ? "Video" : 
                              replyingTo.content}
                         </div>
                     </div>
@@ -366,7 +368,10 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     disabled={uploading}
                     title={isViewOnce ? "View-Once ON - for uploaded media" : "Enable View-Once for media"}
                 >
-                    👁️
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
                 </button>
 
                 <textarea

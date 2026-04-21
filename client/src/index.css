@@ -2102,7 +2102,6 @@ select {
   position: relative;
   width: 120px;
   height: 120px;
-  animation: splashFloat 3s ease-in-out infinite;
 }
 
 .splash-logo img {

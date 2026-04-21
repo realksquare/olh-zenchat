@@ -18,7 +18,7 @@ const SplashScreen = ({ isReady }) => {
         <div className={`splash-screen ${isFading ? "fade-out" : ""}`}>
             <div className="splash-content">
                 <div className="splash-logo">
-                    <img src="/zenchat-logo.png" alt="ZenChat Logo" />
+                    <img src="/logo512.png" alt="ZenChat Logo" />
                     <div className="splash-glow"></div>
                 </div>
                 <h1 className="splash-title">OLH ZenChat</h1>

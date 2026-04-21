@@ -13,7 +13,7 @@ try {
         isFirebaseInitialized = true;
         console.log("[Firebase] Admin SDK initialized successfully.");
     } else {
-        console.warn("[Firebase] FIREBASE_SERVICE_ACCOUNT_KEY not set — push notifications disabled.");
+        console.warn("[Firebase] FIREBASE_SERVICE_ACCOUNT_KEY not set - push notifications disabled.");
     }
 } catch (error) {
     console.error("[Firebase] Admin SDK init error:", error.message);
@@ -31,11 +31,11 @@ const User = require("../models/User");
  */
 const sendPushNotification = async (userId, fcmToken, title, body, data = {}) => {
     if (!isFirebaseInitialized) {
-        console.warn("[Firebase] Skipping push — SDK not initialized.");
+        console.warn("[Firebase] Skipping push - SDK not initialized.");
         return;
     }
     if (!fcmToken) {
-        console.warn(`[Firebase] Skipping push for user ${userId} — no FCM token.`);
+        console.warn(`[Firebase] Skipping push for user ${userId} - no FCM token.`);
         return;
     }
 
@@ -81,7 +81,7 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
     } catch (error) {
         console.error(`[Firebase] Error sending push to user ${userId}:`, error.message);
         if (error.errorInfo?.code === 'messaging/registration-token-not-registered') {
-            console.log(`[Firebase] Token unregistered — clearing for user ${userId}`);
+            console.log(`[Firebase] Token unregistered - clearing for user ${userId}`);
             if (userId) {
                 await User.findByIdAndUpdate(userId, { 
                     $pull: { fcmTokens: { token: fcmToken } } 

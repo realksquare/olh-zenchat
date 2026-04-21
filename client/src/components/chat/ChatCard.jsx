@@ -25,8 +25,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         c => c.userId?.toString() === otherUser?._id?.toString() || c.userId === otherUser?._id
     );
 
-    // Display name: contact name gets ✨ suffix
-    const displayName = isContact ? `${otherUser?.username} ✨` : otherUser?.username;
+    // Display name: contact name gets label suffix
+    const displayName = isContact ? `${otherUser?.username} (Contact)` : otherUser?.username;
 
     const isLastMessageFromThem =
         liveChat.lastMessage?.senderId !== user?._id &&
@@ -49,8 +49,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         if (!liveChat.lastMessage) return { text: "No messages yet", isUnread: false };
         const { content, type, senderId } = liveChat.lastMessage;
         const isMe = senderId?._id === user?._id || senderId === user?._id;
-        if (type === "image") return { text: isMe ? "You sent an image 📷" : "Sent an image 📷", isUnread: false };
-        if (type === "video") return { text: isMe ? "You sent a video 🎥" : "Sent a video 🎥", isUnread: false };
+        if (type === "image") return { text: isMe ? "You sent an image" : "Sent an image", isUnread: false };
+        if (type === "video") return { text: isMe ? "You sent a video" : "Sent a video", isUnread: false };
         return { text: isMe ? `You: ${content}` : content, isUnread: false };
     };
 
@@ -170,7 +170,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                     {/* Tag as Contact */}
                     <button onClick={handleToggleContact} disabled={contactLoading}
                         style={{ ...menuBtnStyle, color: isContact ? "#f59e0b" : "#94a3b8" }}>
-                        <span>{isContact ? "💛" : "✨"}</span>
+                        <span>{isContact ? "Starred" : "Verified"}</span>
                         {contactLoading ? "..." : isContact ? "Remove Contact" : "Tag as Contact"}
                     </button>
 

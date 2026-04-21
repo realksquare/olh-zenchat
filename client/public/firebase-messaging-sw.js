@@ -25,7 +25,7 @@ try {
 
         // Mask view-once media content
         if (payload.data?.isViewOnce === "true") {
-            body = "📷 Sent a view-once media";
+            body = "Image - Sent a view-once media";
         }
 
         // Simple notification display

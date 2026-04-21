@@ -148,7 +148,7 @@ const Sidebar = ({ onChatSelect }) => {
                         className={`sidebar-tab ${activeTab === "contacts" ? "active" : ""}`}
                         onClick={() => setActiveTab("contacts")}
                     >
-                        ✨ Contacts
+                        Contacts
                         {(() => {
                             const onlineContactsCount = user?.contacts?.filter(c => {
                                 const uid = c.userId?._id?.toString() || c.userId?.toString();
@@ -184,7 +184,7 @@ const Sidebar = ({ onChatSelect }) => {
                                     </div>
                                     <div className="search-result-info">
                                         <span className="search-result-name">
-                                            {isUserContact ? `${u.username} ✨` : u.username}
+                                            {isUserContact ? `${u.username} (Contact)` : u.username}
                                         </span>
                                         {u.isOnline && <span className="online-badge">Online</span>}
                                     </div>
