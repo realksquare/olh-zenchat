@@ -2,7 +2,7 @@ const express = require("express");
 const Message = require("../models/Message");
 const Chat = require("../models/Chat");
 const authMiddleware = require("../middleware/auth");
-const { uploadMedia } = require("../utils/cloudinary");
+const { uploadMedia, cloudinary } = require("../utils/cloudinary");
 
 const router = express.Router();
 
@@ -49,14 +49,24 @@ router.get("/:chatId", async (req, res) => {
     }
 });
 
-router.post("/:chatId/upload", uploadMedia.single("file"), async (req, res) => {
+router.post("/:chatId/upload", (req, res, next) => {
+    uploadMedia.single("file")(req, res, (err) => {
+        if (err) {
+            console.error("[Upload] Multer Error:", err);
+            return res.status(400).json({ 
+                message: "File upload failed at the gate", 
+                error: err.message,
+                code: err.code 
+            });
+        }
+        next();
+    });
+}, async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: "No file provided" });
         }
 
-        const { cloudinary } = require("../utils/cloudinary");
-        
         // Manual upload to Cloudinary using a buffer
         const uploadToCloudinary = (fileBuffer) => {
             return new Promise((resolve, reject) => {
