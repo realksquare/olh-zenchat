@@ -7,11 +7,9 @@ cloudinary.config({
   api_secret: (process.env.CLOUDINARY_API_SECRET || "").trim()
 });
 
-// Use memory storage to avoid middleware crashes
-const storage = multer.memoryStorage();
+const storage = multer.diskStorage({}); // Use default temp storage
 const upload = multer({ storage });
 
-// Higher limit for media
 const uploadMedia = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB

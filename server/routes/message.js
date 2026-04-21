@@ -81,10 +81,7 @@ router.post("/:chatId/upload", (req, res, next) => {
             return res.status(400).json({ message: "No file provided" });
         }
 
-        const b64 = Buffer.from(req.file.buffer).toString("base64");
-        const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-        
-        const result = await cloudinary.uploader.upload(dataURI, {
+        const result = await cloudinary.uploader.upload(req.file.path, {
             folder: "zenchat_media",
             resource_type: "auto"
         });
