@@ -156,17 +156,31 @@ const registerSocketHandlers = (io) => {
                             const senderIsContact = offlineUser.contacts?.some(
                                 c => c.userId?.toString() === userId?.toString()
                             );
-                            const unreadCount = await Message.countDocuments({
+                            const unreadMessages = await Message.find({
                                 chatId,
                                 senderId: userId,
                                 status: { $ne: "read" }
                             });
 
+                            const unreadCount = unreadMessages.length;
+                            const hasMedia = unreadMessages.some(m => m.type === 'image' || m.type === 'video');
+                            const hasText = unreadMessages.some(m => m.type === 'text');
+
                             const notifSenderName = senderIsContact ? `${senderName} ✨` : senderName;
                             const title = "ZenChat";
                             let body = `New message from ${notifSenderName}!`;
-                            if (unreadCount === 1) body = `1 new message from ${notifSenderName}!`;
-                            else if (unreadCount > 1) body = `${unreadCount} new messages and media from ${notifSenderName}!`;
+
+                            if (unreadCount === 1) {
+                                body = hasMedia ? `1 new media from ${notifSenderName}!` : `1 new message from ${notifSenderName}!`;
+                            } else if (unreadCount > 1) {
+                                if (hasMedia && hasText) {
+                                    body = `${unreadCount} new messages and media from ${notifSenderName}!`;
+                                } else if (hasMedia) {
+                                    body = `${unreadCount} new media from ${notifSenderName}!`;
+                                } else {
+                                    body = `${unreadCount} new messages from ${notifSenderName}!`;
+                                }
+                            }
 
                             const pwaTokens = tokens.filter(t => t.deviceType === 'pwa');
                             const browserTokens = tokens.filter(t => t.deviceType === 'browser');
