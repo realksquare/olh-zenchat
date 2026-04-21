@@ -6,7 +6,15 @@ const FAQModal = ({ isOpen, onClose }) => {
     const faqContent = [
         {
             q: "What is ZenChat?",
-            a: "A minimalist, premium real-time chat application built for speed and visual excellence. Developed by the OLH DevTeam."
+            a: "A minimalist, premium real-time chat application built for speed and visual excellence. Developed by Krish (OLH DevTeam)."
+        },
+        {
+            q: "Who is behind OLH DevTeam?",
+            a: "OLH (Online Learning Hub) DevTeam is led by Krish, a pre-final year B.E. ECE student at Vel Tech Multi Tech, Avadi. Driven by a passion to build robust, minimalist solutions that contribute to society."
+        },
+        {
+            q: "What are your other projects?",
+            a: "Previous notable works include CertiSure (Certificate Authentication System - certisure-frontend.vercel.app) and MediSure (Medical Records Authentication System - medisure-certisure.vercel.app)."
         },
         {
             q: "What are the standout features?",
@@ -19,10 +27,6 @@ const FAQModal = ({ isOpen, onClose }) => {
         {
             q: "Who is the admin?",
             a: "The master admin is admin_krish. You can contact him for verification requests, account issues, or feedback."
-        },
-        {
-            q: "How does 'View Once' work?",
-            a: "When you send a media file with View Once active, the recipient can only see it for a few seconds before it's permanently masked and deleted from their view."
         }
     ];
 

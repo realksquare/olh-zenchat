@@ -7,13 +7,7 @@ import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
 import TypingIndicator from "./TypingIndicator";
 import { formatDistanceToNow } from "date-fns";
-
-const VerifiedTick = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '4px', color: '#3da5d9', display: 'inline-block', verticalAlign: 'middle' }}>
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="16 8 11 13 8 10" />
-    </svg>
-);
+import { VerifiedTick } from "../ui/Icons";
 
 const EMPTY_MESSAGES = [];
 const EMPTY_CONTACTS = [];

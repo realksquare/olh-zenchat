@@ -3,24 +3,12 @@ import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 
-const VerifiedTick = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '4px', color: '#3da5d9', display: 'inline-block', verticalAlign: 'middle' }}>
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="16 8 11 13 8 10" />
-    </svg>
-);
 import axiosInstance from "../../utils/axios";
 import ChatCard from "./ChatCard";
 import ProfileModal from "../ui/ProfileModal";
 import AdminPanel from "../ui/AdminPanel";
 import FAQModal from "../ui/FAQModal";
-
-const VerifiedTick = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '4px', color: '#3da5d9', display: 'inline-block', verticalAlign: 'middle' }}>
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="16 8 11 13 8 10" />
-    </svg>
-);
+import { VerifiedTick, AdminIcon, HelpIcon } from "../ui/Icons";
 
 const Sidebar = ({ onChatSelect }) => {
     const { user, logout } = useAuthStore();
@@ -290,24 +278,17 @@ const Sidebar = ({ onChatSelect }) => {
             {(user?.role === "master_admin" || user?.role === "co_admin") ? (
                 <div className="sidebar-footer-dual">
                     <button className="footer-btn admin-btn" onClick={() => setIsAdminOpen(true)}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-                            <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-                        </svg>
+                        <AdminIcon size={16} />
                         Admin
                     </button>
                     <button className="footer-btn faq-btn" onClick={() => setIsFAQOpen(true)}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
-                        </svg>
+                        <HelpIcon size={16} />
                         FAQ
                     </button>
                 </div>
             ) : (
                 <button className="sidebar-admin-btn" onClick={() => setIsFAQOpen(true)}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
-                    </svg>
+                    <HelpIcon />
                     Help & FAQ
                 </button>
             )}
