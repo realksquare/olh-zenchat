@@ -15,7 +15,7 @@ router.get("/", async (req, res) => {
             participants: req.user._id,
             deletedBy: { $ne: req.user._id }
         })
-            .populate("participants", "username avatar isOnline lastSeen")
+            .populate("participants", "username avatar isOnline lastSeen isVerified")
             .populate({
                 path: "lastMessage",
                 populate: { path: "senderId", select: "username" },
@@ -93,7 +93,7 @@ router.post("/", async (req, res) => {
             isGroup: false,
             participants: { $all: [req.user._id, userId] },
         })
-            .populate("participants", "username avatar isOnline lastSeen")
+            .populate("participants", "username avatar isOnline lastSeen isVerified")
             .populate({
                 path: "lastMessage",
                 populate: { path: "senderId", select: "username" },
@@ -109,7 +109,7 @@ router.post("/", async (req, res) => {
         });
 
         const populated = await Chat.findById(newChat._id)
-            .populate("participants", "username avatar isOnline lastSeen")
+            .populate("participants", "username avatar isOnline lastSeen isVerified")
             .populate({
                 path: "lastMessage",
                 populate: { path: "senderId", select: "username" },
@@ -133,7 +133,7 @@ router.get("/users", async (req, res) => {
             _id: { $ne: req.user._id },
             username: { $regex: search.trim(), $options: "i" },
         })
-            .select("username avatar isOnline lastSeen")
+            .select("username avatar isOnline lastSeen isVerified")
             .limit(10);
 
         res.json({ users });
@@ -148,7 +148,7 @@ router.get("/:chatId", async (req, res) => {
             _id: req.params.chatId,
             participants: req.user._id,
         })
-            .populate("participants", "username avatar isOnline lastSeen")
+            .populate("participants", "username avatar isOnline lastSeen isVerified")
             .populate({
                 path: "lastMessage",
                 populate: { path: "senderId", select: "username" },
