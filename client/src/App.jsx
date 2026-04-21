@@ -23,10 +23,11 @@ const GuestRoute = ({ children }) => {
 };
 
 const App = () => {
-  const { user, token } = useAuthStore();
+  const { user, token, checkAuth } = useAuthStore();
   const [serverReady, setServerReady] = useState(false);
 
   useEffect(() => {
+    checkAuth();
     // Health check to wake up Render and hide splash screen
     const checkHealth = async () => {
       try {

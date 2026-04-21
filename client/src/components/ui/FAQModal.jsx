@@ -6,27 +6,27 @@ const FAQModal = ({ isOpen, onClose }) => {
     const faqContent = [
         {
             q: "What is ZenChat?",
-            a: "A minimalist, premium real-time chat application built for speed and visual excellence. Developed by Krish (OLH DevTeam)."
+            a: "A minimalist, premium real-time chat application built for speed and visual excellence. Developed by OLH DevTeam."
         },
         {
             q: "Who is behind OLH DevTeam?",
-            a: "OLH (Online Learning Hub) DevTeam is led by Krish, a pre-final year B.E. ECE student at Vel Tech Multi Tech, Avadi. Driven by a passion to build robust, minimalist solutions that contribute to society."
+            a: "OLH (Online Learning Hub) DevTeam is led by Krish, a pre-final year B.E. ECE student at Vel Tech Multi Tech, Avadi, Chennai. Driven by a passion to build robust, minimalist solutions that contribute to society."
         },
         {
-            q: "What are your other projects?",
-            a: "Previous notable works include CertiSure (Certificate Authentication System - certisure-frontend.vercel.app) and MediSure (Medical Records Authentication System - medisure-certisure.vercel.app)."
+            q: "What are other notable works of OLH DevTeam?",
+            a: "These include CertiSure (Certificate Authentication System - https://certisure-frontend.vercel.app) and MediSure (Medical Records Authentication System - https://medisure-certisure.vercel.app)."
         },
         {
-            q: "What are the standout features?",
-            a: "Secure real-time messaging, media sharing (images/videos) with upload progress, view-once media for privacy, message threading (replies), pinning important chats, and verified user badges."
+            q: "What are the standout features of ZenChat?",
+            a: "Secure real-time messaging, media sharing (images/videos) with upload progress, view-once media for privacy, message threading (replies), pinning important chats, reliablity even on 2G / unstable network with data usage conservation strategies, and verified user badges that show credibility."
         },
         {
             q: "What is the tech stack?",
-            a: "ZenChat is built using React (Frontend), Node.js & Express (Backend), MongoDB (Database), and Socket.io for instant real-time communication."
+            a: "ZenChat is built using React (Frontend), Node.js & Express (Backend), MongoDB (Database), and Socket.io for instant real-time communication. Hosted on Vercel (frontend) and Render (backend)."
         },
         {
-            q: "Who is the admin?",
-            a: "The master admin is admin_krish. You can contact him for verification requests, account issues, or feedback."
+            q: "Who is the admin of OLH ZenChat?",
+            a: "The master admin is @admin_krish. You can contact me for verification requests, account issues, or feedback."
         }
     ];
 

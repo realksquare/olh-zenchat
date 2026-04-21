@@ -62,6 +62,23 @@ export const useAuthStore = create(
         set({ token: null, user: null, error: null });
     },
 
+    checkAuth: async () => {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) return;
+        try {
+            const { data } = await axiosInstance.get("/auth/me");
+            localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+            set({ user: data.user, token });
+        } catch (err) {
+            console.error("Auth check failed:", err);
+            if (err.response?.status === 401) {
+                localStorage.removeItem(TOKEN_KEY);
+                localStorage.removeItem(USER_KEY);
+                set({ token: null, user: null });
+            }
+        }
+    },
+
     clearError: () => set({ error: null }),
 
     updateProfile: async (formData) => {
