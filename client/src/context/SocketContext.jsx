@@ -97,6 +97,7 @@ export const SocketProvider = ({ children }) => {
         };
 
         socket.on("connect", () => {
+            console.log("🚀 ZenChat V2.1 - Ready for action!");
             console.log("[Socket] Connected:", socket.id);
             const activeChat = useChatStore.getState().activeChat;
             if (activeChat?._id) socket.emit("join_chat", { chatId: activeChat._id });

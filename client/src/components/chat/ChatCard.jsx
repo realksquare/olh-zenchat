@@ -15,9 +15,10 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const [contactLoading, setContactLoading] = useState(false);
     const pressTimer = useRef(null);
 
-    const otherUser = liveChat.participants?.find((p) => p._id !== user?._id);
-    const isTyping = typingUsers[liveChat._id]?.has(otherUser?._id) || typingUsers[liveChat._id]?.has(otherUser?._id?.toString());
-    const isOnline = otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString());
+    const otherUser = liveChat.participants?.find((p) => (p._id?.toString() || p.toString()) !== user?._id?.toString());
+    const otherUserId = otherUser?._id?.toString() || otherUser?.toString();
+    const isTyping = typingUsers[liveChat._id]?.has(otherUserId);
+    const isOnline = otherUser?.isOnline || onlineUsers.has(otherUserId);
 
     // Check if this user is a contact
     const isContact = user?.contacts?.some(
