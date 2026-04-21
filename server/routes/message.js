@@ -31,16 +31,14 @@ router.get("/sign-upload", (req, res) => {
         const signature = cloudinary.utils.api_sign_request(
             {
                 timestamp: timestamp,
-                folder: "zenchat_media",
             },
-            process.env.CLOUDINARY_API_SECRET
+            (process.env.CLOUDINARY_API_SECRET || "").trim()
         );
         res.json({
             signature,
             timestamp,
-            cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-            apiKey: process.env.CLOUDINARY_API_KEY,
-            folder: "zenchat_media"
+            cloudName: (process.env.CLOUDINARY_CLOUD_NAME || "").trim(),
+            apiKey: (process.env.CLOUDINARY_API_KEY || "").trim(),
         });
     } catch (err) {
         res.status(500).json({ error: err.message });

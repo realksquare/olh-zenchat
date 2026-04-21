@@ -197,21 +197,18 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
     const uploadAndSend = async (files, textContent) => {
         setUploading(true);
         try {
-            // Get secure signature from server
             const { data: signData } = await axiosInstance.get("/messages/sign-upload");
             const { signature, timestamp, apiKey, cloudName, folder } = signData;
 
             for (const file of files) {
                 const isVideo = ACCEPTED_VIDEO.includes(file.type);
-                
+
                 const formData = new FormData();
                 formData.append("file", file);
                 formData.append("api_key", apiKey);
                 formData.append("timestamp", timestamp);
                 formData.append("signature", signature);
-                formData.append("folder", folder);
 
-                // Upload directly to Cloudinary
                 const res = await axios.post(
                     `https://api.cloudinary.com/v1_1/${cloudName}/${isVideo ? 'video' : 'image'}/upload`,
                     formData
