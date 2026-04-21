@@ -217,8 +217,9 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
             }
             if (soundEnabled) playSendSound();
         } catch (error) {
-            console.error("Cloudinary upload error:", error.response?.data || error.message);
-            alert("Upload failed. Make sure you created an 'Unsigned' preset named 'ml_default' in Cloudinary Settings > Upload.");
+            const errorDetail = error.response?.data?.error?.message || error.message;
+            console.error("Cloudinary Detailed Error:", error.response?.data || error);
+            alert(`Upload failed: ${errorDetail}. \n\nCheck console for details.`);
         } finally {
             setUploading(false);
             setStagedFiles([]);
