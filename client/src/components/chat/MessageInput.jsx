@@ -196,17 +196,31 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
     const uploadAndSend = async (files, textContent) => {
         setUploading(true);
         try {
+            const { storage, ref, uploadBytesResumable, getDownloadURL } = await import("../../utils/firebase");
+            
             for (const file of files) {
                 const isVideo = ACCEPTED_VIDEO.includes(file.type);
-                const formData = new FormData();
-                formData.append("file", file);
-                const { data } = await axiosInstance.post(`/messages/${chatId}/upload`, formData, {
-                    headers: { "Content-Type": "multipart/form-data" }
+                const fileExt = file.name.split('.').pop();
+                const fileName = `chat_${chatId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                const storageRef = ref(storage, fileName);
+                
+                const uploadTask = uploadBytesResumable(storageRef, file);
+                
+                // Wait for upload to complete
+                await new Promise((resolve, reject) => {
+                    uploadTask.on('state_changed', 
+                        null, 
+                        (error) => reject(error), 
+                        () => resolve()
+                    );
                 });
-                sendMessage(chatId, "", isVideo ? "video" : "image", data.mediaUrl, null, isViewOnce);
+
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                sendMessage(chatId, "", isVideo ? "video" : "image", downloadURL, null, isViewOnce);
             }
             if (soundEnabled) playSendSound();
-        } catch {
+        } catch (error) {
+            console.error("Firebase upload error:", error);
             alert("Failed to upload media. Please try again.");
         } finally {
             setUploading(false);
