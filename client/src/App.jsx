@@ -8,6 +8,7 @@ import InstallPWA from "./components/ui/InstallPWA";
 import { primeAudioContext } from "./utils/audio";
 import { requestNotificationPermission } from "./utils/firebase";
 import axiosInstance from "./utils/axios";
+import NotificationPrompt from "./components/layout/NotificationPrompt";
 
 const ProtectedRoute = ({ children }) => {
   const token = useAuthStore((state) => state.token);
@@ -28,9 +29,11 @@ const App = () => {
     window.addEventListener('touchstart', prime, { once: true });
     window.addEventListener('mousedown', prime, { once: true });
 
-    // Handle FCM token registration
+    // Handle FCM token registration (only if already granted)
     if (token && user) {
       const registerFCM = async () => {
+        if (Notification.permission !== "granted") return;
+        
         const fcmToken = await requestNotificationPermission();
         if (fcmToken) {
           try {
@@ -55,6 +58,7 @@ const App = () => {
   return (
     <>
       <InstallPWA />
+      <NotificationPrompt />
       <Routes>
         <Route
           path="/login"

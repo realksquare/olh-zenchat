@@ -385,6 +385,36 @@ const registerSocketHandlers = (io) => {
             }
         });
 
+        socket.on("typing_start", async ({ chatId }) => {
+            const chat = await Chat.findById(chatId);
+            if (!chat) return;
+            chat.participants
+                .filter(p => p.toString() !== userId)
+                .forEach(participantId => {
+                    const userData = onlineUsers.get(participantId.toString());
+                    if (userData && userData.sockets) {
+                        userData.sockets.forEach((dType, sId) => {
+                            io.to(sId).emit("typing_status", { userId, chatId, isTyping: true });
+                        });
+                    }
+                });
+        });
+
+        socket.on("typing_stop", async ({ chatId }) => {
+            const chat = await Chat.findById(chatId);
+            if (!chat) return;
+            chat.participants
+                .filter(p => p.toString() !== userId)
+                .forEach(participantId => {
+                    const userData = onlineUsers.get(participantId.toString());
+                    if (userData && userData.sockets) {
+                        userData.sockets.forEach((dType, sId) => {
+                            io.to(sId).emit("typing_status", { userId, chatId, isTyping: false });
+                        });
+                    }
+                });
+        });
+
         socket.on("disconnect", async () => {
             if (userId) {
                 const userData = onlineUsers.get(userId);

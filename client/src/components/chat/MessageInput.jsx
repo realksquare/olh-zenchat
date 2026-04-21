@@ -197,17 +197,15 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
     const uploadAndSend = async (files, textContent) => {
         setUploading(true);
         try {
-            const { data: signData } = await axiosInstance.get("/messages/sign-upload");
-            const { signature, timestamp, apiKey, cloudName, folder } = signData;
+            const cloudName = "du4nvei7j";
+            const uploadPreset = "ml_default";
 
             for (const file of files) {
                 const isVideo = ACCEPTED_VIDEO.includes(file.type);
 
                 const formData = new FormData();
                 formData.append("file", file);
-                formData.append("api_key", apiKey);
-                formData.append("timestamp", timestamp);
-                formData.append("signature", signature);
+                formData.append("upload_preset", uploadPreset);
 
                 const res = await axios.post(
                     `https://api.cloudinary.com/v1_1/${cloudName}/${isVideo ? 'video' : 'image'}/upload`,
@@ -219,8 +217,8 @@ const MessageInput = ({ chatId, editingMessage, onCancelEdit }) => {
             }
             if (soundEnabled) playSendSound();
         } catch (error) {
-            console.error("Cloudinary upload error:", error);
-            alert("Failed to upload media. Please try again.");
+            console.error("Cloudinary upload error:", error.response?.data || error.message);
+            alert("Upload failed. Make sure you created an 'Unsigned' preset named 'ml_default' in Cloudinary Settings > Upload.");
         } finally {
             setUploading(false);
             setStagedFiles([]);
