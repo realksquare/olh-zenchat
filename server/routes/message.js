@@ -6,6 +6,24 @@ const { uploadMedia, cloudinary } = require("../utils/cloudinary");
 
 const router = express.Router();
 
+router.get("/test-cloudinary", async (req, res) => {
+    try {
+        const { cloudinary } = require("../utils/cloudinary");
+        const result = await cloudinary.api.ping();
+        res.json({ 
+            success: true, 
+            status: "Cloudinary SDK Loaded",
+            result 
+        });
+    } catch (err) {
+        res.status(500).json({ 
+            success: false, 
+            error: err.message,
+            stack: err.stack 
+        });
+    }
+});
+
 router.use(authMiddleware);
 
 router.get("/:chatId", async (req, res) => {
@@ -53,11 +71,7 @@ router.post("/:chatId/upload", (req, res, next) => {
     uploadMedia.single("file")(req, res, (err) => {
         if (err) {
             console.error("[Upload] Multer Error:", err);
-            return res.status(400).json({ 
-                message: "File upload failed at the gate", 
-                error: err.message,
-                code: err.code 
-            });
+            return res.status(400).json({ message: "File upload failed", error: err.message });
         }
         next();
     });
@@ -67,31 +81,18 @@ router.post("/:chatId/upload", (req, res, next) => {
             return res.status(400).json({ message: "No file provided" });
         }
 
-        // Manual upload to Cloudinary using a buffer
-        const uploadToCloudinary = (fileBuffer) => {
-            return new Promise((resolve, reject) => {
-                const uploadStream = cloudinary.uploader.upload_stream(
-                    {
-                        folder: "zenchat_media",
-                        resource_type: "auto"
-                    },
-                    (error, result) => {
-                        if (error) reject(error);
-                        else resolve(result);
-                    }
-                );
-                uploadStream.end(fileBuffer);
-            });
-        };
+        const b64 = Buffer.from(req.file.buffer).toString("base64");
+        const dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+        
+        const result = await cloudinary.uploader.upload(dataURI, {
+            folder: "zenchat_media",
+            resource_type: "auto"
+        });
 
-        const result = await uploadToCloudinary(req.file.buffer);
         res.json({ mediaUrl: result.secure_url });
     } catch (err) {
-        console.error("[Upload] Manual upload failed:", err);
-        res.status(500).json({ 
-            message: "Upload failed during Cloudinary processing", 
-            error: err.message 
-        });
+        console.error("[Upload] Cloudinary processing failed:", err);
+        res.status(500).json({ message: "Upload failed", error: err.message });
     }
 });
 
