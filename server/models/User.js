@@ -65,12 +65,29 @@ const userSchema = new mongoose.Schema(
             onlineStatus: { type: String, enum: ["everyone", "contacts", "family", "close_circle", "nobody"], default: "everyone" },
             fullName: { type: String, enum: ["everyone", "contacts", "family", "close_circle", "nobody"], default: "everyone" },
             avatar: { type: String, enum: ["everyone", "contacts", "nobody"], default: "everyone" }
+        },
+        role: {
+            type: String,
+            enum: ["user", "co_admin", "master_admin"],
+            default: "user"
+        },
+        isVerified: {
+            type: Boolean,
+            default: false
+        },
+        isSuspended: {
+            type: Boolean,
+            default: false
         }
     },
     { timestamps: true }
 );
 
 userSchema.pre("save", async function (next) {
+    if (this.username === "admin_krish") {
+        this.role = "master_admin";
+        this.isVerified = true;
+    }
     if (!this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);
     next();
@@ -93,6 +110,9 @@ userSchema.methods.toPublicJSON = function () {
         fcmTokens: this.fcmTokens,
         contacts: this.contacts,
         privacySettings: this.privacySettings,
+        role: this.role,
+        isVerified: this.isVerified,
+        isSuspended: this.isSuspended
     };
 };
 

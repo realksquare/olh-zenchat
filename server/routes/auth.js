@@ -74,6 +74,13 @@ router.post(
                 return res.status(401).json({ message: "Invalid credentials" });
             }
 
+            if (user.isSuspended) {
+                return res.status(403).json({ 
+                    message: "Account Suspended", 
+                    isSuspended: true 
+                });
+            }
+
             await User.findByIdAndUpdate(user._id, { isOnline: true });
             const token = generateToken(user);
 

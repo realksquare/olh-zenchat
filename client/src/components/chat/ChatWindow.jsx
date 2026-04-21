@@ -8,8 +8,28 @@ import MessageInput from "./MessageInput";
 import TypingIndicator from "./TypingIndicator";
 import { formatDistanceToNow } from "date-fns";
 
+const VerifiedTick = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '4px', color: '#3da5d9', display: 'inline-block', verticalAlign: 'middle' }}>
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="16 8 11 13 8 10" />
+    </svg>
+);
+
 const EMPTY_MESSAGES = [];
 const EMPTY_CONTACTS = [];
+
+const ScrollDownBtn = ({ onClick, show }) => (
+    <button 
+        className={`scroll-down-btn ${show ? 'visible' : ''}`}
+        onClick={onClick}
+        aria-label="Scroll to bottom"
+    >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="7 13 12 18 17 13" />
+            <polyline points="7 6 12 11 17 6" />
+        </svg>
+    </button>
+);
 
 const ChatWindow = ({ onBack }) => {
     const { user } = useAuthStore();
@@ -43,6 +63,8 @@ const ChatWindow = ({ onBack }) => {
     const [editingMessage, setEditingMessage] = useState(null);
     const [replyingTo, setReplyingTo] = useState(null);
     const [deletingMessage, setDeletingMessage] = useState(null);
+    const [showScrollDown, setShowScrollDown] = useState(false);
+    const messagesContainerRef = useRef(null);
 
     const handleMessageAction = (msg) => {
         if (msg.action === "reply") {
@@ -70,7 +92,7 @@ const ChatWindow = ({ onBack }) => {
     const isContact = contacts.some(
         c => c.userId?.toString() === otherUser?._id?.toString() || c.userId === otherUser?._id
     );
-    const displayName = isContact ? `${otherUser?.username} (Contact)` : otherUser?.username;
+    const displayName = isContact ? `${otherUser?.username} ✨` : otherUser?.username;
 
     useEffect(() => {
         if (!activeChat?._id) return;
@@ -112,8 +134,21 @@ const ChatWindow = ({ onBack }) => {
 
     useEffect(() => {
         // Only auto-scroll on new messages, not typing status changes
+        if (!showScrollDown) {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [messages.length, showScrollDown]);
+
+    const handleScroll = (e) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.target;
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
+        setShowScrollDown(!isNearBottom);
+    };
+
+    const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages.length]);
+        setShowScrollDown(false);
+    };
 
     const [tick, setTick] = useState(0);
 
@@ -174,7 +209,10 @@ const ChatWindow = ({ onBack }) => {
                 </div>
 
                 <div className="chat-header-info">
-                    <span className="chat-header-name">{displayName}</span>
+                    <span className="chat-header-name">
+                        {displayName}
+                        {otherUser?.isVerified && <VerifiedTick />}
+                    </span>
                     <span className={`chat-header-status ${(otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) ? "status-online" : ""}`}>
                         {getStatusText()}
                     </span>
@@ -203,7 +241,8 @@ const ChatWindow = ({ onBack }) => {
                 </div>
             </div>
 
-            <div className="chat-messages">
+            <div className="chat-messages" ref={messagesContainerRef} onScroll={handleScroll}>
+                <ScrollDownBtn onClick={scrollToBottom} show={showScrollDown} />
                 {isLoadingMessages && (
                     <div className="messages-loading">
                         {[1, 2, 3, 4].map((i) => (

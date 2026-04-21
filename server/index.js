@@ -28,6 +28,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/admin", require("./routes/admin"));
 
 registerSocketHandlers(io);
 

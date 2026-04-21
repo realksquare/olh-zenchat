@@ -33,8 +33,16 @@ const LoginPage = () => {
                 <p className="auth-subtitle">Sign in to your account</p>
 
                 {error && (
-                    <div className="auth-error" role="alert">
-                        {error}
+                    <div className={`auth-error ${error === "Account Suspended" ? "auth-error-suspended" : ""}`} role="alert">
+                        {error === "Account Suspended" ? (
+                            <>
+                                <strong>Account Suspended</strong>
+                                <p style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+                                    Your account has been suspended for violating terms. 
+                                    Contact admin for further details.
+                                </p>
+                            </>
+                        ) : error}
                     </div>
                 )}
 

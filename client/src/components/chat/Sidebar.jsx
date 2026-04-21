@@ -2,9 +2,17 @@ import { useState, useEffect, useMemo, memo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
+
+const VerifiedTick = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '4px', color: '#3da5d9', display: 'inline-block', verticalAlign: 'middle' }}>
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="16 8 11 13 8 10" />
+    </svg>
+);
 import axiosInstance from "../../utils/axios";
 import ChatCard from "./ChatCard";
 import ProfileModal from "../ui/ProfileModal";
+import AdminPanel from "../ui/AdminPanel";
 
 const Sidebar = ({ onChatSelect }) => {
     const { user, logout } = useAuthStore();
@@ -24,7 +32,8 @@ const Sidebar = ({ onChatSelect }) => {
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState("everyone"); // "everyone" | "contacts"
+    const [isAdminOpen, setIsAdminOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState("recents"); // "recents" | "contacts"
 
     useEffect(() => {
         const delayDebounce = setTimeout(async () => {
@@ -139,10 +148,10 @@ const Sidebar = ({ onChatSelect }) => {
                 {/* Tab switcher */}
                 <div className="sidebar-tabs">
                     <button
-                        className={`sidebar-tab ${activeTab === "everyone" ? "active" : ""}`}
-                        onClick={() => setActiveTab("everyone")}
+                        className={`sidebar-tab ${activeTab === "recents" ? "active" : ""}`}
+                        onClick={() => setActiveTab("recents")}
                     >
-                        Everyone
+                        Recents
                     </button>
                     <button
                         className={`sidebar-tab ${activeTab === "contacts" ? "active" : ""}`}
@@ -184,7 +193,8 @@ const Sidebar = ({ onChatSelect }) => {
                                     </div>
                                     <div className="search-result-info">
                                         <span className="search-result-name">
-                                            {isUserContact ? `${u.username} (Contact)` : u.username}
+                                            {u.username} {isUserContact && "✨"}
+                                            {u.isVerified && <VerifiedTick />}
                                         </span>
                                         {u.isOnline && <span className="online-badge">Online</span>}
                                     </div>
@@ -266,6 +276,19 @@ const Sidebar = ({ onChatSelect }) => {
                 onClose={() => setIsProfileOpen(false)}
                 onSave={() => setIsProfileOpen(false)}
             />
+
+            {(user?.role === "master_admin" || user?.role === "co_admin") && (
+                <>
+                    <button className="sidebar-admin-btn" onClick={() => setIsAdminOpen(true)}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+                            <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+                        </svg>
+                        Admin Dashboard
+                    </button>
+                    {isAdminOpen && <AdminPanel onClose={() => setIsAdminOpen(false)} />}
+                </>
+            )}
         </div>
     );
 };

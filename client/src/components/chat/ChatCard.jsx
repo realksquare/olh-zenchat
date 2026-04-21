@@ -3,6 +3,13 @@ import { useChatStore } from "../../stores/chatStore";
 import { useAuthStore } from "../../stores/authStore";
 import { formatDistanceToNow } from "date-fns";
 
+const VerifiedTick = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '4px', color: '#3da5d9', display: 'inline-block', verticalAlign: 'middle' }}>
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="16 8 11 13 8 10" />
+    </svg>
+);
+
 const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const { user, toggleContact } = useAuthStore();
     const typingUsers = useChatStore((s) => s.typingUsers);
@@ -25,8 +32,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         c => c.userId?.toString() === otherUser?._id?.toString() || c.userId === otherUser?._id
     );
 
-    // Display name: contact name gets label suffix
-    const displayName = isContact ? `${otherUser?.username} (Contact)` : otherUser?.username;
+    // Display name: contact name gets sparkle suffix
+    const displayName = isContact ? `${otherUser?.username} ✨` : otherUser?.username;
 
     const isLastMessageFromThem =
         liveChat.lastMessage?.senderId !== user?._id &&
@@ -131,6 +138,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                 <div className="chat-card-row">
                     <span className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`}>
                         {displayName}
+                        {otherUser?.isVerified && <VerifiedTick />}
                     </span>
                     <span className="chat-card-time">
                         {liveChat.updatedAt ? formatDistanceToNow(new Date(liveChat.updatedAt), { addSuffix: false }) : ""}
