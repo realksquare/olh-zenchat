@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "olh.zenchat",
+      "sha256_cert_fingerprints": ["10:C1:C5:AC:40:4D:37:73:F6:A5:46:AE:25:81:A3:82:4D:77:DA:57:86:43:2A:AB:86:73:78:DB:D1:FA:6E:3A"]
+    }
+  }
+]

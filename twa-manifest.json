@@ -1,0 +1,65 @@
+{
+  "packageId": "olh.zenchat",
+  "host": "olh-zenchat.vercel.app",
+  "name": "OLH ZenChat",
+  "launcherName": "ZenChat",
+  "display": "standalone",
+  "themeColor": "#121820",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#121820",
+  "enableNotifications": true,
+  "startUrl": "https://olh-zenchat.vercel.app",
+  "iconUrl": "https://olh-zenchat.vercel.app/logo512.png",
+  "maskableIconUrl": "https://olh-zenchat.vercel.app/logo512.png",
+  "monochromeIconUrl": "https://olh-zenchat.vercel.app/logo512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "android.keystore",
+    "alias": "zenchat"
+  },
+  "appVersionName": "2",
+  "appVersionCode": 2,
+  "shortcuts": [
+    {
+      "name": "Recents",
+      "shortName": "Recents",
+      "url": "https://olh-zenchat.vercel.app/?tab=recents",
+      "chosenIconUrl": "https://olh-zenchat.vercel.app/logo192.png"
+    },
+    {
+      "name": "Contacts",
+      "shortName": "Contacts",
+      "url": "https://olh-zenchat.vercel.app/?tab=contacts",
+      "chosenIconUrl": "https://olh-zenchat.vercel.app/logo192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://olh-zenchat.vercel.app/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "playBilling": {
+      "enabled": true
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://olh-zenchat.vercel.app/",
+  "minSdkVersion": 21,
+  "orientation": "any",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "2"
+}
