@@ -19,5 +19,21 @@
       "type": "image/png",
       "purpose": "any"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Recents",
+      "short_name": "Recents",
+      "description": "View your recent chats",
+      "url": "/?tab=recents",
+      "icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Contacts",
+      "short_name": "Contacts",
+      "description": "View your contacts",
+      "url": "/?tab=contacts",
+      "icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+    }
   ]
 }

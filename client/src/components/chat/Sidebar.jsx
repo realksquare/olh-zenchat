@@ -31,6 +31,14 @@ const Sidebar = ({ onChatSelect }) => {
     const [isAdminOpen, setIsAdminOpen] = useState(false);
     const [isFAQOpen, setIsFAQOpen] = useState(false);
     const [activeTab, setActiveTab] = useState("recents"); // "recents" | "contacts"
+    
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get("tab");
+        if (tab === "contacts" || tab === "recents") {
+            setActiveTab(tab);
+        }
+    }, []);
 
     useEffect(() => {
         const delayDebounce = setTimeout(async () => {
