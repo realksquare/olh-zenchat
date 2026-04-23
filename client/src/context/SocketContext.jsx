@@ -152,8 +152,8 @@ export const SocketProvider = ({ children }) => {
         return () => window.removeEventListener("online", handleOnline);
     }, []);
 
-    const sendMessage = useCallback((chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false) => {
-        const payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce };
+    const sendMessage = useCallback((chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null) => {
+        const payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid };
         
         if (socketRef.current?.connected && navigator.onLine) {
             socketRef.current.emit("send_message", payload);

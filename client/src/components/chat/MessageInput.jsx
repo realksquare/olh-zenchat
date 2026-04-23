@@ -236,13 +236,10 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 );
 
                 const downloadURL = res.data.secure_url;
-                // Replace temp message or just send real one
-                sendMessage(chatId, files.length === 1 ? textContent : "", isVideo ? "video" : "image", downloadURL, replyingTo?._id, isViewOnce);
-                // We'll let the socket event update/remove the temp message naturally if IDs match, 
-                // but usually the socket returns a new message. For now, we just send.
+                sendMessage(chatId, files.length === 1 ? textContent : "", isVideo ? "video" : "image", downloadURL, replyingTo?._id, isViewOnce, tempId);
             }
             if (soundEnabled) playSendSound();
-            onCancelReply(); // Clear reply after sending
+            onCancelReply(); 
         } catch (error) {
             const errorDetail = error.response?.data?.error?.message || error.message;
             console.error("Cloudinary Detailed Error:", error.response?.data || error);
@@ -273,7 +270,18 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             }
             onCancelEdit();
         } else {
-            sendMessage(chatId, filteredContent, "text", "", replyingTo?._id, false);
+            const tempId = `temp-${Date.now()}-${Math.random()}`;
+            // Add optimistic text message too
+            addMessage(chatId, {
+                _id: tempId,
+                chatId,
+                senderId: user?._id,
+                content: filteredContent,
+                type: "text",
+                status: "sending",
+                createdAt: new Date().toISOString()
+            });
+            sendMessage(chatId, filteredContent, "text", "", replyingTo?._id, false, tempId);
             if (soundEnabled) playSendSound();
             onCancelReply();
         }

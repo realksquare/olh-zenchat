@@ -20,8 +20,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
 
     const repliedToMessage = useMemo(() => {
         if (!message.replyTo) return null;
-        // Search through all chats to find the message if it's not in the current active list
-        // but for simplicity we assume it's in the current chatId's messages
+        if (typeof message.replyTo === 'object' && message.replyTo._id) return message.replyTo;
         return messages[message.chatId]?.find(m => m._id === message.replyTo);
     }, [message.replyTo, messages, message.chatId]);
 
@@ -148,8 +147,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                                     onClick={(e) => { e.stopPropagation(); scrollToMessage(message.replyTo); }}
                                 >
                                     <div className="replied-sender">
-                                        {repliedToMessage.senderId === user?._id ? "You" : (otherUser?.username || "Someone")}
-                                        {otherUser?.isVerified && <VerifiedTick />}
+                                        {repliedToMessage.senderId?._id === user?._id || repliedToMessage.senderId === user?._id ? "You" : (repliedToMessage.senderId?.username || otherUser?.username || "Someone")}
                                     </div>
                                     <div className="replied-content">
                                         {repliedToMessage.type === "image" ? "Image" : 

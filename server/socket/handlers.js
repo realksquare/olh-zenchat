@@ -75,7 +75,7 @@ const registerSocketHandlers = (io) => {
             socket.leave(chatId);
         });
 
-        socket.on("send_message", async ({ chatId, content, type, mediaUrl, replyTo, isViewOnce }) => {
+        socket.on("send_message", async ({ chatId, content, type, mediaUrl, replyTo, isViewOnce, cid }) => {
             try {
                 const message = await Message.create({
                     chatId,
@@ -85,6 +85,7 @@ const registerSocketHandlers = (io) => {
                     mediaUrl: mediaUrl || "",
                     replyTo: replyTo || null,
                     isViewOnce: isViewOnce || false,
+                    cid: cid || null,
                     status: "sent",
                 });
 

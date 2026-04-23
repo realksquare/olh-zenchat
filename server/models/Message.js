@@ -69,6 +69,10 @@ const messageSchema = new mongoose.Schema(
                 ref: "User",
             },
         ],
+        cid: {
+            type: String,
+            default: null,
+        },
     },
     { timestamps: true }
 );

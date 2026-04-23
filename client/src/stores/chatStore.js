@@ -84,7 +84,8 @@ export const useChatStore = create(
 
                     let nextMessages = [...chatMessages];
                     const existingIndex = nextMessages.findIndex(
-                        m => m._id?.toString() === message._id?.toString()
+                        m => (m._id?.toString() === message._id?.toString()) || 
+                             (message.cid && m._id === message.cid)
                     );
 
                     if (existingIndex !== -1) {

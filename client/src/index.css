@@ -2300,7 +2300,7 @@ select {
 .scroll-down-btn {
   position: absolute;
   right: 20px;
-  bottom: 80px;
+  bottom: 120px;
   background: var(--color-primary);
   color: white;
   width: 32px;
