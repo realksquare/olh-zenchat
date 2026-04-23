@@ -103,7 +103,14 @@ const ChatWindow = ({ onBack }) => {
         };
 
         joinChat(chatId);
-        fetchMessages(chatId).then(markIfVisible);
+        fetchMessages(chatId).then(() => {
+            markIfVisible();
+            // Force scroll to bottom after messages load - use a slightly longer delay for mobile
+            setTimeout(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+                setShowScrollDown(false);
+            }, 150);
+        });
         window.addEventListener('focus', markIfVisible);
         return () => window.removeEventListener('focus', markIfVisible);
 

@@ -30,12 +30,15 @@ const App = () => {
     checkAuth();
     // Health check to wake up Render and hide splash screen
     const checkHealth = async () => {
+      console.log("[Health] Checking server status...");
       try {
         await axiosInstance.get("/messages/health");
+        console.log("[Health] Server is READY!");
         setServerReady(true);
       } catch (err) {
-        // Retry every 3 seconds if server is still sleeping
-        setTimeout(checkHealth, 3000);
+        console.log("[Health] Server SLEEPING or error, retrying in 2s...");
+        // Retry every 2 seconds if server is still sleeping
+        setTimeout(checkHealth, 2000);
       }
     };
     checkHealth();

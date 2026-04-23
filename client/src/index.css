@@ -1114,7 +1114,6 @@ select {
   display: flex;
   align-items: center;
   padding: var(--space-1) var(--space-2);
-  align-self: flex-start;
 }
 
 .typing-wave {
@@ -2301,7 +2300,7 @@ select {
 .scroll-down-btn {
   position: absolute;
   right: 20px;
-  bottom: 20px;
+  bottom: 80px;
   background: var(--color-primary);
   color: white;
   width: 32px;

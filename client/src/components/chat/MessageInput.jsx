@@ -259,9 +259,6 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
 
         if (stagedFiles.length > 0) {
             await uploadAndSend(stagedFiles, filteredContent);
-            if (filteredContent) {
-                sendMessage(chatId, filteredContent, "text", "", null, false);
-            }
             setContent("");
             clearTyping();
             return;
