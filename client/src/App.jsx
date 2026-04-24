@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./stores/authStore";
+import { useChatStore } from "./stores/chatStore";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
@@ -24,31 +25,29 @@ const GuestRoute = ({ children }) => {
 
 const App = () => {
   const { user, token, checkAuth } = useAuthStore();
+  const { initLocalData, fetchChats } = useChatStore();
   const [serverReady, setServerReady] = useState(false);
 
   useEffect(() => {
     checkAuth();
-    // Health check to wake up Render and hide splash screen
+    if (token) {
+        initLocalData();
+        fetchChats();
+    }
     const checkHealth = async () => {
-      console.log("[Health] Checking server status...");
       try {
         await axiosInstance.get("/messages/health");
-        console.log("[Health] Server is READY!");
         setServerReady(true);
       } catch (err) {
-        console.log("[Health] Server SLEEPING or error, retrying in 2s...");
-        // Retry every 2 seconds if server is still sleeping
         setTimeout(checkHealth, 2000);
       }
     };
     checkHealth();
 
-    // Prime AudioContext on first user interaction
     const prime = () => { primeAudioContext(); };
     window.addEventListener('touchstart', prime, { once: true });
     window.addEventListener('mousedown', prime, { once: true });
 
-    // Handle FCM token registration (only if already granted)
     if (token && user) {
       const registerFCM = async () => {
         if (Notification.permission !== "granted") return;
@@ -60,11 +59,10 @@ const App = () => {
             await axiosInstance.put("/auth/me", { 
               fcmToken,
               deviceType: isPWA ? "pwa" : "browser",
-              notificationsEnabled: true // Enable by default if they grant permission
+              notificationsEnabled: true
             });
-            console.log("[FCM] Token registered successfully");
           } catch (err) {
-            console.error("[FCM] Failed to register token with backend", err);
+            console.error(err);
           }
         }
       };

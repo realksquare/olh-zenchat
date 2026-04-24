@@ -21,6 +21,8 @@ const io = new Server(server, {
     },
 });
 
+app.set("io", io);
+
 app.use(cors({ origin: process.env.CLIENT_URL }));
 app.use(compression());
 app.use(express.json());
@@ -36,7 +38,7 @@ const PORT = process.env.PORT || 5000;
 
 connectDB().then(async () => {
     await User.updateMany({}, { $set: { isOnline: false } });
-    console.log("🧹 Ghost users swept offline");
+
 
     server.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);

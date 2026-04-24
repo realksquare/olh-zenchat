@@ -96,9 +96,11 @@ export const SocketProvider = ({ children }) => {
             useChatStore.getState().deleteMessage(chatId, messageId, deleteFor);
         };
 
+        const handleNewChat = ({ chat }) => {
+            useChatStore.getState().addChat(chat);
+        };
+
         socket.on("connect", () => {
-            console.log("ZenChat V2.2 - Ready for action!");
-            console.log("[Socket] Connected:", socket.id);
             const activeChat = useChatStore.getState().activeChat;
             if (activeChat?._id) socket.emit("join_chat", { chatId: activeChat._id });
         });
@@ -111,6 +113,7 @@ export const SocketProvider = ({ children }) => {
         socket.on("user_offline", handleUserOffline);
         socket.on("message_edited", handleMessageEdited);
         socket.on("message_deleted", handleMessageDeleted);
+        socket.on("new_chat", handleNewChat);
 
         return () => {
             socket.off("connect");
@@ -122,6 +125,7 @@ export const SocketProvider = ({ children }) => {
             socket.off("user_offline", handleUserOffline);
             socket.off("message_edited", handleMessageEdited);
             socket.off("message_deleted", handleMessageDeleted);
+            socket.off("new_chat", handleNewChat);
             socket.disconnect();
             socketRef.current = null;
         };
@@ -140,7 +144,6 @@ export const SocketProvider = ({ children }) => {
     useEffect(() => {
         const handleOnline = () => {
             if (offlineQueueRef.current.length > 0 && socketRef.current?.connected) {
-                console.log(`[OfflineQueue] Flushing ${offlineQueueRef.current.length} messages...`);
                 while (offlineQueueRef.current.length > 0) {
                     const msg = offlineQueueRef.current.shift();
                     socketRef.current.emit("send_message", msg);
@@ -158,7 +161,6 @@ export const SocketProvider = ({ children }) => {
         if (socketRef.current?.connected && navigator.onLine) {
             socketRef.current.emit("send_message", payload);
         } else {
-            console.log("[OfflineQueue] Socket disconnected or offline, queuing message...");
             offlineQueueRef.current.push(payload);
         }
     }, []);

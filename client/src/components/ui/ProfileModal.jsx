@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import { requestNotificationPermission } from "../../utils/firebase";
+import LoadingOverlay from "./LoadingOverlay";
 
 const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const { user, updateProfile, isLoading, soundEnabled, toggleSound } = useAuthStore();
@@ -17,6 +18,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [onlineVisibility, setOnlineVisibility] = useState(user?.privacySettings?.onlineStatus || "everyone");
     const [nameVisibility, setNameVisibility] = useState(user?.privacySettings?.fullName || "everyone");
     const [error, setError] = useState("");
+    const [isSubscribing, setIsSubscribing] = useState(false);
 
     const fileInputRef = useRef(null);
 
@@ -31,6 +33,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setNameVisibility(user.privacySettings?.fullName || "everyone");
             setAvatarFile(null);
             setError("");
+            setIsSubscribing(false);
         }
     }, [isOpen, user]);
 
@@ -90,17 +93,22 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     };
 
     const handleSubscribe = async () => {
-        const token = await requestNotificationPermission();
-        if (token) {
-            const formData = new FormData();
-            formData.append("notificationsEnabled", "true");
-            formData.append("fcmToken", token);
-            const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-            formData.append("deviceType", isPWA ? "pwa" : "browser");
-            await updateProfile(formData);
-            window.location.reload();
-        } else {
-            setError("Failed to enable notifications. Permission denied or error.");
+        setIsSubscribing(true);
+        try {
+            const token = await requestNotificationPermission();
+            if (token) {
+                const formData = new FormData();
+                formData.append("notificationsEnabled", "true");
+                formData.append("fcmToken", token);
+                const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+                formData.append("deviceType", isPWA ? "pwa" : "browser");
+                await updateProfile(formData);
+                window.location.reload();
+            } else {
+                setError("Failed to enable notifications. Permission denied or error.");
+            }
+        } finally {
+            setIsSubscribing(false);
         }
     };
 
@@ -112,6 +120,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
 
     return createPortal(
         <div className="modal-overlay" onClick={onClose}>
+            {isSubscribing && <LoadingOverlay message="Subscribing..." subMessage="Setting up your secure connection" />}
             <div className="modal-content profile-modal" onClick={(e) => e.stopPropagation()}>
                 <button className="modal-close" onClick={onClose}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

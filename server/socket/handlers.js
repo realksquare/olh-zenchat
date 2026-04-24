@@ -5,14 +5,14 @@ const mongoose = require("mongoose");
 const { sendPushNotification } = require("../utils/firebase");
 
 const onlineUsers = new Map();
-const disconnectTimeouts = new Map(); // For 30s grace period
+const disconnectTimeouts = new Map();
 
 const registerSocketHandlers = (io) => {
     io.on("connection", (socket) => {
         const { userId, deviceType } = socket.handshake.auth;
 
         if (userId) {
-            // Cancel pending offline timer on reconnect
+            socket.join(userId);
             if (disconnectTimeouts.has(userId)) {
                 clearTimeout(disconnectTimeouts.get(userId));
                 disconnectTimeouts.delete(userId);
@@ -25,12 +25,66 @@ const registerSocketHandlers = (io) => {
             userData.sockets.set(socket.id, deviceType || "browser");
             userData.hasPWA = Array.from(userData.sockets.values()).includes("pwa");
 
-            const isFirstConnection = userData.sockets.size === 1;
-
-            if (isFirstConnection) {
+            if (userData.sockets.size === 1) {
                 User.findByIdAndUpdate(userId, { isOnline: true }).exec();
-                io.emit("user_online", { userId });
+                broadcastUserStatus(userId, true);
             }
+
+            const broadcastUserStatus = async (uid, isOnline, lastSeen = null) => {
+                try {
+                    const user = await User.findById(uid).select("privacySettings contacts");
+                    if (!user) return;
+
+                    const privacy = user.privacySettings?.onlineStatus || "everyone";
+                    
+                    for (const [targetId, targetData] of onlineUsers.entries()) {
+                        if (targetId === uid) continue;
+
+                        let canSee = false;
+                        if (privacy === "everyone") {
+                            canSee = true;
+                        } else if (privacy === "nobody") {
+                            canSee = false;
+                        } else {
+                            const isContact = user.contacts?.some(c => 
+                                c.userId.toString() === targetId && 
+                                (privacy === "contacts" || c.tag === privacy)
+                            );
+                            if (isContact) canSee = true;
+                        }
+
+                        if (canSee) {
+                            targetData.sockets.forEach((dType, sId) => {
+                                if (isOnline) {
+                                    io.to(sId).emit("user_online", { userId: uid });
+                                } else {
+                                    io.to(sId).emit("user_offline", { userId: uid, lastSeen });
+                                }
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error broadcasting status:", err);
+                }
+            };
+
+            socket.on("disconnect", () => {
+                if (userData && userData.sockets.has(socket.id)) {
+                    userData.sockets.delete(socket.id);
+                    userData.hasPWA = Array.from(userData.sockets.values()).includes("pwa");
+
+                    if (userData.sockets.size === 0) {
+                        const timeout = setTimeout(async () => {
+                            const now = new Date();
+                            await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
+                            onlineUsers.delete(userId);
+                            disconnectTimeouts.delete(userId);
+                            broadcastUserStatus(userId, false, now);
+                        }, 30000);
+                        disconnectTimeouts.set(userId, timeout);
+                    }
+                }
+            });
 
             (async () => {
                 try {
@@ -61,8 +115,35 @@ const registerSocketHandlers = (io) => {
                             }
                         });
                     }
+
+                    for (const [otherId, otherData] of onlineUsers.entries()) {
+                        if (otherId === userId) continue;
+                        
+                        const otherUser = await User.findById(otherId).select("privacySettings contacts");
+                        if (!otherUser) continue;
+
+                        const privacy = otherUser.privacySettings?.onlineStatus || "everyone";
+                        let canSee = false;
+
+                        if (privacy === "everyone") {
+                            canSee = true;
+                        } else if (privacy === "nobody") {
+                            canSee = false;
+                        } else {
+                            const isContact = otherUser.contacts?.some(c => 
+                                c.userId.toString() === userId && 
+                                (privacy === "contacts" || c.tag === privacy)
+                            );
+                            if (isContact) canSee = true;
+                        }
+
+                        if (canSee) {
+                            socket.emit("user_online", { userId: otherId });
+                        }
+                    }
+
                 } catch (err) {
-                    console.error("Error delivering pending messages:", err);
+                    console.error("Error in connection async block:", err);
                 }
             })();
         }
@@ -105,8 +186,6 @@ const registerSocketHandlers = (io) => {
                 };
 
                 io.to(chatId).emit("receive_message", { message: messagePayload });
-                
-                // Extra assurance: emit to sender's current socket
                 socket.emit("receive_message", { message: messagePayload });
 
                 const chat = await Chat.findById(chatId);
@@ -132,26 +211,13 @@ const registerSocketHandlers = (io) => {
                         });
                         isDelivered = true;
                     } else {
-                        // User is offline: Try Push Notification
                         const pIdStr = participantId._id?.toString() || participantId.toString();
-                        console.log(`[Push] User ${pIdStr} is offline, checking for push...`);
                         
                         User.findById(pIdStr).then(async (offlineUser) => {
-                            if (!offlineUser) {
-                                console.warn(`[Push] User ${pIdStr} not found in DB.`);
-                                return;
-                            }
-                            
-                            if (!offlineUser.notificationsEnabled) {
-                                console.log(`[Push] User ${pIdStr} has notifications DISABLED.`);
-                                return;
-                            }
+                            if (!offlineUser || !offlineUser.notificationsEnabled) return;
 
                             const tokens = offlineUser.fcmTokens || [];
-                            if (tokens.length === 0 && !offlineUser.fcmToken) {
-                                console.log(`[Push] User ${pIdStr} has NO valid FCM tokens.`);
-                                return;
-                            }
+                            if (tokens.length === 0 && !offlineUser.fcmToken) return;
 
                             const senderName = populated.senderId.username;
                             const senderIsContact = offlineUser.contacts?.some(
@@ -195,7 +261,6 @@ const registerSocketHandlers = (io) => {
                                 targetTokens = [offlineUser.fcmToken];
                             }
 
-                            console.log(`[Push] Sending to ${targetTokens.length} tokens for user ${pIdStr}...`);
                             let pushSuccess = false;
                             for (const tkn of targetTokens) {
                                 const success = await sendPushNotification(offlineUser._id, tkn, title, body, {
@@ -215,7 +280,7 @@ const registerSocketHandlers = (io) => {
                                     });
                                 }
                             }
-                        }).catch(err => console.error(`[Push] Error in handlers:`, err));
+                        }).catch(err => console.error(`[Push] Error:`, err));
                     }
                 });
 
@@ -236,17 +301,6 @@ const registerSocketHandlers = (io) => {
                             io.to(socketId).emit("receive_message", { message: messagePayload });
                         }
                     });
-                }
-
-                if (deliveredToAtLeastOne) {
-                    if (myData && myData.sockets) {
-                        myData.sockets.forEach((dType, socketId) => {
-                            io.to(socketId).emit("message_delivered", {
-                                messageId: message._id.toString(),
-                                chatId: chatId.toString(),
-                            });
-                        });
-                    }
                 }
             } catch (err) {
                 socket.emit("message_error", { error: "Failed to send message" });
@@ -329,66 +383,6 @@ const registerSocketHandlers = (io) => {
         socket.on("typing_start", async ({ chatId }) => {
             const chat = await Chat.findById(chatId);
             if (!chat) return;
-            chat.participants.forEach(pId => {
-                const pIdStr = pId.toString();
-                if (pIdStr !== userId) {
-                    io.to(pIdStr).emit("typing_status", { userId, chatId, isTyping: true });
-                }
-            });
-        });
-
-        socket.on("typing_stop", async ({ chatId }) => {
-            const chat = await Chat.findById(chatId);
-            if (!chat) return;
-            chat.participants.forEach(pId => {
-                const pIdStr = pId.toString();
-                if (pIdStr !== userId) {
-                    io.to(pIdStr).emit("typing_status", { userId, chatId, isTyping: false });
-                }
-            });
-        });
-
-        socket.on("message_read", async ({ chatId }) => {
-            try {
-                const senderIdCriteria = { $ne: new mongoose.Types.ObjectId(userId) };
-                const chatIdCriteria = new mongoose.Types.ObjectId(chatId);
-
-                const result = await Message.updateMany(
-                    { chatId: chatIdCriteria, senderId: senderIdCriteria, status: { $ne: "read" } },
-                    { status: "read" }
-                );
-
-                const chat = await Chat.findById(chatId);
-                if (!chat) return;
-
-                chat.participants
-                    .filter(p => p.toString() !== userId)
-                    .forEach(participantId => {
-                        const userData = onlineUsers.get(participantId.toString());
-                        if (userData && userData.sockets) {
-                            userData.sockets.forEach((dType, socketId) => {
-                                io.to(socketId).emit("messages_read", { chatId: chatId.toString(), readBy: userId });
-                            });
-                        }
-                    });
-
-                const myData = onlineUsers.get(userId);
-                if (myData && myData.sockets) {
-                    myData.sockets.forEach((dType, socketId) => {
-                        if (socketId !== socket.id) {
-                            io.to(socketId).emit("messages_read", { chatId: chatId.toString(), readBy: userId });
-                        }
-                    });
-                }
-            } catch (err) {
-                console.error("[DEBUG] message_read error:", err);
-                socket.emit("message_error", { error: "Failed to update read status" });
-            }
-        });
-
-        socket.on("typing_start", async ({ chatId }) => {
-            const chat = await Chat.findById(chatId);
-            if (!chat) return;
             chat.participants
                 .filter(p => p.toString() !== userId)
                 .forEach(participantId => {
@@ -416,36 +410,40 @@ const registerSocketHandlers = (io) => {
                 });
         });
 
-        socket.on("disconnect", async () => {
-            if (userId) {
-                const userData = onlineUsers.get(userId);
-                if (userData) {
-                    userData.sockets.delete(socket.id);
-                    userData.hasPWA = Array.from(userData.sockets.values()).includes("pwa");
-                    
-                    if (userData.sockets.size === 0) {
-                        // Start 7s grace period
-                        console.log(`[GracePeriod] User ${userId} disconnected, starting 7s timer...`);
-                        const timeoutId = setTimeout(async () => {
-                            const currentData = onlineUsers.get(userId);
-                            if (currentData && currentData.sockets.size === 0) {
-                                onlineUsers.delete(userId);
-                                disconnectTimeouts.delete(userId);
-                                
-                                const lastSeen = new Date();
-                                try {
-                                    await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen });
-                                    io.emit("user_offline", { userId, lastSeen });
-                                    console.log(`[GracePeriod] User ${userId} marked offline after 7s.`);
-                                } catch (err) {
-                                    console.error("[GracePeriod] Error marking offline:", err);
-                                }
-                            }
-                        }, 7000);
-                        
-                        disconnectTimeouts.set(userId, timeoutId);
-                    }
+        socket.on("message_read", async ({ chatId }) => {
+            try {
+                const senderIdCriteria = { $ne: new mongoose.Types.ObjectId(userId) };
+                const chatIdCriteria = new mongoose.Types.ObjectId(chatId);
+
+                await Message.updateMany(
+                    { chatId: chatIdCriteria, senderId: senderIdCriteria, status: { $ne: "read" } },
+                    { status: "read" }
+                );
+
+                const chat = await Chat.findById(chatId);
+                if (!chat) return;
+
+                chat.participants
+                    .filter(p => p.toString() !== userId)
+                    .forEach(participantId => {
+                        const userData = onlineUsers.get(participantId.toString());
+                        if (userData && userData.sockets) {
+                            userData.sockets.forEach((dType, socketId) => {
+                                io.to(socketId).emit("messages_read", { chatId: chatId.toString(), readBy: userId });
+                            });
+                        }
+                    });
+
+                const myData = onlineUsers.get(userId);
+                if (myData && myData.sockets) {
+                    myData.sockets.forEach((dType, socketId) => {
+                        if (socketId !== socket.id) {
+                            io.to(socketId).emit("messages_read", { chatId: chatId.toString(), readBy: userId });
+                        }
+                    });
                 }
+            } catch (err) {
+                socket.emit("message_error", { error: "Failed to update read status" });
             }
         });
     });

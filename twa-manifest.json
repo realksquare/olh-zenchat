@@ -12,7 +12,7 @@
   "navigationDividerColorDark": "#000000",
   "backgroundColor": "#121820",
   "enableNotifications": true,
-  "startUrl": "https://olh-zenchat.vercel.app",
+  "startUrl": "/",
   "iconUrl": "https://olh-zenchat.vercel.app/logo512.png",
   "maskableIconUrl": "https://olh-zenchat.vercel.app/logo512.png",
   "monochromeIconUrl": "https://olh-zenchat.vercel.app/logo512.png",
@@ -21,8 +21,8 @@
     "path": "android.keystore",
     "alias": "zenchat"
   },
-  "appVersionName": "2",
-  "appVersionCode": 2,
+  "appVersionName": "3",
+  "appVersionCode": 3,
   "shortcuts": [
     {
       "name": "Recents",
@@ -61,5 +61,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": [],
-  "appVersion": "2"
+  "appVersion": "3"
 }

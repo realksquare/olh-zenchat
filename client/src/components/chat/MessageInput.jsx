@@ -206,14 +206,13 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 const isVideo = ACCEPTED_VIDEO.includes(file.type);
                 const tempId = `temp-${Date.now()}-${Math.random()}`;
                 
-                // Create optimistic message
                 addMessage(chatId, {
                     _id: tempId,
                     chatId,
                     senderId: user?._id,
-                    content: files.length === 1 ? textContent : "", // Only add caption to first if single file
+                    content: files.length === 1 ? textContent : "",
                     type: isVideo ? "video" : "image",
-                    mediaUrl: URL.createObjectURL(file), // Local blob for preview
+                    mediaUrl: URL.createObjectURL(file),
                     status: "sending",
                     progress: 0,
                     replyTo: replyingTo?._id,
@@ -241,9 +240,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             if (soundEnabled) playSendSound();
             onCancelReply(); 
         } catch (error) {
-            const errorDetail = error.response?.data?.error?.message || error.message;
-            console.error("Cloudinary Detailed Error:", error.response?.data || error);
-            alert(`Upload failed: ${errorDetail}. \n\nCheck console for details.`);
+            console.error(error);
         } finally {
             setUploading(false);
             setStagedFiles([]);
@@ -271,7 +268,6 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             onCancelEdit();
         } else {
             const tempId = `temp-${Date.now()}-${Math.random()}`;
-            // Add optimistic text message too
             addMessage(chatId, {
                 _id: tempId,
                 chatId,

@@ -5,16 +5,13 @@ import axiosInstance from "../../utils/axios";
 
 const NotificationPrompt = () => {
     const [show, setShow] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const { user, setFCMToken } = useAuthStore();
 
     useEffect(() => {
         const checkPermission = async () => {
             if (!user) return;
-            
-            // Check if user already has tokens in DB via their profile or local state
-            // But primarily check browser permission
             if (Notification.permission === "default") {
-                // Show prompt after a small delay
                 const timer = setTimeout(() => setShow(true), 3000);
                 return () => clearTimeout(timer);
             }
@@ -23,6 +20,7 @@ const NotificationPrompt = () => {
     }, [user]);
 
     const handleEnable = async () => {
+        setIsLoading(true);
         try {
             const token = await requestNotificationPermission();
             if (token) {
@@ -33,10 +31,13 @@ const NotificationPrompt = () => {
                     notificationsEnabled: true
                 });
                 setFCMToken(token);
-                setShow(false);
             }
+            setShow(false); // Close regardless of token if they interacted
         } catch (err) {
             console.error("Failed to enable notifications", err);
+            setShow(false);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -49,8 +50,10 @@ const NotificationPrompt = () => {
                 <h3>Stay Connected!</h3>
                 <p>Enable push notifications for instant updates when you're offline!</p>
                 <div className="notif-prompt-actions">
-                    <button className="notif-btn-later" onClick={() => setShow(false)}>Later</button>
-                    <button className="notif-btn-enable" onClick={handleEnable}>Enable Now</button>
+                    <button className="notif-btn-later" onClick={() => setShow(false)} disabled={isLoading}>Later</button>
+                    <button className="notif-btn-enable" onClick={handleEnable} disabled={isLoading}>
+                        {isLoading ? "Please wait..." : "Enable Now"}
+                    </button>
                 </div>
             </div>
         </div>

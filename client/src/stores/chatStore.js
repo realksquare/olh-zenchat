@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import axiosInstance from "../utils/axios";
 import { useAuthStore } from "./authStore";
+import { db, persistChat, persistMessage, getLocalChats, getLocalMessages } from "../db/zenDB";
 
 export const useChatStore = create(
     persist(
@@ -14,14 +15,32 @@ export const useChatStore = create(
             unreadCounts: {},
             isLoadingChats: false,
             isLoadingMessages: false,
+            isOffline: !navigator.onLine,
+
+            initLocalData: async () => {
+                const localChats = await getLocalChats();
+                if (localChats.length > 0) {
+                    const initialUnread = {};
+                    localChats.forEach(chat => {
+                        initialUnread[chat._id] = chat.unreadCount || 0;
+                    });
+                    set({ chats: localChats, unreadCounts: initialUnread });
+                }
+            },
 
             fetchChats: async () => {
+                const local = await getLocalChats();
+                if (local.length > 0 && get().chats.length === 0) {
+                    set({ chats: local });
+                }
+
                 set({ isLoadingChats: true });
                 try {
                     const { data } = await axiosInstance.get("/chats");
                     const initialUnread = {};
                     data.chats.forEach(chat => {
                         initialUnread[chat._id] = chat.unreadCount || 0;
+                        persistChat(chat);
                     });
                     set({ chats: data.chats, unreadCounts: initialUnread, isLoadingChats: false });
                 } catch (_) {
@@ -61,14 +80,23 @@ export const useChatStore = create(
                         })
                     }));
                 } catch (error) {
-                    console.error("Failed to toggle pin:", error);
+                    console.error(error);
                 }
             },
 
             fetchMessages: async (chatId) => {
+                const local = await getLocalMessages(chatId);
+                if (local.length > 0) {
+                    set((state) => ({
+                        messages: { ...state.messages, [chatId]: local }
+                    }));
+                }
+
                 set({ isLoadingMessages: true });
                 try {
                     const { data } = await axiosInstance.get(`/messages/${chatId}`);
+                    data.messages.forEach(msg => persistMessage({ ...msg, chatId }));
+                    
                     set((state) => ({
                         messages: { ...state.messages, [chatId]: data.messages },
                         isLoadingMessages: false,
@@ -79,6 +107,7 @@ export const useChatStore = create(
             },
 
             addMessage: (chatId, message) => {
+                persistMessage({ ...message, chatId });
                 set((state) => {
                     const chatMessages = state.messages[chatId] || [];
 
@@ -101,11 +130,15 @@ export const useChatStore = create(
                     const isActiveChat = state.activeChat?._id?.toString() === chatId?.toString();
 
                     const updatedChats = state.chats
-                        .map((chat) =>
-                            chat._id?.toString() === chatId?.toString()
-                                ? { ...chat, lastMessage: { ...message }, updatedAt: message.createdAt }
-                                : chat
-                        )
+                        .map((chat) => {
+                            if (chat._id?.toString() !== chatId?.toString()) return chat;
+                            const currentUpdatedAt = chat.updatedAt ? new Date(chat.updatedAt) : new Date(0);
+                            const msgDate = new Date(message.createdAt);
+                            if (msgDate >= currentUpdatedAt) {
+                                return { ...chat, lastMessage: { ...message }, updatedAt: message.createdAt };
+                            }
+                            return chat;
+                        })
                         .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
                     let updatedActiveChat = state.activeChat;
@@ -365,8 +398,6 @@ export const useChatStore = create(
                 });
             },
 
-
-
             updateParticipantStatus: (userId, isOnline, lastSeen) => {
                 set((state) => {
                     const updatedChats = state.chats.map((chat) => ({
@@ -473,7 +504,7 @@ export const useChatStore = create(
                         return { messages: { ...state.messages, [chatId]: updatedMessages } };
                     });
                 } catch (error) {
-                    console.error("Failed to star message:", error);
+                    console.error(error);
                 }
             },
 
@@ -491,7 +522,7 @@ export const useChatStore = create(
                         return { messages: { ...state.messages, [chatId]: updatedMessages } };
                     });
                 } catch (error) {
-                    console.error("Failed to mark as viewed:", error);
+                    console.error(error);
                 }
             },
         }),

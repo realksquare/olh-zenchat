@@ -7,12 +7,12 @@ cloudinary.config({
   api_secret: (process.env.CLOUDINARY_API_SECRET || "").trim()
 });
 
-const storage = multer.diskStorage({}); // Use default temp storage
+const storage = multer.diskStorage({});
 const upload = multer({ storage });
 
 const uploadMedia = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+  limits: { fileSize: 10 * 1024 * 1024 }
 });
 
 module.exports = { cloudinary, upload, uploadMedia };

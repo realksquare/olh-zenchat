@@ -76,7 +76,6 @@ router.get("/:chatId", async (req, res) => {
             .skip(skip)
             .limit(limit);
 
-        // Mark messages from others as read when fetching history
         await Message.updateMany(
             { 
                 chatId: req.params.chatId, 
@@ -206,8 +205,6 @@ router.post("/:messageId/view", async (req, res) => {
             await Message.findByIdAndUpdate(req.params.messageId, {
                 $addToSet: { viewedBy: req.user._id }
             });
-            // Optional: If both participants have viewed (in 1-on-1), we could delete it, 
-            // but for now we just mark it as viewed on the client.
         }
         res.json({ success: true });
     } catch (err) {

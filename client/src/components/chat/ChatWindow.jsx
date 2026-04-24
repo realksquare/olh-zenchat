@@ -27,7 +27,6 @@ const ScrollDownBtn = ({ onClick, show }) => (
 
 const ChatWindow = ({ onBack }) => {
     const { user } = useAuthStore();
-    // Get the contacts list from auth store to show label for contacts
     const contacts = useAuthStore((s) => s.user?.contacts || EMPTY_CONTACTS);
     const { 
         activeChat, fetchMessages, isLoadingMessages, 
@@ -47,8 +46,9 @@ const ChatWindow = ({ onBack }) => {
     );
     
     const messages = useMemo(() => {
-        if (!showOnlyStarred) return rawMessages;
-        return rawMessages.filter(m => m.starredBy?.includes(user?._id));
+        const sorted = [...rawMessages].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        if (!showOnlyStarred) return sorted;
+        return sorted.filter(m => m.starredBy?.includes(user?._id));
     }, [rawMessages, showOnlyStarred, user?._id]);
 
     const { joinChat, leaveChat, markAsRead, deleteMessage } = useSocket();
@@ -62,11 +62,9 @@ const ChatWindow = ({ onBack }) => {
 
     const handleMessageAction = (msg) => {
         if (msg.action === "reply") {
-            // It's a reply action
             setReplyingTo(msg);
             setEditingMessage(null);
         } else {
-            // It's a real edit action
             setEditingMessage(msg);
             setReplyingTo(null);
         }
@@ -82,7 +80,6 @@ const ChatWindow = ({ onBack }) => {
         return set instanceof Set ? set.has(otherId) : false;
     }, [typingUsers, activeChat?._id, otherUser?._id]);
 
-    // Contact display name (append label if tagged as contact)
     const isContact = contacts.some(
         c => c.userId?.toString() === otherUser?._id?.toString() || c.userId === otherUser?._id
     );
@@ -92,8 +89,6 @@ const ChatWindow = ({ onBack }) => {
         if (!activeChat?._id) return;
         const chatId = activeChat._id;
 
-        // Only mark as read if the chat window is actually visible in mobile layout
-        // or we are on desktop (where showChat is implicitly true/handled by layout)
         const isMobile = window.innerWidth <= 768;
         const markIfVisible = () => {
             if (isMobile && !onBack) return;
@@ -105,7 +100,6 @@ const ChatWindow = ({ onBack }) => {
         joinChat(chatId);
         fetchMessages(chatId).then(() => {
             markIfVisible();
-            // Force scroll to bottom after messages load - use a slightly longer delay for mobile
             setTimeout(() => {
                 messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
                 setShowScrollDown(false);
@@ -113,19 +107,7 @@ const ChatWindow = ({ onBack }) => {
         });
         window.addEventListener('focus', markIfVisible);
         return () => window.removeEventListener('focus', markIfVisible);
-
-        // Simplified: only one passive attempt after a delay
-        const timer = setTimeout(() => {
-            if (activeChat?._id === chatId) {
-                markAsRead(chatId);
-            }
-        }, 1000);
-
-        return () => {
-            clearTimeout(timer);
-            leaveChat(chatId);
-        };
-    }, [activeChat?._id]); // STRICT dependency on ID only
+    }, [activeChat?._id]);
 
     useEffect(() => {
         setEditingMessage(null);
@@ -134,7 +116,6 @@ const ChatWindow = ({ onBack }) => {
     }, [activeChat?._id]);
 
     useEffect(() => {
-        // Only auto-scroll on new messages, not typing status changes
         if (!showScrollDown) {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }

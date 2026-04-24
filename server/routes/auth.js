@@ -164,7 +164,6 @@ router.put(
 
             if (fcmToken !== undefined) {
                 const deviceType = req.body.deviceType || 'browser';
-                // Remove existing token if it's the same token, or update existing device entry
                 const tokens = (user.fcmTokens || []).filter(t => t.token !== fcmToken && t.deviceType !== deviceType);
                 tokens.push({
                     token: fcmToken,
@@ -197,7 +196,6 @@ router.put(
     }
 );
 
-// ── Contacts ────────────────────────────────────────────
 router.post("/contacts/:targetId", authMiddleware, async (req, res) => {
     try {
         const { targetId } = req.params;
@@ -208,7 +206,7 @@ router.post("/contacts/:targetId", authMiddleware, async (req, res) => {
         }
         const already = me.contacts.find(c => c.userId?.toString() === targetId);
         if (already) {
-            return res.json({ user: me.toPublicJSON() }); // idempotent
+            return res.json({ user: me.toPublicJSON() });
         }
         me.contacts.push({ userId: targetId, tag: "general" });
         await me.save();

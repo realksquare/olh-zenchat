@@ -115,6 +115,11 @@ router.post("/", async (req, res) => {
                 populate: { path: "senderId", select: "username" },
             });
 
+        const io = req.app.get("io");
+        if (io) {
+            io.to(userId).emit("new_chat", { chat: populated });
+        }
+
         res.status(201).json({ chat: populated });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
@@ -179,7 +184,6 @@ router.delete("/:chatId", async (req, res) => {
             $addToSet: { deletedBy: req.user._id }
         });
 
-        // Optionally, clear existing messages from view for this user
         await Message.updateMany(
             { chatId: req.params.chatId, deletedFor: { $ne: req.user._id } },
             { $addToSet: { deletedFor: req.user._id } }

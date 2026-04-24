@@ -26,7 +26,7 @@
     <string name="fullScopeUrl" translatable="false">https://olh-zenchat.vercel.app/</string>
     <string name="generatorApp" translatable="false">bubblewrap-cli</string>
     <string name="hostName" translatable="false">olh-zenchat.vercel.app</string>
-    <string name="launchUrl" translatable="false">https://olh-zenchat.vercel.apphttps://olh-zenchat.vercel.app</string>
+    <string name="launchUrl" translatable="false">https://olh-zenchat.vercel.app/</string>
     <string name="launcherName" translatable="false">ZenChat</string>
     <string name="orientation" translatable="false">any</string>
     <string name="providerAuthority" translatable="false">olh.zenchat.fileprovider</string>

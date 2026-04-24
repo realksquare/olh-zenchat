@@ -14,7 +14,6 @@ const HomePage = () => {
 
     useEffect(() => {
         if (token) {
-            fetchChats();
             // Force empty state on refresh
             useChatStore.getState().setActiveChat(null);
         }

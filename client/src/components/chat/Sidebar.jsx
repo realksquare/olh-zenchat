@@ -30,7 +30,7 @@ const Sidebar = ({ onChatSelect }) => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isAdminOpen, setIsAdminOpen] = useState(false);
     const [isFAQOpen, setIsFAQOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState("recents"); // "recents" | "contacts"
+    const [activeTab, setActiveTab] = useState("recents");
     
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -79,7 +79,6 @@ const Sidebar = ({ onChatSelect }) => {
     const getInitials = (name) => name ? name.slice(0, 2).toUpperCase() : "??";
     const getOtherParticipant = (chat) => chat.participants?.find((p) => p._id !== user?._id);
 
-    // Filter chats based on active tab
     const filteredChats = useMemo(() => {
         const isContactChat = (chat) => {
             const other = chat.participants?.find((p) => p._id !== user?._id);
@@ -91,7 +90,6 @@ const Sidebar = ({ onChatSelect }) => {
         return activeTab === "contacts" ? chats.filter(isContactChat) : chats;
     }, [chats, activeTab, user?._id, user?.contacts]);
 
-    // Filter contacts in search results too
     const filteredSearchResults = useMemo(() => {
         if (activeTab !== "contacts") return searchResults;
         return searchResults.filter(u => user?.contacts?.some(
@@ -151,7 +149,6 @@ const Sidebar = ({ onChatSelect }) => {
                     )}
                 </div>
 
-                {/* Tab switcher */}
                 <div className="sidebar-tabs">
                     <button
                         className={`sidebar-tab ${activeTab === "recents" ? "active" : ""}`}

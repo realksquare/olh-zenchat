@@ -5,7 +5,6 @@ const authMiddleware = require("../middleware/auth");
 
 const router = express.Router();
 
-// Middleware to check for co_admin or master_admin
 const adminCheck = async (req, res, next) => {
     try {
         const user = await User.findById(req.user._id);
@@ -19,14 +18,12 @@ const adminCheck = async (req, res, next) => {
     }
 };
 
-// Get admin stats
 router.get("/stats", authMiddleware, adminCheck, async (req, res) => {
     try {
         const totalUsers = await User.countDocuments();
-        const totalChats = 0; // Placeholder until Chat model count is added if needed
+        const totalChats = 0;
         const messagesCount = await Message.countDocuments();
         
-        // DAU: users who were online or had lastSeen today
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const dauCount = await User.countDocuments({
@@ -51,7 +48,6 @@ router.get("/stats", authMiddleware, adminCheck, async (req, res) => {
     }
 });
 
-// Get all users
 router.get("/users", authMiddleware, adminCheck, async (req, res) => {
     try {
         const users = await User.find({}, "-password").sort({ createdAt: -1 });
@@ -61,7 +57,6 @@ router.get("/users", authMiddleware, adminCheck, async (req, res) => {
     }
 });
 
-// Toggle Verification
 router.post("/verify/:userId", authMiddleware, adminCheck, async (req, res) => {
     try {
         const user = await User.findById(req.params.userId);
@@ -74,14 +69,12 @@ router.post("/verify/:userId", authMiddleware, adminCheck, async (req, res) => {
     }
 });
 
-// Toggle Role (Promote/Demote)
 router.post("/role/:userId", authMiddleware, adminCheck, async (req, res) => {
     try {
         const { role } = req.body;
         const targetUser = await User.findById(req.params.userId);
         if (!targetUser) return res.status(404).json({ message: "User not found" });
 
-        // Master admin check
         if (targetUser.username === "admin_krish") {
             return res.status(403).json({ message: "Cannot modify master admin" });
         }
@@ -98,7 +91,6 @@ router.post("/role/:userId", authMiddleware, adminCheck, async (req, res) => {
     }
 });
 
-// Toggle Suspension
 router.post("/suspend/:userId", authMiddleware, adminCheck, async (req, res) => {
     try {
         const targetUser = await User.findById(req.params.userId);
@@ -116,7 +108,6 @@ router.post("/suspend/:userId", authMiddleware, adminCheck, async (req, res) => 
     }
 });
 
-// Delete User
 router.delete("/users/:userId", authMiddleware, adminCheck, async (req, res) => {
     try {
         const targetUser = await User.findById(req.params.userId);
