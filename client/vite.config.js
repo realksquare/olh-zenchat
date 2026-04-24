@@ -15,20 +15,26 @@ export default defineConfig({
   },
   build: {
     outDir: "dist",
-    minify: "esbuild",
+    minify: "oxc",
     sourcemap: false,
-    chunkSizeWarningLimit: 600,
+    chunkSizeWarningLimit: 800,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ["react", "react-dom", "react-router-dom"],
-          firebase: ["firebase/app", "firebase/messaging", "firebase/storage"],
-          utils: ["axios", "date-fns", "dexie", "zustand", "socket.io-client"]
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("react") || id.includes("react-dom") || id.includes("react-router-dom")) {
+              return "vendor";
+            }
+            if (id.includes("firebase")) {
+              return "firebase";
+            }
+            return "libs";
+          }
         },
       },
     },
   },
-  esbuild: {
+  oxc: {
     drop: ["console", "debugger"],
   },
 });
