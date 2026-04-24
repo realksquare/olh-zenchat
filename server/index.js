@@ -19,11 +19,11 @@ const allowedOrigins = [
     "https://olh-zenchat.vercel.app",
     "https://olh-zenchat.onrender.com",
     "http://localhost:5173"
-].filter(Boolean);
+].filter(Boolean).map(url => url.replace(/\/$/, ""));
 
 const io = new Server(server, {
     cors: {
-        origin: allowedOrigins,
+        origin: (origin, callback) => callback(null, true),
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         credentials: true
     },
@@ -32,7 +32,7 @@ const io = new Server(server, {
 app.set("io", io);
 
 app.use(cors({ 
-    origin: allowedOrigins,
+    origin: (origin, callback) => callback(null, true),
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"]
