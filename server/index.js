@@ -14,16 +14,33 @@ const User = require("./models/User");
 const app = express();
 const server = http.createServer(app);
 
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    "https://olh-zenchat.vercel.app",
+    "https://olh-zenchat.onrender.com",
+    "http://localhost:5173"
+].filter(Boolean);
+
 const io = new Server(server, {
     cors: {
-        origin: process.env.CLIENT_URL,
-        methods: ["GET", "POST"],
+        origin: allowedOrigins,
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        credentials: true
     },
 });
 
 app.set("io", io);
 
-app.use(cors({ origin: process.env.CLIENT_URL }));
+app.use(cors({ 
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
+    credentials: true
+}));
 app.use(compression());
 app.use(express.json());
 
