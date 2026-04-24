@@ -25,11 +25,6 @@ const registerSocketHandlers = (io) => {
             userData.sockets.set(socket.id, deviceType || "browser");
             userData.hasPWA = Array.from(userData.sockets.values()).includes("pwa");
 
-            if (userData.sockets.size === 1) {
-                User.findByIdAndUpdate(userId, { isOnline: true }).exec();
-                broadcastUserStatus(userId, true);
-            }
-
             const broadcastUserStatus = async (uid, isOnline, lastSeen = null) => {
                 try {
                     const user = await User.findById(uid).select("privacySettings contacts");
@@ -67,6 +62,11 @@ const registerSocketHandlers = (io) => {
                     console.error("Error broadcasting status:", err);
                 }
             };
+
+            if (userData.sockets.size === 1) {
+                User.findByIdAndUpdate(userId, { isOnline: true }).exec();
+                broadcastUserStatus(userId, true);
+            }
 
             socket.on("disconnect", () => {
                 if (userData && userData.sockets.has(socket.id)) {
