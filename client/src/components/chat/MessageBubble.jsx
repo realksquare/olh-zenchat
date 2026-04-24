@@ -144,7 +144,11 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                             {repliedToMessage && (
                                 <div 
                                     className="replied-message-preview" 
-                                    onClick={(e) => { e.stopPropagation(); scrollToMessage(message.replyTo); }}
+                                    onClick={(e) => { 
+                                        e.stopPropagation(); 
+                                        const targetId = message.replyTo?._id || message.replyTo;
+                                        scrollToMessage(targetId); 
+                                    }}
                                 >
                                     <div className="replied-sender">
                                         {repliedToMessage.senderId?._id === user?._id || repliedToMessage.senderId === user?._id ? "You" : (repliedToMessage.senderId?.username || otherUser?.username || "Someone")}

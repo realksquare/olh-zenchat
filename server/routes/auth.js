@@ -42,7 +42,7 @@ router.post(
             const user = await User.create({ username, email, password });
             const token = generateToken(user);
 
-            res.status(201).json({ token, user: user.toPublicJSON() });
+            res.status(201).json({ token, user: user.toPrivateJSON() });
         } catch (err) {
             res.status(500).json({ message: "Server error" });
         }
@@ -84,7 +84,7 @@ router.post(
             await User.findByIdAndUpdate(user._id, { isOnline: true });
             const token = generateToken(user);
 
-            res.json({ token, user: user.toPublicJSON() });
+            res.json({ token, user: user.toPrivateJSON() });
         } catch (err) {
             res.status(500).json({ message: "Server error" });
         }
@@ -97,7 +97,7 @@ router.get("/me", authMiddleware, async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-        res.json({ user: user.toPublicJSON() });
+        res.json({ user: user.toPrivateJSON() });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }
@@ -189,7 +189,7 @@ router.put(
             }
 
             await user.save();
-            res.json({ user: user.toPublicJSON() });
+            res.json({ user: user.toPrivateJSON() });
         } catch (err) {
             res.status(500).json({ message: "Server error" });
         }
@@ -210,7 +210,7 @@ router.post("/contacts/:targetId", authMiddleware, async (req, res) => {
         }
         me.contacts.push({ userId: targetId, tag: "general" });
         await me.save();
-        res.json({ user: me.toPublicJSON() });
+        res.json({ user: me.toPrivateJSON() });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }
@@ -223,7 +223,7 @@ router.delete("/contacts/:targetId", authMiddleware, async (req, res) => {
         if (!me) return res.status(404).json({ message: "User not found" });
         me.contacts = me.contacts.filter(c => c.userId?.toString() !== targetId);
         await me.save();
-        res.json({ user: me.toPublicJSON() });
+        res.json({ user: me.toPrivateJSON() });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }

@@ -101,18 +101,43 @@ userSchema.methods.toPublicJSON = function () {
     return {
         _id: this._id,
         username: this.username,
+        avatar: this.avatar,
+        fullName: this.fullName,
+        isOnline: this.isOnline,
+        lastSeen: this.lastSeen,
+        role: this.role,
+        isVerified: this.isVerified,
+        privacySettings: this.privacySettings
+    };
+};
+
+userSchema.methods.toPrivateJSON = function () {
+    return {
+        _id: this._id,
+        username: this.username,
         email: this.email,
         avatar: this.avatar,
         fullName: this.fullName,
         isOnline: this.isOnline,
         lastSeen: this.lastSeen,
         notificationsEnabled: this.notificationsEnabled,
-        fcmTokens: this.fcmTokens,
-        contacts: this.contacts,
         privacySettings: this.privacySettings,
         role: this.role,
         isVerified: this.isVerified,
-        isSuspended: this.isSuspended
+        isSuspended: this.isSuspended,
+        contacts: this.contacts,
+        fcmTokens: this.fcmTokens
+    };
+};
+
+userSchema.methods.toParticipantJSON = function () {
+    return {
+        _id: this._id,
+        username: this.username,
+        avatar: this.avatar,
+        isOnline: this.isOnline,
+        role: this.role,
+        isVerified: this.isVerified
     };
 };
 

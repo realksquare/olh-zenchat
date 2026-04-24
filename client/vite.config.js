@@ -13,4 +13,22 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    outDir: "dist",
+    minify: "esbuild",
+    sourcemap: false,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom", "react-router-dom"],
+          firebase: ["firebase/app", "firebase/messaging", "firebase/storage"],
+          utils: ["axios", "date-fns", "dexie", "zustand", "socket.io-client"]
+        },
+      },
+    },
+  },
+  esbuild: {
+    drop: ["console", "debugger"],
+  },
 });
