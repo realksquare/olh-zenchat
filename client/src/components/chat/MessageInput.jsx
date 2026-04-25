@@ -172,17 +172,20 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
         const chars = "░▒▓█";
         
         // Take the last few characters to keep the flicker dynamic
-        const segment = text.toLowerCase().slice(-8);
+        const segment = text.toLowerCase().slice(-10);
         let result = "";
         
         for (let i = 0; i < segment.length; i++) {
             const char = segment[i];
-            if (leetMap[char] && Math.random() > 0.3) {
+            // Increase probability of leet characters
+            if (leetMap[char] && Math.random() > 0.1) {
                 result += leetMap[char];
             } else if (char === " ") {
                 result += "_";
-            } else if (Math.random() > 0.6) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            } else if (Math.random() > 0.5) {
+                // Hacker symbols
+                const symbols = "01<>/_";
+                result += symbols.charAt(Math.floor(Math.random() * symbols.length));
             } else {
                 result += char;
             }

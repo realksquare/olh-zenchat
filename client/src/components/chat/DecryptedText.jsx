@@ -10,7 +10,7 @@ const DecryptedText = ({ text, animate = false }) => {
             return;
         }
 
-        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789░▒▓█";
+        const chars = "01<>/_░▒▓█";
         const leetMap = { 'a': '4', 'e': '3', 'i': '1', 'o': '0', 's': '5', 't': '7' };
         
         let iteration = 0;

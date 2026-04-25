@@ -123,6 +123,12 @@ const ChatWindow = ({ onBack }) => {
         }
     }, [messages.length, showScrollDown]);
 
+    useEffect(() => {
+        if (isTyping && !showScrollDown) {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [isTyping, showScrollDown]);
+
     const handleScroll = (e) => {
         const { scrollTop, scrollHeight, clientHeight } = e.target;
         const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
