@@ -20,6 +20,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const audioRef = useRef(null);
     const videoRef = useRef(null);
     const streamRef = useRef(null);
+    const seekTimeoutRef = useRef(null);
     const { createMoment, moments } = useMomentStore();
     const { user } = useAuthStore();
 
@@ -28,7 +29,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
         setTimeout(() => setToast(null), 5000);
     };
 
-    // Live Audio Preview Logic
+    // Live Audio Preview Logic with Debounced Seeking
     useEffect(() => {
         if (isOpen && music && music.previewUrl) {
             if (!audioRef.current) {
@@ -39,8 +40,14 @@ const MomentCreator = ({ isOpen, onClose }) => {
             }
 
             if (isPlaying) {
-                audioRef.current.currentTime = startTime;
-                audioRef.current.play().catch(e => console.log("Auto-play blocked"));
+                // Debounce seeking to prevent stutter
+                if (seekTimeoutRef.current) clearTimeout(seekTimeoutRef.current);
+                seekTimeoutRef.current = setTimeout(() => {
+                    if (audioRef.current) {
+                        audioRef.current.currentTime = startTime;
+                        audioRef.current.play().catch(e => console.log("Auto-play blocked"));
+                    }
+                }, 150);
             } else {
                 audioRef.current.pause();
             }
@@ -53,6 +60,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
             const interval = setInterval(checkTime, 100);
             return () => {
                 clearInterval(interval);
+                if (seekTimeoutRef.current) clearTimeout(seekTimeoutRef.current);
                 if (audioRef.current) audioRef.current.pause();
             };
         } else {
@@ -136,14 +144,11 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
     const handleShare = async () => {
         if (!content && !media && !music) return;
-
-        // 5 Moment Limit Check
         const ownMomentsCount = moments.filter(m => (m.userId?._id || m.userId) === user?._id).length;
         if (ownMomentsCount >= 5) {
             showToast("Slow down... only 5 exhales per cycle allowed. 🌪️");
             return;
         }
-
         setIsUploading(true);
         try {
             let mediaUrl = "";
@@ -160,7 +165,6 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 mediaUrl = data.secure_url;
                 type = data.resource_type === "video" ? "video" : "image";
             } else if (music) type = "music";
-
             await createMoment({ type, content, mediaUrl, music: music ? { ...music, duration, startTime } : null });
             showToast("Moment exhaled successfully. ✨");
             setTimeout(() => { 

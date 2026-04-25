@@ -82,4 +82,24 @@ router.post("/:id/view", protect, async (req, res) => {
     }
 });
 
+// @route   DELETE /api/moments/:id
+// @desc    Delete a moment
+router.delete("/:id", protect, async (req, res) => {
+    try {
+        const moment = await Moment.findById(req.params.id);
+        if (!moment) return res.status(404).json({ message: "Moment not found" });
+        
+        if (moment.userId.toString() !== req.user._id.toString()) {
+            return res.status(401).json({ message: "Not authorized" });
+        }
+
+        await moment.deleteOne();
+        console.log(`[Moments] Moment ${req.params.id} deleted by ${req.user.username}`);
+        res.json({ message: "Moment inhaled back." });
+    } catch (err) {
+        console.error("[Moments] Delete error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 module.exports = router;
