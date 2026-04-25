@@ -1,7 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import axiosInstance from "../utils/axios";
 
 export const useMomentStore = create((set, get) => ({
     moments: [],
@@ -11,7 +9,7 @@ export const useMomentStore = create((set, get) => ({
     fetchMoments: async () => {
         set({ isLoading: true });
         try {
-            const res = await axios.get(`${API_URL}/moments`, { withCredentials: true });
+            const res = await axiosInstance.get("/moments");
             set({ moments: res.data, isLoading: false });
         } catch (err) {
             set({ error: "Failed to fetch moments", isLoading: false });
@@ -21,7 +19,7 @@ export const useMomentStore = create((set, get) => ({
     createMoment: async (momentData) => {
         set({ isLoading: true });
         try {
-            const res = await axios.post(`${API_URL}/moments`, momentData, { withCredentials: true });
+            const res = await axiosInstance.post("/moments", momentData);
             set((state) => ({ 
                 moments: [res.data, ...state.moments],
                 isLoading: false 
@@ -35,7 +33,7 @@ export const useMomentStore = create((set, get) => ({
 
     viewMoment: async (momentId) => {
         try {
-            await axios.post(`${API_URL}/moments/${momentId}/view`, {}, { withCredentials: true });
+            await axiosInstance.post(`/moments/${momentId}/view`);
             set((state) => ({
                 moments: state.moments.filter(m => m._id !== momentId)
             }));
