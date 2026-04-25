@@ -110,7 +110,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
     return (
         <div 
             id={`msg-${message._id}`}
-            className={`message-row ${isMe ? "mine" : "theirs"}`}
+            className={`message-row ${isMe ? "mine" : "theirs"} ${isNew ? "message-slide-up" : ""}`}
             onDoubleClick={() => !message.deletedForEveryone && onEdit({ action: "reply", ...message })}
         >
             {!isMe && showAvatar && (
@@ -177,7 +177,10 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                             )}
                             {message.content && (
                                 <span className="message-text">
-                                    <DecryptedText text={message.content} animate={isNew && !isMe} />
+                                    <DecryptedText 
+                                        text={message.content} 
+                                        animate={isNew && !isMe && message.canSeeScramble} 
+                                    />
                                 </span>
                             )}
                             {status === "sending" && (

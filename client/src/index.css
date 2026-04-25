@@ -2719,4 +2719,19 @@ select {
   letter-spacing: 0.02em;
 }
 
+.message-slide-up {
+  animation: message-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes message-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 

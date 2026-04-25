@@ -180,37 +180,52 @@ const registerSocketHandlers = (io) => {
                     .populate("senderId", "username avatar")
                     .populate("replyTo");
 
-                const messagePayload = {
+                const sender = await User.findById(userId).select("privacySettings contacts");
+                const typingPrivacy = sender.privacySettings?.typingIndicator || "everyone";
+
+                const messagePayloadBase = {
                     ...populated.toObject(),
                     chatId: chatId.toString(),
                 };
 
-                io.to(chatId).emit("receive_message", { message: messagePayload });
-                socket.emit("receive_message", { message: messagePayload });
-
                 const chat = await Chat.findById(chatId);
-                const otherParticipants = chat.participants.filter(
-                    (p) => {
-                        const pid = p._id?.toString() || p.toString();
-                        return pid !== userId?.toString();
+                const participants = chat.participants;
+
+                participants.forEach(async (participantId) => {
+                    const pIdStr = participantId.toString();
+                    
+                    // Calculate if this specific recipient can see the scramble
+                    let canSeeScramble = false;
+                    if (typingPrivacy === "everyone") {
+                        canSeeScramble = true;
+                    } else if (typingPrivacy === "contacts") {
+                        const isContact = sender.contacts?.some(c => c.userId.toString() === pIdStr);
+                        if (isContact) canSeeScramble = true;
                     }
-                );
 
-                let isDelivered = false;
-                otherParticipants.forEach((participantId) => {
-                    const userData = onlineUsers.get(participantId.toString());
-                    const participantSockets = userData?.sockets;
+                    const messagePayload = { ...messagePayloadBase, canSeeScramble };
 
-                    if (participantSockets && participantSockets.size > 0) {
-                        participantSockets.forEach((dType, socketId) => {
-                            const room = io.sockets.adapter.rooms.get(chatId);
-                            const isInRoom = room?.has(socketId);
-                            if (!isInRoom) {
+                    const userData = onlineUsers.get(pIdStr);
+                    if (userData && userData.sockets) {
+                        userData.sockets.forEach((dType, socketId) => {
+                            // If it's the sender's socket, we emit without the flag (or they don't care)
+                            if (pIdStr === userId.toString()) {
+                                io.to(socketId).emit("receive_message", { message: messagePayloadBase });
+                            } else {
                                 io.to(socketId).emit("receive_message", { message: messagePayload });
                             }
                         });
+                    }
+                });
+
+                let isDelivered = false;
+                const otherParticipants = participants.filter(p => p.toString() !== userId.toString());
+                otherParticipants.forEach((participantId) => {
+                    const userData = onlineUsers.get(participantId.toString());
+                    if (userData && userData.sockets && userData.sockets.size > 0) {
                         isDelivered = true;
                     } else {
+                        // ... notification logic remains same
                         const pIdStr = participantId._id?.toString() || participantId.toString();
                         
                         User.findById(pIdStr).then(async (offlineUser) => {
