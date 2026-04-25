@@ -13,7 +13,7 @@ import axiosInstance from "./utils/axios";
 import NotificationPrompt from "./components/layout/NotificationPrompt";
 import SplashScreen from "./components/ui/SplashScreen";
 import { useState } from "react";
-import socket from "./utils/socket";
+import { useSocket } from "./context/SocketContext";
 
 const ProtectedRoute = ({ children }) => {
   const token = useAuthStore((state) => state.token);
@@ -28,6 +28,7 @@ const GuestRoute = ({ children }) => {
 const App = () => {
   const { user, token, checkAuth } = useAuthStore();
   const { initLocalData, fetchChats } = useChatStore();
+  const { socket } = useSocket();
   const [serverReady, setServerReady] = useState(false);
 
   useEffect(() => {
@@ -72,14 +73,16 @@ const App = () => {
       registerFCM();
     }
 
-    socket.on("new_moment", (moment) => {
-        useMomentStore.getState().addMoment(moment);
-    });
+    if (socket) {
+        socket.on("new_moment", (moment) => {
+            useMomentStore.getState().addMoment(moment);
+        });
+    }
 
     return () => {
-        socket.off("new_moment");
+        if (socket) socket.off("new_moment");
     };
-  }, [token, user?._id]);
+  }, [token, user?._id, socket]);
 
   return (
     <>
