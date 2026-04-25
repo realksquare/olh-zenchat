@@ -17,7 +17,6 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
     
     const currentMoment = moments[currentIndex];
 
-    // Handle Metadata Rotation (Crossfade)
     useEffect(() => {
         if (!isOpen || !currentMoment?.music) {
             setShowMusicInfo(false);
@@ -53,13 +52,11 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
 
         stopAudio();
         setShowMusicInfo(false);
-
-        // Mark as viewed
         viewMoment(currentMoment._id, currentUser?._id);
 
         let totalDuration = 10;
         if (currentMoment.type === "video") {
-            // Handled via metadata below
+            // Handled via metadata
         } else if (currentMoment.music) {
             totalDuration = currentMoment.music.duration || 18;
         }
@@ -72,8 +69,6 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
             audioRef.current.play().catch(e => console.log("Audio blocked"));
         }
 
-        // Timer for countdown and auto-advance
-        let timer;
         const interval = setInterval(() => {
             setTimeLeft(prev => {
                 if (prev <= 1) {
@@ -117,7 +112,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
             onClose();
             setIsClosing(false);
             setCurrentIndex(0);
-        }, 1000); // 1s fade out
+        }, 1000);
     };
 
     if (!isOpen || !currentMoment) return null;
@@ -129,39 +124,39 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
     return createPortal(
         <div className={`modal-overlay moments-aura-viewer-overlay ${isClosing ? 'fading-out' : ''}`}>
             <div className="moments-aura-viewer-content" onClick={(e) => e.stopPropagation()}>
-                {/* Progress Bars - Solid White */}
                 <div className="aura-progress-bars">
                     {moments.map((_, idx) => (
                         <div key={idx} className="aura-progress-bg">
-                            <div 
-                                className={`aura-progress-fill solid ${idx === currentIndex ? 'active' : (idx < currentIndex ? 'completed' : '')}`} 
-                            />
+                            <div className={`aura-progress-fill solid ${idx === currentIndex ? 'active' : (idx < currentIndex ? 'completed' : '')}`} />
                         </div>
                     ))}
                 </div>
 
                 <div className="aura-viewer-header">
-                    <div className="aura-user-meta">
-                        <div className="avatar avatar-md moments-halo">
-                            {user?.avatar ? (
-                                <img src={user.avatar} alt={user.username} />
-                            ) : (
-                                <span>{user?.username?.slice(0, 2).toUpperCase()}</span>
-                            )}
-                        </div>
-                        <div className="aura-user-info">
-                            <span className="aura-username">{user?.username}</span>
-                            <div className="aura-metadata-wrapper">
-                                <span className={`aura-time ${showMusicInfo ? 'fade-out' : 'fade-in'}`}>
-                                    {formatDistanceToNow(new Date(currentMoment.createdAt), { addSuffix: true })}
-                                </span>
-                                {currentMoment.music && (
-                                    <span className={`aura-music-line ${showMusicInfo ? 'fade-in' : 'fade-out'}`}>
-                                        🎵 {currentMoment.music.title} • {currentMoment.music.artist}
-                                    </span>
+                    <div className="aura-user-meta-container">
+                        <div className="aura-user-meta">
+                            <div className="avatar avatar-md moments-halo">
+                                {user?.avatar ? (
+                                    <img src={user.avatar} alt={user.username} />
+                                ) : (
+                                    <span>{user?.username?.slice(0, 2).toUpperCase()}</span>
                                 )}
                             </div>
+                            <div className="aura-user-info">
+                                <span className="aura-username">{user?.username}</span>
+                                <div className="aura-metadata-wrapper">
+                                    <span className={`aura-time ${showMusicInfo ? 'fade-out' : 'fade-in'}`}>
+                                        {formatDistanceToNow(new Date(currentMoment.createdAt), { addSuffix: true })}
+                                    </span>
+                                    {currentMoment.music && (
+                                        <span className={`aura-music-line ${showMusicInfo ? 'fade-in' : 'fade-out'}`}>
+                                            🎵 {currentMoment.music.title} • {currentMoment.music.artist}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
                         </div>
+                        <div className="aura-avatar-countdown">{Math.ceil(timeLeft)}</div>
                     </div>
                     
                     <div className="aura-viewer-actions">
@@ -245,7 +240,6 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                 <div className="aura-nav-zone right" onClick={handleNext} />
                 
                 <div className="aura-viewer-footer-wrapper">
-                    <div className="aura-countdown-text">#Moment. fades away in: {Math.ceil(timeLeft)}s</div>
                     <div className="aura-viewer-footer">#Moments.</div>
                 </div>
             </div>
