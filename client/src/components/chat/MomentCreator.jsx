@@ -1,7 +1,6 @@
 import { useState, useRef, memo } from "react";
 import { createPortal } from "react-dom";
 import { useMomentStore } from "../../stores/momentStore";
-import axiosInstance from "../../utils/axios";
 import MusicSearch from "./MusicSearch";
 
 const MomentCreator = ({ isOpen, onClose }) => {
@@ -15,7 +14,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const [toast, setToast] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef(null);
-    const { createMoment, fetchMoments } = useMomentStore();
+    const { createMoment } = useMomentStore();
 
     if (!isOpen) return null;
 
@@ -58,7 +57,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 type = "music";
             }
 
-            const newMoment = await createMoment({
+            await createMoment({
                 type,
                 content,
                 mediaUrl,
@@ -67,7 +66,6 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
             showToast("Moment exhaled successfully. ✨");
             
-            // Small delay before closing to show toast
             setTimeout(() => {
                 onClose();
                 setContent("");
@@ -236,28 +234,6 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 </div>
             )}
         </>,
-
-                        <button 
-                            className="aura-share-btn" 
-                            onClick={handleShare}
-                            disabled={isUploading || (!content && !media)}
-                        >
-                            {isUploading ? (
-                                <div className="aura-loader"></div>
-                            ) : (
-                                <>
-                                    <span>Share One-Breath</span>
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <line x1="22" y1="2" x2="11" y2="13" />
-                                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                                    </svg>
-                                </>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>,
         document.body
     );
 };
