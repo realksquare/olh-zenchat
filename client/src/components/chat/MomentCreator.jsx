@@ -165,7 +165,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                         <polyline points="21 15 16 10 5 21" />
                                     </svg>
                                 </div>
-                                <p>Tap to capture a breath...</p>
+                                <p>Add Media (optional) - images (max 3mb), videos (max 7mb)</p>
                                 <span>Images or Videos</span>
                             </div>
                         )}
