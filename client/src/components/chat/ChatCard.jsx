@@ -2,6 +2,7 @@ import { useState, useRef, memo, useMemo } from "react";
 import { useChatStore } from "../../stores/chatStore";
 import { useAuthStore } from "../../stores/authStore";
 import { formatDistanceToNow } from "date-fns";
+import { useMomentStore } from "../../stores/momentStore";
 import { VerifiedTick } from "../ui/Icons";
 
 const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
@@ -11,6 +12,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const unreadCount = useChatStore((s) => s.unreadCounts[chat._id] || 0);
     const deleteChatForUser = useChatStore((s) => s.deleteChatForUser);
     const liveChat = useChatStore((s) => s.chats.find((c) => c._id === chat._id)) || chat;
+    const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
 
     const [showMenu, setShowMenu] = useState(false);
     const [contactLoading, setContactLoading] = useState(false);
@@ -22,6 +24,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const isTyping = chatTyping && !!chatTyping[otherUserId];
     const typingScramble = isTyping ? chatTyping[otherUserId] : null;
     const isOnline = otherUser?.isOnline || onlineUsers.has(otherUserId);
+    const hasMoments = hasActiveMoment(otherUserId);
 
     // Check if this user is a contact
     const isContact = user?.contacts?.some(
@@ -123,7 +126,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
             style={{ position: "relative" }}
         >
             <div className="chat-card-avatar-wrap">
-                <div className="avatar avatar-md">
+                <div className={`avatar avatar-md ${hasMoments ? 'moments-halo' : ''}`}>
                     {otherUser?.avatar ? (
                         <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
                     ) : (

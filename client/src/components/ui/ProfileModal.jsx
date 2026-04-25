@@ -206,8 +206,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 <option value="contacts">Contacts Only</option>
                                 <option value="nobody">Nobody</option>
                             </select>
-                            <span style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "4px", display: "block" }}>
-                                If disabled, others see a standard wave/typing indicator.
+                            <span style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "4px", display: "block", lineHeight: "1.2" }}>
+                                Only if both sender and receiver have set the same visibility level, scrambled preview is rendered. Otherwise, standard indicators are used.
                             </span>
                         </div>
                     </div>

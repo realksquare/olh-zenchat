@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./stores/authStore";
 import { useChatStore } from "./stores/chatStore";
+import { useMomentStore } from "./stores/momentStore";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
@@ -33,6 +34,7 @@ const App = () => {
     if (token) {
         initLocalData();
         fetchChats();
+        useMomentStore.getState().fetchMoments();
     }
     const checkHealth = async () => {
       try {

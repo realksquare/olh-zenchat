@@ -8,6 +8,8 @@ import MessageInput from "./MessageInput";
 import TypingIndicator from "./TypingIndicator";
 import { formatDistanceToNow } from "date-fns";
 import { VerifiedTick } from "../ui/Icons";
+import UserCardModal from "../ui/UserCardModal";
+import { useMomentStore } from "../../stores/momentStore";
 
 const EMPTY_MESSAGES = [];
 const EMPTY_CONTACTS = [];
@@ -40,6 +42,8 @@ const ChatWindow = ({ onBack }) => {
         onlineUsers: s.onlineUsers
     })));
 
+    const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
+
     const [showOnlyStarred, setShowOnlyStarred] = useState(false);
     const rawMessages = useChatStore((s) =>
         activeChat && s.messages[activeChat._id] ? s.messages[activeChat._id] : EMPTY_MESSAGES
@@ -58,6 +62,7 @@ const ChatWindow = ({ onBack }) => {
     const [replyingTo, setReplyingTo] = useState(null);
     const [deletingMessage, setDeletingMessage] = useState(null);
     const [showScrollDown, setShowScrollDown] = useState(false);
+    const [showUserCard, setShowUserCard] = useState(false);
     const messagesContainerRef = useRef(null);
 
     const handleMessageAction = (msg) => {
@@ -79,6 +84,11 @@ const ChatWindow = ({ onBack }) => {
         const otherId = otherUser._id?.toString() || otherUser._id;
         return chatTyping?.[otherId] || null;
     }, [typingUsers, activeChat?._id, otherUser?._id]);
+
+    const hasMoments = useMemo(() => {
+        if (!otherUser) return false;
+        return hasActiveMoment(otherUser._id?.toString() || otherUser._id);
+    }, [otherUser, hasActiveMoment]);
 
     const isTyping = !!typingScramble;
 
@@ -187,8 +197,12 @@ const ChatWindow = ({ onBack }) => {
                     </svg>
                 </button>
 
-                <div className="chat-header-avatar-wrap">
-                    <div className="avatar avatar-md">
+                <div 
+                    className="chat-header-avatar-wrap" 
+                    onClick={() => setShowUserCard(true)}
+                    style={{ cursor: 'pointer' }}
+                >
+                    <div className={`avatar avatar-md ${hasMoments ? 'moments-halo' : ''}`}>
                         {otherUser?.avatar ? (
                             <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
                         ) : (
@@ -198,7 +212,11 @@ const ChatWindow = ({ onBack }) => {
                     {(otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) && <span className="online-dot" />}
                 </div>
 
-                <div className="chat-header-info">
+                <div 
+                    className="chat-header-info"
+                    onClick={() => setShowUserCard(true)}
+                    style={{ cursor: 'pointer' }}
+                >
                     <span className="chat-header-name">
                         {displayName}
                         {otherUser?.isVerified && <VerifiedTick />}
@@ -292,6 +310,14 @@ const ChatWindow = ({ onBack }) => {
                     </div>
                 </div>
             )}
+
+            <UserCardModal 
+                isOpen={showUserCard}
+                onClose={() => setShowUserCard(false)}
+                user={otherUser}
+                isOnline={otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())}
+                hasMoments={hasMoments}
+            />
         </div>
     );
 };
