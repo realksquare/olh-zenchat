@@ -19,8 +19,6 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const videoRef = useRef(null);
     const { createMoment } = useMomentStore();
 
-    if (!isOpen) return null;
-
     const showToast = (message) => {
         setToast(message);
         setTimeout(() => setToast(null), 5000);
@@ -169,6 +167,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
             setIsUploading(false);
         }
     };
+
+    if (!isOpen) return null;
 
     return createPortal(
         <>
