@@ -13,18 +13,20 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
     useEffect(() => {
         if (!isOpen || !currentMoment) return;
 
-        // Auto-advance after 5 seconds (or duration of audio)
+        const duration = (currentMoment.music?.duration || 5) * 1000;
+
+        // Auto-advance
         const timer = setTimeout(() => {
             handleNext();
-        }, 5000);
+        }, duration);
 
         // Mark as viewed
         viewMoment(currentMoment._id);
 
-        // Handle Music
+        // Handle Music (Only when viewed)
         if (currentMoment.music?.previewUrl) {
             const newAudio = new Audio(currentMoment.music.previewUrl);
-            newAudio.play().catch(e => console.log("Audio play blocked"));
+            newAudio.play().catch(e => console.log("Audio blocked"));
             setAudio(newAudio);
         }
 
@@ -76,6 +78,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                         <div key={idx} className="aura-progress-bg">
                             <div 
                                 className={`aura-progress-fill ${idx === currentIndex ? 'active' : (idx < currentIndex ? 'completed' : '')}`} 
+                                style={idx === currentIndex ? { '--duration': `${currentMoment.music?.duration || 5}s` } : {}}
                             />
                         </div>
                     ))}

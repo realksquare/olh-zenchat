@@ -31,13 +31,15 @@ router.get("/", protect, async (req, res) => {
         const user = await User.findById(req.user._id);
         const contactIds = user.contacts.map(c => c.userId);
         
-        // Include self moments too
-        const allowedIds = [...contactIds, req.user._id];
-
+        // Find moments from self (all) or contacts (unviewed)
         const moments = await Moment.find({
-            userId: { $in: allowedIds },
-            // Filter out moments already viewed by this user
-            "viewedBy.userId": { $ne: req.user._id }
+            $or: [
+                { userId: req.user._id },
+                { 
+                    userId: { $in: contactIds },
+                    "viewedBy.userId": { $ne: req.user._id }
+                }
+            ]
         })
         .populate("userId", "username avatar")
         .sort({ createdAt: -1 });

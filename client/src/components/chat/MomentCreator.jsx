@@ -10,6 +10,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const [previewUrl, setPreviewUrl] = useState(null);
     const [music, setMusic] = useState(null);
     const [isMusicSearchOpen, setIsMusicSearchOpen] = useState(false);
+    const [duration, setDuration] = useState(18);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef(null);
     const { createMoment } = useMomentStore();
@@ -27,7 +28,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
     };
 
     const handleShare = async () => {
-        if (!content && !media) return;
+        if (!content && !media && !music) return;
 
         setIsUploading(true);
         try {
@@ -37,9 +38,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
             if (media) {
                 const formData = new FormData();
                 formData.append("file", media);
-                formData.append("upload_preset", "zenchat_unsigned"); // Ensure you have this preset in Cloudinary
+                formData.append("upload_preset", "zenchat_unsigned");
                 
-                // Using standard fetch for Cloudinary to avoid axios instance interceptors
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/auto/upload`, {
                     method: "POST",
                     body: formData
@@ -47,13 +47,15 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 const data = await res.json();
                 mediaUrl = data.secure_url;
                 type = data.resource_type === "video" ? "video" : "image";
+            } else if (music) {
+                type = "music";
             }
 
             await createMoment({
-                type: music && !media ? "music" : type,
+                type,
                 content,
                 mediaUrl,
-                music
+                music: music ? { ...music, duration } : null
             });
 
             onClose();
@@ -120,24 +122,34 @@ const MomentCreator = ({ isOpen, onClose }) => {
                     />
 
                     {music && (
-                        <div className="aura-music-card">
-                            <div className="music-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M9 18V5l12-2v13" />
-                                    <circle cx="6" cy="18" r="3" />
-                                    <circle cx="18" cy="16" r="3" />
-                                </svg>
+                        <>
+                            <div className="aura-music-card">
+                                <div className="music-icon">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M9 18V5l12-2v13" />
+                                        <circle cx="6" cy="18" r="3" />
+                                        <circle cx="18" cy="16" r="3" />
+                                    </svg>
+                                </div>
+                                <div className="music-details">
+                                    <span className="music-title">{music.title}</span>
+                                    <span className="music-artist">{music.artist}</span>
+                                </div>
+                                <button className="remove-music" onClick={() => setMusic(null)}>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                </button>
                             </div>
-                            <div className="music-details">
-                                <span className="music-title">{music.title}</span>
-                                <span className="music-artist">{music.artist}</span>
+                            <div className="aura-duration-selector">
+                                <span>Duration:</span>
+                                <select value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
+                                    <option value={18}>18 Seconds</option>
+                                    <option value={24}>24 Seconds</option>
+                                    <option value={30}>30 Seconds</option>
+                                </select>
                             </div>
-                            <button className="remove-music" onClick={() => setMusic(null)}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
-                            </button>
-                        </div>
+                        </>
                     )}
 
                     {isMusicSearchOpen && (
@@ -152,13 +164,6 @@ const MomentCreator = ({ isOpen, onClose }) => {
                     
                     <div className="aura-actions">
                         <div className="aura-tools">
-                            <button className="aura-tool-btn" title="Add Media" onClick={() => fileInputRef.current?.click()}>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                    <polyline points="17 8 12 3 7 8" />
-                                    <line x1="12" y1="3" x2="12" y2="15" />
-                                </svg>
-                            </button>
                             <button className="aura-tool-btn" title="Add Music" onClick={() => setIsMusicSearchOpen(!isMusicSearchOpen)}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M9 18V5l12-2v13" />

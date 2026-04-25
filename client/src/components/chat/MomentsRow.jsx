@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
 
@@ -7,11 +7,11 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
     const moments = useMomentStore((s) => s.moments);
 
     // Group moments by user
-    const userMoments = useMemo(() => {
+    const userGroups = useMemo(() => {
         const groups = {};
         moments.forEach(m => {
             const uid = m.userId?._id || m.userId;
-            if (uid === user?._id) return; // Skip self in the feed
+            if (uid === user?._id) return;
             if (!groups[uid]) {
                 groups[uid] = {
                     user: m.userId,
@@ -23,13 +23,15 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
         return Object.values(groups);
     }, [moments, user?._id]);
 
-    const myMoments = moments.filter(m => (m.userId?._id || m.userId) === user?._id);
+    const myMoments = useMemo(() => 
+        moments.filter(m => (m.userId?._id || m.userId) === user?._id)
+    , [moments, user?._id]);
 
     return (
         <div className="moments-row-container">
-            <div className="moments-scroll">
-                {/* Your Moment */}
-                <div className="moment-item self" onClick={onAddMoment}>
+            <div className="moments-row">
+                {/* Current User's Moment Aura */}
+                <div className="moment-item" onClick={() => myMoments.length > 0 ? onViewMoment(myMoments) : onAddMoment()}>
                     <div className={`avatar avatar-md ${myMoments.length > 0 ? 'moments-halo' : ''}`}>
                         {user?.avatar ? (
                             <img src={user.avatar} alt="Me" />
@@ -37,7 +39,7 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
                             <span>{user?.username?.slice(0, 2).toUpperCase()}</span>
                         )}
                         <div className="add-moment-btn">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
                             </svg>
                         </div>
@@ -45,11 +47,11 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
                     <span className="moment-label">You</span>
                 </div>
 
-                {/* Contact Moments */}
-                {userMoments.map((group) => (
+                {/* Contacts' Moments */}
+                {userGroups.map((group) => (
                     <div 
                         key={group.user?._id || Math.random()} 
-                        className="moment-item" 
+                        className="moment-item"
                         onClick={() => onViewMoment(group.moments)}
                     >
                         <div className="avatar avatar-md moments-halo">
@@ -66,8 +68,5 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
         </div>
     );
 };
-
-// Internal useMemo since I forgot to import it in the code block above
-import { useMemo } from "react";
 
 export default memo(MomentsRow);

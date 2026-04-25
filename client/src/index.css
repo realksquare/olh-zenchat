@@ -2908,12 +2908,25 @@ select {
   white-space: nowrap;
 }
 
+.avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: #fff;
+  font-weight: 700;
+  overflow: visible; /* Allow halo and btn to overflow slightly */
+}
+
 .add-moment-btn {
   position: absolute;
-  bottom: -2px;
-  right: -2px;
-  width: 20px;
-  height: 20px;
+  bottom: 0;
+  right: 0;
+  width: 18px;
+  height: 18px;
   background: var(--color-primary);
   border: 2px solid var(--color-surface);
   border-radius: 50%;
@@ -2921,7 +2934,35 @@ select {
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.aura-duration-selector {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 8px 16px;
+  border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.aura-duration-selector span {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.aura-duration-selector select {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
 }
 
 .moments-aura-overlay {
@@ -3182,7 +3223,7 @@ select {
 
 .aura-progress-fill.active {
   width: 100%;
-  transition: width 5s linear;
+  transition: width var(--duration, 5s) linear;
 }
 
 .aura-progress-fill.completed {
