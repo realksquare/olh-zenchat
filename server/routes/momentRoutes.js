@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Moment = require("../models/Moment");
 const User = require("../models/User");
-const { protect } = require("../middleware/auth");
+const protect = require("../middleware/auth");
 
 // @route   POST /api/moments
 // @desc    Create a new moment
