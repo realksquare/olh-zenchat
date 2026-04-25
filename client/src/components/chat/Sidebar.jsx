@@ -9,6 +9,8 @@ import ProfileModal from "../ui/ProfileModal";
 import AdminPanel from "../ui/AdminPanel";
 import FAQModal from "../ui/FAQModal";
 import MomentsRow from "./MomentsRow";
+import MomentCreator from "./MomentCreator";
+import MomentViewer from "./MomentViewer";
 import { VerifiedTick, AdminIcon, HelpIcon } from "../ui/Icons";
 
 const Sidebar = ({ onChatSelect }) => {
@@ -31,6 +33,8 @@ const Sidebar = ({ onChatSelect }) => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isAdminOpen, setIsAdminOpen] = useState(false);
     const [isFAQOpen, setIsFAQOpen] = useState(false);
+    const [isMomentCreatorOpen, setIsMomentCreatorOpen] = useState(false);
+    const [activeViewerMoments, setActiveViewerMoments] = useState(null);
     const [activeTab, setActiveTab] = useState("recents");
     
     useEffect(() => {
@@ -130,8 +134,19 @@ const Sidebar = ({ onChatSelect }) => {
             </div>
 
             <MomentsRow 
-                onAddMoment={() => console.log("Add moment")} 
-                onViewMoment={(moments) => console.log("View", moments)} 
+                onAddMoment={() => setIsMomentCreatorOpen(true)} 
+                onViewMoment={(moments) => setActiveViewerMoments(moments)} 
+            />
+
+            <MomentCreator 
+                isOpen={isMomentCreatorOpen} 
+                onClose={() => setIsMomentCreatorOpen(false)} 
+            />
+
+            <MomentViewer 
+                moments={activeViewerMoments || []}
+                isOpen={!!activeViewerMoments}
+                onClose={() => setActiveViewerMoments(null)}
             />
 
             <div className="sidebar-search-wrap">
