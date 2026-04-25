@@ -147,7 +147,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                         </div>
                     ) : (
                         <>
-                            {repliedToMessage && (
+                            {message.replyTo && (
                                 <div 
                                     className="replied-message-preview" 
                                     onClick={(e) => { 
@@ -156,14 +156,20 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                                         scrollToMessage(targetId); 
                                     }}
                                 >
-                                    <div className="replied-sender">
-                                        {repliedToMessage.senderId?._id === user?._id || repliedToMessage.senderId === user?._id ? "You" : (repliedToMessage.senderId?.username || otherUser?.username || "Someone")}
-                                    </div>
-                                    <div className="replied-content">
-                                        {repliedToMessage.type === "image" ? "Image" : 
-                                         repliedToMessage.type === "video" ? "Video" : 
-                                         repliedToMessage.content}
-                                    </div>
+                                    {repliedToMessage ? (
+                                        <>
+                                            <div className="replied-sender">
+                                                {repliedToMessage.senderId?._id === user?._id || repliedToMessage.senderId === user?._id ? "You" : (repliedToMessage.senderId?.username || otherUser?.username || "Someone")}
+                                            </div>
+                                            <div className="replied-content">
+                                                {repliedToMessage.content || (repliedToMessage.type === 'image' ? "📷 Image" : (repliedToMessage.type === 'video' ? "🎥 Video" : "Media"))}
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="replied-content" style={{ opacity: 0.6, fontStyle: 'italic', fontSize: '0.8rem' }}>
+                                            Original message deleted
+                                        </div>
+                                    )}
                                 </div>
                             )}
                             {(message.type === "image" || message.type === "video") && message.mediaUrl && (

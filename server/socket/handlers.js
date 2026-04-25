@@ -369,7 +369,7 @@ const registerSocketHandlers = (io) => {
                 if (!message || message.senderId.toString() !== userId) return;
 
                 if (deleteFor === "everyone") {
-                    await Message.findByIdAndUpdate(messageId, { deletedForEveryone: true, content: "", mediaUrl: "" });
+                    await Message.findByIdAndDelete(messageId);
                     io.to(chatId).emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "everyone" });
                     
                     const chat = await Chat.findById(chatId);
