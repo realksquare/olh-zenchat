@@ -255,13 +255,18 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                             )}
                                         </button>
-                                        <span>Zen-Cropper: {startTime}s - {startTime + duration}s</span>
+                                        <span>{music.title} • {music.artist}</span>
                                     </div>
                                     <select value={duration} onChange={(e) => setDuration(Number(e.target.value))} className="aura-duration-select">
                                         <option value={18}>18s</option>
                                         <option value={24}>24s</option>
                                         <option value={30}>30s</option>
                                     </select>
+                                    <button className="aura-remove-music" onClick={() => { setMusic(null); setIsPlaying(false); }} title="Remove Music">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                                        </svg>
+                                    </button>
                                 </div>
                                 <div className="cropper-track-wrapper">
                                     <input 

@@ -4,90 +4,99 @@ const MusicSearch = ({ onSelect, onClose }) => {
     const [query, setQuery] = useState("");
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [previewAudio, setPreviewAudio] = useState(null);
 
     useEffect(() => {
-        const delayDebounce = setTimeout(async () => {
-            if (query.trim().length < 2) {
-                setResults([]);
-                return;
-            }
+        const searchMusic = async () => {
+            if (!query || query.length < 2) return;
             setLoading(true);
             try {
-                const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=10`);
-                const data = await res.json();
-                setResults(data.results || []);
+                // Fetch from iTunes
+                const itunesRes = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=15`);
+                const itunesData = await itunesRes.json();
+                const itunesTracks = itunesData.results.map(track => ({
+                    id: `itunes-${track.trackId}`,
+                    title: track.trackName,
+                    artist: track.artistName,
+                    previewUrl: track.previewUrl,
+                    coverUrl: track.artworkUrl100,
+                    totalDuration: Math.floor(track.trackTimeMillis / 1000),
+                    source: "iTunes"
+                }));
+
+                // Attempt to Fetch from Deezer (Fallback if CORS allows)
+                let deezerTracks = [];
+                try {
+                    const deezerRes = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=10`, { mode: 'cors' });
+                    if (deezerRes.ok) {
+                        const deezerData = await deezerRes.json();
+                        deezerTracks = (deezerData.data || []).map(track => ({
+                            id: `deezer-${track.id}`,
+                            title: track.title,
+                            artist: track.artist.name,
+                            previewUrl: track.preview,
+                            coverUrl: track.album.cover_medium,
+                            totalDuration: track.duration,
+                            source: "Deezer"
+                        }));
+                    }
+                } catch (e) {
+                    console.log("Deezer CORS block or error - staying with iTunes Aura.");
+                }
+
+                // Combine and Filter duplicates
+                const combined = [...itunesTracks, ...deezerTracks];
+                const unique = combined.filter((v, i, a) => a.findIndex(t => t.title === v.title && t.artist === v.artist) === i);
+                setResults(unique);
             } catch (err) {
-                console.error("Music search failed:", err);
+                console.error("Search error:", err);
             } finally {
                 setLoading(false);
             }
-        }, 500);
-        return () => clearTimeout(delayDebounce);
-    }, [query]);
-
-    const handlePreview = (url) => {
-        if (previewAudio && previewAudio.src === url) {
-            previewAudio.pause();
-            setPreviewAudio(null);
-            return;
-        }
-        if (previewAudio) previewAudio.pause();
-        const audio = new Audio(url);
-        audio.play();
-        setPreviewAudio(audio);
-    };
-
-    useEffect(() => {
-        return () => {
-            if (previewAudio) previewAudio.pause();
         };
-    }, [previewAudio]);
+
+        const timer = setTimeout(searchMusic, 500);
+        return () => clearTimeout(timer);
+    }, [query]);
 
     return (
         <div className="aura-music-search">
             <div className="music-search-header">
                 <input 
                     type="text" 
-                    placeholder="Search music vibes..." 
-                    value={query}
+                    placeholder="Search and add track (upto 30s fixed preview)..." 
+                    value={query} 
                     onChange={(e) => setQuery(e.target.value)}
                     autoFocus
                 />
             </div>
-
             <div className="music-results">
                 {loading ? (
-                    <div className="music-loading">Searching soundscapes...</div>
-                ) : (
-                    results.map((track) => (
-                        <div key={track.trackId} className="music-track-item">
-                            <img src={track.artworkUrl100} alt={track.trackName} className="track-cover" />
+                    <div className="music-loading">Vibing through the catalogs...</div>
+                ) : results.length > 0 ? (
+                    results.map(track => (
+                        <div key={track.id} className="music-track-item">
+                            <img src={track.coverUrl} alt="Cover" className="track-cover" />
                             <div className="track-info">
-                                <span className="track-name">{track.trackName}</span>
-                                <span className="track-artist">{track.artistName}</span>
+                                <div className="track-name-wrapper">
+                                    <span className="track-name">{track.title}</span>
+                                    <span className="track-source-tag">{track.source}</span>
+                                </div>
+                                <span className="track-artist">{track.artist}</span>
                             </div>
                             <div className="track-actions">
-                                <button className="preview-btn" onClick={() => handlePreview(track.previewUrl)}>
-                                    {previewAudio?.src === track.previewUrl ? "Stop" : "Play"}
-                                </button>
-                                <button className="select-btn" onClick={() => {
-                                    if (previewAudio) previewAudio.pause();
-                                    onSelect({
-                                        title: track.trackName,
-                                        artist: track.artistName,
-                                        previewUrl: track.previewUrl,
-                                        coverUrl: track.artworkUrl100,
-                                        totalDuration: Math.floor(track.trackTimeMillis / 1000)
-                                    });
-                                }}>
-                                    Select
-                                </button>
+                                <button className="select-btn" onClick={() => onSelect(track)}>Select</button>
                             </div>
                         </div>
                     ))
+                ) : query.length >= 2 ? (
+                    <div className="music-loading">No vibes found matching your breath.</div>
+                ) : (
+                    <div className="music-loading">Type to explore multisensory vibes...</div>
                 )}
             </div>
+            <button className="aura-close-search" onClick={onClose}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
         </div>
     );
 };
