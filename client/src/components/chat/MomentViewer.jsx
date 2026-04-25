@@ -10,6 +10,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
     const [showMusicInfo, setShowMusicInfo] = useState(false);
     const [timeLeft, setTimeLeft] = useState(10);
     const [isClosing, setIsClosing] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const audioRef = useRef(null);
     const videoRef = useRef(null);
     const { viewMoment, deleteMoment } = useMomentStore();
@@ -35,20 +36,18 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
         }
     };
 
-    const handleDelete = async (e) => {
-        e.stopPropagation();
-        if (window.confirm("Delete this moment for everyone?")) {
-            await deleteMoment(currentMoment._id);
-            if (moments.length === 1) {
-                handleClose();
-            } else {
-                handleNext();
-            }
+    const confirmDelete = async () => {
+        await deleteMoment(currentMoment._id);
+        setShowDeleteConfirm(false);
+        if (moments.length === 1) {
+            handleClose();
+        } else {
+            handleNext();
         }
     };
 
     useEffect(() => {
-        if (!isOpen || !currentMoment) return;
+        if (!isOpen || !currentMoment || showDeleteConfirm) return;
 
         stopAudio();
         setShowMusicInfo(false);
@@ -56,7 +55,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
 
         let totalDuration = 10;
         if (currentMoment.type === "video") {
-            // Handled via metadata
+            // Wait for metadata
         } else if (currentMoment.music) {
             totalDuration = currentMoment.music.duration || 18;
         }
@@ -84,7 +83,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
             clearInterval(interval);
             stopAudio();
         };
-    }, [currentIndex, isOpen, currentMoment?._id]);
+    }, [currentIndex, isOpen, currentMoment?._id, showDeleteConfirm]);
 
     useEffect(() => {
         if (audioRef.current) audioRef.current.muted = isMuted;
@@ -112,6 +111,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
             onClose();
             setIsClosing(false);
             setCurrentIndex(0);
+            setShowDeleteConfirm(false);
         }, 1000);
     };
 
@@ -161,7 +161,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                     
                     <div className="aura-viewer-actions">
                         {isOwn && (
-                            <button className="aura-trash-btn" onClick={handleDelete}>
+                            <button className="aura-trash-btn" onClick={() => setShowDeleteConfirm(true)}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                             </button>
                         )}
@@ -239,6 +239,17 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                 <div className="aura-nav-zone left" onClick={handlePrev} />
                 <div className="aura-nav-zone right" onClick={handleNext} />
                 
+                {showDeleteConfirm && (
+                    <div className="aura-permission-popup">
+                        <h3>Inhale back?</h3>
+                        <p>This moment will disappear for everyone, forever.</p>
+                        <div className="permission-actions">
+                            <button className="deny-btn" onClick={confirmDelete} style={{ background: '#ef4444', border: 'none' }}>Yes, Inhale</button>
+                            <button className="allow-btn" onClick={() => setShowDeleteConfirm(false)} style={{ background: 'rgba(255,255,255,0.1)' }}>Cancel</button>
+                        </div>
+                    </div>
+                )}
+
                 <div className="aura-viewer-footer-wrapper">
                     <div className="aura-viewer-footer">#Moments.</div>
                 </div>
