@@ -18,7 +18,9 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
 
     const otherUser = liveChat.participants?.find((p) => (p._id?.toString() || p.toString()) !== user?._id?.toString());
     const otherUserId = otherUser?._id?.toString() || otherUser?.toString();
-    const isTyping = typingUsers[liveChat._id]?.has(otherUserId);
+    const chatTyping = typingUsers[liveChat._id];
+    const isTyping = chatTyping && !!chatTyping[otherUserId];
+    const typingScramble = isTyping ? chatTyping[otherUserId] : null;
     const isOnline = otherUser?.isOnline || onlineUsers.has(otherUserId);
 
     // Check if this user is a contact
@@ -37,7 +39,10 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const displayUnreadCount = unreadCount > 0 ? unreadCount : (isLastMessageUnread ? 1 : 0);
 
     const getPreview = () => {
-        if (isTyping) return { text: "typing...", isUnread: true };
+        if (isTyping) {
+            const scrambleText = typeof typingScramble === "string" ? typingScramble : "typing...";
+            return { text: scrambleText, isUnread: true };
+        }
         if (hasUnread) {
             if (displayUnreadCount === 1 && liveChat.lastMessage?.content) {
                 return { text: liveChat.lastMessage.content, isUnread: true };

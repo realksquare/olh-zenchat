@@ -164,17 +164,32 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
         }
     }, [editingMessage]);
 
+    const getScramble = (text) => {
+        if (!text) return "";
+        const chars = "░▒▓█║▌▐▀▄";
+        let result = "";
+        const len = Math.min(text.length, 8);
+        for (let i = 0; i < len; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    };
+
     const handleTypingStart = useCallback(() => {
+        const scramble = getScramble(content);
         if (!isTypingRef.current) {
             isTypingRef.current = true;
-            startTyping(chatId);
+            startTyping(chatId, scramble);
+        } else {
+            // Update scramble periodically even if already typing
+            startTyping(chatId, scramble);
         }
         clearTimeout(typingTimeoutRef.current);
         typingTimeoutRef.current = setTimeout(() => {
             isTypingRef.current = false;
             stopTyping(chatId);
         }, 1500);
-    }, [chatId, startTyping, stopTyping]);
+    }, [chatId, startTyping, stopTyping, content]);
 
     useEffect(() => {
         return () => {

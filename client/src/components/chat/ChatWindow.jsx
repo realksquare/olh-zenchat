@@ -73,12 +73,14 @@ const ChatWindow = ({ onBack }) => {
     const otherUser = useMemo(() => 
         activeChat?.participants?.find((p) => (p._id?.toString() || p._id) !== user?._id?.toString()), 
     [activeChat, user?._id]);
-    const isTyping = useMemo(() => {
-        if (!activeChat || !otherUser) return false;
-        const set = typingUsers[activeChat._id];
+    const typingScramble = useMemo(() => {
+        if (!activeChat || !otherUser) return null;
+        const chatTyping = typingUsers[activeChat._id];
         const otherId = otherUser._id?.toString() || otherUser._id;
-        return set instanceof Set ? set.has(otherId) : false;
+        return chatTyping?.[otherId] || null;
     }, [typingUsers, activeChat?._id, otherUser?._id]);
+
+    const isTyping = !!typingScramble;
 
     const isContact = contacts.some(
         c => c.userId?.toString() === otherUser?._id?.toString() || c.userId === otherUser?._id
@@ -253,7 +255,7 @@ const ChatWindow = ({ onBack }) => {
                     />
                 ))}
 
-                {isTyping && <TypingIndicator />}
+                {isTyping && <TypingIndicator scramble={typeof typingScramble === "string" ? typingScramble : ""} />}
                 <div ref={messagesEndRef} />
             </div>
 

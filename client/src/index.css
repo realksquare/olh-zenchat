@@ -1110,43 +1110,70 @@ select {
 
 /* ── Typing indicator ─────────────────────────────────── */
 
-.typing-indicator {
+.typing-scramble-bubble {
+  background: var(--color-surface-offset);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 8px 14px;
+  border-radius: 14px 14px 14px 4px;
+  max-width: 150px;
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  padding: var(--space-1) var(--space-2);
+  gap: 4px;
+  min-height: 36px;
 }
 
-.typing-wave {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  background: #1e2530;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--radius-full);
-  padding: var(--space-2) var(--space-3);
-  height: 36px;
+.scramble-noise {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  color: var(--color-primary);
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: scramble-flicker 0.4s infinite steps(2);
+  text-shadow: 0 0 8px rgba(61, 165, 217, 0.4);
 }
 
-.wave-bar {
-  display: block;
-  width: 3px;
-  border-radius: var(--radius-full);
-  background: var(--color-primary);
-  animation: wave 1s ease-in-out infinite;
-  transform-origin: bottom;
+.scramble-glitch-bar {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(61, 165, 217, 0.15),
+    transparent
+  );
+  animation: scramble-glitch-move 2.5s infinite linear;
 }
 
-@keyframes wave {
+@keyframes scramble-flicker {
+  0% { opacity: 0.7; transform: skewX(-3deg); }
+  50% { opacity: 1; transform: skewX(3deg); }
+  100% { opacity: 0.8; transform: skewX(0deg); }
+}
 
-  0%,
-  100% {
-    height: 4px;
-    opacity: 0.4;
+@keyframes scramble-glitch-move {
+  0% { left: -100%; }
+  15% { left: 120%; }
+  100% { left: 120%; }
+}
+
+.typing-slide-up {
+  animation: typing-indicator-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes typing-indicator-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
   }
-
-  50% {
-    height: 16px;
+  to {
     opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

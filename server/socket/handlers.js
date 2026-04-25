@@ -380,7 +380,7 @@ const registerSocketHandlers = (io) => {
             }
         });
 
-        socket.on("typing_start", async ({ chatId }) => {
+        socket.on("typing_start", async ({ chatId, scramble }) => {
             const chat = await Chat.findById(chatId);
             if (!chat) return;
             chat.participants
@@ -389,7 +389,7 @@ const registerSocketHandlers = (io) => {
                     const userData = onlineUsers.get(participantId.toString());
                     if (userData && userData.sockets) {
                         userData.sockets.forEach((dType, sId) => {
-                            io.to(sId).emit("typing_status", { userId, chatId, isTyping: true });
+                            io.to(sId).emit("typing_status", { userId, chatId, isTyping: true, scramble });
                         });
                     }
                 });

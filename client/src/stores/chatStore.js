@@ -425,10 +425,14 @@ export const useChatStore = create(
                 });
             },
 
-            setTypingUser: (chatId, userId, isTyping) => {
+            setTypingUser: (chatId, userId, isTyping, scramble) => {
                 set((state) => {
-                    const chatTyping = new Set(state.typingUsers[chatId] || []);
-                    isTyping ? chatTyping.add(userId) : chatTyping.delete(userId);
+                    const chatTyping = { ...(state.typingUsers[chatId] || {}) };
+                    if (isTyping) {
+                        chatTyping[userId] = scramble || true;
+                    } else {
+                        delete chatTyping[userId];
+                    }
                     return { typingUsers: { ...state.typingUsers, [chatId]: chatTyping } };
                 });
             },
@@ -465,7 +469,13 @@ export const useChatStore = create(
 
             isUserTypingInChat: (chatId, userId) => {
                 const { typingUsers } = get();
-                return typingUsers[chatId]?.has(userId) || false;
+                return !!typingUsers[chatId]?.[userId];
+            },
+            
+            getTypingScramble: (chatId, userId) => {
+                const { typingUsers } = get();
+                const val = typingUsers[chatId]?.[userId];
+                return typeof val === "string" ? val : "";
             },
 
             deleteChatForUser: async (chatId) => {

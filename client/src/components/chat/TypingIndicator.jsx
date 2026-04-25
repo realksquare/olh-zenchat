@@ -1,16 +1,17 @@
-const TypingIndicator = () => {
+import { memo } from "react";
+
+const TypingIndicator = ({ scramble }) => {
     return (
-        <div className="message-row theirs">
+        <div className="message-row theirs typing-slide-up">
             <div className="avatar-spacer" />
-            <div className="typing-wave">
-                <span className="wave-bar" style={{ animationDelay: "0ms" }} />
-                <span className="wave-bar" style={{ animationDelay: "80ms" }} />
-                <span className="wave-bar" style={{ animationDelay: "160ms" }} />
-                <span className="wave-bar" style={{ animationDelay: "240ms" }} />
-                <span className="wave-bar" style={{ animationDelay: "320ms" }} />
+            <div className="typing-scramble-bubble">
+                <span className="scramble-noise">
+                    {scramble || "..."}
+                </span>
+                <div className="scramble-glitch-bar" />
             </div>
         </div>
     );
 };
 
-export default TypingIndicator;
+export default memo(TypingIndicator);

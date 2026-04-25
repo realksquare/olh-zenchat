@@ -74,8 +74,8 @@ export const SocketProvider = ({ children }) => {
             useChatStore.getState().markMessagesAsReadByOther(chatId);
         };
 
-        const handleTypingStatus = ({ userId, chatId, isTyping }) => {
-            useChatStore.getState().setTypingUser(chatId, userId, isTyping);
+        const handleTypingStatus = ({ userId, chatId, isTyping, scramble }) => {
+            useChatStore.getState().setTypingUser(chatId, userId, isTyping, scramble);
         };
 
         const handleUserOnline = ({ userId }) => {
@@ -165,9 +165,9 @@ export const SocketProvider = ({ children }) => {
         }
     }, []);
 
-    const startTyping = useCallback((chatId) => {
+    const startTyping = useCallback((chatId, scramble) => {
         if (socketRef.current?.connected) {
-            socketRef.current.emit("typing_start", { chatId });
+            socketRef.current.emit("typing_start", { chatId, scramble });
         }
     }, []);
 
