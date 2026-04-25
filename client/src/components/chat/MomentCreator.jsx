@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, memo } from "react";
 import { createPortal } from "react-dom";
 import { useMomentStore } from "../../stores/momentStore";
 import MusicSearch from "./MusicSearch";
+import axiosInstance from "../../utils/axios";
 
 const MomentCreator = ({ isOpen, onClose }) => {
     const [content, setContent] = useState("");
@@ -17,6 +18,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const fileInputRef = useRef(null);
     const audioRef = useRef(null);
     const videoRef = useRef(null);
+    const streamRef = useRef(null);
     const { createMoment } = useMomentStore();
 
     const showToast = (message) => {
@@ -55,6 +57,20 @@ const MomentCreator = ({ isOpen, onClose }) => {
         }
     }, [music, startTime, duration, isOpen]);
 
+    // Camera Stream Logic (Robust Ref Handling)
+    useEffect(() => {
+        let interval;
+        if (cameraState === "active" && streamRef.current) {
+            interval = setInterval(() => {
+                if (videoRef.current && !videoRef.current.srcObject) {
+                    videoRef.current.srcObject = streamRef.current;
+                    clearInterval(interval);
+                }
+            }, 100);
+        }
+        return () => { if (interval) clearInterval(interval); };
+    }, [cameraState]);
+
     const compressImage = (base64Str, maxSize = 3 * 1024 * 1024) => {
         return new Promise((resolve) => {
             const img = new Image();
@@ -63,33 +79,40 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 const canvas = document.createElement("canvas");
                 let width = img.width;
                 let height = img.height;
-                
-                // Max resolution cap for safety
-                if (width > 2000) {
-                    height *= 2000 / width;
-                    width = 2000;
-                }
-
+                if (width > 1600) { height *= 1600 / width; width = 1600; }
                 canvas.width = width;
                 canvas.height = height;
                 const ctx = canvas.getContext("2d");
                 ctx.drawImage(img, 0, 0, width, height);
-                
                 let quality = 0.8;
                 let result = canvas.toDataURL("image/jpeg", quality);
-                
                 while (result.length > maxSize && quality > 0.1) {
                     quality -= 0.1;
                     result = canvas.toDataURL("image/jpeg", quality);
                 }
-                
-                if (result.length > maxSize) {
-                    resolve(null);
-                } else {
-                    fetch(result).then(res => res.blob()).then(blob => resolve(blob));
-                }
+                fetch(result).then(res => res.blob()).then(blob => resolve({ blob, dataUrl: result }));
             };
         });
+    };
+
+    const startCamera = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+            streamRef.current = stream;
+            setCameraState("active");
+            showToast("Camera breath granted. ✨");
+        } catch (err) {
+            setCameraState("closed");
+            showToast("Camera breath denied. 🌪️");
+        }
+    };
+
+    const stopCamera = () => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+        setCameraState("closed");
     };
 
     const handleCameraCapture = async () => {
@@ -98,41 +121,11 @@ const MomentCreator = ({ isOpen, onClose }) => {
         canvas.height = videoRef.current.videoHeight;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(videoRef.current, 0, 0);
-        
-        const dataUrl = canvas.toDataURL("image/jpeg");
-        const blob = await compressImage(dataUrl);
-        
-        if (!blob) {
-            showToast("Breath too heavy... image compression failed. 🌪️");
-            return;
-        }
-
-        const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
-        setMedia(file);
+        const { blob, dataUrl } = await compressImage(canvas.toDataURL("image/jpeg"));
+        if (!blob) { showToast("Compression failed. 🌪️"); return; }
+        setMedia(new File([blob], "capture.jpg", { type: "image/jpeg" }));
         setPreviewUrl(dataUrl);
         stopCamera();
-    };
-
-    const startCamera = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                setCameraState("active");
-                showToast("Camera breath granted. ✨");
-            }
-        } catch (err) {
-            setCameraState("closed");
-            showToast("Camera breath denied. 🌪️");
-        }
-    };
-
-    const stopCamera = () => {
-        if (videoRef.current && videoRef.current.srcObject) {
-            videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-            videoRef.current.srcObject = null;
-        }
-        setCameraState("closed");
     };
 
     const handleShare = async () => {
@@ -152,31 +145,31 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 const data = await res.json();
                 mediaUrl = data.secure_url;
                 type = data.resource_type === "video" ? "video" : "image";
-            } else if (music) {
-                type = "music";
-            }
+            } else if (music) type = "music";
+
             await createMoment({ type, content, mediaUrl, music: music ? { ...music, duration, startTime } : null });
             showToast("Moment exhaled successfully. ✨");
-            setTimeout(() => {
-                onClose();
-                setContent(""); setMedia(null); setPreviewUrl(null); setMusic(null);
-            }, 1500);
+            setTimeout(() => { onClose(); setContent(""); setMedia(null); setPreviewUrl(null); setMusic(null); }, 1500);
         } catch (err) {
             showToast("Breath lost... try again. 🌪️");
-        } finally {
-            setIsUploading(false);
-        }
+        } finally { setIsUploading(false); }
+    };
+
+    const handleClose = () => {
+        stopCamera();
+        if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+        onClose();
     };
 
     if (!isOpen) return null;
 
     return createPortal(
         <>
-            <div className="modal-overlay moments-aura-overlay" onClick={onClose}>
+            <div className="modal-overlay moments-aura-overlay" onClick={handleClose}>
                 <div className="moments-aura-content" onClick={(e) => e.stopPropagation()}>
                     <div className="moments-aura-header">
                         <h2 className="moments-aura-title">#Moments.</h2>
-                        <button className="aura-close-btn" onClick={onClose}>
+                        <button className="aura-close-btn" onClick={handleClose}>
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                             </svg>
@@ -218,8 +211,10 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                         <polyline points="21 15 16 10 5 21" />
                                     </svg>
                                 </div>
-                                <p>Add Media (optional) - images (max 3mb), videos (max 7mb)</p>
-                                <span>Images or Videos</span>
+                                <div className="aura-placeholder-text">
+                                    <p>Add Media (optional)</p>
+                                    <span>Images (max 3mb), Videos (max 7mb)</span>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -277,7 +272,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                 <p>Allow ZenChat to capture a moment through your lens?</p>
                                 <div className="permission-actions">
                                     <button className="allow-btn" onClick={startCamera}>Allow Access</button>
-                                    <button className="deny-btn" onClick={() => { setCameraState("closed"); showToast("Camera breath denied. 🌪️"); }}>Deny</button>
+                                    <button className="deny-btn" onClick={() => { stopCamera(); showToast("Camera breath denied. 🌪️"); }}>Deny</button>
                                 </div>
                             </div>
                         )}
