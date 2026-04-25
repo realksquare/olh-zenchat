@@ -127,6 +127,32 @@ const MomentCreator = ({ isOpen, onClose }) => {
         stopCamera();
     };
 
+    const handleFileSelect = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.type.startsWith("video/")) {
+            const video = document.createElement("video");
+            video.preload = "metadata";
+            video.onloadedmetadata = () => {
+                window.URL.revokeObjectURL(video.src);
+                if (video.duration > 60) {
+                    showToast("Video too long! 60s limit. 🌪️");
+                    e.target.value = "";
+                } else {
+                    setMedia(file);
+                    setPreviewUrl(URL.createObjectURL(file));
+                }
+            };
+            video.src = URL.createObjectURL(file);
+        } else {
+            setMedia(file);
+            const reader = new FileReader();
+            reader.onloadend = () => setPreviewUrl(reader.result);
+            reader.readAsDataURL(file);
+        }
+    };
+
     const handleShare = async () => {
         if (!content && !media && !music) return;
         const ownMomentsCount = moments.filter(m => (m.userId?._id || m.userId) === user?._id).length;
@@ -198,7 +224,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                             </div>
                         ) : previewUrl ? (
                             <div className="aura-media-wrapper">
-                                {media?.type.startsWith("video") ? (
+                                {media?.type.startsWith("video") || (media && !media.type.startsWith("image") && media.name.endsWith('.mp4')) ? (
                                     <video src={previewUrl} autoPlay muted loop className="aura-media" />
                                 ) : (
                                     <img src={previewUrl} alt="Preview" className="aura-media" />
@@ -220,7 +246,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                 </div>
                                 <div className="aura-placeholder-text">
                                     <p>Add Media (optional)</p>
-                                    <span>Images (max 3mb), Videos (max 7mb)</span>
+                                    <span>Images (max 3mb), Videos (max 7mb, 60s)</span>
                                 </div>
                             </div>
                         )}
@@ -285,15 +311,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                 <button className="aura-tool-btn" onClick={() => setCameraState("permission")}>
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
                                 </button>
-                                <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*,video/*" onChange={(e) => {
-                                    const file = e.target.files[0];
-                                    if (file) {
-                                        setMedia(file);
-                                        const reader = new FileReader();
-                                        reader.onloadend = () => setPreviewUrl(reader.result);
-                                        reader.readAsDataURL(file);
-                                    }
-                                }} />
+                                <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*,video/*" onChange={handleFileSelect} />
                             </div>
                             <button className="aura-share-btn" onClick={handleShare} disabled={isUploading || (!content && !media && !music)}>
                                 {isUploading ? <div className="aura-loader"></div> : <><span>Share One-Breath</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg></>}

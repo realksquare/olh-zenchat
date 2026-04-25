@@ -226,7 +226,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                             <div className="aura-music-tag">
                                 <div className="music-visualizer">
                                     <div className="v-bar"></div>
-                                    <div className="v-bar).</div>
+                                    <div className="v-bar"></div>
                                     <div className="v-bar"></div>
                                 </div>
                                 <div className="music-meta">
