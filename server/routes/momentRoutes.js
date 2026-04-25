@@ -8,12 +8,13 @@ const protect = require("../middleware/auth");
 // @desc    Create a new moment
 router.post("/", protect, async (req, res) => {
     try {
-        const { type, content, mediaUrl } = req.body;
+        const { type, content, mediaUrl, music } = req.body;
         const moment = await Moment.create({
             userId: req.user._id,
             type,
             content,
-            mediaUrl
+            mediaUrl,
+            music
         });
         
         const populated = await Moment.findById(moment._id).populate("userId", "username avatar");

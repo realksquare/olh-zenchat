@@ -9,7 +9,7 @@ const momentSchema = new mongoose.Schema(
         },
         type: {
             type: String,
-            enum: ["text", "image", "video"],
+            enum: ["text", "image", "video", "music"],
             default: "text",
         },
         content: {
@@ -19,6 +19,12 @@ const momentSchema = new mongoose.Schema(
         mediaUrl: {
             type: String,
             default: "",
+        },
+        music: {
+            title: String,
+            artist: String,
+            previewUrl: String,
+            coverUrl: String
         },
         viewedBy: [
             {
