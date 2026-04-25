@@ -1,4 +1,4 @@
-import { useState, useRef, memo } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import { createPortal } from "react-dom";
 import { useMomentStore } from "../../stores/momentStore";
 import MusicSearch from "./MusicSearch";
@@ -14,14 +14,53 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const [toast, setToast] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef(null);
+    const audioRef = useRef(null);
     const { createMoment } = useMomentStore();
 
     if (!isOpen) return null;
 
     const showToast = (message) => {
         setToast(message);
-        setTimeout(() => setToast(null), 3000);
+        setTimeout(() => setToast(null), 5000); // 5 seconds for success/fail
     };
+
+    // Live Audio Preview Logic (Instagram Style)
+    useEffect(() => {
+        if (music && music.previewUrl) {
+            if (!audioRef.current) {
+                audioRef.current = new Audio(music.previewUrl);
+                audioRef.current.loop = true;
+            } else if (audioRef.current.src !== music.previewUrl) {
+                audioRef.current.src = music.previewUrl;
+            }
+
+            audioRef.current.currentTime = startTime;
+            audioRef.current.play().catch(e => console.log("Auto-play blocked"));
+
+            // Loop within the duration window
+            const checkTime = () => {
+                if (audioRef.current && audioRef.current.currentTime >= startTime + duration) {
+                    audioRef.current.currentTime = startTime;
+                }
+            };
+            const interval = setInterval(checkTime, 100);
+            return () => {
+                clearInterval(interval);
+                if (audioRef.current) audioRef.current.pause();
+            };
+        } else {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+        }
+    }, [music, startTime, duration]);
+
+    // Ensure startTime is valid when duration changes
+    useEffect(() => {
+        const maxStart = Math.max(0, 30 - duration);
+        if (startTime > maxStart) setStartTime(0);
+    }, [duration]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -73,7 +112,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 setPreviewUrl(null);
                 setMusic(null);
                 setIsMusicSearchOpen(false);
-            }, 1000);
+            }, 1500);
         } catch (err) {
             showToast("Breath lost... try again. 🌪️");
             console.error("Failed to share moment:", err);
@@ -82,13 +121,21 @@ const MomentCreator = ({ isOpen, onClose }) => {
         }
     };
 
+    const handleClose = () => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current = null;
+        }
+        onClose();
+    };
+
     return createPortal(
         <>
-            <div className="modal-overlay moments-aura-overlay" onClick={onClose}>
+            <div className="modal-overlay moments-aura-overlay" onClick={handleClose}>
                 <div className="moments-aura-content" onClick={(e) => e.stopPropagation()}>
                     <div className="moments-aura-header">
                         <h2 className="moments-aura-title">#Moments.</h2>
-                        <button className="aura-close-btn" onClick={onClose}>
+                        <button className="aura-close-btn" onClick={handleClose}>
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                             </svg>
@@ -136,7 +183,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                         {music && (
                             <>
                                 <div className="aura-music-card">
-                                    <div className="music-icon">
+                                    <div className="music-icon pulse">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <path d="M9 18V5l12-2v13" />
                                             <circle cx="6" cy="18" r="3" />
@@ -155,25 +202,30 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                 </div>
                                 <div className="aura-music-cropper">
                                     <div className="cropper-label">
-                                        <span>Start at: {startTime}s</span>
-                                        <span>Duration: {duration}s</span>
+                                        <span>Zen-Cropper: {startTime}s - {startTime + duration}s</span>
+                                        <div className="aura-duration-selector">
+                                            <select value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
+                                                <option value={18}>18s</option>
+                                                <option value={24}>24s</option>
+                                                <option value={30}>30s</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                    <input 
-                                        type="range" 
-                                        min="0" 
-                                        max={30 - duration} 
-                                        value={startTime} 
-                                        onChange={(e) => setStartTime(Number(e.target.value))}
-                                        className="aura-slider"
-                                    />
-                                </div>
-                                <div className="aura-duration-selector">
-                                    <span>Vibe Length:</span>
-                                    <select value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
-                                        <option value={18}>18 Seconds</option>
-                                        <option value={24}>24 Seconds</option>
-                                        <option value={30}>30 Seconds</option>
-                                    </select>
+                                    <div className="cropper-track-wrapper">
+                                        <input 
+                                            type="range" 
+                                            min="0" 
+                                            max={30 - duration} 
+                                            step="0.5"
+                                            value={startTime} 
+                                            onChange={(e) => setStartTime(Number(e.target.value))}
+                                            className="aura-slider"
+                                        />
+                                        <div className="cropper-window-preview" style={{ 
+                                            left: `${(startTime / 30) * 100}%`,
+                                            width: `${(duration / 30) * 100}%`
+                                        }} />
+                                    </div>
                                 </div>
                             </>
                         )}
@@ -204,6 +256,13 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                     accept="image/*,video/*"
                                     onChange={handleFileChange}
                                 />
+                                {!media && !music && (
+                                    <button className="aura-tool-btn" title="Capture Breath" onClick={() => fileInputRef.current?.click()}>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" />
+                                        </svg>
+                                    </button>
+                                )}
                             </div>
 
                             <button 
@@ -229,7 +288,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
             </div>
             {toast && (
                 <div className="aura-toast">
-                    {toast.includes("Success") ? "✨" : "🌪️"}
+                    {toast.includes("success") ? "✨" : "🌪️"}
                     {toast}
                 </div>
             )}

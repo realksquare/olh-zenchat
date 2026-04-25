@@ -3009,10 +3009,39 @@ select {
   -webkit-appearance: none;
   width: 16px;
   height: 16px;
-  background: #3b82f6;
+  background: #fff;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+  position: relative;
+  z-index: 10;
+}
+
+.cropper-track-wrapper {
+  position: relative;
+  width: 100%;
+  padding: 10px 0;
+}
+
+.cropper-window-preview {
+  position: absolute;
+  top: 10px;
+  height: 4px;
+  background: var(--color-primary);
+  border-radius: 2px;
+  opacity: 0.5;
+  pointer-events: none;
+  box-shadow: 0 0 10px var(--color-primary);
+}
+
+.music-icon.pulse svg {
+  animation: music-pulse 1.5s infinite;
+}
+
+@keyframes music-pulse {
+  0% { transform: scale(1); filter: drop-shadow(0 0 0px var(--color-primary)); }
+  50% { transform: scale(1.1); filter: drop-shadow(0 0 8px var(--color-primary)); }
+  100% { transform: scale(1); filter: drop-shadow(0 0 0px var(--color-primary)); }
 }
 
 .aura-toast {
@@ -3032,7 +3061,11 @@ select {
   display: flex;
   align-items: center;
   gap: 10px;
-  animation: toast-slide-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: toast-slide-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), toast-fade-out 0.5s 4.5s forwards;
+}
+
+@keyframes toast-fade-out {
+  to { transform: translateX(-10px); opacity: 0; pointer-events: none; }
 }
 
 @keyframes toast-slide-in {
@@ -3049,17 +3082,18 @@ select {
 .moments-aura-content {
   width: 100%;
   max-width: 480px;
-  height: 85vh;
-  background: rgba(30, 41, 59, 0.6);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  height: min(85vh, 720px);
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 32px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.7);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   position: relative;
-  animation: aura-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: aura-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1);
 }
 
 @keyframes aura-pop {
@@ -3099,16 +3133,18 @@ select {
 }
 
 .aura-preview-container {
-  flex: 1;
-  margin: 0 24px;
-  background: rgba(15, 23, 42, 0.5);
-  border: 2px dashed rgba(255, 255, 255, 0.05);
-  border-radius: 24px;
+  flex: 1.2;
+  min-height: 200px;
+  margin: 0 28px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   position: relative;
+  transition: all 0.3s ease;
 }
 
 .aura-media-wrapper {
@@ -3158,18 +3194,27 @@ select {
 }
 
 .aura-input-section {
-  padding: 32px 28px;
+  padding: 24px 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .aura-textarea {
   width: 100%;
   background: transparent;
   border: none;
-  color: #f8fafc;
-  font-size: 1.25rem;
+  color: #fff;
+  font-size: 1.1rem;
   font-weight: 500;
   resize: none;
   outline: none;
+  height: 60px;
+  line-height: 1.5;
+  transition: height 0.3s ease;
+}
+
+.aura-textarea:focus {
   height: 100px;
 }
 

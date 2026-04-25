@@ -18,8 +18,25 @@ router.post("/", protect, async (req, res) => {
         });
         
         const populated = await Moment.findById(moment._id).populate("userId", "username avatar");
+        
+        console.log(`[Moments] New moment exhaled by ${req.user.username} (${req.user._id}). Type: ${type}`);
+        
+        // Emit to contacts
+        const io = req.app.get("io");
+        const user = await User.findById(req.user._id).select("contacts");
+        const contactIds = user.contacts.map(c => c.userId.toString());
+        
+        // Emit to the user themselves (for other tabs)
+        io.to(req.user._id.toString()).emit("new_moment", populated);
+        
+        // Emit to each online contact
+        contactIds.forEach(cid => {
+            io.to(cid).emit("new_moment", populated);
+        });
+
         res.status(201).json(populated);
     } catch (err) {
+        console.error(`[Moments] Error exhaling moment:`, err);
         res.status(500).json({ message: "Server error" });
     }
 });
