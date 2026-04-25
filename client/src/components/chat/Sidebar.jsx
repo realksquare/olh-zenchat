@@ -8,6 +8,7 @@ import ChatCard from "./ChatCard";
 import ProfileModal from "../ui/ProfileModal";
 import AdminPanel from "../ui/AdminPanel";
 import FAQModal from "../ui/FAQModal";
+import MomentsRow from "./MomentsRow";
 import { VerifiedTick, AdminIcon, HelpIcon } from "../ui/Icons";
 
 const Sidebar = ({ onChatSelect }) => {
@@ -127,6 +128,11 @@ const Sidebar = ({ onChatSelect }) => {
                     </svg>
                 </button>
             </div>
+
+            <MomentsRow 
+                onAddMoment={() => console.log("Add moment")} 
+                onViewMoment={(moments) => console.log("View", moments)} 
+            />
 
             <div className="sidebar-search-wrap">
                 <div className="sidebar-search">
