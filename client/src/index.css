@@ -3017,6 +3017,32 @@ select {
   z-index: 10;
 }
 
+.label-with-play {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cropper-play-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cropper-play-btn:hover {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  transform: scale(1.1);
+}
+
 .cropper-track-wrapper {
   position: relative;
   width: 100%;
@@ -3529,31 +3555,115 @@ select {
   flex-direction: column;
 }
 
-.aura-username {
-  font-weight: 700;
-  color: #fff;
-  font-size: 1rem;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+.aura-metadata-wrapper {
+  position: relative;
+  height: 18px;
+  min-width: 150px;
 }
 
-.aura-time {
+.aura-time, .aura-music-line {
+  position: absolute;
+  top: 0;
+  left: 0;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
-.aura-viewer-branding {
-  font-size: 1rem;
-  font-weight: 900;
-  color: rgba(255, 255, 255, 0.3);
-  letter-spacing: 0.1em;
+.aura-music-line {
+  color: var(--color-primary);
+  font-weight: 600;
 }
 
-.aura-viewer-close {
+.fade-in { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.fade-out { opacity: 0; transform: translateY(5px); pointer-events: none; }
+
+.aura-viewer-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.aura-speaker-btn {
   background: none;
   border: none;
   color: #fff;
   cursor: pointer;
   opacity: 0.7;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aura-speaker-btn:hover { opacity: 1; }
+
+.aura-progress-fill.active {
+  width: 100%;
+  animation: progress-fill var(--duration, 5s) linear forwards;
+}
+
+@keyframes progress-fill {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.aura-music-focus {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+.focus-art {
+  width: 240px;
+  height: 240px;
+  border-radius: 24px;
+  object-fit: cover;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1);
+  animation: art-float 6s ease-in-out infinite;
+}
+
+@keyframes art-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.music-visualizer.centered {
+  height: 32px;
+  gap: 6px;
+}
+
+.music-visualizer.centered .v-bar {
+  width: 6px;
+}
+
+.music-focus-info {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.music-focus-info h2 {
+  font-size: 1.8rem;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.music-focus-info p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.1rem;
+}
+
+.aura-viewer-footer {
+  position: absolute;
+  bottom: 24px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.1em;
 }
 
 .aura-viewer-media {

@@ -31,11 +31,15 @@ export const useMomentStore = create((set, get) => ({
         }
     },
 
-    viewMoment: async (momentId) => {
+    viewMoment: async (momentId, userId) => {
         try {
             await axiosInstance.post(`/moments/${momentId}/view`);
             set((state) => ({
-                moments: state.moments.filter(m => m._id !== momentId)
+                moments: state.moments.filter(m => {
+                    const mid = m.userId?._id || m.userId;
+                    const uid = userId?._id || userId;
+                    return m._id !== momentId || mid === uid;
+                })
             }));
         } catch (err) {
             console.error("Failed to view moment:", err);

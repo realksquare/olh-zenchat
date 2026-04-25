@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, memo } from "react";
 import { createPortal } from "react-dom";
 import { useMomentStore } from "../../stores/momentStore";
+import { useAuthStore } from "../../stores/authStore";
 import MusicSearch from "./MusicSearch";
-import axiosInstance from "../../utils/axios";
 
 const MomentCreator = ({ isOpen, onClose }) => {
     const [content, setContent] = useState("");
@@ -12,6 +12,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const [isMusicSearchOpen, setIsMusicSearchOpen] = useState(false);
     const [duration, setDuration] = useState(18);
     const [startTime, setStartTime] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(true);
     const [toast, setToast] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
     const [cameraState, setCameraState] = useState("closed"); // closed, permission, active
@@ -19,7 +20,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const audioRef = useRef(null);
     const videoRef = useRef(null);
     const streamRef = useRef(null);
-    const { createMoment } = useMomentStore();
+    const { createMoment, moments } = useMomentStore();
+    const { user } = useAuthStore();
 
     const showToast = (message) => {
         setToast(message);
@@ -36,11 +38,15 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 audioRef.current.src = music.previewUrl;
             }
 
-            audioRef.current.currentTime = startTime;
-            audioRef.current.play().catch(e => console.log("Auto-play blocked"));
+            if (isPlaying) {
+                audioRef.current.currentTime = startTime;
+                audioRef.current.play().catch(e => console.log("Auto-play blocked"));
+            } else {
+                audioRef.current.pause();
+            }
 
             const checkTime = () => {
-                if (audioRef.current && audioRef.current.currentTime >= startTime + duration) {
+                if (audioRef.current && isPlaying && audioRef.current.currentTime >= startTime + duration) {
                     audioRef.current.currentTime = startTime;
                 }
             };
@@ -55,9 +61,9 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 audioRef.current = null;
             }
         }
-    }, [music, startTime, duration, isOpen]);
+    }, [music, startTime, duration, isOpen, isPlaying]);
 
-    // Camera Stream Logic (Robust Ref Handling)
+    // Camera Stream Logic
     useEffect(() => {
         let interval;
         if (cameraState === "active" && streamRef.current) {
@@ -130,6 +136,14 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
     const handleShare = async () => {
         if (!content && !media && !music) return;
+
+        // 5 Moment Limit Check
+        const ownMomentsCount = moments.filter(m => (m.userId?._id || m.userId) === user?._id).length;
+        if (ownMomentsCount >= 5) {
+            showToast("Slow down... only 5 exhales per cycle allowed. 🌪️");
+            return;
+        }
+
         setIsUploading(true);
         try {
             let mediaUrl = "";
@@ -149,7 +163,11 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
             await createMoment({ type, content, mediaUrl, music: music ? { ...music, duration, startTime } : null });
             showToast("Moment exhaled successfully. ✨");
-            setTimeout(() => { onClose(); setContent(""); setMedia(null); setPreviewUrl(null); setMusic(null); }, 1500);
+            setTimeout(() => { 
+                onClose(); 
+                setContent(""); setMedia(null); setPreviewUrl(null); setMusic(null); 
+                setIsPlaying(true);
+            }, 1500);
         } catch (err) {
             showToast("Breath lost... try again. 🌪️");
         } finally { setIsUploading(false); }
@@ -225,7 +243,16 @@ const MomentCreator = ({ isOpen, onClose }) => {
                         {music && (
                             <div className="aura-music-cropper">
                                 <div className="cropper-label">
-                                    <span>Zen-Cropper: {startTime}s - {startTime + duration}s</span>
+                                    <div className="label-with-play">
+                                        <button className="cropper-play-btn" onClick={() => setIsPlaying(!isPlaying)}>
+                                            {isPlaying ? (
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                            ) : (
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                            )}
+                                        </button>
+                                        <span>Zen-Cropper: {startTime}s - {startTime + duration}s</span>
+                                    </div>
                                     <select value={duration} onChange={(e) => setDuration(Number(e.target.value))} className="aura-duration-select">
                                         <option value={18}>18s</option>
                                         <option value={24}>24s</option>
@@ -248,7 +275,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                         )}
 
                         {isMusicSearchOpen && (
-                            <MusicSearch onSelect={(track) => { setMusic(track); setIsMusicSearchOpen(false); }} onClose={() => setIsMusicSearchOpen(false)} />
+                            <MusicSearch onSelect={(track) => { setMusic(track); setIsMusicSearchOpen(false); setIsPlaying(true); }} onClose={() => setIsMusicSearchOpen(false)} />
                         )}
                         
                         <div className="aura-actions">
