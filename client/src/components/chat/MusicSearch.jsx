@@ -77,7 +77,8 @@ const MusicSearch = ({ onSelect, onClose }) => {
                                         title: track.trackName,
                                         artist: track.artistName,
                                         previewUrl: track.previewUrl,
-                                        coverUrl: track.artworkUrl100
+                                        coverUrl: track.artworkUrl100,
+                                        totalDuration: Math.floor(track.trackTimeMillis / 1000)
                                     });
                                 }}>
                                     Select

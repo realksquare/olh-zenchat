@@ -3161,16 +3161,33 @@ select {
 
 .aura-remove-media {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  border: none;
-  color: #fff;
+  top: 12px;
+  right: 12px;
   width: 28px;
   height: 28px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  transition: all 0.2s;
+  z-index: 60;
+  padding: 0;
+}
+
+.aura-remove-media:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  transform: scale(1.1);
+}
+
+.aura-remove-media svg {
+  width: 14px;
+  height: 14px;
 }
 
 .aura-placeholder {
@@ -3325,13 +3342,19 @@ select {
 }
 
 .aura-duration-select {
-  background: rgba(255, 255, 255, 0.05);
+  background: #1e293b;
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #fff;
-  padding: 2px 6px;
-  border-radius: 6px;
+  padding: 4px 8px;
+  border-radius: 8px;
   font-size: 0.75rem;
   outline: none;
+  cursor: pointer;
+}
+
+.aura-duration-select option {
+  background: #0f172a;
+  color: #fff;
 }
 
 .aura-textarea {

@@ -233,8 +233,16 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                     </select>
                                 </div>
                                 <div className="cropper-track-wrapper">
-                                    <input type="range" min="0" max={30 - duration} step="0.5" value={startTime} onChange={(e) => setStartTime(Number(e.target.value))} className="aura-slider" />
-                                    <div className="cropper-window-preview" style={{ left: `${(startTime / 30) * 100}%`, width: `${(duration / 30) * 100}%` }} />
+                                    <input 
+                                        type="range" 
+                                        min="0" 
+                                        max={(music.totalDuration || 30) - duration} 
+                                        step="0.5" 
+                                        value={startTime} 
+                                        onChange={(e) => setStartTime(Number(e.target.value))} 
+                                        className="aura-slider" 
+                                    />
+                                    <div className="cropper-window-preview" style={{ left: `${(startTime / (music.totalDuration || 30)) * 100}%`, width: `${(duration / (music.totalDuration || 30)) * 100}%` }} />
                                 </div>
                             </div>
                         )}
