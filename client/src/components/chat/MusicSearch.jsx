@@ -10,7 +10,7 @@ const MusicSearch = ({ onSelect, onClose }) => {
             if (!query || query.length < 2) return;
             setLoading(true);
             try {
-                // Fetch from iTunes
+                // iTunes Search (Reliable)
                 const itunesRes = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=15`);
                 const itunesData = await itunesRes.json();
                 const itunesTracks = itunesData.results.map(track => ({
@@ -23,29 +23,31 @@ const MusicSearch = ({ onSelect, onClose }) => {
                     source: "iTunes"
                 }));
 
-                // Attempt to Fetch from Deezer (Fallback if CORS allows)
+                // Deezer Search via AllOrigins Proxy (To bypass CORS)
                 let deezerTracks = [];
                 try {
-                    const deezerRes = await fetch(`https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=10`, { mode: 'cors' });
-                    if (deezerRes.ok) {
-                        const deezerData = await deezerRes.json();
-                        deezerTracks = (deezerData.data || []).map(track => ({
-                            id: `deezer-${track.id}`,
-                            title: track.title,
-                            artist: track.artist.name,
-                            previewUrl: track.preview,
-                            coverUrl: track.album.cover_medium,
-                            totalDuration: track.duration,
-                            source: "Deezer"
-                        }));
-                    }
+                    const deezerUrl = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=10`;
+                    const proxyRes = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(deezerUrl)}`);
+                    const proxyData = await proxyRes.json();
+                    const deezerData = JSON.parse(proxyData.contents);
+                    deezerTracks = (deezerData.data || []).map(track => ({
+                        id: `deezer-${track.id}`,
+                        title: track.title,
+                        artist: track.artist.name,
+                        previewUrl: track.preview,
+                        coverUrl: track.album.cover_medium,
+                        totalDuration: track.duration,
+                        source: "Deezer"
+                    }));
                 } catch (e) {
-                    console.log("Deezer CORS block or error - staying with iTunes Aura.");
+                    console.log("Deezer Proxy Error:", e);
                 }
 
-                // Combine and Filter duplicates
+                // Combine and prioritize iTunes then Deezer
                 const combined = [...itunesTracks, ...deezerTracks];
-                const unique = combined.filter((v, i, a) => a.findIndex(t => t.title === v.title && t.artist === v.artist) === i);
+                const unique = combined.filter((v, i, a) => 
+                    a.findIndex(t => t.title.toLowerCase() === v.title.toLowerCase() && t.artist.toLowerCase() === v.artist.toLowerCase()) === i
+                );
                 setResults(unique);
             } catch (err) {
                 console.error("Search error:", err);
@@ -71,10 +73,10 @@ const MusicSearch = ({ onSelect, onClose }) => {
             </div>
             <div className="music-results">
                 {loading ? (
-                    <div className="music-loading">Vibing through the catalogs...</div>
+                    <div className="music-loading">Vibing through multisensory catalogs...</div>
                 ) : results.length > 0 ? (
                     results.map(track => (
-                        <div key={track.id} className="music-track-item">
+                        <div key={track.id} className="music-track-item" onClick={() => onSelect(track)}>
                             <img src={track.coverUrl} alt="Cover" className="track-cover" />
                             <div className="track-info">
                                 <div className="track-name-wrapper">
@@ -84,14 +86,14 @@ const MusicSearch = ({ onSelect, onClose }) => {
                                 <span className="track-artist">{track.artist}</span>
                             </div>
                             <div className="track-actions">
-                                <button className="select-btn" onClick={() => onSelect(track)}>Select</button>
+                                <button className="select-btn">Select</button>
                             </div>
                         </div>
                     ))
                 ) : query.length >= 2 ? (
                     <div className="music-loading">No vibes found matching your breath.</div>
                 ) : (
-                    <div className="music-loading">Type to explore multisensory vibes...</div>
+                    <div className="music-loading">Type to explore vibes across catalogs...</div>
                 )}
             </div>
             <button className="aura-close-search" onClick={onClose}>

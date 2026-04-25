@@ -15,7 +15,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const [isPlaying, setIsPlaying] = useState(true);
     const [toast, setToast] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
-    const [cameraState, setCameraState] = useState("closed"); // closed, permission, active
+    const [cameraState, setCameraState] = useState("closed");
     const fileInputRef = useRef(null);
     const audioRef = useRef(null);
     const videoRef = useRef(null);
@@ -29,7 +29,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
         setTimeout(() => setToast(null), 5000);
     };
 
-    // Live Audio Preview Logic with Debounced Seeking
+    // Live Audio Preview Logic
     useEffect(() => {
         if (isOpen && music && music.previewUrl) {
             if (!audioRef.current) {
@@ -40,12 +40,11 @@ const MomentCreator = ({ isOpen, onClose }) => {
             }
 
             if (isPlaying) {
-                // Debounce seeking to prevent stutter
                 if (seekTimeoutRef.current) clearTimeout(seekTimeoutRef.current);
                 seekTimeoutRef.current = setTimeout(() => {
                     if (audioRef.current) {
                         audioRef.current.currentTime = startTime;
-                        audioRef.current.play().catch(e => console.log("Auto-play blocked"));
+                        audioRef.current.play().catch(e => console.log("Audio blocked"));
                     }
                 }, 150);
             } else {
@@ -70,20 +69,6 @@ const MomentCreator = ({ isOpen, onClose }) => {
             }
         }
     }, [music, startTime, duration, isOpen, isPlaying]);
-
-    // Camera Stream Logic
-    useEffect(() => {
-        let interval;
-        if (cameraState === "active" && streamRef.current) {
-            interval = setInterval(() => {
-                if (videoRef.current && !videoRef.current.srcObject) {
-                    videoRef.current.srcObject = streamRef.current;
-                    clearInterval(interval);
-                }
-            }, 100);
-        }
-        return () => { if (interval) clearInterval(interval); };
-    }, [cameraState]);
 
     const compressImage = (base64Str, maxSize = 3 * 1024 * 1024) => {
         return new Promise((resolve) => {
@@ -169,7 +154,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
             showToast("Moment exhaled successfully. ✨");
             setTimeout(() => { 
                 onClose(); 
-                setContent(""); setMedia(null); setPreviewUrl(null); setMusic(null); 
+                setContent(""); setMedia(null); setPreviewUrl(null); setMusic(null); setStartTime(0);
                 setIsPlaying(true);
             }, 1500);
         } catch (err) {
@@ -257,34 +242,39 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                         </button>
                                         <span>{music.title} • {music.artist}</span>
                                     </div>
-                                    <select value={duration} onChange={(e) => setDuration(Number(e.target.value))} className="aura-duration-select">
+                                    <select value={duration} onChange={(e) => { 
+                                        const newDur = Number(e.target.value);
+                                        setDuration(newDur);
+                                        if (startTime + newDur > 30) setStartTime(30 - newDur);
+                                    }} className="aura-duration-select">
                                         <option value={18}>18s</option>
                                         <option value={24}>24s</option>
                                         <option value={30}>30s</option>
                                     </select>
-                                    <button className="aura-remove-music" onClick={() => { setMusic(null); setIsPlaying(false); }} title="Remove Music">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                                        </svg>
+                                    <button className="aura-remove-music" onClick={() => { setMusic(null); setIsPlaying(false); }}>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                                     </button>
                                 </div>
                                 <div className="cropper-track-wrapper">
+                                    <div className="cropper-window-preview" style={{ 
+                                        left: `${(startTime / 30) * 100}%`, 
+                                        width: `${(duration / 30) * 100}%` 
+                                    }} />
                                     <input 
                                         type="range" 
                                         min="0" 
-                                        max={(music.totalDuration || 30) - duration} 
+                                        max={30 - duration} 
                                         step="0.5" 
                                         value={startTime} 
                                         onChange={(e) => setStartTime(Number(e.target.value))} 
                                         className="aura-slider" 
                                     />
-                                    <div className="cropper-window-preview" style={{ left: `${(startTime / (music.totalDuration || 30)) * 100}%`, width: `${(duration / (music.totalDuration || 30)) * 100}%` }} />
                                 </div>
                             </div>
                         )}
 
                         {isMusicSearchOpen && (
-                            <MusicSearch onSelect={(track) => { setMusic(track); setIsMusicSearchOpen(false); setIsPlaying(true); }} onClose={() => setIsMusicSearchOpen(false)} />
+                            <MusicSearch onSelect={(track) => { setMusic(track); setIsMusicSearchOpen(false); setIsPlaying(true); setStartTime(0); }} onClose={() => setIsMusicSearchOpen(false)} />
                         )}
                         
                         <div className="aura-actions">

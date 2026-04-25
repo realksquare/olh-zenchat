@@ -3506,8 +3506,15 @@ select {
 }
 
 .moments-aura-viewer-overlay {
-  background: #000;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
   z-index: 2000;
+  transition: opacity 1s ease;
+}
+
+.moments-aura-viewer-overlay.fading-out {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .moments-aura-viewer-content {
@@ -3546,12 +3553,11 @@ select {
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
-.aura-progress-fill.active {
+.aura-progress-fill.completed {
   width: 100%;
-  transition: width var(--duration, 5s) linear;
 }
 
-.aura-progress-fill.completed {
+.aura-progress-fill.active.solid {
   width: 100%;
 }
 
@@ -3645,7 +3651,7 @@ select {
   justify-content: center;
   gap: 24px;
   width: 100%;
-  padding-top: 60px;
+  padding-top: 100px;
 }
 
 .focus-art {
@@ -3687,12 +3693,25 @@ select {
   font-size: 1.1rem;
 }
 
-.aura-viewer-footer {
+.aura-viewer-footer-wrapper {
   position: absolute;
   bottom: 24px;
   left: 0;
   right: 0;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.aura-countdown-text {
+  font-size: 0.85rem;
+  color: #fff;
+  font-weight: 500;
+}
+
+.aura-viewer-footer {
   font-size: 0.9rem;
   font-weight: 900;
   color: rgba(255, 255, 255, 0.2);
