@@ -383,13 +383,34 @@ const registerSocketHandlers = (io) => {
         socket.on("typing_start", async ({ chatId, scramble }) => {
             const chat = await Chat.findById(chatId);
             if (!chat) return;
+
+            const sender = await User.findById(userId).select("privacySettings contacts");
+            if (!sender) return;
+
+            const privacy = sender.privacySettings?.typingIndicator || "everyone";
+
             chat.participants
                 .filter(p => p.toString() !== userId)
                 .forEach(participantId => {
                     const userData = onlineUsers.get(participantId.toString());
                     if (userData && userData.sockets) {
+                        let canSeeScramble = false;
+                        if (privacy === "everyone") {
+                            canSeeScramble = true;
+                        } else if (privacy === "nobody") {
+                            canSeeScramble = false;
+                        } else {
+                            const isContact = sender.contacts?.some(c => c.userId.toString() === participantId.toString());
+                            if (isContact) canSeeScramble = true;
+                        }
+
                         userData.sockets.forEach((dType, sId) => {
-                            io.to(sId).emit("typing_status", { userId, chatId, isTyping: true, scramble });
+                            io.to(sId).emit("typing_status", { 
+                                userId, 
+                                chatId, 
+                                isTyping: true, 
+                                scramble: canSeeScramble ? scramble : null 
+                            });
                         });
                     }
                 });

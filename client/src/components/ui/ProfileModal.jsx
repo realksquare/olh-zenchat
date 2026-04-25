@@ -17,6 +17,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [avatarPreview, setAvatarPreview] = useState(user?.avatar || "");
     const [onlineVisibility, setOnlineVisibility] = useState(user?.privacySettings?.onlineStatus || "everyone");
     const [nameVisibility, setNameVisibility] = useState(user?.privacySettings?.fullName || "everyone");
+    const [typingVisibility, setTypingVisibility] = useState(user?.privacySettings?.typingIndicator || "everyone");
     const [error, setError] = useState("");
     const [isSubscribing, setIsSubscribing] = useState(false);
 
@@ -31,6 +32,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setAvatarPreview(user.avatar || "");
             setOnlineVisibility(user.privacySettings?.onlineStatus || "everyone");
             setNameVisibility(user.privacySettings?.fullName || "everyone");
+            setTypingVisibility(user.privacySettings?.typingIndicator || "everyone");
             setAvatarFile(null);
             setError("");
             setIsSubscribing(false);
@@ -58,7 +60,11 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         if (email !== user.email) formData.append("email", email);
         if (password) formData.append("password", password);
         if (avatarFile) formData.append("avatar", avatarFile);
-        const privacySettings = { onlineStatus: onlineVisibility, fullName: nameVisibility };
+        const privacySettings = { 
+            onlineStatus: onlineVisibility, 
+            fullName: nameVisibility,
+            typingIndicator: typingVisibility 
+        };
         formData.append("privacySettings", JSON.stringify(privacySettings));
         const res = await updateProfile(formData);
         if (res.success) {
@@ -192,6 +198,17 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                     <option value="nobody">Nobody</option>
                                 </select>
                             </div>
+                        </div>
+                        <div className="form-group" style={{ marginTop: "1rem" }}>
+                            <label>Scrambled Typing Preview</label>
+                            <select value={typingVisibility} onChange={(e) => setTypingVisibility(e.target.value)}>
+                                <option value="everyone">Everyone</option>
+                                <option value="contacts">Contacts Only</option>
+                                <option value="nobody">Nobody</option>
+                            </select>
+                            <span style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "4px", display: "block" }}>
+                                If disabled, others see a standard wave/typing indicator.
+                            </span>
                         </div>
                     </div>
 

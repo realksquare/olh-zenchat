@@ -1124,6 +1124,31 @@ select {
   min-height: 36px;
 }
 
+.typing-wave {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  background: var(--color-surface-offset);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-full);
+  padding: 8px 12px;
+  height: 34px;
+}
+
+.wave-bar {
+  display: block;
+  width: 3px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  animation: wave 1s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
+@keyframes wave {
+  0%, 100% { height: 4px; opacity: 0.4; }
+  50% { height: 14px; opacity: 1; }
+}
+
 .scramble-noise {
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;

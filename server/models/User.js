@@ -64,7 +64,8 @@ const userSchema = new mongoose.Schema(
         privacySettings: {
             onlineStatus: { type: String, enum: ["everyone", "contacts", "family", "close_circle", "nobody"], default: "everyone" },
             fullName: { type: String, enum: ["everyone", "contacts", "family", "close_circle", "nobody"], default: "everyone" },
-            avatar: { type: String, enum: ["everyone", "contacts", "nobody"], default: "everyone" }
+            avatar: { type: String, enum: ["everyone", "contacts", "nobody"], default: "everyone" },
+            typingIndicator: { type: String, enum: ["everyone", "contacts", "nobody"], default: "everyone" }
         },
         role: {
             type: String,
