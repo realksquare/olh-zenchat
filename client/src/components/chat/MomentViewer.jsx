@@ -10,12 +10,11 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
     const [showMusicInfo, setShowMusicInfo] = useState(false);
     const audioRef = useRef(null);
     const videoRef = useRef(null);
-    const { viewMoment } = useMomentStore();
+    const { viewMoment, deleteMoment } = useMomentStore();
     const { user: currentUser } = useAuthStore();
     
     const currentMoment = moments[currentIndex];
 
-    // Handle Metadata Rotation (Crossfade)
     useEffect(() => {
         if (!isOpen || !currentMoment?.music) {
             setShowMusicInfo(false);
@@ -27,7 +26,6 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
         return () => clearInterval(interval);
     }, [isOpen, currentIndex, currentMoment?.music]);
 
-    // Cleanup Audio on unmount or slide change
     const stopAudio = () => {
         if (audioRef.current) {
             audioRef.current.pause();
@@ -35,25 +33,35 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
         }
     };
 
+    const handleDelete = async (e) => {
+        e.stopPropagation();
+        if (window.confirm("Delete this moment for everyone?")) {
+            await deleteMoment(currentMoment._id);
+            if (moments.length === 1) {
+                handleClose();
+            } else {
+                handleNext();
+            }
+        }
+    };
+
     useEffect(() => {
         if (!isOpen || !currentMoment) return;
 
-        // Reset state for new moment
         stopAudio();
         setShowMusicInfo(false);
 
-        // Mark as viewed
+        // Mark as viewed (if not own)
+        const isOwn = (currentMoment.userId?._id || currentMoment.userId) === currentUser?._id;
         viewMoment(currentMoment._id, currentUser?._id);
 
-        // Calculate Duration
-        let totalDuration = 10; // Default for text/image
+        let totalDuration = 10;
         if (currentMoment.type === "video") {
-            // Video duration will be handled by onLoadedMetadata
+            // Handled by onLoadedMetadata
         } else if (currentMoment.music) {
             totalDuration = currentMoment.music.duration || 18;
         }
 
-        // Handle Music
         if (currentMoment.music?.previewUrl) {
             audioRef.current = new Audio(currentMoment.music.previewUrl);
             audioRef.current.currentTime = currentMoment.music.startTime || 0;
@@ -61,7 +69,6 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
             audioRef.current.play().catch(e => console.log("Audio blocked"));
         }
 
-        // Auto-advance (only for non-video)
         let timer;
         if (currentMoment.type !== "video") {
             timer = setTimeout(() => {
@@ -75,7 +82,6 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
         };
     }, [currentIndex, isOpen, currentMoment?._id]);
 
-    // Handle Mute Sync
     useEffect(() => {
         if (audioRef.current) audioRef.current.muted = isMuted;
         if (videoRef.current) videoRef.current.muted = isMuted;
@@ -98,25 +104,26 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
     const handleClose = () => {
         stopAudio();
         onClose();
+        setCurrentIndex(0);
     };
 
     if (!isOpen || !currentMoment) return null;
 
     const user = currentMoment.userId;
     const isOnlyMusic = currentMoment.type === "music" && !currentMoment.mediaUrl;
+    const isOwn = (user?._id || user) === currentUser?._id;
 
     return createPortal(
         <div className="modal-overlay moments-aura-viewer-overlay" onClick={handleClose}>
             <div className="moments-aura-viewer-content" onClick={(e) => e.stopPropagation()}>
-                {/* Progress Bars */}
                 <div className="aura-progress-bars">
                     {moments.map((_, idx) => (
                         <div key={idx} className="aura-progress-bg">
                             <div 
+                                key={`${idx}-${currentIndex}`}
                                 className={`aura-progress-fill ${idx === currentIndex ? 'active' : (idx < currentIndex ? 'completed' : '')}`} 
                                 style={idx === currentIndex ? { 
-                                    '--duration': `${currentMoment.type === "video" ? '0' : (currentMoment.music?.duration || 10)}s`,
-                                    animationPlayState: 'running'
+                                    '--duration': `${currentMoment.type === "video" ? '0' : (currentMoment.music?.duration || 10)}s`
                                 } : {}}
                             />
                         </div>
@@ -148,6 +155,11 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                     </div>
                     
                     <div className="aura-viewer-actions">
+                        {isOwn && (
+                            <button className="aura-trash-btn" onClick={handleDelete} title="Delete Moment">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                            </button>
+                        )}
                         {(currentMoment.type === "video" || currentMoment.music) && (
                             <button className="aura-speaker-btn" onClick={() => setIsMuted(!isMuted)}>
                                 {isMuted ? (
@@ -175,12 +187,12 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                             playsInline 
                             onEnded={handleNext}
                             onLoadedMetadata={(e) => {
-                                // Sync progress bar with video duration
-                                e.target.closest('.moments-aura-viewer-content').querySelector('.aura-progress-fill.active').style.setProperty('--duration', `${e.target.duration}s`);
+                                const fill = e.target.closest('.moments-aura-viewer-content').querySelector('.aura-progress-fill.active');
+                                if (fill) fill.style.setProperty('--duration', `${e.target.duration}s`);
                             }}
                         />
                     ) : currentMoment.mediaUrl ? (
-                        <img src={currentMoment.mediaUrl} alt="Moment" />
+                        <img src={currentMoment.mediaUrl} alt="Moment" className="viewer-main-media" />
                     ) : (
                         <div className="aura-text-only-bg">
                             {isOnlyMusic && (
@@ -223,7 +235,6 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                     </div>
                 </div>
 
-                {/* Navigation Zones */}
                 <div className="aura-nav-zone left" onClick={handlePrev} />
                 <div className="aura-nav-zone right" onClick={handleNext} />
                 <div className="aura-viewer-footer">#Moments.</div>

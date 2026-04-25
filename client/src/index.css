@@ -3584,19 +3584,26 @@ select {
   gap: 16px;
 }
 
-.aura-speaker-btn {
+.aura-speaker-btn, .aura-trash-btn {
   background: none;
   border: none;
   color: #fff;
   cursor: pointer;
   opacity: 0.7;
-  transition: opacity 0.2s;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.aura-speaker-btn:hover { opacity: 1; }
+.aura-speaker-btn:hover, .aura-trash-btn:hover { 
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.aura-trash-btn:hover {
+  color: #ef4444;
+}
 
 .aura-progress-fill.active {
   width: 100%;
@@ -3612,13 +3619,14 @@ select {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
+  gap: 32px;
+  width: 100%;
 }
 
 .focus-art {
-  width: 240px;
-  height: 240px;
-  border-radius: 24px;
+  width: 180px;
+  height: 180px;
+  border-radius: 20px;
   object-fit: cover;
   box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1);
   animation: art-float 6s ease-in-out infinite;
@@ -3674,10 +3682,9 @@ select {
   position: relative;
 }
 
-.aura-viewer-media img,
-.aura-viewer-media video {
+.aura-viewer-media img.viewer-main-media {
   max-width: 100%;
-  max-height: 100%;
+  max-height: 80vh;
   object-fit: contain;
 }
 

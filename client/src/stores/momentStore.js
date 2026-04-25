@@ -46,6 +46,17 @@ export const useMomentStore = create((set, get) => ({
         }
     },
 
+    deleteMoment: async (momentId) => {
+        try {
+            await axiosInstance.delete(`/moments/${momentId}`);
+            set((state) => ({
+                moments: state.moments.filter(m => m._id !== momentId)
+            }));
+        } catch (err) {
+            console.error("Failed to delete moment:", err);
+        }
+    },
+
     addMoment: (moment) => {
         set((state) => {
             if (state.moments.some(m => m._id === moment._id)) return state;
