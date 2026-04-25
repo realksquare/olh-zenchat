@@ -166,13 +166,28 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
 
     const getScramble = (text) => {
         if (!text) return "";
-        const chars = "░▒▓█║▌▐▀▄";
+        const leetMap = {
+            'a': '4', 'e': '3', 'i': '1', 'o': '0', 's': '5', 't': '7', 'b': '8', 'g': '6'
+        };
+        const chars = "░▒▓█";
+        
+        // Take the last few characters to keep the flicker dynamic
+        const segment = text.toLowerCase().slice(-8);
         let result = "";
-        const len = Math.min(text.length, 8);
-        for (let i = 0; i < len; i++) {
-            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        
+        for (let i = 0; i < segment.length; i++) {
+            const char = segment[i];
+            if (leetMap[char] && Math.random() > 0.3) {
+                result += leetMap[char];
+            } else if (char === " ") {
+                result += "_";
+            } else if (Math.random() > 0.6) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            } else {
+                result += char;
+            }
         }
-        return result;
+        return result || "...";
     };
 
     const handleTypingStart = useCallback(() => {

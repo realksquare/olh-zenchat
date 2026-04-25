@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, memo, useMemo } from "react";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import { format } from "date-fns";
+import DecryptedText from "./DecryptedText";
 
 const VerifiedTick = () => (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '4px', color: '#3da5d9', display: 'inline-block', verticalAlign: 'middle' }}>
@@ -39,6 +40,11 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
     const isDeletedForMe = message.deletedFor?.some(
         (id) => id === user?._id || id?.toString() === user?._id
     );
+
+    const isNew = useMemo(() => {
+        const diff = Date.now() - new Date(message.createdAt).getTime();
+        return diff < 1500; // Only animate if arrived in last 1.5s
+    }, [message.createdAt]);
 
     const [tempVisible, setTempVisible] = useState(false);
 
@@ -169,7 +175,11 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                                     )}
                                 </div>
                             )}
-                            {message.content && <span className="message-text">{message.content}</span>}
+                            {message.content && (
+                                <span className="message-text">
+                                    <DecryptedText text={message.content} animate={isNew && !isMe} />
+                                </span>
+                            )}
                             {status === "sending" && (
                                 <div className="message-progress-container">
                                     <div className="message-progress-bar" style={{ width: `${progress}%` }}></div>
