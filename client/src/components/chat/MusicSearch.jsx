@@ -23,22 +23,23 @@ const MusicSearch = ({ onSelect, onClose }) => {
                     source: "iTunes"
                 }));
 
-                // Deezer Search via AllOrigins Proxy (To bypass CORS)
+                // Deezer Search via CorsProxy.io (Fast & Stable)
                 let deezerTracks = [];
                 try {
                     const deezerUrl = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=10`;
-                    const proxyRes = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(deezerUrl)}`);
-                    const proxyData = await proxyRes.json();
-                    const deezerData = JSON.parse(proxyData.contents);
-                    deezerTracks = (deezerData.data || []).map(track => ({
-                        id: `deezer-${track.id}`,
-                        title: track.title,
-                        artist: track.artist.name,
-                        previewUrl: track.preview,
-                        coverUrl: track.album.cover_medium,
-                        totalDuration: track.duration,
-                        source: "Deezer"
-                    }));
+                    const proxyRes = await fetch(`https://corsproxy.io/?${encodeURIComponent(deezerUrl)}`);
+                    if (proxyRes.ok) {
+                        const deezerData = await proxyRes.json();
+                        deezerTracks = (deezerData.data || []).map(track => ({
+                            id: `deezer-${track.id}`,
+                            title: track.title,
+                            artist: track.artist.name,
+                            previewUrl: track.preview,
+                            coverUrl: track.album.cover_medium,
+                            totalDuration: track.duration,
+                            source: "Deezer"
+                        }));
+                    }
                 } catch (e) {
                     console.log("Deezer Proxy Error:", e);
                 }

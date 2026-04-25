@@ -271,6 +271,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                     <select value={duration} onChange={(e) => { 
                                         const newDur = Number(e.target.value);
                                         setDuration(newDur);
+                                        // Auto-adjust start if end would exceed 30s
                                         if (startTime + newDur > 30) setStartTime(30 - newDur);
                                     }} className="aura-duration-select">
                                         <option value={18}>18s</option>
@@ -288,11 +289,11 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                     }} />
                                     <input 
                                         type="range" 
-                                        min="0" 
-                                        max={30 - duration} 
+                                        min={duration} 
+                                        max={30} 
                                         step="0.5" 
-                                        value={startTime} 
-                                        onChange={(e) => setStartTime(Number(e.target.value))} 
+                                        value={startTime + duration} 
+                                        onChange={(e) => setStartTime(Number(e.target.value) - duration)} 
                                         className="aura-slider" 
                                     />
                                 </div>

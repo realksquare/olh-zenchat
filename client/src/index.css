@@ -3100,23 +3100,27 @@ select {
 }
 
 .moments-aura-overlay {
-  background: radial-gradient(circle at center, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.95));
+  background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(12px) saturate(180%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 1000;
+  padding: 20px;
 }
 
 .moments-aura-content {
   width: 100%;
   max-width: 480px;
-  height: min(85vh, 720px);
-  background: rgba(15, 23, 42, 0.7);
+  max-height: 92vh;
+  overflow-y: auto;
+  background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(40px) saturate(200%);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 32px;
   box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.7);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   position: relative;
   transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   animation: aura-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1);
