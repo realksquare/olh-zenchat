@@ -49,6 +49,15 @@ app.use(express.json());
 
 app.options("*", cors());
 
+app.get("/", (req, res) => {
+    console.log(`[Pulse] Heartbeat received at ${new Date().toISOString()}`);
+    res.json({ status: "alive", message: "ZenChat Server is humming!", timestamp: new Date() });
+});
+
+app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", uptime: process.uptime() });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/messages", messageRoutes);
