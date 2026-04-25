@@ -3193,11 +3193,111 @@ select {
   margin-bottom: 8px;
 }
 
-.aura-input-section {
-  padding: 24px 28px 32px;
+.aura-permission-popup {
+  position: absolute;
+  bottom: 80px;
+  left: 20px;
+  right: 20px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  padding: 24px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  z-index: 200;
+  text-align: center;
+  animation: aura-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.aura-permission-popup h3 {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.aura-permission-popup p {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+
+.permission-actions {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+}
+
+.allow-btn {
+  flex: 1;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.deny-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.aura-camera-view {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.camera-controls {
+  position: absolute;
+  bottom: 24px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+}
+
+.camera-shutter {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #fff;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  transition: transform 0.2s;
+}
+
+.camera-shutter:active {
+  transform: scale(0.9);
+}
+
+.camera-cancel {
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: #fff;
+  padding: 12px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.aura-duration-select {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  outline: none;
 }
 
 .aura-textarea {

@@ -13,16 +13,20 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const [startTime, setStartTime] = useState(0);
     const [toast, setToast] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [cameraState, setCameraState] = useState("closed"); // closed, permission, active
     const fileInputRef = useRef(null);
     const audioRef = useRef(null);
+    const videoRef = useRef(null);
     const { createMoment } = useMomentStore();
+
+    if (!isOpen) return null;
 
     const showToast = (message) => {
         setToast(message);
-        setTimeout(() => setToast(null), 5000); // 5 seconds for success/fail
+        setTimeout(() => setToast(null), 5000);
     };
 
-    // Live Audio Preview Logic (Instagram Style)
+    // Live Audio Preview Logic
     useEffect(() => {
         if (isOpen && music && music.previewUrl) {
             if (!audioRef.current) {
@@ -35,7 +39,6 @@ const MomentCreator = ({ isOpen, onClose }) => {
             audioRef.current.currentTime = startTime;
             audioRef.current.play().catch(e => console.log("Auto-play blocked"));
 
-            // Loop within the duration window
             const checkTime = () => {
                 if (audioRef.current && audioRef.current.currentTime >= startTime + duration) {
                     audioRef.current.currentTime = startTime;
@@ -54,35 +57,96 @@ const MomentCreator = ({ isOpen, onClose }) => {
         }
     }, [music, startTime, duration, isOpen]);
 
-    // Ensure startTime is valid when duration changes
-    useEffect(() => {
-        const maxStart = Math.max(0, 30 - duration);
-        if (startTime > maxStart) setStartTime(0);
-    }, [duration]);
+    const compressImage = (base64Str, maxSize = 3 * 1024 * 1024) => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.src = base64Str;
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                let width = img.width;
+                let height = img.height;
+                
+                // Max resolution cap for safety
+                if (width > 2000) {
+                    height *= 2000 / width;
+                    width = 2000;
+                }
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                let quality = 0.8;
+                let result = canvas.toDataURL("image/jpeg", quality);
+                
+                while (result.length > maxSize && quality > 0.1) {
+                    quality -= 0.1;
+                    result = canvas.toDataURL("image/jpeg", quality);
+                }
+                
+                if (result.length > maxSize) {
+                    resolve(null);
+                } else {
+                    fetch(result).then(res => res.blob()).then(blob => resolve(blob));
+                }
+            };
+        });
+    };
 
+    const handleCameraCapture = async () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(videoRef.current, 0, 0);
+        
+        const dataUrl = canvas.toDataURL("image/jpeg");
+        const blob = await compressImage(dataUrl);
+        
+        if (!blob) {
+            showToast("Breath too heavy... image compression failed. 🌪️");
+            return;
+        }
+
+        const file = new File([blob], "capture.jpg", { type: "image/jpeg" });
         setMedia(file);
-        const reader = new FileReader();
-        reader.onloadend = () => setPreviewUrl(reader.result);
-        reader.readAsDataURL(file);
+        setPreviewUrl(dataUrl);
+        stopCamera();
+    };
+
+    const startCamera = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                setCameraState("active");
+                showToast("Camera breath granted. ✨");
+            }
+        } catch (err) {
+            setCameraState("closed");
+            showToast("Camera breath denied. 🌪️");
+        }
+    };
+
+    const stopCamera = () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+            videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+            videoRef.current.srcObject = null;
+        }
+        setCameraState("closed");
     };
 
     const handleShare = async () => {
         if (!content && !media && !music) return;
-
         setIsUploading(true);
         try {
             let mediaUrl = "";
             let type = "text";
-
             if (media) {
                 const formData = new FormData();
                 formData.append("file", media);
                 formData.append("upload_preset", "zenchat_unsigned");
-                
                 const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/auto/upload`, {
                     method: "POST",
                     body: formData
@@ -93,49 +157,26 @@ const MomentCreator = ({ isOpen, onClose }) => {
             } else if (music) {
                 type = "music";
             }
-
-            await createMoment({
-                type,
-                content,
-                mediaUrl,
-                music: music ? { ...music, duration, startTime } : null
-            });
-
+            await createMoment({ type, content, mediaUrl, music: music ? { ...music, duration, startTime } : null });
             showToast("Moment exhaled successfully. ✨");
-            
             setTimeout(() => {
                 onClose();
-                setContent("");
-                setMedia(null);
-                setPreviewUrl(null);
-                setMusic(null);
-                setIsMusicSearchOpen(false);
+                setContent(""); setMedia(null); setPreviewUrl(null); setMusic(null);
             }, 1500);
         } catch (err) {
             showToast("Breath lost... try again. 🌪️");
-            console.error("Failed to share moment:", err);
         } finally {
             setIsUploading(false);
         }
     };
 
-    const handleClose = () => {
-        if (audioRef.current) {
-            audioRef.current.pause();
-            audioRef.current = null;
-        }
-        onClose();
-    };
-
-    if (!isOpen) return null;
-
     return createPortal(
         <>
-            <div className="modal-overlay moments-aura-overlay" onClick={handleClose}>
+            <div className="modal-overlay moments-aura-overlay" onClick={onClose}>
                 <div className="moments-aura-content" onClick={(e) => e.stopPropagation()}>
                     <div className="moments-aura-header">
                         <h2 className="moments-aura-title">#Moments.</h2>
-                        <button className="aura-close-btn" onClick={handleClose}>
+                        <button className="aura-close-btn" onClick={onClose}>
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                             </svg>
@@ -143,7 +184,19 @@ const MomentCreator = ({ isOpen, onClose }) => {
                     </div>
 
                     <div className="aura-preview-container">
-                        {previewUrl ? (
+                        {cameraState === "active" ? (
+                            <div className="aura-camera-view">
+                                <video ref={videoRef} autoPlay playsInline className="aura-media" />
+                                <div className="camera-controls">
+                                    <button className="camera-shutter" onClick={handleCameraCapture}></button>
+                                    <button className="camera-cancel" onClick={stopCamera}>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        ) : previewUrl ? (
                             <div className="aura-media-wrapper">
                                 {media?.type.startsWith("video") ? (
                                     <video src={previewUrl} autoPlay muted loop className="aura-media" />
@@ -172,126 +225,66 @@ const MomentCreator = ({ isOpen, onClose }) => {
                     </div>
 
                     <div className="aura-input-section">
-                        <textarea 
-                            className="aura-textarea"
-                            placeholder="What's your current vibe?"
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            maxLength={150}
-                        />
-
+                        <textarea className="aura-textarea" placeholder="What's your current vibe?" value={content} onChange={(e) => setContent(e.target.value)} maxLength={150} />
+                        
                         {music && (
-                            <>
-                                <div className="aura-music-card">
-                                    <div className="music-icon pulse">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M9 18V5l12-2v13" />
-                                            <circle cx="6" cy="18" r="3" />
-                                            <circle cx="18" cy="16" r="3" />
-                                        </svg>
-                                    </div>
-                                    <div className="music-details">
-                                        <span className="music-title">{music.title}</span>
-                                        <span className="music-artist">{music.artist}</span>
-                                    </div>
-                                    <button className="remove-music" onClick={() => setMusic(null)}>
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                                        </svg>
-                                    </button>
+                            <div className="aura-music-cropper">
+                                <div className="cropper-label">
+                                    <span>Zen-Cropper: {startTime}s - {startTime + duration}s</span>
+                                    <select value={duration} onChange={(e) => setDuration(Number(e.target.value))} className="aura-duration-select">
+                                        <option value={18}>18s</option>
+                                        <option value={24}>24s</option>
+                                        <option value={30}>30s</option>
+                                    </select>
                                 </div>
-                                <div className="aura-music-cropper">
-                                    <div className="cropper-label">
-                                        <span>Zen-Cropper: {startTime}s - {startTime + duration}s</span>
-                                        <div className="aura-duration-selector">
-                                            <select value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
-                                                <option value={18}>18s</option>
-                                                <option value={24}>24s</option>
-                                                <option value={30}>30s</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="cropper-track-wrapper">
-                                        <input 
-                                            type="range" 
-                                            min="0" 
-                                            max={30 - duration} 
-                                            step="0.5"
-                                            value={startTime} 
-                                            onChange={(e) => setStartTime(Number(e.target.value))}
-                                            className="aura-slider"
-                                        />
-                                        <div className="cropper-window-preview" style={{ 
-                                            left: `${(startTime / 30) * 100}%`,
-                                            width: `${(duration / 30) * 100}%`
-                                        }} />
-                                    </div>
+                                <div className="cropper-track-wrapper">
+                                    <input type="range" min="0" max={30 - duration} step="0.5" value={startTime} onChange={(e) => setStartTime(Number(e.target.value))} className="aura-slider" />
+                                    <div className="cropper-window-preview" style={{ left: `${(startTime / 30) * 100}%`, width: `${(duration / 30) * 100}%` }} />
                                 </div>
-                            </>
+                            </div>
                         )}
 
                         {isMusicSearchOpen && (
-                            <MusicSearch 
-                                onSelect={(track) => {
-                                    setMusic(track);
-                                    setIsMusicSearchOpen(false);
-                                }}
-                                onClose={() => setIsMusicSearchOpen(false)}
-                            />
+                            <MusicSearch onSelect={(track) => { setMusic(track); setIsMusicSearchOpen(false); }} onClose={() => setIsMusicSearchOpen(false)} />
                         )}
                         
                         <div className="aura-actions">
                             <div className="aura-tools">
-                                <button className="aura-tool-btn" title="Add Music" onClick={() => setIsMusicSearchOpen(!isMusicSearchOpen)}>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M9 18V5l12-2v13" />
-                                        <circle cx="6" cy="18" r="3" />
-                                        <circle cx="18" cy="16" r="3" />
-                                    </svg>
+                                <button className="aura-tool-btn" onClick={() => setIsMusicSearchOpen(!isMusicSearchOpen)}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
                                 </button>
-                                <input 
-                                    type="file" 
-                                    ref={fileInputRef} 
-                                    style={{ display: 'none' }} 
-                                    accept="image/*,video/*"
-                                    onChange={handleFileChange}
-                                />
-                                {!media && !music && (
-                                    <button className="aura-tool-btn" title="Capture Breath" onClick={() => fileInputRef.current?.click()}>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" />
-                                        </svg>
-                                    </button>
-                                )}
+                                <button className="aura-tool-btn" onClick={() => setCameraState("permission")}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
+                                </button>
+                                <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*,video/*" onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if (file) {
+                                        setMedia(file);
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => setPreviewUrl(reader.result);
+                                        reader.readAsDataURL(file);
+                                    }
+                                }} />
                             </div>
-
-                            <button 
-                                className="aura-share-btn" 
-                                onClick={handleShare}
-                                disabled={isUploading || (!content && !media && !music)}
-                            >
-                                {isUploading ? (
-                                    <div className="aura-loader"></div>
-                                ) : (
-                                    <>
-                                        <span>Share One-Breath</span>
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <line x1="22" y1="2" x2="11" y2="13" />
-                                            <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                                        </svg>
-                                    </>
-                                )}
+                            <button className="aura-share-btn" onClick={handleShare} disabled={isUploading || (!content && !media && !music)}>
+                                {isUploading ? <div className="aura-loader"></div> : <><span>Share One-Breath</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg></>}
                             </button>
                         </div>
+
+                        {cameraState === "permission" && (
+                            <div className="aura-permission-popup">
+                                <h3>Zen-Camera Access</h3>
+                                <p>Allow ZenChat to capture a moment through your lens?</p>
+                                <div className="permission-actions">
+                                    <button className="allow-btn" onClick={startCamera}>Allow Access</button>
+                                    <button className="deny-btn" onClick={() => { setCameraState("closed"); showToast("Camera breath denied. 🌪️"); }}>Deny</button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
-            {toast && (
-                <div className="aura-toast">
-                    {toast.includes("success") ? "✨" : "🌪️"}
-                    {toast}
-                </div>
-            )}
+            {toast && <div className="aura-toast">{toast.includes("granted") || toast.includes("successfully") ? "✨" : "🌪️"} {toast}</div>}
         </>,
         document.body
     );
