@@ -36,7 +36,6 @@ export const useMomentStore = create((set, get) => ({
     viewMoment: async (momentId) => {
         try {
             await axios.post(`${API_URL}/moments/${momentId}/view`, {}, { withCredentials: true });
-            // Remove from local state because it's "viewed once" (One-Breath rule)
             set((state) => ({
                 moments: state.moments.filter(m => m._id !== momentId)
             }));
@@ -45,8 +44,27 @@ export const useMomentStore = create((set, get) => ({
         }
     },
 
+    addMoment: (moment) => {
+        set((state) => {
+            if (state.moments.some(m => m._id === moment._id)) return state;
+            return { moments: [moment, ...state.moments] };
+        });
+    },
+
     hasActiveMoment: (userId) => {
         const moments = get().moments;
-        return moments.some(m => m.userId?._id === userId || m.userId === userId);
+        return moments.some(m => {
+            const mid = m.userId?._id || m.userId;
+            const uid = userId?._id || userId;
+            return mid === uid;
+        });
+    },
+
+    getHaloColor: (userId) => {
+        if (!userId) return "#3b82f6";
+        const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4"];
+        const idStr = typeof userId === 'string' ? userId : (userId._id || '');
+        const hash = idStr.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        return colors[hash % colors.length];
     }
 }));

@@ -2,8 +2,10 @@ import { memo, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { format } from "date-fns";
 import { VerifiedTick } from "./Icons";
+import { useMomentStore } from "../../stores/momentStore";
 
 const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = false }) => {
+    const getHaloColor = useMomentStore((s) => s.getHaloColor);
     if (!isOpen || !user) return null;
 
     const getInitials = (name) => name ? name.slice(0, 2).toUpperCase() : "??";
@@ -34,7 +36,10 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                 </button>
 
                 <div className="user-card-header">
-                    <div className={`avatar avatar-xl ${hasMoments ? 'moments-halo' : ''}`}>
+                    <div 
+                        className={`avatar avatar-xl ${hasMoments ? 'moments-halo-thin' : ''}`}
+                        style={hasMoments ? { '--halo-color': getHaloColor(user._id) } : {}}
+                    >
                         {user.avatar ? (
                             <img src={user.avatar} alt={user.username} />
                         ) : (

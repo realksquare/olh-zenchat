@@ -4,7 +4,7 @@ import { useAuthStore } from "../../stores/authStore";
 
 const MomentsRow = ({ onAddMoment, onViewMoment }) => {
     const { user } = useAuthStore();
-    const moments = useMomentStore((s) => s.moments);
+    const { moments, getHaloColor } = useMomentStore();
 
     // Group moments by user
     const userGroups = useMemo(() => {
@@ -15,24 +15,30 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
             if (!groups[uid]) {
                 groups[uid] = {
                     user: m.userId,
-                    moments: []
+                    moments: [],
+                    color: getHaloColor(uid)
                 };
             }
             groups[uid].moments.push(m);
         });
         return Object.values(groups);
-    }, [moments, user?._id]);
+    }, [moments, user?._id, getHaloColor]);
 
     const myMoments = useMemo(() => 
         moments.filter(m => (m.userId?._id || m.userId) === user?._id)
     , [moments, user?._id]);
+
+    const myColor = useMemo(() => user?._id ? getHaloColor(user._id) : "#3b82f6", [user?._id, getHaloColor]);
 
     return (
         <div className="moments-row-container">
             <div className="moments-row">
                 {/* Current User's Moment Aura */}
                 <div className="moment-item" onClick={() => myMoments.length > 0 ? onViewMoment(myMoments) : onAddMoment()}>
-                    <div className={`avatar avatar-md ${myMoments.length > 0 ? 'moments-halo' : ''}`}>
+                    <div 
+                        className={`avatar avatar-md ${myMoments.length > 0 ? 'moments-halo-thin' : ''}`}
+                        style={myMoments.length > 0 ? { '--halo-color': myColor } : {}}
+                    >
                         {user?.avatar ? (
                             <img src={user.avatar} alt="Me" />
                         ) : (
@@ -54,7 +60,10 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
                         className="moment-item"
                         onClick={() => onViewMoment(group.moments)}
                     >
-                        <div className="avatar avatar-md moments-halo">
+                        <div 
+                            className="avatar avatar-md moments-halo-thin"
+                            style={{ '--halo-color': group.color }}
+                        >
                             {group.user?.avatar ? (
                                 <img src={group.user.avatar} alt={group.user.username} />
                             ) : (

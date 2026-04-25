@@ -13,6 +13,7 @@ import axiosInstance from "./utils/axios";
 import NotificationPrompt from "./components/layout/NotificationPrompt";
 import SplashScreen from "./components/ui/SplashScreen";
 import { useState } from "react";
+import socket from "./utils/socket";
 
 const ProtectedRoute = ({ children }) => {
   const token = useAuthStore((state) => state.token);
@@ -71,7 +72,13 @@ const App = () => {
       registerFCM();
     }
 
-    return () => {};
+    socket.on("new_moment", (moment) => {
+        useMomentStore.getState().addMoment(moment);
+    });
+
+    return () => {
+        socket.off("new_moment");
+    };
   }, [token, user?._id]);
 
   return (

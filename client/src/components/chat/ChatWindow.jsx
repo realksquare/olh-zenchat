@@ -202,7 +202,10 @@ const ChatWindow = ({ onBack }) => {
                     onClick={() => setShowUserCard(true)}
                     style={{ cursor: 'pointer' }}
                 >
-                    <div className={`avatar avatar-md ${hasMoments ? 'moments-halo' : ''}`}>
+                    <div 
+                        className={`avatar avatar-md ${hasMoments ? 'moments-halo-thin' : ''}`}
+                        style={hasMoments ? { '--halo-color': useMomentStore.getState().getHaloColor(otherUser?._id) } : {}}
+                    >
                         {otherUser?.avatar ? (
                             <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
                         ) : (
