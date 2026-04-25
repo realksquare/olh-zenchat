@@ -17,8 +17,6 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const audioRef = useRef(null);
     const { createMoment } = useMomentStore();
 
-    if (!isOpen) return null;
-
     const showToast = (message) => {
         setToast(message);
         setTimeout(() => setToast(null), 5000); // 5 seconds for success/fail
@@ -26,7 +24,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
     // Live Audio Preview Logic (Instagram Style)
     useEffect(() => {
-        if (music && music.previewUrl) {
+        if (isOpen && music && music.previewUrl) {
             if (!audioRef.current) {
                 audioRef.current = new Audio(music.previewUrl);
                 audioRef.current.loop = true;
@@ -54,7 +52,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 audioRef.current = null;
             }
         }
-    }, [music, startTime, duration]);
+    }, [music, startTime, duration, isOpen]);
 
     // Ensure startTime is valid when duration changes
     useEffect(() => {
@@ -128,6 +126,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
         }
         onClose();
     };
+
+    if (!isOpen) return null;
 
     return createPortal(
         <>
