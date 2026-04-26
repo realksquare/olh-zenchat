@@ -229,7 +229,6 @@ const registerSocketHandlers = (io) => {
                     if (userData && userData.sockets && userData.sockets.size > 0) {
                         isDelivered = true;
                     } else {
-                        const pIdStr = participant._id?.toString() || participant.toString();
                         console.log(`[Push] User ${pIdStr} is offline. Starting notification flow...`);
                         
                         User.findById(pIdStr).then(async (offlineUser) => {
@@ -301,7 +300,7 @@ const registerSocketHandlers = (io) => {
                                 const success = await sendPushNotification(offlineUser._id, tkn, title, body, {
                                     chatId: chatId.toString(),
                                     type: 'new_message',
-                                    isViewOnce: messagePayload.isViewOnce ? "true" : "false"
+                                    isViewOnce: populated.isViewOnce ? "true" : "false"
                                 });
                                 if (success) {
                                     pushSuccess = true;
@@ -341,7 +340,7 @@ const registerSocketHandlers = (io) => {
                 if (myData && myData.sockets) {
                     myData.sockets.forEach((dType, socketId) => {
                         if (socketId !== socket.id) {
-                            io.to(socketId).emit("receive_message", { message: messagePayload });
+                            io.to(socketId).emit("receive_message", { message: messagePayloadBase });
                         }
                     });
                 }
