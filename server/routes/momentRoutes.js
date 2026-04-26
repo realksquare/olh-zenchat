@@ -68,10 +68,7 @@ router.get("/", protect, async (req, res) => {
         const moments = await Moment.find({
             $or: [
                 { userId: req.user._id },
-                { 
-                    userId: { $in: contactIds },
-                    "viewedBy.userId": { $ne: req.user._id }
-                }
+                { userId: { $in: contactIds } }
             ]
         })
         .populate("userId", "username avatar fullName")
