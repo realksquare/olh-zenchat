@@ -3,6 +3,7 @@ import { io } from "socket.io-client";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { playReceiveSound } from "../utils/audio";
+import { useMomentStore } from "../stores/momentStore";
 
 const SocketContext = createContext(null);
 
