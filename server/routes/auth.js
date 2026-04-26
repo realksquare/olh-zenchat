@@ -193,7 +193,6 @@ router.put(
                 console.log("[Auth] Uploading avatar to Cloudinary:", req.file.path);
                 try {
                     const result = await cloudinary.uploader.upload(req.file.path, {
-                        folder: "zenchat_avatars",
                         resource_type: "image"
                     });
                     console.log("[Auth] Cloudinary upload success:", result.secure_url);
