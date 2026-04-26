@@ -126,7 +126,10 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
             style={{ position: "relative" }}
         >
             <div className="chat-card-avatar-wrap">
-                <div className={`avatar avatar-md ${hasMoments ? 'moments-halo' : ''}`}>
+                <div 
+                    className={`avatar avatar-md ${hasMoments ? 'moments-halo' : ''}`}
+                    style={hasMoments ? { '--halo-color': useMomentStore.getState().getHaloColor(otherUserId) } : {}}
+                >
                     {otherUser?.avatar ? (
                         <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
                     ) : (

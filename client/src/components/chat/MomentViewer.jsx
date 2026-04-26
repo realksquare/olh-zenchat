@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo } from "react";
+import { useState, useEffect, useRef, memo, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
@@ -13,9 +13,9 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
     const [showMusicInfo, setShowMusicInfo] = useState(false);
     const audioRef = useRef(null);
     const videoRef = useRef(null);
-    const { viewMoment, deleteMoment } = useMomentStore();
+    const { viewMoment, deleteMoment, getHaloColor } = useMomentStore();
     const { user: currentUser } = useAuthStore();
-    
+
     const currentMoment = moments[currentIndex];
 
     const stopAudio = () => {
@@ -55,7 +55,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
 
         let totalDuration = 10;
         if (currentMoment.type === "video") {
-            // Handled via onLoadedMetadata
+            // Placeholder, will be updated by onLoadedMetadata
         } else if (currentMoment.music) {
             totalDuration = currentMoment.music.duration || 18;
         }
@@ -115,10 +115,16 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
         }, 800);
     };
 
+    const haloColor = useMemo(() => {
+        if (!currentMoment?.userId) return "#3b82f6";
+        return getHaloColor(currentMoment.userId);
+    }, [currentMoment, getHaloColor]);
+
     if (!isOpen || !currentMoment) return null;
 
     const user = currentMoment.userId;
-    const isMusicOnly = currentMoment.type === "music" && !currentMoment.mediaUrl;
+    // Fix display logic: media should ALWAYS show if mediaUrl exists
+    const hasMedia = !!currentMoment.mediaUrl;
     const hasText = !!currentMoment.content;
     const isOwn = (user?._id || user) === currentUser?._id;
 
@@ -128,6 +134,9 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
         backgroundSize: 'cover',
         backgroundPosition: 'center'
     } : {};
+
+    const songMetadata = currentMoment.music ? `${currentMoment.music.title} • ${currentMoment.music.artist}` : "";
+    const isLongMetadata = songMetadata.length > 25;
 
     return createPortal(
         <div className={`modal-overlay moments-aura-viewer-overlay ${isClosing ? 'fading-out' : ''}`}>
@@ -140,11 +149,11 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                     ))}
                 </div>
 
-                <div className={`aura-viewer-header ${(!currentMoment.mediaUrl) ? 'with-bg' : ''}`}>
+                <div className={`aura-viewer-header ${(!hasMedia) ? 'with-bg' : ''}`}>
                     <div className="aura-user-meta-container">
                         <div className="aura-user-meta">
                             <div className="avatar-with-countdown">
-                                <div className="avatar avatar-md moments-halo">
+                                <div className="avatar avatar-md moments-halo" style={{ '--halo-color': haloColor }}>
                                     {user?.avatar ? (
                                         <img src={user.avatar} alt={user.username} />
                                     ) : (
@@ -154,33 +163,40 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                                 <div className="aura-avatar-countdown">{Math.ceil(timeLeft)}</div>
                             </div>
                             <div className="aura-user-info">
-                                <span className="aura-username">{user?.username}</span>
+                                <div className="aura-user-title-row">
+                                    <span className="aura-username">{user?.username}</span>
+                                    <span className="aura-moment-counter">
+                                        {currentIndex + 1} of {moments.length}
+                                    </span>
+                                </div>
                                 <div className="aura-metadata-wrapper">
                                     <span className={`aura-time ${showMusicInfo ? 'fade-out' : 'fade-in'}`}>
                                         {formatDistanceToNow(new Date(currentMoment.createdAt), { addSuffix: true })}
                                     </span>
                                     {currentMoment.music && (
-                                        <span className={`aura-music-line ${showMusicInfo ? 'fade-in' : 'fade-out'}`}>
-                                            {currentMoment.music.title} • {currentMoment.music.artist}
-                                        </span>
+                                        <div className={`aura-music-line ${showMusicInfo ? 'fade-in' : 'fade-out'}`}>
+                                            <div className={isLongMetadata ? "marquee-text" : ""}>
+                                                {songMetadata}
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className="aura-viewer-actions">
                         {isOwn && (
                             <button className="aura-trash-btn" onClick={() => setShowDeleteConfirm(true)} title="Let go.">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
                             </button>
                         )}
                         {(currentMoment.type === "video" || currentMoment.music) && (
                             <button className="aura-speaker-btn" onClick={() => setIsMuted(!isMuted)}>
                                 {isMuted ? (
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 5L6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>
                                 ) : (
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 5L6 9H2v6h4l5 4V5z" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" /></svg>
                                 )}
                             </button>
                         )}
@@ -194,22 +210,22 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
 
                 <div className="aura-viewer-media">
                     {currentMoment.type === "video" ? (
-                        <video 
+                        <video
                             ref={videoRef}
-                            src={currentMoment.mediaUrl} 
-                            autoPlay 
+                            src={currentMoment.mediaUrl}
+                            autoPlay
                             muted={isMuted}
-                            playsInline 
+                            playsInline
                             onLoadedMetadata={(e) => setTimeLeft(Math.ceil(e.target.duration))}
                         />
-                    ) : currentMoment.mediaUrl ? (
+                    ) : hasMedia ? (
                         <div className="aura-media-content">
                             <img src={currentMoment.mediaUrl} alt="Moment" className="viewer-main-media" />
-                            {currentMoment.content && <p className="aura-overlay-text">{currentMoment.content}</p>}
+                            {hasText && <p className="aura-overlay-text">{currentMoment.content}</p>}
                         </div>
                     ) : (
-                        <div className={`aura-text-only-bg ${isMusicOnly ? 'music-only' : ''}`}>
-                            {isMusicOnly && !hasText && (
+                        <div className="aura-text-only-bg">
+                            {currentMoment.music && !hasText && (
                                 <div className="aura-music-focus">
                                     <img src={currentMoment.music.coverUrl} alt="Art" className="focus-art" />
                                     <div className="music-visualizer centered">
@@ -230,20 +246,20 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
 
                 <div className="aura-nav-zone left" onClick={handlePrev} />
                 <div className="aura-nav-zone right" onClick={handleNext} />
-                
+
                 {showDeleteConfirm && (
                     <div className="aura-permission-popup">
                         <h3>Let go?</h3>
-                        <p>This #moment. will fade for everyone, forever.</p>
+                        <p>This #moment. will fade for everyone.</p>
                         <div className="permission-actions">
-                            <button className="deny-btn" onClick={confirmDelete} style={{ background: '#ef4444', border: 'none' }}>Let go</button>
+                            <button className="deny-btn" onClick={confirmDelete} style={{ background: '#ef4444', border: 'none' }}>Let go...</button>
                             <button className="allow-btn" onClick={() => setShowDeleteConfirm(false)} style={{ background: 'rgba(255,255,255,0.1)' }}>Keep</button>
                         </div>
                     </div>
                 )}
 
                 <div className="aura-viewer-footer-wrapper">
-                    <div className="aura-viewer-footer">#moments.</div>
+                    <div className="aura-viewer-footer">#moments. - powered by OLH ZenChat.</div>
                 </div>
             </div>
         </div>,

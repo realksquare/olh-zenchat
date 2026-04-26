@@ -15,6 +15,7 @@ import { VerifiedTick, AdminIcon, HelpIcon } from "../ui/Icons";
 
 const Sidebar = ({ onChatSelect }) => {
     const { user, logout } = useAuthStore();
+    const { hasActiveMoment, getHaloColor } = useMomentStore();
     const { 
         chats, activeChat, setActiveChat, 
         addChat, isLoadingChats, togglePinChat, onlineUsers 
@@ -109,9 +110,12 @@ const Sidebar = ({ onChatSelect }) => {
         <div className="sidebar">
             <div className="sidebar-profile">
                 <div
-                    className="avatar avatar-sm"
+                    className={`avatar avatar-sm ${hasActiveMoment(user?._id) ? 'moments-halo-thin' : ''}`}
                     onClick={() => setIsProfileOpen(true)}
-                    style={{ cursor: "pointer" }}
+                    style={{ 
+                        cursor: "pointer",
+                        ...(hasActiveMoment(user?._id) ? { '--halo-color': getHaloColor(user?._id) } : {})
+                    }}
                     title="Edit Profile"
                 >
                     {user?.avatar ? (

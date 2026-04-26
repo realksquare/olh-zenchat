@@ -31,16 +31,14 @@ router.post("/", protect, async (req, res) => {
         
         // Emit to each online contact and send push notification
         const notificationTitle = `${user.username} has shared a #moment.!`;
-        let notificationBody = "";
-        if (type === "music") notificationBody = `vibe. ${music.title}`;
-        else if (content) notificationBody = content;
-        else notificationBody = `Shared a new ${type}.`;
+        const notificationBody = ""; // Simplified as requested
 
         contactIds.forEach(async (cid) => {
             io.to(cid).emit("new_moment", populated);
             
             // Send Push Notif to contacts
             try {
+                console.log(`[moments] Sending push to ${cid}. Title: "${notificationTitle}", Body: "${notificationBody}"`);
                 const contact = await User.findById(cid).select("fcmTokens");
                 if (contact && contact.fcmTokens?.length > 0) {
                     contact.fcmTokens.forEach(t => {
@@ -64,18 +62,20 @@ router.post("/", protect, async (req, res) => {
 });
 
 // @route   GET /api/moments
-// @desc    Get all active moments from self and contacts
+// @desc    Get moments (self = all, contacts = unviewed)
 router.get("/", protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
         const contactIds = user.contacts.map(c => c.userId);
         
-        // Find all active moments from self or contacts (24h rule usually handled by TTL or cleanup, 
-        // but here we just fetch whatever is in DB)
+        // Find moments from self (all) OR contacts (if not viewed by me)
         const moments = await Moment.find({
             $or: [
                 { userId: req.user._id },
-                { userId: { $in: contactIds } }
+                { 
+                    userId: { $in: contactIds },
+                    "viewedBy.userId": { $ne: req.user._id }
+                }
             ]
         })
         .populate("userId", "username avatar fullName")

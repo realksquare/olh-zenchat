@@ -222,9 +222,10 @@ const registerSocketHandlers = (io) => {
                 });
 
                 let isDelivered = false;
-                const otherParticipants = participants.filter(p => p.toString() !== userId.toString());
-                otherParticipants.forEach((participantId) => {
-                    const userData = onlineUsers.get(participantId.toString());
+                const otherParticipants = participants.filter(p => (p._id?.toString() || p.toString()) !== userId.toString());
+                otherParticipants.forEach((participant) => {
+                    const pIdStr = participant._id?.toString() || participant.toString();
+                    const userData = onlineUsers.get(pIdStr);
                     if (userData && userData.sockets && userData.sockets.size > 0) {
                         isDelivered = true;
                     } else {

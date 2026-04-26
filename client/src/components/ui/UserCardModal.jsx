@@ -6,28 +6,38 @@ import { useMomentStore } from "../../stores/momentStore";
 
 const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = false }) => {
     const getHaloColor = useMomentStore((s) => s.getHaloColor);
+    
+    // Safety exit
     if (!isOpen || !user) return null;
 
-    const getInitials = (name) => name ? name.slice(0, 2).toUpperCase() : "??";
+    // Extremely defensive metadata extraction
+    const username = typeof user.username === 'string' ? user.username : 'User';
+    const fullName = typeof user.fullName === 'string' ? user.fullName : null;
+    const userId = typeof user._id === 'string' ? user._id : (user._id?.toString() || 'unknown');
     
-    // Privacy check for Full Name
-    const canSeeFullName = useMemo(() => {
+    const canSeeFullName = (() => {
         const privacy = user.privacySettings?.fullName || "everyone";
         if (privacy === "everyone") return true;
         if (privacy === "nobody") return false;
-        // For "contacts", we assume if this modal is open from a chat, 
-        // they are likely in a context where they can see it or the server filtered it
-        // But let's be safe and check if fullName exists in the object
-        return !!user.fullName;
-    }, [user]);
+        return !!fullName;
+    })();
 
-    const joinedDate = useMemo(() => {
-        if (!user.createdAt) return "Unknown";
-        return format(new Date(user.createdAt), "MMMM yyyy");
-    }, [user.createdAt]);
+    const joinedDate = (() => {
+        try {
+            if (!user.createdAt) return "Unknown";
+            const date = new Date(user.createdAt);
+            if (isNaN(date.getTime())) return "Unknown";
+            return format(date, "MMMM yyyy");
+        } catch (e) {
+            return "Unknown";
+        }
+    })();
+
+    const initials = username.slice(0, 2).toUpperCase();
+    const haloColor = getHaloColor(userId);
 
     return createPortal(
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000 }}>
             <div className="modal-content user-card-modal" onClick={(e) => e.stopPropagation()}>
                 <button className="modal-close" onClick={onClose}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -38,12 +48,12 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                 <div className="user-card-header">
                     <div 
                         className={`avatar avatar-xl ${hasMoments ? 'moments-halo-thin' : ''}`}
-                        style={hasMoments ? { '--halo-color': getHaloColor(user._id) } : {}}
+                        style={hasMoments ? { '--halo-color': haloColor } : {}}
                     >
                         {user.avatar ? (
-                            <img src={user.avatar} alt={user.username} />
+                            <img src={user.avatar} alt={username} />
                         ) : (
-                            <span>{getInitials(user.username)}</span>
+                            <span>{initials}</span>
                         )}
                         {isOnline && <span className="online-dot-large" />}
                     </div>
@@ -52,11 +62,11 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                 <div className="user-card-body">
                     <div className="user-card-info">
                         <h2 className="user-card-username">
-                            @{user.username}
+                            @{username}
                             {user.isVerified && <VerifiedTick />}
                         </h2>
-                        {canSeeFullName && user.fullName && (
-                            <p className="user-card-fullname">{user.fullName}</p>
+                        {canSeeFullName && fullName && (
+                            <p className="user-card-fullname">{fullName}</p>
                         )}
                     </div>
 
