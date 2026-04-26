@@ -174,11 +174,22 @@ router.put(
             }
 
             if (req.file && req.file.path) {
+                const conf = cloudinary.config();
+                const secret = conf.api_secret || "";
                 console.log("[Auth] Cloudinary Config Check:", {
-                    cloud_name: cloudinary.config().cloud_name,
-                    api_key: cloudinary.config().api_key,
-                    has_secret: !!cloudinary.config().api_secret
+                    cloud_name: conf.cloud_name,
+                    api_key: conf.api_key,
+                    secret_hint: `${secret.substring(0, 2)}...${secret.substring(secret.length - 2)}`,
+                    has_secret: !!secret
                 });
+
+                // Force re-config just in case
+                cloudinary.config({
+                    cloud_name: conf.cloud_name,
+                    api_key: conf.api_key,
+                    api_secret: secret
+                });
+
                 console.log("[Auth] Uploading avatar to Cloudinary:", req.file.path);
                 try {
                     const result = await cloudinary.uploader.upload(req.file.path, {
