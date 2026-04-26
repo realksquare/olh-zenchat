@@ -10,6 +10,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
     const [timeLeft, setTimeLeft] = useState(10);
     const [isClosing, setIsClosing] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showMusicInfo, setShowMusicInfo] = useState(false);
     const audioRef = useRef(null);
     const videoRef = useRef(null);
     const { viewMoment, deleteMoment } = useMomentStore();
@@ -23,6 +24,17 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
             audioRef.current = null;
         }
     };
+
+    useEffect(() => {
+        if (!isOpen || !currentMoment?.music) {
+            setShowMusicInfo(false);
+            return;
+        }
+        const interval = setInterval(() => {
+            setShowMusicInfo(prev => !prev);
+        }, 3000);
+        return () => clearInterval(interval);
+    }, [isOpen, currentIndex, currentMoment?.music]);
 
     const confirmDelete = async () => {
         await deleteMoment(currentMoment._id);
@@ -38,6 +50,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
         if (!isOpen || !currentMoment || showDeleteConfirm) return;
 
         stopAudio();
+        setShowMusicInfo(false);
         viewMoment(currentMoment._id, currentUser?._id);
 
         let totalDuration = 10;
@@ -127,7 +140,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                     ))}
                 </div>
 
-                <div className="aura-viewer-header">
+                <div className={`aura-viewer-header ${(!currentMoment.mediaUrl) ? 'with-bg' : ''}`}>
                     <div className="aura-user-meta-container">
                         <div className="aura-user-meta">
                             <div className="avatar avatar-md moments-halo">
@@ -140,11 +153,11 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                             <div className="aura-user-info">
                                 <span className="aura-username">{user?.username}</span>
                                 <div className="aura-metadata-wrapper">
-                                    <span className="aura-time">
+                                    <span className={`aura-time ${showMusicInfo ? 'fade-out' : 'fade-in'}`}>
                                         {formatDistanceToNow(new Date(currentMoment.createdAt), { addSuffix: true })}
                                     </span>
                                     {currentMoment.music && (
-                                        <span className="aura-music-line">
+                                        <span className={`aura-music-line ${showMusicInfo ? 'fade-in' : 'fade-out'}`}>
                                             {currentMoment.music.title} • {currentMoment.music.artist}
                                         </span>
                                     )}

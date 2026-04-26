@@ -57,7 +57,7 @@ const MusicSearch = ({ onSelect, onClose }) => {
                                 <img src={track.coverUrl} alt="Cover" className="track-cover" />
                                 <div className="track-info">
                                     <span className="track-name">{track.title}</span>
-                                    <span className="track-artist">{track.artist}</span>
+                                    <span className="track-artist">• {track.artist}</span>
                                 </div>
                                 <button className="select-btn">Select</button>
                             </div>
