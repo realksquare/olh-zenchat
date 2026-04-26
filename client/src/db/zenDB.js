@@ -2,7 +2,7 @@ import Dexie from "dexie";
 
 export const db = new Dexie("ZenChatDB");
 
-db.version(1).stores({
+db.version(2).stores({
     chats: "_id, updatedAt, lastMessage._id",
     messages: "_id, chatId, createdAt, senderId",
     settings: "key", 
@@ -35,4 +35,5 @@ export const getLocalMessages = async (chatId) => {
 export const clearLocalData = async () => {
     await db.chats.clear();
     await db.messages.clear();
+    if (db.settings) await db.settings.clear();
 };

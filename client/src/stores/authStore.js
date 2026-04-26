@@ -74,9 +74,12 @@ export const useAuthStore = create(
         const token = localStorage.getItem(TOKEN_KEY);
         if (!token) return;
         try {
+            const { data } = await axiosInstance.get("/auth/me");
             localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-            await db.settings.put({ key: "token", value: token });
-            await db.settings.put({ key: "apiUrl", value: import.meta.env.VITE_API_URL || "" });
+            if (db?.settings) {
+                await db.settings.put({ key: "token", value: token });
+                await db.settings.put({ key: "apiUrl", value: import.meta.env.VITE_API_URL || "" });
+            }
             set({ user: data.user, token });
         } catch (err) {
             console.error("Auth check failed:", err);

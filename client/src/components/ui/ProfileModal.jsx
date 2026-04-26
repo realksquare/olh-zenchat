@@ -20,6 +20,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [typingVisibility, setTypingVisibility] = useState(user?.privacySettings?.typingIndicator || "everyone");
     const [error, setError] = useState("");
     const [isSubscribing, setIsSubscribing] = useState(false);
+    const [imageError, setImageError] = useState(false);
 
     const fileInputRef = useRef(null);
 
@@ -33,9 +34,11 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setOnlineVisibility(user.privacySettings?.onlineStatus || "everyone");
             setNameVisibility(user.privacySettings?.fullName || "everyone");
             setTypingVisibility(user.privacySettings?.typingIndicator || "everyone");
+            setAvatarVisibility(user.privacySettings?.avatar || "everyone");
             setAvatarFile(null);
             setError("");
             setIsSubscribing(false);
+            setImageError(false);
         }
     }, [isOpen, user]);
 
@@ -65,6 +68,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setAvatarFile(file);
             const url = URL.createObjectURL(file);
             setAvatarPreview(url);
+            setImageError(false);
         }
     };
 
@@ -76,7 +80,11 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         if (fullName !== user.fullName) formData.append("fullName", fullName);
         if (email !== user.email) formData.append("email", email);
         if (password) formData.append("password", password);
-        if (avatarFile) formData.append("avatar", avatarFile);
+        if (avatarFile) {
+            formData.append("avatar", avatarFile);
+        } else if (!avatarPreview) {
+            formData.append("clearAvatar", "true");
+        }
         const privacySettings = { 
             onlineStatus: onlineVisibility, 
             fullName: nameVisibility,
@@ -160,18 +168,17 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                             className="avatar avatar-lg profile-avatar-edit"
                             onClick={() => fileInputRef.current?.click()}
                         >
-                            {avatarPreview ? (
+                            {(avatarPreview && !imageError) ? (
                                 <img 
                                     src={avatarPreview} 
                                     alt="Avatar preview" 
                                     onError={(e) => {
                                         console.error("Avatar preview failed to load:", avatarPreview);
-                                        e.target.style.display = 'none';
-                                        setError("Failed to load image preview.");
+                                        setImageError(true);
                                     }}
                                 />
                             ) : (
-                                <span>{getInitials(username)}</span>
+                                <span>{getInitials(username || user?.username || "??")}</span>
                             )}
                             <div className="avatar-edit-overlay">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -181,6 +188,21 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                             </div>
                         </div>
                         <input type="file" accept="image/*" ref={fileInputRef} style={{ display: "none" }} onChange={handleFileChange} />
+                        {avatarPreview && (
+                            <button 
+                                type="button" 
+                                className="avatar-reset-btn"
+                                onClick={() => {
+                                    setAvatarFile(null);
+                                    setAvatarPreview("");
+                                }}
+                                title="Reset to initials"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                            </button>
+                        )}
                     </div>
 
                     <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>

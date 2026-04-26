@@ -175,6 +175,8 @@ router.put(
 
             if (req.file && req.file.path) {
                 user.avatar = req.file.path;
+            } else if (req.body.clearAvatar === 'true' || req.body.clearAvatar === true) {
+                user.avatar = "";
             }
 
             if (req.body.fullName !== undefined) {
