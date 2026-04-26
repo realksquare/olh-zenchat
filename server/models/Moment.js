@@ -24,7 +24,9 @@ const momentSchema = new mongoose.Schema(
             title: String,
             artist: String,
             previewUrl: String,
-            coverUrl: String
+            coverUrl: String,
+            duration: Number,
+            startTime: Number
         },
         viewedBy: [
             {

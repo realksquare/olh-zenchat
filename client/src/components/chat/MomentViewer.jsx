@@ -56,8 +56,8 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
         let totalDuration = 10;
         if (currentMoment.type === "video") {
             // Placeholder, will be updated by onLoadedMetadata
-        } else if (currentMoment.music) {
-            totalDuration = currentMoment.music.duration || 18;
+        } else if (currentMoment.music && currentMoment.music.duration) {
+            totalDuration = currentMoment.music.duration;
         }
         setTimeLeft(totalDuration);
 
@@ -143,8 +143,11 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
             <div className="moments-aura-viewer-content" onClick={(e) => e.stopPropagation()} style={bgStyle}>
                 <div className="aura-progress-bars">
                     {moments.map((_, idx) => (
-                        <div key={idx} className="aura-progress-bg">
-                            <div className={`aura-progress-fill solid ${idx === currentIndex ? 'active' : (idx < currentIndex ? 'completed' : '')}`} />
+                        <div key={`${currentIndex}-${idx}`} className="aura-progress-bg">
+                            <div 
+                                className={`aura-progress-fill solid ${idx === currentIndex ? 'active' : (idx < currentIndex ? 'completed' : '')}`} 
+                                style={idx === currentIndex ? { '--duration': `${currentMoment.music?.duration || 10}s` } : {}}
+                            />
                         </div>
                     ))}
                 </div>
@@ -219,9 +222,13 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                             onLoadedMetadata={(e) => setTimeLeft(Math.ceil(e.target.duration))}
                         />
                     ) : hasMedia ? (
-                        <div className="aura-media-content">
+                        <div className="aura-media-content" key={currentMoment._id}>
                             <img src={currentMoment.mediaUrl} alt="Moment" className="viewer-main-media" />
-                            {hasText && <p className="aura-overlay-text">{currentMoment.content}</p>}
+                            {hasText && (
+                                <div className="aura-content-overlay">
+                                    <p className="aura-overlay-text">{currentMoment.content}</p>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <div className="aura-text-only-bg">
