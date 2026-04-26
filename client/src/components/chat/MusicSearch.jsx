@@ -1,4 +1,5 @@
 import { useState, useEffect, memo } from "react";
+import axiosInstance from "../../utils/axios";
 
 const MusicSearch = ({ onSelect, onClose }) => {
     const [query, setQuery] = useState("");
@@ -10,18 +11,8 @@ const MusicSearch = ({ onSelect, onClose }) => {
             if (!query || query.length < 2) return;
             setLoading(true);
             try {
-                const itunesRes = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=25`);
-                const itunesData = await itunesRes.json();
-                const itunesTracks = itunesData.results.map(track => ({
-                    id: `itunes-${track.trackId}`,
-                    title: track.trackName,
-                    artist: track.artistName,
-                    previewUrl: track.previewUrl,
-                    coverUrl: track.artworkUrl100,
-                    totalDuration: Math.floor(track.trackTimeMillis / 1000),
-                    source: "iTunes"
-                }));
-                setResults(itunesTracks);
+                const { data } = await axiosInstance.get(`/music/search?q=${encodeURIComponent(query)}`);
+                setResults(data);
             } catch (err) {
                 console.error("Search error:", err);
             } finally {

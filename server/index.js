@@ -63,6 +63,7 @@ app.use("/api/chats", chatRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/moments", require("./routes/momentRoutes"));
 app.use("/api/admin", require("./routes/admin"));
+app.use("/api/music", require("./routes/music"));
 
 registerSocketHandlers(io);
 
