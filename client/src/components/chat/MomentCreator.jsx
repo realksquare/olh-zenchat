@@ -252,7 +252,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
                     </div>
 
                     <div className="aura-input-section">
-                        <textarea className="aura-textarea" placeholder="Share your thoughts..." value={content} onChange={(e) => setContent(e.target.value)} maxLength={150} />
+                        <textarea className="aura-textarea" placeholder="Share your thoughts..." value={content} onChange={(e) => setContent(e.target.value)} maxLength={49} />
+                        <div className="aura-char-count">{content.length}/49</div>
                         
                         {music && (
                             <div className="aura-music-cropper">

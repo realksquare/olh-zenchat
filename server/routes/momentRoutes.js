@@ -3,6 +3,7 @@ const router = express.Router();
 const Moment = require("../models/Moment");
 const User = require("../models/User");
 const protect = require("../middleware/auth");
+const { sendPushNotification } = require("../utils/firebaseAdmin");
 
 // @route   POST /api/moments
 // @desc    Create a new moment
@@ -17,61 +18,83 @@ router.post("/", protect, async (req, res) => {
             music
         });
         
-        const populated = await Moment.findById(moment._id).populate("userId", "username avatar");
+        const populated = await Moment.findById(moment._id).populate("userId", "username avatar fullName");
         
-        console.log(`[Moments] New moment exhaled by ${req.user.username} (${req.user._id}). Type: ${type}`);
+        console.log(`[moments] New moment shared by ${req.user.username} (${req.user._id}). Type: ${type}`);
         
-        // Emit to contacts
         const io = req.app.get("io");
-        const user = await User.findById(req.user._id).select("contacts");
+        const user = await User.findById(req.user._id).select("contacts username fullName avatar");
         const contactIds = user.contacts.map(c => c.userId.toString());
         
-        // Emit to the user themselves (for other tabs)
+        // Emit to the user themselves
         io.to(req.user._id.toString()).emit("new_moment", populated);
         
-        // Emit to each online contact
-        contactIds.forEach(cid => {
+        // Emit to each online contact and send push notification
+        const notificationTitle = `#moment. from ${user.username}`;
+        let notificationBody = "";
+        if (type === "music") notificationBody = `vibe. ${music.title}`;
+        else if (content) notificationBody = content;
+        else notificationBody = `Shared a new ${type}.`;
+
+        contactIds.forEach(async (cid) => {
             io.to(cid).emit("new_moment", populated);
+            
+            // Send Push Notif to contacts
+            try {
+                const contact = await User.findById(cid).select("fcmTokens");
+                if (contact && contact.fcmTokens?.length > 0) {
+                    contact.fcmTokens.forEach(t => {
+                        sendPushNotification(t.token, {
+                            title: notificationTitle,
+                            body: notificationBody,
+                            icon: user.avatar || "/logo192.png",
+                            click_action: "https://olh-zenchat.vercel.app/?tab=moments",
+                            tag: "moment-upload"
+                        });
+                    });
+                }
+            } catch (err) {
+                console.error(`[moments] Notif error for contact ${cid}:`, err);
+            }
         });
 
         res.status(201).json(populated);
     } catch (err) {
-        console.error(`[Moments] Error exhaling moment:`, err);
+        console.error(`[moments] Error sharing moment:`, err);
         res.status(500).json({ message: "Server error" });
     }
 });
 
 // @route   GET /api/moments
-// @desc    Get moments from contacts (that haven't been viewed yet)
+// @desc    Get all active moments from self and contacts
 router.get("/", protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
         const contactIds = user.contacts.map(c => c.userId);
         
-        // Find moments from self (all) or contacts (unviewed)
+        // Find all active moments from self or contacts (24h rule usually handled by TTL or cleanup, 
+        // but here we just fetch whatever is in DB)
         const moments = await Moment.find({
             $or: [
                 { userId: req.user._id },
-                { 
-                    userId: { $in: contactIds },
-                    "viewedBy.userId": { $ne: req.user._id }
-                }
+                { userId: { $in: contactIds } }
             ]
         })
-        .populate("userId", "username avatar")
+        .populate("userId", "username avatar fullName")
         .sort({ createdAt: -1 });
 
         res.json(moments);
     } catch (err) {
+        console.error(`[moments] Fetch error:`, err);
         res.status(500).json({ message: "Server error" });
     }
 });
 
 // @route   POST /api/moments/:id/view
-// @desc    Mark a moment as viewed (One-Breath rule)
+// @desc    Mark a moment as viewed
 router.post("/:id/view", protect, async (req, res) => {
     try {
-        const moment = await Moment.findByIdAndUpdate(
+        await Moment.findByIdAndUpdate(
             req.params.id,
             { $addToSet: { viewedBy: { userId: req.user._id } } },
             { new: true }
@@ -83,7 +106,7 @@ router.post("/:id/view", protect, async (req, res) => {
 });
 
 // @route   DELETE /api/moments/:id
-// @desc    Delete a moment
+// @desc    Delete a moment (Let go)
 router.delete("/:id", protect, async (req, res) => {
     try {
         const moment = await Moment.findById(req.params.id);
@@ -94,10 +117,10 @@ router.delete("/:id", protect, async (req, res) => {
         }
 
         await moment.deleteOne();
-        console.log(`[Moments] Moment ${req.params.id} deleted by ${req.user.username}`);
-        res.json({ message: "Moment inhaled back." });
+        console.log(`[moments] Moment ${req.params.id} let go by ${req.user.username}`);
+        res.json({ message: "Moment let go." });
     } catch (err) {
-        console.error("[Moments] Delete error:", err);
+        console.error("[moments] Let-go error:", err);
         res.status(500).json({ message: "Server error" });
     }
 });

@@ -7,7 +7,6 @@ import { formatDistanceToNow } from "date-fns";
 const MomentViewer = ({ moments, isOpen, onClose }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isMuted, setIsMuted] = useState(false);
-    const [showMusicInfo, setShowMusicInfo] = useState(false);
     const [timeLeft, setTimeLeft] = useState(10);
     const [isClosing, setIsClosing] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -17,17 +16,6 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
     const { user: currentUser } = useAuthStore();
     
     const currentMoment = moments[currentIndex];
-
-    useEffect(() => {
-        if (!isOpen || !currentMoment?.music) {
-            setShowMusicInfo(false);
-            return;
-        }
-        const interval = setInterval(() => {
-            setShowMusicInfo(prev => !prev);
-        }, 3000);
-        return () => clearInterval(interval);
-    }, [isOpen, currentIndex, currentMoment?.music]);
 
     const stopAudio = () => {
         if (audioRef.current) {
@@ -50,12 +38,11 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
         if (!isOpen || !currentMoment || showDeleteConfirm) return;
 
         stopAudio();
-        setShowMusicInfo(false);
         viewMoment(currentMoment._id, currentUser?._id);
 
         let totalDuration = 10;
         if (currentMoment.type === "video") {
-            // Wait for metadata
+            // Handled via onLoadedMetadata
         } else if (currentMoment.music) {
             totalDuration = currentMoment.music.duration || 18;
         }
@@ -112,18 +99,26 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
             setIsClosing(false);
             setCurrentIndex(0);
             setShowDeleteConfirm(false);
-        }, 1000);
+        }, 800);
     };
 
     if (!isOpen || !currentMoment) return null;
 
     const user = currentMoment.userId;
-    const isOnlyMusic = currentMoment.type === "music" && !currentMoment.mediaUrl;
+    const isMusicOnly = currentMoment.type === "music" && !currentMoment.mediaUrl;
+    const hasText = !!currentMoment.content;
     const isOwn = (user?._id || user) === currentUser?._id;
+
+    const bgStyle = currentMoment.music?.coverUrl ? {
+        '--vibe-bg': `url(${currentMoment.music.coverUrl})`,
+        background: `linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.4)), url(${currentMoment.music.coverUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+    } : {};
 
     return createPortal(
         <div className={`modal-overlay moments-aura-viewer-overlay ${isClosing ? 'fading-out' : ''}`}>
-            <div className="moments-aura-viewer-content" onClick={(e) => e.stopPropagation()}>
+            <div className="moments-aura-viewer-content" onClick={(e) => e.stopPropagation()} style={bgStyle}>
                 <div className="aura-progress-bars">
                     {moments.map((_, idx) => (
                         <div key={idx} className="aura-progress-bg">
@@ -145,12 +140,12 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                             <div className="aura-user-info">
                                 <span className="aura-username">{user?.username}</span>
                                 <div className="aura-metadata-wrapper">
-                                    <span className={`aura-time ${showMusicInfo ? 'fade-out' : 'fade-in'}`}>
+                                    <span className="aura-time">
                                         {formatDistanceToNow(new Date(currentMoment.createdAt), { addSuffix: true })}
                                     </span>
                                     {currentMoment.music && (
-                                        <span className={`aura-music-line ${showMusicInfo ? 'fade-in' : 'fade-out'}`}>
-                                            vibe. {currentMoment.music.title}
+                                        <span className="aura-music-line">
+                                            {currentMoment.music.title} • {currentMoment.music.artist}
                                         </span>
                                     )}
                                 </div>
@@ -193,47 +188,25 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                             onLoadedMetadata={(e) => setTimeLeft(Math.ceil(e.target.duration))}
                         />
                     ) : currentMoment.mediaUrl ? (
-                        <img src={currentMoment.mediaUrl} alt="Moment" className="viewer-main-media" />
+                        <div className="aura-media-content">
+                            <img src={currentMoment.mediaUrl} alt="Moment" className="viewer-main-media" />
+                            {currentMoment.content && <p className="aura-overlay-text">{currentMoment.content}</p>}
+                        </div>
                     ) : (
-                        <div className="aura-text-only-bg">
-                            {isOnlyMusic && (
+                        <div className={`aura-text-only-bg ${isMusicOnly ? 'music-only' : ''}`}>
+                            {isMusicOnly && !hasText && (
                                 <div className="aura-music-focus">
                                     <img src={currentMoment.music.coverUrl} alt="Art" className="focus-art" />
                                     <div className="music-visualizer centered">
-                                        <div className="v-bar"></div>
-                                        <div className="v-bar"></div>
-                                        <div className="v-bar"></div>
-                                        <div className="v-bar"></div>
-                                        <div className="v-bar"></div>
+                                        <div className="v-bar"></div><div className="v-bar"></div><div className="v-bar"></div><div className="v-bar"></div><div className="v-bar"></div>
                                     </div>
                                 </div>
                             )}
+                            {hasText && (
+                                <p className={`aura-text-content ${isMusicOnly ? 'centered' : ''}`}>{currentMoment.content}</p>
+                            )}
                         </div>
                     )}
-                    
-                    <div className="aura-content-overlay">
-                        {isOnlyMusic ? (
-                            <div className="music-focus-info">
-                                <h2>{currentMoment.music.title}</h2>
-                                <p>{currentMoment.music.artist}</p>
-                            </div>
-                        ) : currentMoment.music && (
-                            <div className="aura-music-tag">
-                                <div className="music-visualizer">
-                                    <div className="v-bar"></div>
-                                    <div className="v-bar"></div>
-                                    <div className="v-bar"></div>
-                                </div>
-                                <div className="music-meta">
-                                    <span className="m-title">{currentMoment.music.title}</span>
-                                    <span className="m-artist">{currentMoment.music.artist}</span>
-                                </div>
-                            </div>
-                        )}
-                        {currentMoment.content && (
-                            <p className="aura-text-content">{currentMoment.content}</p>
-                        )}
-                    </div>
                 </div>
 
                 <div className="aura-nav-zone left" onClick={handlePrev} />
