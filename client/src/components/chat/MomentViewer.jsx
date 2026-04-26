@@ -143,12 +143,15 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                 <div className={`aura-viewer-header ${(!currentMoment.mediaUrl) ? 'with-bg' : ''}`}>
                     <div className="aura-user-meta-container">
                         <div className="aura-user-meta">
-                            <div className="avatar avatar-md moments-halo">
-                                {user?.avatar ? (
-                                    <img src={user.avatar} alt={user.username} />
-                                ) : (
-                                    <span>{user?.username?.slice(0, 2).toUpperCase()}</span>
-                                )}
+                            <div className="avatar-with-countdown">
+                                <div className="avatar avatar-md moments-halo">
+                                    {user?.avatar ? (
+                                        <img src={user.avatar} alt={user.username} />
+                                    ) : (
+                                        <span>{user?.username?.slice(0, 2).toUpperCase()}</span>
+                                    )}
+                                </div>
+                                <div className="aura-avatar-countdown">{Math.ceil(timeLeft)}</div>
                             </div>
                             <div className="aura-user-info">
                                 <span className="aura-username">{user?.username}</span>
@@ -164,7 +167,6 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                                 </div>
                             </div>
                         </div>
-                        <div className="aura-avatar-countdown">{Math.ceil(timeLeft)}</div>
                     </div>
                     
                     <div className="aura-viewer-actions">
@@ -212,6 +214,10 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                                     <img src={currentMoment.music.coverUrl} alt="Art" className="focus-art" />
                                     <div className="music-visualizer centered">
                                         <div className="v-bar"></div><div className="v-bar"></div><div className="v-bar"></div><div className="v-bar"></div><div className="v-bar"></div>
+                                    </div>
+                                    <div className="music-focus-info">
+                                        <h2>{currentMoment.music.title}</h2>
+                                        <p>{currentMoment.music.artist}</p>
                                     </div>
                                 </div>
                             )}
