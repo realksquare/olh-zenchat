@@ -36,7 +36,8 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
         return () => clearInterval(interval);
     }, [isOpen, currentIndex, currentMoment?.music]);
 
-    const confirmDelete = async () => {
+    const confirmDelete = async (e) => {
+        if (e) e.stopPropagation();
         await deleteMoment(currentMoment._id);
         setShowDeleteConfirm(false);
         if (moments.length === 1) {
@@ -45,6 +46,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
             handleNext();
         }
     };
+
 
     useEffect(() => {
         if (!isOpen || !currentMoment || showDeleteConfirm) return;
@@ -190,7 +192,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
 
                     <div className="aura-viewer-actions">
                         {isOwn && (
-                            <button className="aura-trash-btn" onClick={() => setShowDeleteConfirm(true)} title="Let go.">
+                            <button className="aura-trash-btn" onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }} title="Let go." style={{ zIndex: 100 }}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
                             </button>
                         )}
@@ -259,8 +261,8 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                         <h3>Let go?</h3>
                         <p>This #moment. will fade for everyone.</p>
                         <div className="permission-actions">
-                            <button className="deny-btn" onClick={confirmDelete} style={{ background: '#ef4444', border: 'none' }}>Let go...</button>
-                            <button className="allow-btn" onClick={() => setShowDeleteConfirm(false)} style={{ background: 'rgba(255,255,255,0.1)' }}>Keep</button>
+                            <button className="deny-btn" onClick={confirmDelete} style={{ background: '#ef4444', border: 'none', zIndex: 100 }}>Let go...</button>
+                            <button className="allow-btn" onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }} style={{ background: 'rgba(255,255,255,0.1)', zIndex: 100 }}>Keep</button>
                         </div>
                     </div>
                 )}

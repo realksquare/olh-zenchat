@@ -1003,7 +1003,7 @@ select {
 }
 
 .message-bubble.mine.status-sent {
-  background: var(--color-surface-soft);
+  background: #475569; /* Slate 600 grey for sent */
   color: #fff;
 }
 
@@ -3529,26 +3529,49 @@ select {
 }
 
 @media (max-width: 480px) {
-  .aura-textarea {
-    font-size: 1rem;
+  .moments-aura-overlay {
+    padding: 0;
+    align-items: flex-end;
   }
-
+  .moments-aura-content {
+    border-radius: 32px 32px 0 0;
+    border-bottom: none;
+    max-height: 88vh;
+  }
+  .moments-aura-header {
+    padding: 20px 24px;
+  }
+  .aura-input-section {
+    padding: 12px 24px 24px;
+  }
+  .aura-textarea {
+    font-size: 0.95rem;
+    height: 50px;
+  }
+  .aura-textarea:focus {
+    height: 80px;
+  }
+  .aura-tool-btn {
+    width: 38px;
+    height: 38px;
+  }
+  .aura-share-btn {
+    padding: 10px 18px;
+    font-size: 0.9rem;
+  }
   .aura-username {
     font-size: 0.9rem;
   }
-
   .aura-time, .aura-music-line {
     font-size: 0.7rem;
   }
-
   .aura-text-content {
     font-size: 1.1rem;
     padding: 0 20px;
   }
-
   .focus-art {
-    width: 130px;
-    height: 130px;
+    width: 120px;
+    height: 120px;
   }
 }
 
