@@ -3054,8 +3054,8 @@ select {
 
 .moments-halo {
   position: relative;
-  border: 2.5px solid var(--halo-color, #082f49) !important;
-  box-shadow: 0 0 0 1px var(--halo-color, #082f49), 0 0 12px var(--halo-color, #082f49);
+  border: 2.5px solid var(--halo-color, #3b82f6) !important;
+  box-shadow: 0 0 0 1px var(--halo-color, #3b82f6), 0 0 12px var(--halo-color, #3b82f6);
   transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -3063,7 +3063,7 @@ select {
   content: '';
   position: absolute;
   inset: -5px;
-  border: 1.5px solid var(--halo-color, #082f49);
+  border: 1.5px solid var(--halo-color, #3b82f6);
   border-radius: 50%;
   opacity: 0.6;
   animation: halo-pulse 2s infinite;

@@ -82,10 +82,10 @@ export const useMomentStore = create((set, get) => ({
         const moments = get().moments;
         const uid = (userId?._id || userId || '').toString();
         const cuid = (currentUserId?._id || currentUserId || '').toString();
-        if (!uid) return '#082f49';
+        if (!uid) return '#3b82f6';
         const userMoments = moments.filter(m => (m.userId?._id || m.userId)?.toString() === uid);
-        if (userMoments.length === 0) return '#082f49';
-        if (uid === cuid) return '#082f49'; // own → sapphire
+        if (userMoments.length === 0) return '#3b82f6';
+        if (uid === cuid) return '#3b82f6'; // own → vivid sapphire blue
         const hasUnviewed = userMoments.some(m => {
             const viewedBy = m.viewedBy || [];
             return !viewedBy.some(v => (v.userId?._id || v.userId)?.toString() === cuid);
