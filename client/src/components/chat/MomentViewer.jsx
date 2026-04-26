@@ -222,7 +222,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
                                 </div>
                             )}
                             {hasText && (
-                                <p className={`aura-text-content ${isMusicOnly ? 'centered' : ''}`}>{currentMoment.content}</p>
+                                <p className="aura-text-content centered">{currentMoment.content}</p>
                             )}
                         </div>
                     )}
