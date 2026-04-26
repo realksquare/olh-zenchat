@@ -15,7 +15,7 @@ const EMPTY_MESSAGES = [];
 const EMPTY_CONTACTS = [];
 
 const ScrollDownBtn = ({ onClick, show }) => (
-    <button 
+    <button
         className={`scroll-down-btn ${show ? 'visible' : ''}`}
         onClick={onClick}
         aria-label="Scroll to bottom"
@@ -30,9 +30,9 @@ const ScrollDownBtn = ({ onClick, show }) => (
 const ChatWindow = ({ onBack }) => {
     const { user } = useAuthStore();
     const contacts = useAuthStore((s) => s.user?.contacts || EMPTY_CONTACTS);
-    const { 
-        activeChat, fetchMessages, isLoadingMessages, 
-        typingUsers, markChatAsRead, onlineUsers 
+    const {
+        activeChat, fetchMessages, isLoadingMessages,
+        typingUsers, markChatAsRead, onlineUsers
     } = useChatStore(useShallow((s) => ({
         activeChat: s.activeChat,
         fetchMessages: s.fetchMessages,
@@ -48,7 +48,7 @@ const ChatWindow = ({ onBack }) => {
     const rawMessages = useChatStore((s) =>
         activeChat && s.messages[activeChat._id] ? s.messages[activeChat._id] : EMPTY_MESSAGES
     );
-    
+
     const messages = useMemo(() => {
         const sorted = [...rawMessages].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         if (!showOnlyStarred) return sorted;
@@ -75,9 +75,9 @@ const ChatWindow = ({ onBack }) => {
         }
     };
 
-    const otherUser = useMemo(() => 
-        activeChat?.participants?.find((p) => (p._id?.toString() || p._id) !== user?._id?.toString()), 
-    [activeChat, user?._id]);
+    const otherUser = useMemo(() =>
+        activeChat?.participants?.find((p) => (p._id?.toString() || p._id) !== user?._id?.toString()),
+        [activeChat, user?._id]);
     const typingScramble = useMemo(() => {
         if (!activeChat || !otherUser) return null;
         const chatTyping = typingUsers[activeChat._id];
@@ -197,12 +197,12 @@ const ChatWindow = ({ onBack }) => {
                     </svg>
                 </button>
 
-                <div 
-                    className="chat-header-avatar-wrap" 
+                <div
+                    className="chat-header-avatar-wrap"
                     onClick={() => setShowUserCard(true)}
                     style={{ cursor: 'pointer' }}
                 >
-                    <div 
+                    <div
                         className={`avatar avatar-md ${hasMoments ? 'moments-halo-thin' : ''}`}
                         style={hasMoments ? { '--halo-color': useMomentStore.getState().getHaloColor(otherUser?._id, user?._id) } : {}}
                     >
@@ -215,7 +215,7 @@ const ChatWindow = ({ onBack }) => {
                     {(otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) && <span className="online-dot" />}
                 </div>
 
-                <div 
+                <div
                     className="chat-header-info"
                     onClick={() => setShowUserCard(true)}
                     style={{ cursor: 'pointer' }}
@@ -230,11 +230,11 @@ const ChatWindow = ({ onBack }) => {
                 </div>
 
                 <div className="chat-header-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
-                    <button 
+                    <button
                         className={`header-action-btn ${showOnlyStarred ? 'active' : ''}`}
                         onClick={() => setShowOnlyStarred(!showOnlyStarred)}
                         title={showOnlyStarred ? "Show all messages" : "Show only favorites"}
-                        style={{ 
+                        style={{
                             background: showOnlyStarred ? 'rgba(234, 179, 8, 0.15)' : 'transparent',
                             color: showOnlyStarred ? '#eab308' : '#94a3b8',
                             padding: '8px',
@@ -314,7 +314,7 @@ const ChatWindow = ({ onBack }) => {
                 </div>
             )}
 
-            <UserCardModal 
+            <UserCardModal
                 isOpen={showUserCard}
                 onClose={() => setShowUserCard(false)}
                 user={otherUser}

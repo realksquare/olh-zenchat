@@ -31,7 +31,7 @@ const registerSocketHandlers = (io) => {
                     if (!user) return;
 
                     const privacy = user.privacySettings?.onlineStatus || "everyone";
-                    
+
                     for (const [targetId, targetData] of onlineUsers.entries()) {
                         if (targetId === uid) continue;
 
@@ -41,8 +41,8 @@ const registerSocketHandlers = (io) => {
                         } else if (privacy === "nobody") {
                             canSee = false;
                         } else {
-                            const isContact = user.contacts?.some(c => 
-                                c.userId.toString() === targetId && 
+                            const isContact = user.contacts?.some(c =>
+                                c.userId.toString() === targetId &&
                                 (privacy === "contacts" || c.tag === privacy)
                             );
                             if (isContact) canSee = true;
@@ -118,7 +118,7 @@ const registerSocketHandlers = (io) => {
 
                     for (const [otherId, otherData] of onlineUsers.entries()) {
                         if (otherId === userId) continue;
-                        
+
                         const otherUser = await User.findById(otherId).select("privacySettings contacts");
                         if (!otherUser) continue;
 
@@ -130,8 +130,8 @@ const registerSocketHandlers = (io) => {
                         } else if (privacy === "nobody") {
                             canSee = false;
                         } else {
-                            const isContact = otherUser.contacts?.some(c => 
-                                c.userId.toString() === userId && 
+                            const isContact = otherUser.contacts?.some(c =>
+                                c.userId.toString() === userId &&
                                 (privacy === "contacts" || c.tag === privacy)
                             );
                             if (isContact) canSee = true;
@@ -173,7 +173,7 @@ const registerSocketHandlers = (io) => {
                 await Chat.findByIdAndUpdate(chatId, {
                     lastMessage: message._id,
                     updatedAt: new Date(),
-                    deletedBy: [], 
+                    deletedBy: [],
                 });
 
                 const populated = await Message.findById(message._id)
@@ -199,11 +199,11 @@ const registerSocketHandlers = (io) => {
 
                 participants.forEach(async (participant) => {
                     const pIdStr = participant._id.toString();
-                    
+
                     const recipientPrivacy = participant.privacySettings?.typingIndicator || "everyone";
                     const senderAllowsRecipient = allows(sender, pIdStr, typingPrivacy);
                     const recipientAllowsSender = allows(participant, userId, recipientPrivacy);
-                    
+
                     const canSeeScramble = senderAllowsRecipient && recipientAllowsSender;
 
                     const messagePayload = { ...messagePayloadBase, canSeeScramble };
@@ -229,7 +229,7 @@ const registerSocketHandlers = (io) => {
                         isDelivered = true;
                     } else {
                         console.log(`[Push] User ${pIdStr} is offline. Starting notification flow...`);
-                        
+
                         User.findById(pIdStr).then(async (offlineUser) => {
                             if (!offlineUser) {
                                 console.log(`[Push] Error: User ${pIdStr} not found in DB.`);
@@ -242,7 +242,7 @@ const registerSocketHandlers = (io) => {
 
                             const tokens = offlineUser.fcmTokens || [];
                             console.log(`[Push] Token Verify: User ${pIdStr} has ${tokens.length} tokens and ${offlineUser.fcmToken ? '1 legacy token' : 'no legacy token'}.`);
-                            
+
                             if (tokens.length === 0 && !offlineUser.fcmToken) {
                                 console.log(`[Push] Skip: No tokens found for user ${pIdStr}.`);
                                 return;
@@ -280,7 +280,7 @@ const registerSocketHandlers = (io) => {
 
                             const pwaTokens = tokens.filter(t => t.deviceType === 'pwa');
                             const browserTokens = tokens.filter(t => t.deviceType === 'browser');
-                            
+
                             let targetTokens = [];
                             if (pwaTokens.length > 0) {
                                 targetTokens = pwaTokens.map(t => t.token);
@@ -338,7 +338,7 @@ const registerSocketHandlers = (io) => {
             try {
                 const message = await Message.findById(messageId);
                 if (!message || message.senderId.toString() !== userId) return;
-                
+
                 const updated = await Message.findByIdAndUpdate(
                     messageId,
                     { content: newContent.trim(), isEdited: true, editedAt: new Date() },
@@ -360,7 +360,7 @@ const registerSocketHandlers = (io) => {
                         });
                     }
                 });
-                
+
                 const myData = onlineUsers.get(userId);
                 if (myData && myData.sockets) {
                     myData.sockets.forEach((dType, socketId) => {
@@ -380,7 +380,7 @@ const registerSocketHandlers = (io) => {
                 if (deleteFor === "everyone") {
                     await Message.findByIdAndDelete(messageId);
                     io.to(chatId).emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "everyone" });
-                    
+
                     const chat = await Chat.findById(chatId);
                     chat.participants.filter(p => p.toString() !== userId).forEach(participantId => {
                         const userData = onlineUsers.get(participantId.toString());
@@ -427,20 +427,20 @@ const registerSocketHandlers = (io) => {
                 .forEach(recipient => {
                     const recipientId = recipient._id.toString();
                     const userData = onlineUsers.get(recipientId);
-                    
+
                     if (userData && userData.sockets) {
                         const recipientPrivacy = recipient.privacySettings?.typingIndicator || "everyone";
-                        
+
                         const senderAllowsRecipient = allows(sender, recipientId, senderPrivacy);
                         const recipientAllowsSender = allows(recipient, userId, recipientPrivacy);
                         const mutualConsent = senderAllowsRecipient && recipientAllowsSender;
 
                         userData.sockets.forEach((dType, sId) => {
-                            io.to(sId).emit("typing_status", { 
-                                userId, 
-                                chatId, 
-                                isTyping: true, 
-                                scramble: mutualConsent ? scramble : null 
+                            io.to(sId).emit("typing_status", {
+                                userId,
+                                chatId,
+                                isTyping: true,
+                                scramble: mutualConsent ? scramble : null
                             });
                         });
                     }

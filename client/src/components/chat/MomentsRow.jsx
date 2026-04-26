@@ -36,7 +36,7 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
                 {/* Current User's Moment Aura */}
                 <div className="moment-item" onClick={() => myMoments.length > 0 ? onViewMoment(myMoments) : onAddMoment()}>
                     <div 
-                        className={`avatar avatar-md ${myMoments.length > 0 ? 'moments-halo-thin' : ''}`}
+                        className={`avatar avatar-md ${myMoments.length > 0 ? 'moments-halo' : ''}`}
                         style={myMoments.length > 0 ? { '--halo-color': myColor } : {}}
                     >
                         {user?.avatar ? (
@@ -64,7 +64,7 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
                         onClick={() => onViewMoment(group.moments)}
                     >
                         <div 
-                            className="avatar avatar-md moments-halo-thin"
+                            className="avatar avatar-md moments-halo"
                             style={{ '--halo-color': group.color }}
                         >
                             {group.user?.avatar ? (

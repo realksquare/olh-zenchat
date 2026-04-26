@@ -14,7 +14,11 @@ const firebaseConfig = {
 };
 
 const db = new Dexie("ZenChatDB");
-db.version(1).stores({ settings: "key" });
+db.version(2).stores({
+    chats: "_id, updatedAt, lastMessage._id",
+    messages: "_id, chatId, createdAt, senderId",
+    settings: "key", 
+});
 
 try {
     firebase.initializeApp(firebaseConfig);
@@ -26,9 +30,11 @@ try {
         if (messageId) {
             try {
                 const tokenObj = await db.settings.get("token");
-                const apiUrlObj = await db.settings.get("apiUrl");
-                if (tokenObj?.value && apiUrlObj?.value) {
-                    const baseUrl = apiUrlObj.value.replace(/\/$/, "");
+                if (tokenObj?.value) {
+                    const apiUrlObj = await db.settings.get("apiUrl");
+                    const rawUrl = apiUrlObj?.value || "";
+                    const baseUrl = rawUrl.replace(/\/$/, "");
+                    
                     fetch(`${baseUrl}/api/messages/${messageId}/delivered`, {
                         method: 'POST',
                         headers: {

@@ -22,9 +22,9 @@ export const useMomentStore = create((set, get) => ({
         try {
             const res = await axiosInstance.post("/moments", momentData);
             const newMoment = res.data.moment || res.data;
-            set((state) => ({ 
+            set((state) => ({
                 moments: [newMoment, ...state.moments],
-                isLoading: false 
+                isLoading: false
             }));
             return { success: true, moment: newMoment };
         } catch (err) {
@@ -79,7 +79,7 @@ export const useMomentStore = create((set, get) => ({
         if (!userId) return "#082f49"; // Sapphire fallback
         const uid = typeof userId === 'string' ? userId : (userId._id || userId || '');
         const cuid = typeof currentUserId === 'string' ? currentUserId : (currentUserId?._id || currentUserId || '');
-        
+
         if (uid === cuid) return "#082f49"; // Sapphire for own
         return "#10b981"; // Emerald for others
     }
