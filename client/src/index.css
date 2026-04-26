@@ -1015,9 +1015,9 @@ select {
 
 .message-bubble.mine.status-seen,
 .message-bubble.mine.status-read {
-  background: #10b981; /* Green for seen/read */
+  background: #059669; /* Darker Emerald for seen/read */
   color: #fff;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 4px 15px rgba(5, 150, 105, 0.2);
 }
 
 .message-text {

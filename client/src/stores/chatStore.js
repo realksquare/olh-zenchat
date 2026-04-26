@@ -39,8 +39,13 @@ export const useChatStore = create(
                     const { data } = await axiosInstance.get("/chats");
                     const initialUnread = {};
                     data.chats.forEach(chat => {
-                        initialUnread[chat._id] = chat.unreadCount || 0;
-                        persistChat(chat);
+                        let count = chat.unreadCount || 0;
+                        // Client-side fix: if last message is deleted for everyone or empty, and count is 1, sync it
+                        if (count === 1 && chat.lastMessage && (chat.lastMessage.deletedForEveryone || (!chat.lastMessage.content && !chat.lastMessage.mediaUrl))) {
+                            count = 0;
+                        }
+                        initialUnread[chat._id] = count;
+                        persistChat({ ...chat, unreadCount: count });
                     });
                     set({ chats: data.chats, unreadCounts: initialUnread, isLoadingChats: false });
                 } catch (_) {

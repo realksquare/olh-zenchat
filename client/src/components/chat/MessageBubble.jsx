@@ -73,7 +73,10 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
         }
     };
 
-    if (message.deletedForEveryone) {
+    // Fallback: treat messages with no content/media and no special type as deleted for everyone
+    const isGhostDeleted = !message.content && !message.mediaUrl && !message.music && message.type === "text" && !message.deletedForEveryone;
+
+    if (message.deletedForEveryone || isGhostDeleted) {
         return (
             <div className={`message-row ${isMe ? "mine" : "theirs"}`}>
                 {!isMe && showAvatar && (

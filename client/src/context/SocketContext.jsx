@@ -101,8 +101,11 @@ export const SocketProvider = ({ children }) => {
             useChatStore.getState().addChat(chat);
         };
 
-        const handleNewMoment = ({ moment }) => {
-            useMomentStore.getState().addMoment(moment);
+        const handleNewMoment = (payload) => {
+            const m = payload?.moment || payload;
+            if (m && m._id) {
+                useMomentStore.getState().addMoment(m);
+            }
         };
 
         const handleMomentDeleted = ({ momentId }) => {

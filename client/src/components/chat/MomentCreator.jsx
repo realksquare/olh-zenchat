@@ -6,8 +6,6 @@ import MusicSearch from "./MusicSearch";
 
 const MomentCreator = ({ isOpen, onClose }) => {
     const [content, setContent] = useState("");
-    const [media, setMedia] = useState(null);
-    const [previewUrl, setPreviewUrl] = useState(null);
     const [music, setMusic] = useState(null);
     const [isMusicSearchOpen, setIsMusicSearchOpen] = useState(false);
     const [duration, setDuration] = useState(18);
@@ -15,11 +13,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const [isPlaying, setIsPlaying] = useState(true);
     const [toast, setToast] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
-    const [cameraState, setCameraState] = useState("closed");
-    const fileInputRef = useRef(null);
     const audioRef = useRef(null);
-    const videoRef = useRef(null);
-    const streamRef = useRef(null);
     const seekTimeoutRef = useRef(null);
     const { createMoment, moments } = useMomentStore();
     const { user } = useAuthStore();
@@ -69,91 +63,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
         }
     }, [music, startTime, duration, isOpen, isPlaying]);
 
-    const compressImage = (base64Str, maxSize = 3 * 1024 * 1024) => {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.src = base64Str;
-            img.onload = () => {
-                const canvas = document.createElement("canvas");
-                let width = img.width;
-                let height = img.height;
-                if (width > 1600) { height *= 1600 / width; width = 1600; }
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext("2d");
-                ctx.drawImage(img, 0, 0, width, height);
-                let quality = 0.8;
-                let result = canvas.toDataURL("image/jpeg", quality);
-                while (result.length > maxSize && quality > 0.1) {
-                    quality -= 0.1;
-                    result = canvas.toDataURL("image/jpeg", quality);
-                }
-                fetch(result).then(res => res.blob()).then(blob => resolve({ blob, dataUrl: result }));
-            };
-        });
-    };
-
-    const startCamera = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-            streamRef.current = stream;
-            setCameraState("active");
-            showToast("Lens opened. ✨");
-        } catch (err) {
-            setCameraState("closed");
-            showToast("Lens access denied. 🌪️");
-        }
-    };
-
-    const stopCamera = () => {
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop());
-            streamRef.current = null;
-        }
-        setCameraState("closed");
-    };
-
-    const handleCameraCapture = async () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = videoRef.current.videoWidth;
-        canvas.height = videoRef.current.videoHeight;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(videoRef.current, 0, 0);
-        const { blob, dataUrl } = await compressImage(canvas.toDataURL("image/jpeg"));
-        if (!blob) { showToast("Compression failed. 🌪️"); return; }
-        setMedia(new File([blob], "capture.jpg", { type: "image/jpeg" }));
-        setPreviewUrl(dataUrl);
-        stopCamera();
-    };
-
-    const handleFileSelect = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        if (file.type.startsWith("video/")) {
-            const video = document.createElement("video");
-            video.preload = "metadata";
-            video.onloadedmetadata = () => {
-                window.URL.revokeObjectURL(video.src);
-                if (video.duration > 60) {
-                    showToast("Thought too long! 60s limit. 🌪️");
-                    e.target.value = "";
-                } else {
-                    setMedia(file);
-                    setPreviewUrl(URL.createObjectURL(file));
-                }
-            };
-            video.src = URL.createObjectURL(file);
-        } else {
-            setMedia(file);
-            const reader = new FileReader();
-            reader.onloadend = () => setPreviewUrl(reader.result);
-            reader.readAsDataURL(file);
-        }
-    };
-
     const handleShare = async () => {
-        if (!content && !media && !music) return;
+        if (!content && !music) return;
         const ownMomentsCount = moments.filter(m => (m.userId?._id || m.userId) === user?._id).length;
         if (ownMomentsCount >= 5) {
             showToast("Slow down... only 5 #moments. per cycle. 🌪️");
@@ -161,25 +72,12 @@ const MomentCreator = ({ isOpen, onClose }) => {
         }
         setIsUploading(true);
         try {
-            let mediaUrl = "";
-            let type = "text";
-            if (media) {
-                const formData = new FormData();
-                formData.append("file", media);
-                formData.append("upload_preset", "zenchat_unsigned");
-                const res = await fetch(`https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/auto/upload`, {
-                    method: "POST",
-                    body: formData
-                });
-                const data = await res.json();
-                mediaUrl = data.secure_url;
-                type = data.resource_type === "video" ? "video" : "image";
-            } else if (music) type = "music";
-            await createMoment({ type, content, mediaUrl, music: music ? { ...music, duration, startTime } : null });
+            let type = music ? "music" : "text";
+            await createMoment({ type, content, music: music ? { ...music, duration, startTime } : null });
             showToast("Living the #moment. ✨");
             setTimeout(() => { 
                 onClose(); 
-                setContent(""); setMedia(null); setPreviewUrl(null); setMusic(null); setStartTime(0);
+                setContent(""); setMusic(null); setStartTime(0);
                 setIsPlaying(true);
             }, 1500);
         } catch (err) {
@@ -188,7 +86,6 @@ const MomentCreator = ({ isOpen, onClose }) => {
     };
 
     const handleClose = () => {
-        stopCamera();
         if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
         onClose();
     };
@@ -208,51 +105,28 @@ const MomentCreator = ({ isOpen, onClose }) => {
                         </button>
                     </div>
 
-                    <div className="aura-preview-container">
-                        {cameraState === "active" ? (
-                            <div className="aura-camera-view">
-                                <video ref={videoRef} autoPlay playsInline className="aura-media" />
-                                <div className="camera-controls">
-                                    <button className="camera-shutter" onClick={handleCameraCapture}></button>
-                                    <button className="camera-cancel" onClick={stopCamera}>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                                        </svg>
-                                    </button>
-                                </div>
+                    <div className="aura-preview-container text-only-preview">
+                        <div className="aura-placeholder">
+                            <div className="aura-placeholder-icon text-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                                </svg>
                             </div>
-                        ) : previewUrl ? (
-                            <div className="aura-media-wrapper">
-                                {media?.type.startsWith("video") || (media && !media.type.startsWith("image") && media.name.endsWith('.mp4')) ? (
-                                    <video src={previewUrl} autoPlay muted loop className="aura-media" />
-                                ) : (
-                                    <img src={previewUrl} alt="Preview" className="aura-media" />
-                                )}
-                                <button className="aura-remove-media" onClick={() => { setMedia(null); setPreviewUrl(null); }}>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                                    </svg>
-                                </button>
+                            <div className="aura-placeholder-text">
+                                <p>Capture your thought</p>
+                                <span>Minimalistic. Expressive. 49 characters.</span>
                             </div>
-                        ) : (
-                            <div className="aura-placeholder" onClick={() => fileInputRef.current?.click()}>
-                                <div className="aura-placeholder-icon">
-                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                        <circle cx="8.5" cy="8.5" r="1.5" />
-                                        <polyline points="21 15 16 10 5 21" />
-                                    </svg>
-                                </div>
-                                <div className="aura-placeholder-text">
-                                    <p>Share your lens (optional)</p>
-                                    <span>Images (max 3mb), Videos (max 7mb, 60s)</span>
-                                </div>
-                            </div>
-                        )}
+                        </div>
                     </div>
 
                     <div className="aura-input-section">
-                        <textarea className="aura-textarea" placeholder="Share your thoughts..." value={content} onChange={(e) => setContent(e.target.value)} maxLength={49} />
+                        <textarea 
+                            className="aura-textarea" 
+                            placeholder="Share your thoughts..." 
+                            value={content} 
+                            onChange={(e) => setContent(e.target.value)} 
+                            maxLength={49} 
+                        />
                         <div className="aura-char-count">{content.length}/49</div>
                         
                         {music && (
@@ -308,30 +182,15 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                 <button className="aura-tool-btn" onClick={() => setIsMusicSearchOpen(!isMusicSearchOpen)} title="vibe.">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
                                 </button>
-                                <button className="aura-tool-btn" onClick={() => setCameraState("permission")} title="lens.">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
-                                </button>
-                                <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*,video/*" onChange={handleFileSelect} />
                             </div>
-                            <button className="aura-share-btn" onClick={handleShare} disabled={isUploading || (!content && !media && !music)}>
+                            <button className="aura-share-btn" onClick={handleShare} disabled={isUploading || (!content && !music)}>
                                 {isUploading ? <div className="aura-loader"></div> : <><span>Live the #moment.</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg></>}
                             </button>
                         </div>
-
-                        {cameraState === "permission" && (
-                            <div className="aura-permission-popup">
-                                <h3>Open your lens?</h3>
-                                <p>Allow ZenChat to capture a #moment. through your eyes?</p>
-                                <div className="permission-actions">
-                                    <button className="allow-btn" onClick={startCamera}>Open</button>
-                                    <button className="deny-btn" onClick={() => { stopCamera(); showToast("Lens closed. 🌪️"); }}>Close</button>
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
-            {toast && <div className="aura-toast">{toast.includes("denied") || toast.includes("lost") ? "🌪️" : "✨"} {toast}</div>}
+            {toast && <div className="aura-toast">{toast.includes("lost") ? "🌪️" : "✨"} {toast}</div>}
         </>,
         document.body
     );
