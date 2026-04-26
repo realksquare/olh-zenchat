@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 const User = require("../models/User");
 const authMiddleware = require("../middleware/auth");
-const { upload } = require("../utils/cloudinary");
+const { upload, cloudinary } = require("../utils/cloudinary");
 
 const router = express.Router();
 
