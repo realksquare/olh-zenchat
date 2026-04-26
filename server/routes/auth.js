@@ -174,7 +174,11 @@ router.put(
             }
 
             if (req.file && req.file.path) {
-                user.avatar = req.file.path;
+                const result = await cloudinary.uploader.upload(req.file.path, {
+                    folder: "zenchat_avatars",
+                    resource_type: "image"
+                });
+                user.avatar = result.secure_url;
             } else if (req.body.clearAvatar === 'true' || req.body.clearAvatar === true) {
                 user.avatar = "";
             }

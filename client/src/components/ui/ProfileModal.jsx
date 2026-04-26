@@ -166,7 +166,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
 
                 <form onSubmit={handleSubmit} className="profile-form">
                     <div className="profile-avatar-section">
-                        <div
+                    <div className="profile-avatar-container" style={{ margin: "0 auto 1.5rem" }}>
+                        <div 
                             className="avatar avatar-lg profile-avatar-edit"
                             onClick={() => fileInputRef.current?.click()}
                         >
@@ -205,6 +206,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 </svg>
                             </button>
                         )}
+                    </div>
                     </div>
 
                     <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
