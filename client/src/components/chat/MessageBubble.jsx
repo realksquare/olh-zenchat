@@ -208,6 +208,20 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                         <span className="message-time">
                             {new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         </span>
+                        {isMe && (
+                            <span className={`message-status-ticks ${status}`}>
+                                {status === "sent" ? (
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                ) : (
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="18 6 7 17 2 12" />
+                                        <polyline points="22 6 11 17 6 12" />
+                                    </svg>
+                                )}
+                            </span>
+                        )}
                     </div>
                 </div>
 

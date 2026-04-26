@@ -34,18 +34,9 @@ export const useMomentStore = create((set, get) => ({
     viewMoment: async (momentId, userId) => {
         try {
             await axiosInstance.post(`/moments/${momentId}/view`);
-            // We don't remove it from state anymore because the server 
-            // handles filtering for GET /moments, but for immediate 
-            // disappearance we can keep it, or let the user see it once
-            // Actually, the user says "it disappears at that time... but refresh brings it back"
-            // So we should filter it out locally too.
-            set((state) => ({
-                moments: state.moments.filter(m => {
-                    const isOwn = (m.userId?._id || m.userId) === userId;
-                    if (isOwn) return true;
-                    return m._id !== momentId;
-                })
-            }));
+            // We just mark it as viewed on server.
+            // We don't filter locally while viewing to avoid UI disappearance.
+            // Fresh fetch on reload or tab change will handle the cleanup.
         } catch (err) {
             console.error("Failed to view moment:", err);
         }
@@ -69,6 +60,12 @@ export const useMomentStore = create((set, get) => ({
         });
     },
 
+    removeMoment: (momentId) => {
+        set((state) => ({
+            moments: state.moments.filter(m => m._id !== momentId)
+        }));
+    },
+
     hasActiveMoment: (userId) => {
         const moments = get().moments;
         const uid = typeof userId === 'string' ? userId : (userId?._id || userId);
@@ -78,29 +75,12 @@ export const useMomentStore = create((set, get) => ({
         });
     },
 
-    getHaloColor: (userId) => {
-        if (!userId) return "#3b82f6";
-        const idStr = typeof userId === 'string' ? userId : (userId._id || userId || '');
-        if (!idStr) return "#3b82f6";
+    getHaloColor: (userId, currentUserId) => {
+        if (!userId) return "#082f49"; // Sapphire fallback
+        const uid = typeof userId === 'string' ? userId : (userId._id || userId || '');
+        const cuid = typeof currentUserId === 'string' ? currentUserId : (currentUserId?._id || currentUserId || '');
         
-        const colors = [
-            "#3b82f6", // Blue
-            "#10b981", // Emerald
-            "#f59e0b", // Amber
-            "#ef4444", // Red
-            "#8b5cf6", // Violet
-            "#ec4899", // Pink
-            "#06b6d4", // Cyan
-            "#f472b6", // Light Pink
-            "#fbbf24", // Yellow
-            "#a78bfa"  // Lavender
-        ];
-        
-        let hash = 0;
-        for (let i = 0; i < idStr.length; i++) {
-            hash = idStr.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const index = Math.abs(hash) % colors.length;
-        return colors[index];
+        if (uid === cuid) return "#082f49"; // Sapphire for own
+        return "#10b981"; // Emerald for others
     }
 }));

@@ -1,9 +1,8 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react()],
   server: {
     proxy: {
       "/api": "http://localhost:5000",
@@ -15,9 +14,9 @@ export default defineConfig({
   },
   build: {
     outDir: "dist",
-    minify: "oxc",
+    minify: "esbuild",
     sourcemap: false,
-    chunkSizeWarningLimit: 800,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -28,13 +27,13 @@ export default defineConfig({
             if (id.includes("firebase")) {
               return "firebase";
             }
+            if (id.includes("zustand") || id.includes("axios")) {
+              return "libs-core";
+            }
             return "libs";
           }
         },
       },
     },
-  },
-  oxc: {
-    drop: ["console", "debugger"],
   },
 });

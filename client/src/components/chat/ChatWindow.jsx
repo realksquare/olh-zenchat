@@ -204,7 +204,7 @@ const ChatWindow = ({ onBack }) => {
                 >
                     <div 
                         className={`avatar avatar-md ${hasMoments ? 'moments-halo-thin' : ''}`}
-                        style={hasMoments ? { '--halo-color': useMomentStore.getState().getHaloColor(otherUser?._id) } : {}}
+                        style={hasMoments ? { '--halo-color': useMomentStore.getState().getHaloColor(otherUser?._id, user?._id) } : {}}
                     >
                         {otherUser?.avatar ? (
                             <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />

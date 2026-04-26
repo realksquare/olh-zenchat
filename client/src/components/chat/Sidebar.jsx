@@ -115,7 +115,7 @@ const Sidebar = ({ onChatSelect }) => {
                     onClick={() => setIsProfileOpen(true)}
                     style={{ 
                         cursor: "pointer",
-                        ...(hasActiveMoment(user?._id) ? { '--halo-color': getHaloColor(user?._id) } : {})
+                        ...(hasActiveMoment(user?._id) ? { '--halo-color': getHaloColor(user?._id, user?._id) } : {})
                     }}
                     title="Edit Profile"
                 >

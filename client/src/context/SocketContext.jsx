@@ -100,6 +100,14 @@ export const SocketProvider = ({ children }) => {
             useChatStore.getState().addChat(chat);
         };
 
+        const handleNewMoment = ({ moment }) => {
+            useMomentStore.getState().addMoment(moment);
+        };
+
+        const handleMomentDeleted = ({ momentId }) => {
+            useMomentStore.getState().removeMoment(momentId);
+        };
+
         socket.on("connect", () => {
             const activeChat = useChatStore.getState().activeChat;
             if (activeChat?._id) socket.emit("join_chat", { chatId: activeChat._id });
@@ -114,6 +122,8 @@ export const SocketProvider = ({ children }) => {
         socket.on("message_edited", handleMessageEdited);
         socket.on("message_deleted", handleMessageDeleted);
         socket.on("new_chat", handleNewChat);
+        socket.on("new_moment", handleNewMoment);
+        socket.on("moment_deleted", handleMomentDeleted);
 
         return () => {
             socket.off("connect");
@@ -126,6 +136,8 @@ export const SocketProvider = ({ children }) => {
             socket.off("message_edited", handleMessageEdited);
             socket.off("message_deleted", handleMessageDeleted);
             socket.off("new_chat", handleNewChat);
+            socket.off("new_moment", handleNewMoment);
+            socket.off("moment_deleted", handleMomentDeleted);
             socket.disconnect();
             socketRef.current = null;
         };

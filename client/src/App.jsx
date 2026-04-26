@@ -73,15 +73,7 @@ const App = () => {
       registerFCM();
     }
 
-    if (socket) {
-        socket.on("new_moment", (moment) => {
-            useMomentStore.getState().addMoment(moment);
-        });
-    }
-
-    return () => {
-        if (socket) socket.off("new_moment");
-    };
+    return () => { };
   }, [token, user?._id, socket]);
 
   return (

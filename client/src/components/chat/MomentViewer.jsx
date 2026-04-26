@@ -116,9 +116,9 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
     };
 
     const haloColor = useMemo(() => {
-        if (!currentMoment?.userId) return "#3b82f6";
-        return getHaloColor(currentMoment.userId);
-    }, [currentMoment, getHaloColor]);
+        if (!currentMoment?.userId) return "#082f49";
+        return getHaloColor(currentMoment.userId, currentUser?._id);
+    }, [currentMoment, getHaloColor, currentUser?._id]);
 
     if (!isOpen || !currentMoment) return null;
 

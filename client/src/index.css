@@ -1,5 +1,4 @@
 @import url("https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&display=swap");
-@import "tailwindcss";
 
 /* Theme-matched Scrollbars */
 *::-webkit-scrollbar {
@@ -4289,3 +4288,23 @@ select {
 }
 
 
+.message-status-ticks {
+  display: flex;
+  align-items: center;
+  margin-left: 4px;
+  opacity: 0.6;
+}
+
+.message-status-ticks.sent { color: #94a3b8; }
+.message-status-ticks.delivered { color: #94a3b8; }
+.message-status-ticks.read { color: #3b82f6; opacity: 1; }
+
+.moments-halo {
+  border: 2.5px solid var(--halo-color, #082f49);
+  padding: 2px;
+}
+
+.moments-halo-thin {
+  border: 1.5px solid var(--halo-color, #082f49);
+  padding: 1.5px;
+}
