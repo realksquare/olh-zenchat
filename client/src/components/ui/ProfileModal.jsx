@@ -17,6 +17,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [avatarPreview, setAvatarPreview] = useState(user?.avatar || "");
     const [onlineVisibility, setOnlineVisibility] = useState(user?.privacySettings?.onlineStatus || "everyone");
     const [nameVisibility, setNameVisibility] = useState(user?.privacySettings?.fullName || "everyone");
+    const [avatarVisibility, setAvatarVisibility] = useState(user?.privacySettings?.avatar || "everyone");
     const [typingVisibility, setTypingVisibility] = useState(user?.privacySettings?.typingIndicator || "everyone");
     const [error, setError] = useState("");
     const [isSubscribing, setIsSubscribing] = useState(false);
@@ -88,6 +89,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         const privacySettings = { 
             onlineStatus: onlineVisibility, 
             fullName: nameVisibility,
+            avatar: avatarVisibility,
             typingIndicator: typingVisibility 
         };
         formData.append("privacySettings", JSON.stringify(privacySettings));
@@ -228,7 +230,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
 
                     <div className="privacy-section" style={{ marginTop: "1.25rem", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "1.25rem" }}>
                         <h3 style={{ fontSize: "0.85rem", marginBottom: "1rem", color: "var(--color-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Privacy</h3>
-                        <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                        <div className="form-row" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "1rem" }}>
                             <div className="form-group">
                                 <label>Online Status</label>
                                 <select value={onlineVisibility} onChange={(e) => setOnlineVisibility(e.target.value)}>
@@ -240,6 +242,14 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                             <div className="form-group">
                                 <label>Full Name</label>
                                 <select value={nameVisibility} onChange={(e) => setNameVisibility(e.target.value)}>
+                                    <option value="everyone">Everyone</option>
+                                    <option value="contacts">Contacts Only</option>
+                                    <option value="nobody">Nobody</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label>Avatar Visibility</label>
+                                <select value={avatarVisibility} onChange={(e) => setAvatarVisibility(e.target.value)}>
                                     <option value="everyone">Everyone</option>
                                     <option value="contacts">Contacts Only</option>
                                     <option value="nobody">Nobody</option>
