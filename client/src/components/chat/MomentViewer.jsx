@@ -90,7 +90,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             audioRef.current = new Audio(currentMoment.music.previewUrl);
             audioRef.current.currentTime = currentMoment.music.startTime || 0;
             audioRef.current.muted = isMuted;
-            audioRef.current.play().catch(e => console.log("Audio blocked"));
+            audioRef.current.play().catch(e => {});
         }
 
         const interval = setInterval(() => {

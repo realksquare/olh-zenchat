@@ -200,7 +200,6 @@ const registerSocketHandlers = (io) => {
                 participants.forEach(async (participant) => {
                     const pIdStr = participant._id.toString();
                     
-                    // Calculate if this specific recipient can see the scramble (Mutual Consent)
                     const recipientPrivacy = participant.privacySettings?.typingIndicator || "everyone";
                     const senderAllowsRecipient = allows(sender, pIdStr, typingPrivacy);
                     const recipientAllowsSender = allows(participant, userId, recipientPrivacy);
@@ -312,16 +311,7 @@ const registerSocketHandlers = (io) => {
                             }
 
                             if (pushSuccess) {
-                                // await Message.findByIdAndUpdate(message._id, { status: "delivered" });
                                 console.log(`[Push] Info: Message ${message._id} push accepted by FCM. Waiting for device delivery receipt...`);
-                                /*
-                                const senderData = onlineUsers.get(userId);
-                                if (senderData && senderData.sockets) {
-                                    senderData.sockets.forEach((dType, sId) => {
-                                        io.to(sId).emit("message_delivered", { chatId: chatId.toString(), messageId: message._id.toString() });
-                                    });
-                                }
-                                */
                             } else {
                                 console.log(`[Push] Final: Notification flow finished with NO successful deliveries.`);
                             }

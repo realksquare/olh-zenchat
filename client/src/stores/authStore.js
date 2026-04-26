@@ -41,6 +41,7 @@ export const useAuthStore = create(
     login: async (email, password) => {
         set({ isLoading: true, error: null });
         try {
+            const { data } = await axiosInstance.post("/auth/login", { email, password });
             localStorage.setItem(TOKEN_KEY, data.token);
             localStorage.setItem(USER_KEY, JSON.stringify(data.user));
             if (db?.settings) {

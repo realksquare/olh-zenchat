@@ -56,12 +56,10 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Validate file type
             if (!file.type.startsWith('image/')) {
                 setError("Please select an image file.");
                 return;
             }
-            // Validate file size (e.g., 5MB)
             if (file.size > 5 * 1024 * 1024) {
                 setError("Image too large. Max 5MB.");
                 return;
@@ -176,7 +174,6 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                     src={avatarPreview} 
                                     alt="Avatar preview" 
                                     onError={(e) => {
-                                        console.error("Avatar preview failed to load:", avatarPreview);
                                         setImageError(true);
                                     }}
                                 />
@@ -303,7 +300,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                         <button type="button" className="btn btn-outline" onClick={handleExport} style={{ flex: 1, fontSize: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                             <span>Export</span>
                         </button>
-                        <button type="button" className="btn btn-outline" onClick={() => alert("Import coming soon!")} style={{ flex: 1, fontSize: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                        <button type="button" className="btn btn-outline" style={{ flex: 1, fontSize: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                             <span>Import</span>
                         </button>
                     </div>

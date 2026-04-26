@@ -174,32 +174,15 @@ router.put(
             }
 
             if (req.file && req.file.path) {
-                const conf = cloudinary.config();
-                const secret = conf.api_secret || "";
-                console.log("[Auth] Cloudinary Config Check:", {
-                    cloud_name: conf.cloud_name,
-                    api_key: conf.api_key,
-                    secret_hint: `${secret.substring(0, 2)}...${secret.substring(secret.length - 2)}`,
-                    has_secret: !!secret
-                });
-
-                // Force re-config just in case
-                cloudinary.config({
-                    cloud_name: conf.cloud_name,
-                    api_key: conf.api_key,
-                    api_secret: secret
-                });
-
-                console.log("[Auth] Uploading avatar to Cloudinary:", req.file.path);
                 try {
                     const result = await cloudinary.uploader.upload(req.file.path, {
+                        folder: "zenchat_avatars",
                         resource_type: "image"
                     });
-                    console.log("[Auth] Cloudinary upload success:", result.secure_url);
                     user.avatar = result.secure_url;
                 } catch (cloudErr) {
-                    console.error("[Auth] Cloudinary upload failed:", cloudErr);
-                    throw cloudErr; // Re-throw to be caught by catch(err)
+                    console.error("[Auth] Avatar upload failed:", cloudErr);
+                    return res.status(500).json({ message: "Avatar upload failed" });
                 }
             } else if (req.body.clearAvatar === 'true' || req.body.clearAvatar === true) {
                 user.avatar = "";
@@ -219,8 +202,8 @@ router.put(
             await user.save();
             res.json({ user: user.toPrivateJSON() });
         } catch (err) {
-            console.error("[Auth] Update failed:", err);
-            res.status(500).json({ message: "Server error", error: err.message });
+            console.error("[Auth] Update error:", err);
+            res.status(500).json({ message: "Server error" });
         }
     }
 );

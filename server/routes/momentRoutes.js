@@ -5,8 +5,6 @@ const User = require("../models/User");
 const protect = require("../middleware/auth");
 const { sendPushNotification } = require("../utils/firebase");
 
-// @route   POST /api/moments
-// @desc    Create a new moment
 router.post("/", protect, async (req, res) => {
     try {
         const { type, content, mediaUrl, music } = req.body;
@@ -61,8 +59,6 @@ router.post("/", protect, async (req, res) => {
     }
 });
 
-// @route   GET /api/moments
-// @desc    Get moments (self = all, contacts = unviewed)
 router.get("/", protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
@@ -88,8 +84,6 @@ router.get("/", protect, async (req, res) => {
     }
 });
 
-// @route   POST /api/moments/:id/view
-// @desc    Mark a moment as viewed
 router.post("/:id/view", protect, async (req, res) => {
     try {
         await Moment.findByIdAndUpdate(
@@ -103,8 +97,6 @@ router.post("/:id/view", protect, async (req, res) => {
     }
 });
 
-// @route   DELETE /api/moments/:id
-// @desc    Delete a moment (Let go)
 router.delete("/:id", protect, async (req, res) => {
     try {
         const moment = await Moment.findById(req.params.id);

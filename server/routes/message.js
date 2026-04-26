@@ -6,23 +6,6 @@ const { uploadMedia, cloudinary } = require("../utils/cloudinary");
 
 const router = express.Router();
 
-router.get("/test-cloudinary", async (req, res) => {
-    try {
-        const { cloudinary } = require("../utils/cloudinary");
-        const result = await cloudinary.api.ping();
-        res.json({ 
-            success: true, 
-            status: "Cloudinary SDK Loaded",
-            result 
-        });
-    } catch (err) {
-        res.status(500).json({ 
-            success: false, 
-            error: err.message,
-            stack: err.stack 
-        });
-    }
-});
 
 router.get("/sign-upload", (req, res) => {
     try {

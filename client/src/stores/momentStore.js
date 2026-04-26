@@ -45,7 +45,6 @@ export const useMomentStore = create((set, get) => ({
                 })
             }));
         } catch (err) {
-            console.error("Failed to view moment:", err);
         }
     },
 
@@ -56,7 +55,6 @@ export const useMomentStore = create((set, get) => ({
                 moments: state.moments.filter(m => m._id !== momentId)
             }));
         } catch (err) {
-            console.error("Failed to delete moment:", err);
         }
     },
 
