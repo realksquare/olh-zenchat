@@ -130,7 +130,7 @@ const Sidebar = ({ onChatSelect }) => {
                         <span>{getInitials(user?.username)}</span>
                     )}
                 </div>
-                <span className="sidebar-username" onClick={() => setIsProfileOpen(true)} style={{ cursor: "pointer" }} title="Edit Profile">
+                <span className="sidebar-username" onClick={() => setIsProfileOpen(true)} style={{ cursor: "pointer", display: 'flex', alignItems: 'center' }} title="Edit Profile">
                     {user?.username}
                     {user?.isVerified && <VerifiedTick />}
                 </span>

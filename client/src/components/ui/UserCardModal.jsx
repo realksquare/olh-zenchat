@@ -61,7 +61,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
 
                 <div className="user-card-body">
                     <div className="user-card-info">
-                        <h2 className="user-card-username">
+                        <h2 className="user-card-username" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             @{username}
                             {user.isVerified && <VerifiedTick />}
                         </h2>

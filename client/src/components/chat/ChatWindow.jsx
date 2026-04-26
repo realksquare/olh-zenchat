@@ -220,7 +220,7 @@ const ChatWindow = ({ onBack }) => {
                     onClick={() => setShowUserCard(true)}
                     style={{ cursor: 'pointer' }}
                 >
-                    <span className="chat-header-name">
+                    <span className="chat-header-name" style={{ display: 'flex', alignItems: 'center' }}>
                         {displayName}
                         {otherUser?.isVerified && <VerifiedTick />}
                     </span>

@@ -4,6 +4,7 @@ import { useAuthStore } from "../../stores/authStore";
 import { formatDistanceToNow } from "date-fns";
 import { useMomentStore } from "../../stores/momentStore";
 import { VerifiedTick } from "../ui/Icons";
+import axiosInstance from "../../utils/axios";
 
 const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const { user, toggleContact } = useAuthStore();
@@ -101,6 +102,18 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         setShowMenu(false);
     };
 
+    const handleToggleVerify = async (e) => {
+        e.stopPropagation();
+        try {
+            const { data } = await axiosInstance.post(`/admin/verify/${otherUserId}`);
+            // Force re-fetch or local update if needed, but since we are using liveChat, 
+            // the socket will likely broadcast the change or the next fetch will catch it.
+            // For immediate feedback:
+            if (otherUser) otherUser.isVerified = data.user.isVerified;
+            setShowMenu(false);
+        } catch (err) { alert(err.response?.data?.message || "Failed"); }
+    };
+
     const menuBtnStyle = {
         background: "transparent",
         border: "none",
@@ -144,7 +157,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
 
             <div className="chat-card-info">
                 <div className="chat-card-row">
-                    <span className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`}>
+                    <span className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`} style={{ display: 'flex', alignItems: 'center' }}>
                         {displayName}
                         {otherUser?.isVerified && <VerifiedTick />}
                     </span>
@@ -183,10 +196,19 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                         {isPinned ? "Unpin Chat" : "Pin Chat"}
                     </button>
 
+                    {/* Admin: Verify */}
+                    {(user?.role === "co_admin" || user?.role === "master_admin") && (
+                        <button onClick={handleToggleVerify}
+                            style={{ ...menuBtnStyle, color: otherUser?.isVerified ? "var(--color-primary)" : "#94a3b8", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: '8px', marginBottom: '4px' }}>
+                            <VerifiedTick />
+                            {otherUser?.isVerified ? "Remove Verification" : "Verify User"}
+                        </button>
+                    )}
+
                     {/* Tag as Contact */}
                     <button onClick={handleToggleContact} disabled={contactLoading}
                         style={{ ...menuBtnStyle, color: isContact ? "#f59e0b" : "#94a3b8" }}>
-                        <span>{isContact ? "Starred" : "Verified"}</span>
+                        <span style={{ fontSize: '14px' }}>{isContact ? "⭐" : "👤"}</span>
                         {contactLoading ? "..." : isContact ? "Remove Contact" : "Tag as Contact"}
                     </button>
 

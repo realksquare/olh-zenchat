@@ -1,7 +1,7 @@
 import { memo } from "react";
 
 export const VerifiedTick = memo(() => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '4px', color: '#3da5d9', display: 'inline-block', verticalAlign: 'text-bottom', transform: 'translateY(-1px)' }}>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '6px', color: '#3da5d9', display: 'inline-block', verticalAlign: 'middle' }}>
         <circle cx="12" cy="12" r="10" />
         <polyline points="16 8 11 13 8 10" />
     </svg>

@@ -456,7 +456,7 @@ select {
 /* ── Avatar ───────────────────────────────────────────── */
 
 .avatar {
-  border-radius: var(--radius-full);
+  border-radius: 50% !important;
   background: #1e3a4a;
   color: var(--color-primary);
   display: flex;
@@ -467,22 +467,11 @@ select {
   overflow: hidden;
 }
 
-.avatar-sm {
-  width: 36px;
-  height: 36px;
-  font-size: var(--text-xs);
-}
-
-.avatar-md {
-  width: 42px;
-  height: 42px;
-  font-size: var(--text-sm);
-}
-
 .avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
 }
 
 .profile-avatar-container {
@@ -4425,12 +4414,31 @@ select {
 .message-status-ticks.delivered { color: #94a3b8; }
 .message-status-ticks.read { color: #3b82f6; opacity: 1; }
 
+.avatar-sm {
+  width: 36px !important;
+  height: 36px !important;
+  font-size: var(--text-xs) !important;
+}
+
+.avatar-md {
+  width: 42px !important;
+  height: 42px !important;
+  font-size: var(--text-sm) !important;
+}
+
+.avatar-lg {
+  width: 54px !important;
+  height: 54px !important;
+}
+
 .moments-halo {
   border: 2.5px solid var(--halo-color, #082f49);
   padding: 2px;
+  border-radius: 50% !important;
 }
 
 .moments-halo-thin {
   border: 1.5px solid var(--halo-color, #082f49);
   padding: 1.5px;
+  border-radius: 50% !important;
 }

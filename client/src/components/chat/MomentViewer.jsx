@@ -216,29 +216,29 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                     <div className="aura-viewer-actions">
                         {isOwn && (
                             <div className="aura-view-counter" title="Views">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                     <circle cx="12" cy="12" r="3" />
                                 </svg>
-                                <span>{currentMoment.views?.length || 0}</span>
+                                <span style={{ fontSize: '1rem', fontWeight: '700' }}>{currentMoment.views?.length || 0}</span>
                             </div>
                         )}
                         {isOwn && (
-                            <button className="aura-trash-btn" onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }} title="Let go." style={{ zIndex: 100 }}>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+                            <button className="aura-trash-btn" onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }} title="Let go." style={{ zIndex: 100, padding: '8px' }}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
                             </button>
                         )}
                         {(currentMoment.type === "video" || currentMoment.music) && (
-                            <button className="aura-speaker-btn" onClick={() => setIsMuted(!isMuted)}>
+                            <button className="aura-speaker-btn" onClick={() => setIsMuted(!isMuted)} style={{ padding: '8px' }}>
                                 {isMuted ? (
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 5L6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M11 5L6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>
                                 ) : (
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 5L6 9H2v6h4l5 4V5z" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" /></svg>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M11 5L6 9H2v6h4l5 4V5z" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" /></svg>
                                 )}
                             </button>
                         )}
-                        <button className="aura-viewer-close" onClick={handleClose}>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <button className="aura-viewer-close" onClick={handleClose} style={{ padding: '8px' }}>
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                             </svg>
                         </button>
@@ -293,8 +293,8 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                         <h3>Let go?</h3>
                         <p>This #moment. will fade for everyone.</p>
                         <div className="permission-actions">
-                            <button className="deny-btn" onClick={confirmDelete} style={{ background: '#ef4444', border: 'none', zIndex: 100 }}>Let go...</button>
-                            <button className="allow-btn" onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }} style={{ background: 'rgba(255,255,255,0.1)', zIndex: 100 }}>Keep</button>
+                            <button className="deny-btn" onClick={(e) => { e.stopPropagation(); confirmDelete(); }} style={{ background: '#ef4444', border: 'none', zIndex: 100, padding: '12px 20px', fontSize: '1rem', fontWeight: '700' }}>Let go...</button>
+                            <button className="allow-btn" onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }} style={{ background: 'rgba(255,255,255,0.1)', zIndex: 100, padding: '12px 20px', fontSize: '1rem' }}>Keep</button>
                         </div>
                     </div>
                 )}
