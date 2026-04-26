@@ -135,13 +135,30 @@ export const useChatStore = create(
                     const chatMessages = state.messages[chatId] || [];
 
                     let nextMessages = [...chatMessages];
-                    const existingIndex = nextMessages.findIndex(
-                        m => (m._id?.toString() === message._id?.toString()) || 
-                             (message.cid && m._id === message.cid)
-                    );
+                    
+                    // Deduplication logic: match by _id OR cid (Client ID)
+                    const existingIndex = nextMessages.findIndex(m => {
+                        const mId = m._id?.toString();
+                        const msgId = message._id?.toString();
+                        const mCid = m.cid || m._id; // Fallback if cid is missing
+                        const msgCid = message.cid;
+
+                        // Case 1: Match by server ID
+                        if (msgId && mId === msgId) return true;
+                        // Case 2: Match by client ID (optimistic UI)
+                        if (msgCid && mCid === msgCid) return true;
+                        
+                        return false;
+                    });
 
                     if (existingIndex !== -1) {
-                        nextMessages[existingIndex] = { ...nextMessages[existingIndex], ...message };
+                        // Merge message data (preserving some local fields if needed)
+                        nextMessages[existingIndex] = { 
+                            ...nextMessages[existingIndex], 
+                            ...message,
+                            // Ensure the final message has the server ID if available
+                            _id: message._id || nextMessages[existingIndex]._id
+                        };
                     } else {
                         nextMessages.push(message);
                     }

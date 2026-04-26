@@ -329,14 +329,6 @@ const registerSocketHandlers = (io) => {
                     }
                 }
 
-                const myData = onlineUsers.get(userId);
-                if (myData && myData.sockets) {
-                    myData.sockets.forEach((dType, socketId) => {
-                        if (socketId !== socket.id) {
-                            io.to(socketId).emit("receive_message", { message: messagePayloadBase });
-                        }
-                    });
-                }
             } catch (err) {
                 socket.emit("message_error", { error: "Failed to send message" });
             }

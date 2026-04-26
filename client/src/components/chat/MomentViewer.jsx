@@ -295,8 +295,8 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                         <h3>Let go?</h3>
                         <p>This #moment. will fade for everyone.</p>
                         <div className="permission-actions">
-                            <button className="deny-btn" onClick={(e) => { e.stopPropagation(); confirmDelete(); }} style={{ background: '#ef4444', border: 'none', zIndex: 100, padding: '12px 20px', fontSize: '1rem', fontWeight: '700' }}>Let go...</button>
-                            <button className="allow-btn" onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }} style={{ background: 'rgba(255,255,255,0.1)', zIndex: 100, padding: '12px 20px', fontSize: '1rem' }}>Keep</button>
+                            <button className="deny-btn" onClick={(e) => { e.stopPropagation(); confirmDelete(); }}>Let go...</button>
+                            <button className="allow-btn" onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }}>Keep</button>
                         </div>
                     </div>
                 )}
