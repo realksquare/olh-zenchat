@@ -299,6 +299,7 @@ const registerSocketHandlers = (io) => {
                                 console.log(`[Push] Sending to token: ${tkn.substring(0, 10)}...`);
                                 const success = await sendPushNotification(offlineUser._id, tkn, title, body, {
                                     chatId: chatId.toString(),
+                                    messageId: message._id.toString(),
                                     type: 'new_message',
                                     isViewOnce: populated.isViewOnce ? "true" : "false"
                                 });
@@ -311,14 +312,16 @@ const registerSocketHandlers = (io) => {
                             }
 
                             if (pushSuccess) {
-                                await Message.findByIdAndUpdate(message._id, { status: "delivered" });
-                                console.log(`[Push] Final: Message ${message._id} marked as DELIVERED.`);
+                                // await Message.findByIdAndUpdate(message._id, { status: "delivered" });
+                                console.log(`[Push] Info: Message ${message._id} push accepted by FCM. Waiting for device delivery receipt...`);
+                                /*
                                 const senderData = onlineUsers.get(userId);
                                 if (senderData && senderData.sockets) {
                                     senderData.sockets.forEach((dType, sId) => {
                                         io.to(sId).emit("message_delivered", { chatId: chatId.toString(), messageId: message._id.toString() });
                                     });
                                 }
+                                */
                             } else {
                                 console.log(`[Push] Final: Notification flow finished with NO successful deliveries.`);
                             }

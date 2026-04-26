@@ -5,6 +5,7 @@ export const db = new Dexie("ZenChatDB");
 db.version(1).stores({
     chats: "_id, updatedAt, lastMessage._id",
     messages: "_id, chatId, createdAt, senderId",
+    settings: "key", 
 });
 
 export const persistChat = async (chat) => {

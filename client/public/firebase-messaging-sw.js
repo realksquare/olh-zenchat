@@ -2,6 +2,8 @@
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 
+importScripts('https://unpkg.com/dexie@latest/dist/dexie.js');
+
 const firebaseConfig = {
     apiKey: "AIzaSyDuPbl1-IEdxnDctJgELm_VAQoSrLvWEM8",
     authDomain: "olh-zenchat.firebaseapp.com",
@@ -11,15 +13,35 @@ const firebaseConfig = {
     appId: "1:598009129757:web:5c20c07e1864c88778cff4"
 };
 
+const db = new Dexie("ZenChatDB");
+db.version(1).stores({ settings: "key" });
+
 try {
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
     messaging.onBackgroundMessage(async (payload) => {
-        // Get any existing ZenChat notification with the same tag
-        const existingNotifs = await self.registration.getNotifications({ tag: 'zenchat-notif' });
-        
-        let count = 1;
+        // Delivery Receipt Logic
+        const messageId = payload.data?.messageId;
+        if (messageId) {
+            try {
+                const tokenObj = await db.settings.get("token");
+                const apiUrlObj = await db.settings.get("apiUrl");
+                if (tokenObj?.value && apiUrlObj?.value) {
+                    const baseUrl = apiUrlObj.value.replace(/\/$/, "");
+                    fetch(`${baseUrl}/api/messages/${messageId}/delivered`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${tokenObj.value}`,
+                            'Content-Type': 'application/json'
+                        }
+                    }).catch(e => console.log("[SW] Delivery ping failed", e));
+                }
+            } catch (err) {
+                console.log("[SW] Error accessing IDB", err);
+            }
+        }
+
         let title = payload.notification?.title || 'New Message';
         let body = payload.notification?.body || '';
 

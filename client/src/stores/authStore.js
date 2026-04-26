@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import axiosInstance from "../utils/axios";
+import { db } from "../db/zenDB";
 
 const TOKEN_KEY = "zenchat_token";
 const USER_KEY = "zenchat_user";
@@ -24,6 +25,10 @@ export const useAuthStore = create(
             });
             localStorage.setItem(TOKEN_KEY, data.token);
             localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+            if (db?.settings) {
+                await db.settings.put({ key: "token", value: data.token });
+                await db.settings.put({ key: "apiUrl", value: import.meta.env.VITE_API_URL || "" });
+            }
             set({ token: data.token, user: data.user, isLoading: false });
             return { success: true };
         } catch (err) {
@@ -36,9 +41,12 @@ export const useAuthStore = create(
     login: async (email, password) => {
         set({ isLoading: true, error: null });
         try {
-            const { data } = await axiosInstance.post("/auth/login", { email, password });
             localStorage.setItem(TOKEN_KEY, data.token);
             localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+            if (db?.settings) {
+                await db.settings.put({ key: "token", value: data.token });
+                await db.settings.put({ key: "apiUrl", value: import.meta.env.VITE_API_URL || "" });
+            }
             set({ token: data.token, user: data.user, isLoading: false });
             return { success: true };
         } catch (err) {
@@ -66,8 +74,9 @@ export const useAuthStore = create(
         const token = localStorage.getItem(TOKEN_KEY);
         if (!token) return;
         try {
-            const { data } = await axiosInstance.get("/auth/me");
             localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+            await db.settings.put({ key: "token", value: token });
+            await db.settings.put({ key: "apiUrl", value: import.meta.env.VITE_API_URL || "" });
             set({ user: data.user, token });
         } catch (err) {
             console.error("Auth check failed:", err);

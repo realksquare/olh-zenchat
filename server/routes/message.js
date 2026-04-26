@@ -212,6 +212,26 @@ router.post("/:messageId/view", async (req, res) => {
     }
 });
 
+router.post("/:messageId/delivered", async (req, res) => {
+    try {
+        const message = await Message.findById(req.params.messageId);
+        if (message && message.status === "sent") {
+            await Message.findByIdAndUpdate(req.params.messageId, { status: "delivered" });
+            
+            const io = req.app.get("io");
+            if (io) {
+                io.to(message.senderId.toString()).emit("message_delivered", {
+                    chatId: message.chatId.toString(),
+                    messageId: message._id.toString()
+                });
+            }
+        }
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 router.delete("/:messageId", async (req, res) => {
     try {
         const message = await Message.findById(req.params.messageId);

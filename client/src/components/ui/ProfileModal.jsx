@@ -39,8 +39,6 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         }
     }, [isOpen, user]);
 
-    if (!isOpen) return null;
-
     useEffect(() => {
         return () => {
             if (avatarPreview && avatarPreview.startsWith("blob:")) {
@@ -48,6 +46,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             }
         };
     }, [avatarPreview]);
+
+    if (!isOpen) return null;
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
