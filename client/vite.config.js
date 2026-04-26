@@ -14,7 +14,7 @@ export default defineConfig({
   },
   build: {
     outDir: "dist",
-    minify: "esbuild",
+    minify: "oxc",
     sourcemap: false,
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
