@@ -4858,3 +4858,45 @@ select {
   padding: 1.5px;
   border-radius: 50% !important;
 }
+
+/* ── Moment viewer header: compact on mobile ─────────────────────────── */
+@media (max-width: 600px) {
+  .aura-speaker-btn,
+  .aura-trash-btn,
+  .aura-viewer-close {
+    padding: 6px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+  }
+
+  .aura-speaker-btn svg,
+  .aura-trash-btn svg,
+  .aura-viewer-close svg {
+    width: 17px !important;
+    height: 17px !important;
+  }
+
+  .aura-viewer-close svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .aura-view-counter {
+    padding: 3px 7px;
+    font-size: 0.68rem;
+    gap: 4px;
+  }
+
+  .aura-view-counter svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  .aura-header-right {
+    gap: 5px;
+  }
+
+  .aura-viewer-actions {
+    gap: 5px;
+  }
+}
