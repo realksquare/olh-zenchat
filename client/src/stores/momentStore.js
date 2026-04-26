@@ -35,12 +35,18 @@ export const useMomentStore = create((set, get) => ({
 
     viewMoment: async (momentId, userId) => {
         try {
-            await axiosInstance.post(`/moments/${momentId}/view`);
-            set((state) => ({
-                moments: state.moments.map(m => m._id === momentId ? { ...m, viewed: true } : m)
-            }));
-        } catch (err) {
-        }
+            const res = await axiosInstance.post(`/moments/${momentId}/view`);
+            if (res.data?.moment) {
+                const updated = res.data.moment;
+                set((state) => ({
+                    moments: state.moments.map(m =>
+                        m._id === momentId || m._id?.toString() === updated._id?.toString()
+                            ? { ...m, viewedBy: updated.viewedBy }
+                            : m
+                    )
+                }));
+            }
+        } catch (err) {}
     },
 
     deleteMoment: async (momentId) => {
@@ -68,19 +74,37 @@ export const useMomentStore = create((set, get) => ({
 
     hasActiveMoment: (userId) => {
         const moments = get().moments;
-        const uid = typeof userId === 'string' ? userId : (userId?._id || userId);
-        return moments.some(m => {
-            const mid = m.userId?._id || m.userId;
-            return mid === uid;
-        });
+        const uid = (userId?._id || userId || '').toString();
+        return moments.some(m => (m.userId?._id || m.userId)?.toString() === uid);
     },
 
     getHaloColor: (userId, currentUserId) => {
-        if (!userId) return "#082f49"; // Sapphire fallback
-        const uid = typeof userId === 'string' ? userId : (userId._id || userId || '');
-        const cuid = typeof currentUserId === 'string' ? currentUserId : (currentUserId?._id || currentUserId || '');
+        const moments = get().moments;
+        const uid = (userId?._id || userId || '').toString();
+        const cuid = (currentUserId?._id || currentUserId || '').toString();
+        if (!uid) return '#082f49';
+        const userMoments = moments.filter(m => (m.userId?._id || m.userId)?.toString() === uid);
+        if (userMoments.length === 0) return '#082f49';
+        if (uid === cuid) return '#082f49'; // own → sapphire
+        const hasUnviewed = userMoments.some(m => {
+            const viewedBy = m.viewedBy || [];
+            return !viewedBy.some(v => (v.userId?._id || v.userId)?.toString() === cuid);
+        });
+        return hasUnviewed ? '#10b981' : '#94a3b8'; // emerald → grey
+    },
 
-        if (uid === cuid) return "#082f49"; // Sapphire for own
-        return "#10b981"; // Emerald for others
-    }
+    getViewCount: (momentId, uploaderId) => {
+        const moments = get().moments;
+        const m = moments.find(m => m._id === momentId || m._id?.toString() === momentId?.toString());
+        if (!m) return 0;
+        const uid = (uploaderId?._id || uploaderId || '').toString();
+        const viewedBy = m.viewedBy || [];
+        // unique viewers excluding the uploader
+        const unique = new Set(
+            viewedBy
+                .map(v => (v.userId?._id || v.userId)?.toString())
+                .filter(id => id && id !== uid)
+        );
+        return unique.size;
+    },
 }));

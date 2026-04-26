@@ -86,12 +86,25 @@ router.get("/", protect, async (req, res) => {
 
 router.post("/:id/view", protect, async (req, res) => {
     try {
-        await Moment.findByIdAndUpdate(
-            req.params.id,
-            { $addToSet: { viewedBy: { userId: req.user._id } } },
-            { new: true }
-        );
-        res.json({ success: true });
+        const moment = await Moment.findById(req.params.id);
+        if (!moment) return res.json({ success: true });
+        
+        // Only add if not the uploader and not already viewed by this user
+        const uploaderId = moment.userId.toString();
+        const viewerId = req.user._id.toString();
+        const alreadyViewed = moment.viewedBy.some(v => v.userId?.toString() === viewerId);
+        
+        if (uploaderId !== viewerId && !alreadyViewed) {
+            await Moment.findByIdAndUpdate(
+                req.params.id,
+                { $push: { viewedBy: { userId: req.user._id, at: new Date() } } },
+                { new: true }
+            );
+        }
+        
+        // Return updated moment so client can sync viewedBy immediately
+        const updated = await Moment.findById(req.params.id).populate("userId", "username avatar fullName");
+        res.json({ success: true, moment: updated });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }

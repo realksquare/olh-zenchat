@@ -3054,18 +3054,20 @@ select {
 
 .moments-halo {
   position: relative;
-  border: 2.5px solid var(--halo-color, #3b82f6) !important;
+  border: 2.5px solid var(--halo-color, #082f49) !important;
+  box-shadow: 0 0 0 1px var(--halo-color, #082f49), 0 0 12px var(--halo-color, #082f49);
   transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .moments-halo::after {
   content: '';
   position: absolute;
-  inset: -6px;
-  border: 1.5px solid var(--halo-color, #3b82f6);
+  inset: -5px;
+  border: 1.5px solid var(--halo-color, #082f49);
   border-radius: 50%;
-  opacity: 0.5;
+  opacity: 0.6;
   animation: halo-pulse 2s infinite;
+  pointer-events: none;
 }
 
 @keyframes halo-pulse {
@@ -3181,7 +3183,9 @@ select {
 
 .moment-item .avatar {
   margin: 6px;
-  /* Space for thin halo */
+  /* Space for halo ::after ring */
+  width: 46px !important;
+  height: 46px !important;
 }
 
 .moment-label {
@@ -3996,34 +4000,41 @@ select {
 .aura-speaker-btn,
 .aura-trash-btn,
 .aura-viewer-close {
-  background: none;
-  border: none;
+  background: rgba(0, 0, 0, 0.5) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
   color: #ffffff !important;
   cursor: pointer;
-  opacity: 0.8;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-  border-radius: 50%;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 10px !important;
+  border-radius: 50% !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s;
+  flex-shrink: 0;
+  min-width: 42px;
+  min-height: 42px;
 }
 
 .aura-speaker-btn svg,
 .aura-trash-btn svg,
 .aura-viewer-close svg {
-  width: 24px !important;
-  height: 24px !important;
+  width: 22px !important;
+  height: 22px !important;
   stroke: #ffffff !important;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  fill: none !important;
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
+  pointer-events: none;
 }
 
 .aura-viewer-close svg {
-  width: 28px !important;
-  height: 28px !important;
+  width: 24px !important;
+  height: 24px !important;
 }
 
 .aura-speaker-btn:hover,
