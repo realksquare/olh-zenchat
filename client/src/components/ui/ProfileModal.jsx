@@ -41,13 +41,30 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
 
     if (!isOpen) return null;
 
+    useEffect(() => {
+        return () => {
+            if (avatarPreview && avatarPreview.startsWith("blob:")) {
+                URL.revokeObjectURL(avatarPreview);
+            }
+        };
+    }, [avatarPreview]);
+
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                setError("Please select an image file.");
+                return;
+            }
+            // Validate file size (e.g., 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                setError("Image too large. Max 5MB.");
+                return;
+            }
             setAvatarFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => setAvatarPreview(reader.result);
-            reader.readAsDataURL(file);
+            const url = URL.createObjectURL(file);
+            setAvatarPreview(url);
         }
     };
 
@@ -144,7 +161,15 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                             onClick={() => fileInputRef.current?.click()}
                         >
                             {avatarPreview ? (
-                                <img src={avatarPreview} alt="Avatar preview" />
+                                <img 
+                                    src={avatarPreview} 
+                                    alt="Avatar preview" 
+                                    onError={(e) => {
+                                        console.error("Avatar preview failed to load:", avatarPreview);
+                                        e.target.style.display = 'none';
+                                        setError("Failed to load image preview.");
+                                    }}
+                                />
                             ) : (
                                 <span>{getInitials(username)}</span>
                             )}

@@ -229,14 +229,26 @@ const registerSocketHandlers = (io) => {
                     if (userData && userData.sockets && userData.sockets.size > 0) {
                         isDelivered = true;
                     } else {
-                        // ... notification logic remains same
-                        const pIdStr = participantId._id?.toString() || participantId.toString();
+                        const pIdStr = participant._id?.toString() || participant.toString();
+                        console.log(`[Push] User ${pIdStr} is offline. Starting notification flow...`);
                         
                         User.findById(pIdStr).then(async (offlineUser) => {
-                            if (!offlineUser || !offlineUser.notificationsEnabled) return;
+                            if (!offlineUser) {
+                                console.log(`[Push] Error: User ${pIdStr} not found in DB.`);
+                                return;
+                            }
+                            if (!offlineUser.notificationsEnabled) {
+                                console.log(`[Push] Info: Notifications disabled for user ${pIdStr}.`);
+                                return;
+                            }
 
                             const tokens = offlineUser.fcmTokens || [];
-                            if (tokens.length === 0 && !offlineUser.fcmToken) return;
+                            console.log(`[Push] Token Verify: User ${pIdStr} has ${tokens.length} tokens and ${offlineUser.fcmToken ? '1 legacy token' : 'no legacy token'}.`);
+                            
+                            if (tokens.length === 0 && !offlineUser.fcmToken) {
+                                console.log(`[Push] Skip: No tokens found for user ${pIdStr}.`);
+                                return;
+                            }
 
                             const senderName = populated.senderId.username;
                             const senderIsContact = offlineUser.contacts?.some(
@@ -274,32 +286,44 @@ const registerSocketHandlers = (io) => {
                             let targetTokens = [];
                             if (pwaTokens.length > 0) {
                                 targetTokens = pwaTokens.map(t => t.token);
+                                console.log(`[Push] Targeting ${targetTokens.length} PWA tokens.`);
                             } else if (browserTokens.length > 0) {
                                 targetTokens = browserTokens.map(t => t.token);
+                                console.log(`[Push] Targeting ${targetTokens.length} Browser tokens.`);
                             } else if (offlineUser.fcmToken) {
                                 targetTokens = [offlineUser.fcmToken];
+                                console.log(`[Push] Targeting legacy token.`);
                             }
 
                             let pushSuccess = false;
                             for (const tkn of targetTokens) {
+                                console.log(`[Push] Sending to token: ${tkn.substring(0, 10)}...`);
                                 const success = await sendPushNotification(offlineUser._id, tkn, title, body, {
                                     chatId: chatId.toString(),
                                     type: 'new_message',
                                     isViewOnce: messagePayload.isViewOnce ? "true" : "false"
                                 });
-                                if (success) pushSuccess = true;
+                                if (success) {
+                                    pushSuccess = true;
+                                    console.log(`[Push] Success: Notification reached device (Token: ${tkn.substring(0, 10)}...)`);
+                                } else {
+                                    console.log(`[Push] Failed: Notification could not reach device (Token: ${tkn.substring(0, 10)}...)`);
+                                }
                             }
 
                             if (pushSuccess) {
                                 await Message.findByIdAndUpdate(message._id, { status: "delivered" });
+                                console.log(`[Push] Final: Message ${message._id} marked as DELIVERED.`);
                                 const senderData = onlineUsers.get(userId);
                                 if (senderData && senderData.sockets) {
                                     senderData.sockets.forEach((dType, sId) => {
                                         io.to(sId).emit("message_delivered", { chatId: chatId.toString(), messageId: message._id.toString() });
                                     });
                                 }
+                            } else {
+                                console.log(`[Push] Final: Notification flow finished with NO successful deliveries.`);
                             }
-                        }).catch(err => console.error(`[Push] Error:`, err));
+                        }).catch(err => console.error(`[Push] Critical Error:`, err));
                     }
                 });
 

@@ -56,10 +56,14 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
     };
 
     try {
-        await admin.messaging().send(message);
+        console.log(`[Push] Attempting FCM send to token: ${fcmToken.substring(0, 10)}...`);
+        const response = await admin.messaging().send(message);
+        console.log(`[Push] FCM Send Success. Response:`, response);
         return true;
     } catch (error) {
+        console.error(`[Push] FCM Send Error for token ${fcmToken.substring(0, 10)}...:`, error.message);
         if (error.errorInfo?.code === 'messaging/registration-token-not-registered') {
+            console.log(`[Push] Token not registered. Cleaning up...`);
             if (userId) {
                 await User.findByIdAndUpdate(userId, { 
                     $pull: { fcmTokens: { token: fcmToken } } 
