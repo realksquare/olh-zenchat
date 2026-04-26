@@ -30,7 +30,7 @@ router.post("/", protect, async (req, res) => {
         io.to(req.user._id.toString()).emit("new_moment", populated);
         
         // Emit to each online contact and send push notification
-        const notificationTitle = `#moment. from ${user.username}`;
+        const notificationTitle = `${user.username} has shared a #moment.!`;
         let notificationBody = "";
         if (type === "music") notificationBody = `vibe. ${music.title}`;
         else if (content) notificationBody = content;
@@ -47,7 +47,7 @@ router.post("/", protect, async (req, res) => {
                         sendPushNotification(cid, t.token, notificationTitle, notificationBody, {
                             icon: user.avatar || "/logo192.png",
                             click_action: "https://olh-zenchat.vercel.app/?tab=moments",
-                            tag: "moment-upload"
+                            tag: `moment-upload-${user._id.toString()}`
                         });
                     });
                 }
