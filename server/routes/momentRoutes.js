@@ -15,25 +15,25 @@ router.post("/", protect, async (req, res) => {
             mediaUrl,
             music
         });
-        
+
         const populated = await Moment.findById(moment._id).populate("userId", "username avatar fullName");
-        
+
         console.log(`[moments] New moment shared by ${req.user.username} (${req.user._id}). Type: ${type}`);
-        
+
         const io = req.app.get("io");
         const user = await User.findById(req.user._id).select("contacts username fullName avatar");
         const contactIds = user.contacts.map(c => c.userId.toString());
-        
+
         // Emit to the user themselves
         io.to(req.user._id.toString()).emit("new_moment", populated);
-        
+
         // Emit to each online contact and send push notification
         const notificationTitle = `${user.username} has shared a #moment.!`;
         const notificationBody = ""; // Simplified as requested
 
         contactIds.forEach(async (cid) => {
             io.to(cid).emit("new_moment", populated);
-            
+
             // Send Push Notif to contacts
             try {
                 console.log(`[moments] Sending push to ${cid}. Title: "${notificationTitle}", Body: "${notificationBody}"`);
@@ -62,9 +62,11 @@ router.post("/", protect, async (req, res) => {
 router.get("/", protect, async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
         const contactIds = user.contacts.map(c => c.userId);
-        
-        // Find moments from self (all) OR contacts (if not viewed by me)
+        console.log(`[moments] ${user.username} fetching. Contacts found: ${contactIds.length}`);
+
         const moments = await Moment.find({
             $or: [
                 { userId: req.user._id },
@@ -74,6 +76,7 @@ router.get("/", protect, async (req, res) => {
         .populate("userId", "username avatar fullName")
         .sort({ createdAt: -1 });
 
+        console.log(`[moments] Returning ${moments.length} moments for ${user.username}`);
         res.json(moments);
     } catch (err) {
         console.error(`[moments] Fetch error:`, err);
@@ -98,7 +101,7 @@ router.delete("/:id", protect, async (req, res) => {
     try {
         const moment = await Moment.findById(req.params.id);
         if (!moment) return res.status(404).json({ message: "Moment not found" });
-        
+
         if (moment.userId.toString() !== req.user._id.toString()) {
             return res.status(401).json({ message: "Not authorized" });
         }
