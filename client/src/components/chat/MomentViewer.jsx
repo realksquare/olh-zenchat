@@ -4,7 +4,7 @@ import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
 import { formatDistanceToNow } from "date-fns";
 
-const MomentViewer = ({ moments, isOpen, onClose }) => {
+const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isMuted, setIsMuted] = useState(false);
     const [timeLeft, setTimeLeft] = useState(10);
@@ -13,10 +13,31 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
     const [showMusicInfo, setShowMusicInfo] = useState(false);
     const audioRef = useRef(null);
     const videoRef = useRef(null);
+    
+    // Make the viewer reactive by pulling the latest moments for this user
+    const allMoments = useMomentStore((s) => s.moments);
     const { viewMoment, deleteMoment, getHaloColor } = useMomentStore();
     const { user: currentUser } = useAuthStore();
 
+    const moments = useMemo(() => {
+        if (!initialMoments || initialMoments.length === 0) return [];
+        const targetUserId = initialMoments[0].userId?._id || initialMoments[0].userId;
+        return allMoments.filter(m => (m.userId?._id || m.userId) === targetUserId);
+    }, [allMoments, initialMoments]);
+
     const currentMoment = moments[currentIndex];
+
+    // Handle array shrinking (deletion)
+    useEffect(() => {
+        if (isOpen) {
+            if (moments.length === 0) {
+                onClose();
+            } else if (currentIndex >= moments.length) {
+                setCurrentIndex(moments.length - 1);
+            }
+        }
+    }, [moments.length, isOpen, currentIndex, onClose]);
+
 
     const stopAudio = () => {
         if (audioRef.current) {
@@ -32,7 +53,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
         }
         const interval = setInterval(() => {
             setShowMusicInfo(prev => !prev);
-        }, 3000);
+        }, 5000);
         return () => clearInterval(interval);
     }, [isOpen, currentIndex, currentMoment?.music]);
 
@@ -40,11 +61,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
         if (e) e.stopPropagation();
         await deleteMoment(currentMoment._id);
         setShowDeleteConfirm(false);
-        if (moments.length === 1) {
-            handleClose();
-        } else {
-            handleNext();
-        }
+        // The useEffect will automatically handle out-of-bounds or closing the viewer.
     };
 
 
@@ -138,7 +155,7 @@ const MomentViewer = ({ moments, isOpen, onClose }) => {
     } : {};
 
     const songMetadata = currentMoment.music ? `${currentMoment.music.title} • ${currentMoment.music.artist}` : "";
-    const isLongMetadata = songMetadata.length > 25;
+    const isLongMetadata = songMetadata.length > 20;
 
     return createPortal(
         <div className={`modal-overlay moments-aura-viewer-overlay ${isClosing ? 'fading-out' : ''}`}>

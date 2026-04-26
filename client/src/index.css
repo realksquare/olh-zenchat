@@ -3697,7 +3697,7 @@ select {
 .marquee-text {
   display: inline-block;
   white-space: nowrap;
-  animation: marquee 8s linear infinite;
+  animation: marquee 5s linear infinite;
 }
 
 @keyframes marquee {

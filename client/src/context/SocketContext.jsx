@@ -108,8 +108,11 @@ export const SocketProvider = ({ children }) => {
             }
         };
 
-        const handleMomentDeleted = ({ momentId }) => {
-            useMomentStore.getState().removeMoment(momentId);
+        const handleMomentDeleted = (payload) => {
+            const momentId = payload?.momentId || payload?._id || payload?.id || (typeof payload === 'string' ? payload : null);
+            if (momentId) {
+                useMomentStore.getState().removeMoment(momentId);
+            }
         };
 
         socket.on("connect", () => {
