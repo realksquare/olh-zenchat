@@ -39,7 +39,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         liveChat.lastMessage?.senderId?._id !== user?._id;
     const isLastMessageUnread = isLastMessageFromThem && 
         liveChat.lastMessage?.status !== "read" && 
-        !liveChat.lastMessage?.deletedForEveryone;
+        !liveChat.lastMessage?.deletedForEveryone &&
+        (liveChat.lastMessage?.content || liveChat.lastMessage?.mediaUrl || liveChat.lastMessage?.music);
     const hasUnread = unreadCount > 0 || isLastMessageUnread;
     const displayUnreadCount = unreadCount > 0 ? unreadCount : (isLastMessageUnread ? 1 : 0);
 

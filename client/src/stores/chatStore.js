@@ -102,10 +102,28 @@ export const useChatStore = create(
                     const { data } = await axiosInstance.get(`/messages/${chatId}`);
                     data.messages.forEach(msg => persistMessage({ ...msg, chatId }));
                     
-                    set((state) => ({
-                        messages: { ...state.messages, [chatId]: data.messages },
-                        isLoadingMessages: false,
-                    }));
+                    set((state) => {
+                        const messages = data.messages;
+                        const unreadCounts = { ...state.unreadCounts };
+                        
+                        // If all messages are ghosted or read, zero it out
+                        const hasRealUnread = messages.some(m => 
+                            m.senderId?.toString() !== user?._id && 
+                            m.status !== "read" && 
+                            !m.deletedForEveryone &&
+                            (m.content || m.mediaUrl || m.music)
+                        );
+                        
+                        if (!hasRealUnread) {
+                            unreadCounts[chatId] = 0;
+                        }
+
+                        return {
+                            messages: { ...state.messages, [chatId]: messages },
+                            unreadCounts,
+                            isLoadingMessages: false,
+                        };
+                    });
                 } catch (_) {
                     set({ isLoadingMessages: false });
                 }

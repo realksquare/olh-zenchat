@@ -117,6 +117,15 @@ export const SocketProvider = ({ children }) => {
             if (activeChat?._id) socket.emit("join_chat", { chatId: activeChat._id });
         });
 
+        socket.on("online_users", ({ userIds }) => {
+            if (Array.isArray(userIds)) {
+                userIds.forEach(id => {
+                    useChatStore.getState().setUserOnline(id);
+                    useChatStore.getState().updateParticipantStatus(id, true, null);
+                });
+            }
+        });
+
         socket.on("receive_message", handleReceiveMessage);
         socket.on("message_delivered", handleMessageDelivered);
         socket.on("messages_read", handleMessagesRead);
