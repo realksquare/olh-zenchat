@@ -34,9 +34,14 @@ export const useMomentStore = create((set, get) => ({
     viewMoment: async (momentId, userId) => {
         try {
             await axiosInstance.post(`/moments/${momentId}/view`);
-            // We just mark it as viewed on server.
-            // We don't filter locally while viewing to avoid UI disappearance.
-            // Fresh fetch on reload or tab change will handle the cleanup.
+            // Remove from local store after viewing
+            set((state) => ({
+                moments: state.moments.filter(m => {
+                    const isOwn = (m.userId?._id || m.userId) === userId;
+                    if (isOwn) return true;
+                    return m._id !== momentId;
+                })
+            }));
         } catch (err) {
             console.error("Failed to view moment:", err);
         }

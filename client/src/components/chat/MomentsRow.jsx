@@ -16,7 +16,7 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
                 groups[uid] = {
                     user: m.userId,
                     moments: [],
-                    color: getHaloColor(uid)
+                    color: getHaloColor(uid, user?._id)
                 };
             }
             groups[uid].moments.push(m);
@@ -28,7 +28,7 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
         moments.filter(m => (m.userId?._id || m.userId) === user?._id)
     , [moments, user?._id]);
 
-    const myColor = useMemo(() => user?._id ? getHaloColor(user._id) : "#3b82f6", [user?._id, getHaloColor]);
+    const myColor = useMemo(() => user?._id ? getHaloColor(user._id, user._id) : "#082f49", [user?._id, getHaloColor]);
 
     return (
         <div className="moments-row-container">
