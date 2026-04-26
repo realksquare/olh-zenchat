@@ -21,8 +21,12 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
 
     const moments = useMemo(() => {
         if (!initialMoments || initialMoments.length === 0) return [];
-        const targetUserId = initialMoments[0].userId?._id || initialMoments[0].userId;
-        return allMoments.filter(m => (m.userId?._id || m.userId) === targetUserId);
+        // Cast to string to avoid object comparison issues
+        const targetUserId = (initialMoments[0].userId?._id || initialMoments[0].userId)?.toString();
+        if (!targetUserId) return initialMoments; // Fallback to initial if ID extraction fails
+        
+        const filtered = allMoments.filter(m => (m.userId?._id || m.userId)?.toString() === targetUserId);
+        return filtered.length > 0 ? filtered : initialMoments;
     }, [allMoments, initialMoments]);
 
     const currentMoment = moments[currentIndex];
@@ -30,13 +34,15 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     // Handle array shrinking (deletion)
     useEffect(() => {
         if (isOpen) {
-            if (moments.length === 0) {
+            // Only close if we had moments and they were all removed
+            // We check allMoments.length to ensure we don't close prematurely during sync
+            if (moments.length === 0 && allMoments.length > 0) {
                 onClose();
-            } else if (currentIndex >= moments.length) {
+            } else if (currentIndex >= moments.length && moments.length > 0) {
                 setCurrentIndex(moments.length - 1);
             }
         }
-    }, [moments.length, isOpen, currentIndex, onClose]);
+    }, [moments.length, allMoments.length, isOpen, currentIndex, onClose]);
 
 
     const stopAudio = () => {
@@ -208,6 +214,15 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                     </div>
 
                     <div className="aura-viewer-actions">
+                        {isOwn && (
+                            <div className="aura-view-counter" title="Views">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <span>{currentMoment.views?.length || 0}</span>
+                            </div>
+                        )}
                         {isOwn && (
                             <button className="aura-trash-btn" onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }} title="Let go." style={{ zIndex: 100 }}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>

@@ -3735,6 +3735,44 @@ select {
 .aura-trash-btn:hover {
   color: #ef4444;
 }
+  
+.aura-view-counter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  padding: 4px 10px;
+  border-radius: 100px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.aura-view-counter svg {
+  opacity: 0.7;
+}
+
+  
+.aura-view-counter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  padding: 4px 10px;
+  border-radius: 100px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.aura-view-counter svg {
+  opacity: 0.7;
+}
+
 
 .aura-progress-fill.active {
   width: 100%;
@@ -3754,8 +3792,10 @@ select {
   justify-content: center;
   gap: 12px;
   width: 100%;
-  padding-top: 150px;
+  height: 100%;
+  padding-top: 50px; /* Offset to push it lower towards the center of the area below header */
 }
+
 
 .focus-art {
   width: 160px;

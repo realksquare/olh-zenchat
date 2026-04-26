@@ -31,50 +31,52 @@ const App = () => {
   const { socket } = useSocket();
   const [serverReady, setServerReady] = useState(false);
 
-  useEffect(() => {
-    checkAuth();
-    if (token) {
-        initLocalData();
-        fetchChats();
-        useMomentStore.getState().fetchMoments();
-    }
-    const checkHealth = async () => {
-      try {
-        await axiosInstance.get("/messages/health");
-        setServerReady(true);
-      } catch (err) {
-        setTimeout(checkHealth, 2000);
-      }
-    };
-    checkHealth();
-
-    const prime = () => { primeAudioContext(); };
-    window.addEventListener('touchstart', prime, { once: true });
-    window.addEventListener('mousedown', prime, { once: true });
-
-    if (token && user) {
-      const registerFCM = async () => {
-        if (Notification.permission !== "granted") return;
-        
-        const fcmToken = await requestNotificationPermission();
-        if (fcmToken) {
+    useEffect(() => {
+      if (token && user) {
+        const registerFCM = async () => {
           try {
-            const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-            await axiosInstance.put("/auth/me", { 
-              fcmToken,
-              deviceType: isPWA ? "pwa" : "browser",
-              notificationsEnabled: true
-            });
+            if (Notification.permission !== "granted") return;
+            const fcmToken = await requestNotificationPermission();
+            if (fcmToken) {
+              const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+              await axiosInstance.put("/auth/me", { 
+                fcmToken,
+                deviceType: isPWA ? "pwa" : "browser",
+                notificationsEnabled: true
+              });
+            }
           } catch (err) {
-            console.error(err);
+            console.error("FCM registration error:", err);
           }
+        };
+        registerFCM();
+      }
+    }, [token, user?._id]);
+
+    useEffect(() => {
+      checkAuth();
+      if (token) {
+          initLocalData();
+          fetchChats();
+          useMomentStore.getState().fetchMoments();
+      }
+      const checkHealth = async () => {
+        try {
+          await axiosInstance.get("/messages/health");
+          setServerReady(true);
+        } catch (err) {
+          setTimeout(checkHealth, 2000);
         }
       };
-      registerFCM();
-    }
+      checkHealth();
+  
+      const prime = () => { primeAudioContext(); };
+      window.addEventListener('touchstart', prime, { once: true });
+      window.addEventListener('mousedown', prime, { once: true });
+  
+      return () => { };
+    }, [token, user?._id, socket]);
 
-    return () => { };
-  }, [token, user?._id, socket]);
 
   return (
     <>
