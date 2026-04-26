@@ -3760,13 +3760,19 @@ select {
 .fade-in { opacity: 1; transform: translateY(0); pointer-events: auto; }
 .fade-out { opacity: 0; transform: translateY(5px); pointer-events: none; }
 
+.aura-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .aura-viewer-actions {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
-.aura-speaker-btn, .aura-trash-btn {
+.aura-speaker-btn, .aura-trash-btn, .aura-viewer-close {
   background: none;
   border: none;
   color: #fff;
@@ -3776,9 +3782,10 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 8px;
 }
 
-.aura-speaker-btn:hover, .aura-trash-btn:hover { 
+.aura-speaker-btn:hover, .aura-trash-btn:hover, .aura-viewer-close:hover { 
   opacity: 1;
   transform: scale(1.1);
 }

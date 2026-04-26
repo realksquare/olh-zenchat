@@ -36,13 +36,8 @@ export const useMomentStore = create((set, get) => ({
     viewMoment: async (momentId, userId) => {
         try {
             await axiosInstance.post(`/moments/${momentId}/view`);
-            // Remove from local store after viewing
             set((state) => ({
-                moments: state.moments.filter(m => {
-                    const isOwn = (m.userId?._id || m.userId) === userId;
-                    if (isOwn) return true;
-                    return m._id !== momentId;
-                })
+                moments: state.moments.map(m => m._id === momentId ? { ...m, viewed: true } : m)
             }));
         } catch (err) {
         }
