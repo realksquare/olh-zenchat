@@ -174,11 +174,18 @@ router.put(
             }
 
             if (req.file && req.file.path) {
-                const result = await cloudinary.uploader.upload(req.file.path, {
-                    folder: "zenchat_avatars",
-                    resource_type: "image"
-                });
-                user.avatar = result.secure_url;
+                console.log("[Auth] Uploading avatar to Cloudinary:", req.file.path);
+                try {
+                    const result = await cloudinary.uploader.upload(req.file.path, {
+                        folder: "zenchat_avatars",
+                        resource_type: "image"
+                    });
+                    console.log("[Auth] Cloudinary upload success:", result.secure_url);
+                    user.avatar = result.secure_url;
+                } catch (cloudErr) {
+                    console.error("[Auth] Cloudinary upload failed:", cloudErr);
+                    throw cloudErr; // Re-throw to be caught by catch(err)
+                }
             } else if (req.body.clearAvatar === 'true' || req.body.clearAvatar === true) {
                 user.avatar = "";
             }
@@ -197,7 +204,8 @@ router.put(
             await user.save();
             res.json({ user: user.toPrivateJSON() });
         } catch (err) {
-            res.status(500).json({ message: "Server error" });
+            console.error("[Auth] Update failed:", err);
+            res.status(500).json({ message: "Server error", error: err.message });
         }
     }
 );
