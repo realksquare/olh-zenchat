@@ -10,7 +10,8 @@ export const useMomentStore = create((set, get) => ({
         set({ isLoading: true });
         try {
             const res = await axiosInstance.get("/moments");
-            set({ moments: res.data, isLoading: false });
+            const moments = Array.isArray(res.data) ? res.data : (res.data.moments || []);
+            set({ moments, isLoading: false });
         } catch (err) {
             set({ error: "Failed to fetch moments", isLoading: false });
         }
@@ -20,11 +21,12 @@ export const useMomentStore = create((set, get) => ({
         set({ isLoading: true });
         try {
             const res = await axiosInstance.post("/moments", momentData);
+            const newMoment = res.data.moment || res.data;
             set((state) => ({ 
-                moments: [res.data, ...state.moments],
+                moments: [newMoment, ...state.moments],
                 isLoading: false 
             }));
-            return { success: true, moment: res.data };
+            return { success: true, moment: newMoment };
         } catch (err) {
             set({ error: "Failed to create moment", isLoading: false });
             return { success: false, message: err.response?.data?.message || "Error" };

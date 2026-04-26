@@ -1013,8 +1013,9 @@ select {
   box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
 }
 
-.message-bubble.mine.status-seen {
-  background: #10b981; /* Green for seen */
+.message-bubble.mine.status-seen,
+.message-bubble.mine.status-read {
+  background: #10b981; /* Green for seen/read */
   color: #fff;
   box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
 }

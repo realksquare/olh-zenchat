@@ -38,6 +38,11 @@ const Sidebar = ({ onChatSelect }) => {
     const [isMomentCreatorOpen, setIsMomentCreatorOpen] = useState(false);
     const [activeViewerMoments, setActiveViewerMoments] = useState(null);
     const [activeTab, setActiveTab] = useState("recents");
+    const { fetchMoments } = useMomentStore();
+    
+    useEffect(() => {
+        fetchMoments();
+    }, [fetchMoments]);
     
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
