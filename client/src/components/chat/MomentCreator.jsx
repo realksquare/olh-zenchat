@@ -29,7 +29,6 @@ const MomentCreator = ({ isOpen, onClose }) => {
         setTimeout(() => setToast(null), 5000);
     };
 
-    // Live Audio Preview Logic
     useEffect(() => {
         if (isOpen && music && music.previewUrl) {
             if (!audioRef.current) {
@@ -99,10 +98,10 @@ const MomentCreator = ({ isOpen, onClose }) => {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
             streamRef.current = stream;
             setCameraState("active");
-            showToast("Camera breath granted. ✨");
+            showToast("Lens opened. ✨");
         } catch (err) {
             setCameraState("closed");
-            showToast("Camera breath denied. 🌪️");
+            showToast("Lens access denied. 🌪️");
         }
     };
 
@@ -137,7 +136,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
             video.onloadedmetadata = () => {
                 window.URL.revokeObjectURL(video.src);
                 if (video.duration > 60) {
-                    showToast("Video too long! 60s limit. 🌪️");
+                    showToast("Thought too long! 60s limit. 🌪️");
                     e.target.value = "";
                 } else {
                     setMedia(file);
@@ -157,7 +156,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
         if (!content && !media && !music) return;
         const ownMomentsCount = moments.filter(m => (m.userId?._id || m.userId) === user?._id).length;
         if (ownMomentsCount >= 5) {
-            showToast("Slow down... only 5 exhales per cycle allowed. 🌪️");
+            showToast("Slow down... only 5 #moments. per cycle. 🌪️");
             return;
         }
         setIsUploading(true);
@@ -177,7 +176,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 type = data.resource_type === "video" ? "video" : "image";
             } else if (music) type = "music";
             await createMoment({ type, content, mediaUrl, music: music ? { ...music, duration, startTime } : null });
-            showToast("Moment exhaled successfully. ✨");
+            showToast("Living the #moment. ✨");
             setTimeout(() => { 
                 onClose(); 
                 setContent(""); setMedia(null); setPreviewUrl(null); setMusic(null); setStartTime(0);
@@ -201,7 +200,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
             <div className="modal-overlay moments-aura-overlay" onClick={handleClose}>
                 <div className="moments-aura-content" onClick={(e) => e.stopPropagation()}>
                     <div className="moments-aura-header">
-                        <h2 className="moments-aura-title">#Moments.</h2>
+                        <h2 className="moments-aura-title">#moments.</h2>
                         <button className="aura-close-btn" onClick={handleClose}>
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -245,7 +244,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                     </svg>
                                 </div>
                                 <div className="aura-placeholder-text">
-                                    <p>Add Media (optional)</p>
+                                    <p>Share your lens (optional)</p>
                                     <span>Images (max 3mb), Videos (max 7mb, 60s)</span>
                                 </div>
                             </div>
@@ -253,7 +252,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                     </div>
 
                     <div className="aura-input-section">
-                        <textarea className="aura-textarea" placeholder="What's your current vibe?" value={content} onChange={(e) => setContent(e.target.value)} maxLength={150} />
+                        <textarea className="aura-textarea" placeholder="Share your thoughts..." value={content} onChange={(e) => setContent(e.target.value)} maxLength={150} />
                         
                         {music && (
                             <div className="aura-music-cropper">
@@ -271,12 +270,11 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                     <select value={duration} onChange={(e) => { 
                                         const newDur = Number(e.target.value);
                                         setDuration(newDur);
-                                        // Auto-adjust start if end would exceed 30s
                                         if (startTime + newDur > 30) setStartTime(30 - newDur);
                                     }} className="aura-duration-select">
-                                        <option value={18}>18s</option>
-                                        <option value={24}>24s</option>
-                                        <option value={30}>30s</option>
+                                        <option value={18}>18s vibe</option>
+                                        <option value={24}>24s vibe</option>
+                                        <option value={30}>30s vibe</option>
                                     </select>
                                     <button className="aura-remove-music" onClick={() => { setMusic(null); setIsPlaying(false); }}>
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
@@ -306,33 +304,33 @@ const MomentCreator = ({ isOpen, onClose }) => {
                         
                         <div className="aura-actions">
                             <div className="aura-tools">
-                                <button className="aura-tool-btn" onClick={() => setIsMusicSearchOpen(!isMusicSearchOpen)}>
+                                <button className="aura-tool-btn" onClick={() => setIsMusicSearchOpen(!isMusicSearchOpen)} title="vibe.">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
                                 </button>
-                                <button className="aura-tool-btn" onClick={() => setCameraState("permission")}>
+                                <button className="aura-tool-btn" onClick={() => setCameraState("permission")} title="lens.">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg>
                                 </button>
                                 <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*,video/*" onChange={handleFileSelect} />
                             </div>
                             <button className="aura-share-btn" onClick={handleShare} disabled={isUploading || (!content && !media && !music)}>
-                                {isUploading ? <div className="aura-loader"></div> : <><span>Share One-Breath</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg></>}
+                                {isUploading ? <div className="aura-loader"></div> : <><span>Live the #moment.</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg></>}
                             </button>
                         </div>
 
                         {cameraState === "permission" && (
                             <div className="aura-permission-popup">
-                                <h3>Zen-Camera Access</h3>
-                                <p>Allow ZenChat to capture a moment through your lens?</p>
+                                <h3>Open your lens?</h3>
+                                <p>Allow ZenChat to capture a #moment. through your eyes?</p>
                                 <div className="permission-actions">
-                                    <button className="allow-btn" onClick={startCamera}>Allow Access</button>
-                                    <button className="deny-btn" onClick={() => { stopCamera(); showToast("Camera breath denied. 🌪️"); }}>Deny</button>
+                                    <button className="allow-btn" onClick={startCamera}>Open</button>
+                                    <button className="deny-btn" onClick={() => { stopCamera(); showToast("Lens closed. 🌪️"); }}>Close</button>
                                 </div>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
-            {toast && <div className="aura-toast">{toast.includes("granted") || toast.includes("successfully") ? "✨" : "🌪️"} {toast}</div>}
+            {toast && <div className="aura-toast">{toast.includes("denied") || toast.includes("lost") ? "🌪️" : "✨"} {toast}</div>}
         </>,
         document.body
     );
