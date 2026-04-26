@@ -3,7 +3,7 @@ const router = express.Router();
 const Moment = require("../models/Moment");
 const User = require("../models/User");
 const protect = require("../middleware/auth");
-const { sendPushNotification } = require("../utils/firebaseAdmin");
+const { sendPushNotification } = require("../utils/firebase");
 
 // @route   POST /api/moments
 // @desc    Create a new moment
@@ -44,9 +44,7 @@ router.post("/", protect, async (req, res) => {
                 const contact = await User.findById(cid).select("fcmTokens");
                 if (contact && contact.fcmTokens?.length > 0) {
                     contact.fcmTokens.forEach(t => {
-                        sendPushNotification(t.token, {
-                            title: notificationTitle,
-                            body: notificationBody,
+                        sendPushNotification(cid, t.token, notificationTitle, notificationBody, {
                             icon: user.avatar || "/logo192.png",
                             click_action: "https://olh-zenchat.vercel.app/?tab=moments",
                             tag: "moment-upload"
