@@ -11,6 +11,7 @@ import FAQModal from "../ui/FAQModal";
 import MomentsRow from "./MomentsRow";
 import MomentCreator from "./MomentCreator";
 import MomentViewer from "./MomentViewer";
+import { useMomentStore } from "../../stores/momentStore";
 import { VerifiedTick, AdminIcon, HelpIcon } from "../ui/Icons";
 
 const Sidebar = ({ onChatSelect }) => {
