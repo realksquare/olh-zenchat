@@ -12,6 +12,32 @@ const ACCEPTED_VIDEO = ["video/mp4", "video/quicktime", "video/webm", "video/mpe
 const ACCEPTED_ALL = [...ACCEPTED_IMAGE, ...ACCEPTED_VIDEO];
 const MAX_FILES = 3;
 
+const compressImage = (file, targetKB = 300) => new Promise((resolve) => {
+    if (!ACCEPTED_IMAGE.includes(file.type) || file.type === "image/gif") return resolve(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            let quality = 0.85;
+            let scale = 1;
+            const targetBytes = targetKB * 1024;
+            if (file.size > targetBytes * 3) scale = 0.6;
+            else if (file.size > targetBytes) scale = 0.8;
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(
+                (blob) => resolve(blob && blob.size < file.size ? new File([blob], file.name, { type: "image/jpeg" }) : file),
+                "image/jpeg",
+                quality
+            );
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
 const VULGAR_WORDS = ["offensive", "vulgar", "badword1", "badword2"];
 
 const formatFileSize = (bytes) => {
@@ -252,8 +278,9 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     createdAt: new Date().toISOString()
                 });
 
+                const fileToUpload = isVideo ? file : await compressImage(file);
                 const formData = new FormData();
-                formData.append("file", file);
+                formData.append("file", fileToUpload);
                 formData.append("upload_preset", uploadPreset);
 
                 const res = await axios.post(

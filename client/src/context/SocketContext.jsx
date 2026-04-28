@@ -4,6 +4,7 @@ import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { playReceiveSound } from "../utils/audio";
 import { useMomentStore } from "../stores/momentStore";
+import { enqueueOutbox, drainOutbox } from "../db/zenDB";
 
 const SocketContext = createContext(null);
 
@@ -24,8 +25,11 @@ export const SocketProvider = ({ children }) => {
                 deviceType: isPWA ? "pwa" : "browser"
             },
             extraHeaders: { Authorization: `Bearer ${token}` },
-            reconnectionAttempts: 5,
-            reconnectionDelay: 2000,
+            reconnectionAttempts: Infinity,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 30000,
+            randomizationFactor: 0.5,
+            timeout: 20000,
             transports: ["websocket", "polling"],
         });
 
@@ -115,9 +119,17 @@ export const SocketProvider = ({ children }) => {
             }
         };
 
-        socket.on("connect", () => {
+        socket.on("connect", async () => {
             const activeChat = useChatStore.getState().activeChat;
-            if (activeChat?._id) socket.emit("join_chat", { chatId: activeChat._id });
+            if (activeChat?._id) {
+                socket.emit("join_chat", { chatId: activeChat._id });
+                useChatStore.getState().fetchMessages(activeChat._id);
+            }
+            useChatStore.getState().fetchChats();
+            const queued = await drainOutbox();
+            queued.forEach(({ id: _id, createdAt: _ts, ...payload }) => {
+                socket.emit("send_message", payload);
+            });
         });
 
         socket.on("online_users", ({ userIds }) => {
@@ -167,29 +179,26 @@ export const SocketProvider = ({ children }) => {
         socketRef.current?.emit("leave_chat", { chatId });
     }, []);
 
-    const offlineQueueRef = useRef([]);
+    const flushOutbox = useCallback(async () => {
+        if (!socketRef.current?.connected) return;
+        const queued = await drainOutbox();
+        queued.forEach(({ id: _id, createdAt: _ts, ...payload }) => {
+            socketRef.current.emit("send_message", payload);
+        });
+    }, []);
 
     useEffect(() => {
-        const handleOnline = () => {
-            if (offlineQueueRef.current.length > 0 && socketRef.current?.connected) {
-                while (offlineQueueRef.current.length > 0) {
-                    const msg = offlineQueueRef.current.shift();
-                    socketRef.current.emit("send_message", msg);
-                }
-            }
-        };
-
+        const handleOnline = () => flushOutbox();
         window.addEventListener("online", handleOnline);
         return () => window.removeEventListener("online", handleOnline);
-    }, []);
+    }, [flushOutbox]);
 
     const sendMessage = useCallback((chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null) => {
         const payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid };
-        
         if (socketRef.current?.connected && navigator.onLine) {
             socketRef.current.emit("send_message", payload);
         } else {
-            offlineQueueRef.current.push(payload);
+            enqueueOutbox(payload);
         }
     }, []);
 
