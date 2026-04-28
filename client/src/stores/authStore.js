@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import axiosInstance from "../utils/axios";
 import { db } from "../db/zenDB";
+import { initE2E, getMyPublicKeyJwk } from "../utils/crypto";
 
 const TOKEN_KEY = "zenchat_token";
 const USER_KEY = "zenchat_user";
@@ -30,6 +31,10 @@ export const useAuthStore = create(
                 await db.settings.put({ key: "apiUrl", value: import.meta.env.VITE_API_URL || "" });
             }
             set({ token: data.token, user: data.user, isLoading: false });
+            initE2E().then(() => {
+                const pk = getMyPublicKeyJwk();
+                if (pk) axiosInstance.put("/auth/me", { publicKey: JSON.stringify(pk) }).catch(() => {});
+            });
             return { success: true };
         } catch (err) {
             const message = err.response?.data?.message || "Registration failed";
@@ -49,6 +54,10 @@ export const useAuthStore = create(
                 await db.settings.put({ key: "apiUrl", value: import.meta.env.VITE_API_URL || "" });
             }
             set({ token: data.token, user: data.user, isLoading: false });
+            initE2E().then(() => {
+                const pk = getMyPublicKeyJwk();
+                if (pk) axiosInstance.put("/auth/me", { publicKey: JSON.stringify(pk) }).catch(() => {});
+            });
             return { success: true };
         } catch (err) {
             const message = err.response?.data?.message || "Login failed";
@@ -82,6 +91,10 @@ export const useAuthStore = create(
                 await db.settings.put({ key: "apiUrl", value: import.meta.env.VITE_API_URL || "" });
             }
             set({ user: data.user, token });
+            initE2E().then(() => {
+                const pk = getMyPublicKeyJwk();
+                if (pk) axiosInstance.put("/auth/me", { publicKey: JSON.stringify(pk) }).catch(() => {});
+            });
         } catch (err) {
             console.error("Auth check failed:", err);
             if (err.response?.status === 401) {

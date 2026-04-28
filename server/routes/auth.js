@@ -199,6 +199,13 @@ router.put(
                 user.privacySettings = { ...user.privacySettings, ...settings };
             }
 
+            if (req.body.publicKey !== undefined) {
+                const pk = typeof req.body.publicKey === 'string'
+                    ? JSON.parse(req.body.publicKey)
+                    : req.body.publicKey;
+                user.publicKey = pk;
+            }
+
             await user.save();
             res.json({ user: user.toPrivateJSON() });
         } catch (err) {
@@ -236,6 +243,17 @@ router.delete("/contacts/:targetId", authMiddleware, async (req, res) => {
         me.contacts = me.contacts.filter(c => c.userId?.toString() !== targetId);
         await me.save();
         res.json({ user: me.toPrivateJSON() });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
+router.get("/public-key/:userId", authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId).select("publicKey");
+        if (!user) return res.status(404).json({ message: "User not found" });
+        res.json({ publicKey: user.publicKey || null });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }

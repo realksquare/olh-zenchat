@@ -5,6 +5,7 @@ import { useChatStore } from "../stores/chatStore";
 import { playReceiveSound } from "../utils/audio";
 import { useMomentStore } from "../stores/momentStore";
 import { enqueueOutbox, drainOutbox } from "../db/zenDB";
+import { isEncrypted, encryptMessage, decryptMessage, getSharedKey } from "../utils/crypto";
 
 const SocketContext = createContext(null);
 
@@ -43,6 +44,20 @@ export const SocketProvider = ({ children }) => {
         const handleReceiveMessage = async ({ message }) => {
             if (message.mediaUrl) {
                 message.mediaUrl = getThumbnailUrl(message.mediaUrl);
+            }
+
+            if (message.content && isEncrypted(message.content)) {
+                const senderId = message.senderId?._id?.toString() || message.senderId?.toString();
+                if (senderId) {
+                    const aesKey = await getSharedKey(senderId);
+                    if (aesKey) {
+                        const plain = await decryptMessage(message.content, aesKey);
+                        message.content = plain !== null ? plain : "🔒 Encrypted message";
+                    } else {
+                        message.content = "🔒 Encrypted message";
+                    }
+                    message.wasEncrypted = true;
+                }
             }
 
             const existingChat = useChatStore.getState().chats.find(
@@ -193,8 +208,21 @@ export const SocketProvider = ({ children }) => {
         return () => window.removeEventListener("online", handleOnline);
     }, [flushOutbox]);
 
-    const sendMessage = useCallback((chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null) => {
-        const payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid };
+    const sendMessage = useCallback(async (chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null) => {
+        let finalContent = content;
+        if (type === "text" && content) {
+            const activeChat = useChatStore.getState().activeChat;
+            const currentUserId = useAuthStore.getState().user?._id;
+            const peer = activeChat?.participants?.find(
+                (p) => (p._id?.toString() || p.toString()) !== currentUserId?.toString()
+            );
+            const peerId = peer?._id?.toString() || peer?.toString();
+            if (peerId) {
+                const aesKey = await getSharedKey(peerId);
+                if (aesKey) finalContent = await encryptMessage(content, aesKey);
+            }
+        }
+        const payload = { chatId, content: finalContent, type, mediaUrl, replyTo, isViewOnce, cid };
         if (socketRef.current?.connected && navigator.onLine) {
             socketRef.current.emit("send_message", payload);
         } else {

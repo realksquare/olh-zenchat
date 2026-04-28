@@ -15,6 +15,14 @@ db.version(3).stores({
     outbox: "++id, chatId, createdAt",
 });
 
+db.version(4).stores({
+    chats: "_id, updatedAt, lastMessage._id",
+    messages: "_id, chatId, createdAt, senderId",
+    settings: "key",
+    outbox: "++id, chatId, createdAt",
+    keys: "id",
+});
+
 export const persistChat = async (chat) => {
     try {
         await db.chats.put(chat);

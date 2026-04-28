@@ -261,12 +261,15 @@ const registerSocketHandlers = (io) => {
                             const unreadCount = unreadMessages.length;
                             const hasMedia = unreadMessages.some(m => m.type === 'image' || m.type === 'video');
                             const hasText = unreadMessages.some(m => m.type === 'text');
+                            const allEncrypted = unreadMessages.filter(m => m.type === 'text').every(m => m.content?.startsWith('{"v":1,'));
 
                             const notifSenderName = senderIsContact ? `${senderName} ✨` : senderName;
                             const title = "ZenChat";
                             let body = `New message from ${notifSenderName}!`;
 
-                            if (unreadCount === 1) {
+                            if (allEncrypted && !hasMedia) {
+                                body = `${unreadCount > 1 ? `${unreadCount} new` : 'New'} encrypted ${unreadCount > 1 ? 'messages' : 'message'} from ${notifSenderName}`;
+                            } else if (unreadCount === 1) {
                                 body = hasMedia ? `1 new media from ${notifSenderName}!` : `1 new message from ${notifSenderName}!`;
                             } else if (unreadCount > 1) {
                                 if (hasMedia && hasText) {
@@ -277,6 +280,7 @@ const registerSocketHandlers = (io) => {
                                     body = `${unreadCount} new messages from ${notifSenderName}!`;
                                 }
                             }
+
 
                             const pwaTokens = tokens.filter(t => t.deviceType === 'pwa');
                             const browserTokens = tokens.filter(t => t.deviceType === 'browser');

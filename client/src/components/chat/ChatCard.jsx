@@ -3,6 +3,7 @@ import { useChatStore } from "../../stores/chatStore";
 import { useAuthStore } from "../../stores/authStore";
 import { formatDistanceToNow } from "date-fns";
 import { useMomentStore } from "../../stores/momentStore";
+import { isEncrypted } from "../../utils/crypto";
 import { VerifiedTick } from "../ui/Icons";
 import axiosInstance from "../../utils/axios";
 
@@ -52,7 +53,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         }
         if (hasUnread) {
             if (displayUnreadCount === 1 && liveChat.lastMessage?.content) {
-                return { text: liveChat.lastMessage.content, isUnread: true };
+                const raw = liveChat.lastMessage.content;
+                return { text: isEncrypted(raw) ? "🔒 Encrypted message" : raw, isUnread: true };
             }
             if (displayUnreadCount <= 3) {
                 return { text: `${displayUnreadCount} new ${displayUnreadCount === 1 ? "message" : "messages"}`, isUnread: true };
@@ -64,7 +66,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         const isMe = senderId?._id === user?._id || senderId === user?._id;
         if (type === "image") return { text: isMe ? "You sent an image" : "Sent an image", isUnread: false };
         if (type === "video") return { text: isMe ? "You sent a video" : "Sent a video", isUnread: false };
-        return { text: isMe ? `You: ${content}` : content, isUnread: false };
+        const displayContent = isEncrypted(content) ? "🔒 Encrypted message" : content;
+        return { text: isMe ? `You: ${displayContent}` : displayContent, isUnread: false };
     };
 
     const preview = getPreview();
