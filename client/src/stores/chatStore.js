@@ -523,6 +523,19 @@ export const useChatStore = create(
                 });
             },
 
+            removeChat: (chatId) => {
+                set((state) => ({
+                    chats: state.chats.filter((c) => c._id?.toString() !== chatId?.toString()),
+                    activeChat: state.activeChat?._id?.toString() === chatId?.toString() ? null : state.activeChat,
+                    messages: (() => {
+                        const m = { ...state.messages };
+                        delete m[chatId];
+                        delete m[chatId?.toString()];
+                        return m;
+                    })(),
+                }));
+            },
+
             getActiveChatMessages: () => {
                 const { activeChat, messages } = get();
                 if (!activeChat) return [];

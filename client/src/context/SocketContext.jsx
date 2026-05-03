@@ -105,6 +105,10 @@ export const SocketProvider = ({ children }) => {
             useChatStore.getState().addChat(chat);
         };
 
+        const handleChatDeleted = ({ chatId }) => {
+            useChatStore.getState().removeChat(chatId);
+        };
+
         const handleNewMoment = (payload) => {
             const m = payload?.moment || payload;
             if (m && m._id) {
@@ -150,6 +154,7 @@ export const SocketProvider = ({ children }) => {
         socket.on("message_edited", handleMessageEdited);
         socket.on("message_deleted", handleMessageDeleted);
         socket.on("new_chat", handleNewChat);
+        socket.on("chat_deleted", handleChatDeleted);
         socket.on("new_moment", handleNewMoment);
         socket.on("moment_deleted", handleMomentDeleted);
 
@@ -164,6 +169,7 @@ export const SocketProvider = ({ children }) => {
             socket.off("message_edited", handleMessageEdited);
             socket.off("message_deleted", handleMessageDeleted);
             socket.off("new_chat", handleNewChat);
+            socket.off("chat_deleted", handleChatDeleted);
             socket.off("new_moment", handleNewMoment);
             socket.off("moment_deleted", handleMomentDeleted);
             socket.disconnect();

@@ -180,14 +180,42 @@ router.delete("/:chatId", async (req, res) => {
             return res.status(404).json({ message: "Chat not found" });
         }
 
-        await Chat.findByIdAndUpdate(req.params.chatId, {
-            $addToSet: { deletedBy: req.user._id }
-        });
-
-        await Message.updateMany(
-            { chatId: req.params.chatId, deletedFor: { $ne: req.user._id } },
-            { $addToSet: { deletedFor: req.user._id } }
+        // Add this user to deletedBy
+        const updatedChat = await Chat.findByIdAndUpdate(
+            req.params.chatId,
+            { $addToSet: { deletedBy: req.user._id } },
+            { new: true }
         );
+
+        // If ALL participants have deleted it, permanently remove from DB
+        const allDeleted = chat.participants.every(p =>
+            updatedChat.deletedBy.some(d => d.toString() === p.toString())
+        );
+
+        const io = req.app.get("io");
+
+        if (allDeleted) {
+            await Message.deleteMany({ chatId: req.params.chatId });
+            await Chat.findByIdAndDelete(req.params.chatId);
+
+            // Notify all participants
+            if (io) {
+                chat.participants.forEach(pid => {
+                    io.to(pid.toString()).emit("chat_deleted", { chatId: req.params.chatId });
+                });
+            }
+        } else {
+            // Soft-delete messages for this user only
+            await Message.updateMany(
+                { chatId: req.params.chatId, deletedFor: { $ne: req.user._id } },
+                { $addToSet: { deletedFor: req.user._id } }
+            );
+
+            // Emit to the current user's other devices
+            if (io) {
+                io.to(req.user._id.toString()).emit("chat_deleted", { chatId: req.params.chatId });
+            }
+        }
 
         res.json({ success: true, message: "Chat deleted successfully" });
     } catch (err) {

@@ -121,6 +121,22 @@ router.delete("/:id", protect, async (req, res) => {
 
         await moment.deleteOne();
         console.log(`[moments] Moment ${req.params.id} let go by ${req.user.username}`);
+
+        // Notify the uploader + all contacts in real-time
+        const io = req.app.get("io");
+        if (io) {
+            const user = await User.findById(req.user._id).select("contacts");
+            const contactIds = (user?.contacts || []).map(c => c.userId.toString());
+
+            // Notify the owner's own sockets (multi-device)
+            io.to(req.user._id.toString()).emit("moment_deleted", { momentId: req.params.id });
+
+            // Notify all contacts
+            contactIds.forEach(cid => {
+                io.to(cid).emit("moment_deleted", { momentId: req.params.id });
+            });
+        }
+
         res.json({ message: "Moment let go." });
     } catch (err) {
         console.error("[moments] Let-go error:", err);

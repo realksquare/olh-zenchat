@@ -3915,12 +3915,21 @@ select {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0; /* Allow shrinking on small screens */
+  overflow: hidden;
+}
+
+.aura-user-info {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .aura-user-title-row {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .aura-moment-counter {
@@ -3932,11 +3941,21 @@ select {
   font-weight: 500;
 }
 
+.aura-username {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
 .aura-metadata-wrapper {
   position: relative;
   height: 18px;
-  min-width: 80px;
-  max-width: 160px;
+  min-width: 60px;
+  max-width: 150px;
   overflow: hidden;
 }
 
@@ -4898,6 +4917,20 @@ select {
 
   .aura-viewer-actions {
     gap: 5px;
+  }
+
+  .aura-username {
+    font-size: 0.82rem;
+    max-width: 90px;
+  }
+
+  .aura-user-meta {
+    gap: 8px;
+  }
+
+  .aura-viewer-header {
+    padding: 36px 12px 16px 12px;
+    gap: 6px;
   }
 }
 

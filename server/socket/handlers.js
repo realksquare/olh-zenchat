@@ -95,7 +95,7 @@ const registerSocketHandlers = (io) => {
                         chatId: { $in: chatIds },
                         senderId: { $ne: new mongoose.Types.ObjectId(userId) },
                         status: "sent",
-                    });
+                    }).populate("senderId", "username avatar").populate("replyTo");
 
                     if (pendingMessages.length > 0) {
                         await Message.updateMany(
@@ -103,8 +103,17 @@ const registerSocketHandlers = (io) => {
                             { status: "delivered" }
                         );
 
+                        // Push missed messages directly to the newly-connected recipient
+                        // This ensures offline messages render immediately without waiting for fetchMessages REST call
                         pendingMessages.forEach((msg) => {
-                            const senderSockets = onlineUsers.get(msg.senderId.toString());
+                            socket.emit("receive_message", {
+                                message: { ...msg.toObject(), chatId: msg.chatId.toString() }
+                            });
+                        });
+
+                        // Notify senders their messages were delivered
+                        pendingMessages.forEach((msg) => {
+                            const senderSockets = onlineUsers.get(msg.senderId._id?.toString() || msg.senderId.toString());
                             if (senderSockets && senderSockets.sockets) {
                                 senderSockets.sockets.forEach((dType, socketId) => {
                                     io.to(socketId).emit("message_delivered", {
