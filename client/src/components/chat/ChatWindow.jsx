@@ -115,6 +115,9 @@ const ChatWindow = ({ onBack }) => {
             setTimeout(() => {
                 messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
                 setShowScrollDown(false);
+            }, 150);
+        });
+
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible' && activeChat?._id) {
                 fetchMessages(activeChat._id);
