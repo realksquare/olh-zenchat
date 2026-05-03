@@ -121,12 +121,13 @@ export const useChatStore = create(
                         merged.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
                         const unreadCounts = { ...state.unreadCounts };
-                        const hasRealUnread = merged.some(m => 
-                            m.senderId?.toString() !== user?._id && 
+                        const hasRealUnread = merged.some(m => {
+                            const senderIdStr = m.senderId?._id?.toString() || m.senderId?.toString();
+                            return senderIdStr !== user?._id && 
                             m.status !== "read" && 
                             !m.deletedForEveryone &&
-                            (m.content || m.mediaUrl || m.music)
-                        );
+                            (m.content || m.mediaUrl || m.music);
+                        });
                         
                         if (!hasRealUnread) {
                             unreadCounts[chatId.toString()] = 0;

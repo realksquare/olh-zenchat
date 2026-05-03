@@ -94,7 +94,7 @@ const registerSocketHandlers = (io) => {
                     const pendingMessages = await Message.find({
                         chatId: { $in: chatIds },
                         senderId: { $ne: new mongoose.Types.ObjectId(userId) },
-                        status: "sent",
+                        status: { $in: ["sent", "delivered"] },
                     }).populate("senderId", "username avatar").populate("replyTo");
 
                     if (pendingMessages.length > 0) {
