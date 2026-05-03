@@ -130,39 +130,45 @@ export const useChatStore = create(
             },
 
             addMessage: (chatId, message) => {
-                persistMessage({ ...message, chatId });
                 set((state) => {
                     const chatMessages = state.messages[chatId] || [];
-
                     let nextMessages = [...chatMessages];
                     
-                    // Deduplication logic: match by _id OR cid (Client ID)
+                    // 1. Find existing message by server _id OR client cid
                     const existingIndex = nextMessages.findIndex(m => {
                         const mId = m._id?.toString();
                         const msgId = message._id?.toString();
-
-                        // Case 1: Match by server ID (exact _id match)
+                        
+                        // Match by server ID
                         if (msgId && mId && mId === msgId) return true;
-                        // Case 2: Match by client ID — only when BOTH messages explicitly have a cid
+                        
+                        // Match by client ID (Optimistic match)
                         if (message.cid && m.cid && m.cid === message.cid) return true;
-                        // Case 3: Incoming server msg (has _id) matches optimistic msg (has cid, temp _id)
-                        // — when server echoes back the message with the real _id and cid
-                        if (message.cid && m.cid && message._id && m.cid === message.cid) return true;
                         
                         return false;
                     });
 
                     if (existingIndex !== -1) {
-                        // Merge message data (preserving some local fields if needed)
+                        const oldMsg = nextMessages[existingIndex];
+                        
+                        // If we are replacing an optimistic message (temp ID) with a real one (server ID)
+                        // we MUST remove the temp ID from the local database
+                        if (oldMsg._id !== message._id && oldMsg._id?.toString().startsWith('temp-')) {
+                            import("../db/zenDB").then(db => db.db.messages.delete(oldMsg._id));
+                        }
+
+                        // Merge server data over local data
                         nextMessages[existingIndex] = { 
-                            ...nextMessages[existingIndex], 
+                            ...oldMsg, 
                             ...message,
-                            // Ensure the final message has the server ID if available
-                            _id: message._id || nextMessages[existingIndex]._id
+                            status: message.status || oldMsg.status
                         };
                     } else {
                         nextMessages.push(message);
                     }
+
+                    // 2. Persist the (final) message to IndexedDB
+                    import("../db/zenDB").then(db => db.persistMessage({ ...message, chatId }));
 
                     const currentUserId = useAuthStore.getState().user?._id;
                     const isFromMe =

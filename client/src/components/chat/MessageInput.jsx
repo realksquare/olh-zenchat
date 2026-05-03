@@ -267,6 +267,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 
                 addMessage(chatId, {
                     _id: tempId,
+                    cid: tempId,
                     chatId,
                     senderId: user?._id,
                     content: files.length === 1 ? textContent : "",
@@ -330,6 +331,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             const tempId = `temp-${Date.now()}-${Math.random()}`;
             addMessage(chatId, {
                 _id: tempId,
+                cid: tempId,
                 chatId,
                 senderId: user?._id,
                 content: filteredContent,

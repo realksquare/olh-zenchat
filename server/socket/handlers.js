@@ -209,7 +209,8 @@ const registerSocketHandlers = (io) => {
                     const messagePayload = { ...messagePayloadBase, canSeeScramble };
 
                     const userData = onlineUsers.get(pIdStr);
-                    if (userData && userData.sockets) {
+                    if (userData && userData.sockets && userData.sockets.size > 0) {
+                        console.log(`[Socket] Emitting receive_message to user ${pIdStr} (${userData.sockets.size} sockets)`);
                         userData.sockets.forEach((dType, socketId) => {
                             if (pIdStr === userId.toString()) {
                                 io.to(socketId).emit("receive_message", { message: messagePayloadBase });
@@ -217,6 +218,8 @@ const registerSocketHandlers = (io) => {
                                 io.to(socketId).emit("receive_message", { message: messagePayload });
                             }
                         });
+                    } else {
+                        console.log(`[Socket] User ${pIdStr} has no active sockets. Skipping emission.`);
                     }
                 });
 
@@ -312,19 +315,13 @@ const registerSocketHandlers = (io) => {
 
                             if (pushSuccess) {
                                 console.log(`[Push] FCM accepted message ${message._id}. Marking as delivered.`);
-                                // FCM acceptance = reliable delivery indicator — update status now
-                                await Message.findOneAndUpdate(
-                                    { _id: message._id, status: "sent" },
-                                    { status: "delivered" }
-                                );
-                                // Notify sender their message was delivered
-                                const senderData = onlineUsers.get(userId);
-                                if (senderData && senderData.sockets) {
-                                    senderData.sockets.forEach((dType, sId) => {
-                                        io.to(sId).emit("message_delivered", {
-                                            chatId: chatId.toString(),
-                                            messageId: message._id.toString()
-                                        });
+                                // Only mark as delivered if not already read/delivered
+                                const currentMsg = await Message.findById(message._id);
+                                if (currentMsg && currentMsg.status === "sent") {
+                                    await Message.findByIdAndUpdate(message._id, { status: "delivered" });
+                                    const senderData = onlineUsers.get(userId);
+                                    senderData?.sockets?.forEach((dt, sId) => {
+                                        io.to(sId).emit("message_delivered", { chatId: chatId.toString(), messageId: message._id.toString() });
                                     });
                                 }
                             } else {
@@ -335,10 +332,11 @@ const registerSocketHandlers = (io) => {
                 });
 
                 if (isDelivered) {
-                    await Message.findByIdAndUpdate(message._id, { status: "delivered" });
-                    const senderData = onlineUsers.get(userId);
-                    if (senderData && senderData.sockets) {
-                        senderData.sockets.forEach((dType, sId) => {
+                    const currentMsg = await Message.findById(message._id);
+                    if (currentMsg && currentMsg.status === "sent") {
+                        await Message.findByIdAndUpdate(message._id, { status: "delivered" });
+                        const senderData = onlineUsers.get(userId);
+                        senderData?.sockets?.forEach((dt, sId) => {
                             io.to(sId).emit("message_delivered", { chatId: chatId.toString(), messageId: message._id.toString() });
                         });
                     }
