@@ -90,7 +90,7 @@ export const useMomentStore = create((set, get) => ({
             const viewedBy = m.viewedBy || [];
             return !viewedBy.some(v => (v.userId?._id || v.userId)?.toString() === cuid);
         });
-        return hasUnviewed ? '#10b981' : '#94a3b8'; // emerald → grey
+        return hasUnviewed ? '#10b981' : 'rgba(148, 163, 184, 0.4)'; // emerald → transparent slate grey
     },
 
     getViewCount: (momentId, uploaderId) => {

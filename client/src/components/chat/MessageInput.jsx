@@ -393,7 +393,15 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 <div className="reply-preview-container">
                     <div className="reply-info">
                         <div className="reply-to-user">
-                            Replying to {replyingTo.senderId === user?._id ? "yourself" : "them"}
+                            Replying to {(() => {
+                                if (replyingTo.senderId === user?._id || replyingTo.senderId?._id === user?._id) return "yourself";
+                                const sender = replyingTo.senderId;
+                                if (typeof sender === 'object' && sender?.username) return sender.username;
+                                // Fallback to finding the other participant if we only have an ID
+                                const activeChat = useChatStore.getState().activeChat;
+                                const other = activeChat?.participants?.find(p => (p._id || p) === (sender?._id || sender));
+                                return other?.username || "them";
+                            })()}
                         </div>
                         <div className="reply-to-text">
                             {replyingTo.type === "image" ? "Image" : 

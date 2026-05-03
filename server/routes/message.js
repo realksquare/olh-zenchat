@@ -53,7 +53,7 @@ router.get("/:chatId", async (req, res) => {
             chatId: req.params.chatId,
             deletedFor: { $nin: [req.user._id] },
         })
-            .populate("senderId", "username avatar")
+            .populate("senderId", "username avatar createdAt")
             .populate("replyTo")
             .sort({ createdAt: -1 })
             .skip(skip)
@@ -203,9 +203,49 @@ router.post("/:messageId/view", async (req, res) => {
     try {
         const message = await Message.findById(req.params.messageId);
         if (message && message.isViewOnce && !message.viewedBy.includes(req.user._id)) {
+            // Update viewedBy
             await Message.findByIdAndUpdate(req.params.messageId, {
                 $addToSet: { viewedBy: req.user._id }
             });
+
+            // If media exists, delete it from Cloudinary and clear URL in DB
+            if (message.mediaUrl) {
+                try {
+                    // Extract public_id from URL
+                    // Example: https://res.cloudinary.com/cloudname/image/upload/v123/folder/id.jpg
+                    const parts = message.mediaUrl.split('/');
+                    const filenameWithExt = parts[parts.length - 1];
+                    const publicId = filenameWithExt.split('.')[0];
+                    const folder = parts[parts.length - 2];
+                    const fullPublicId = folder === 'upload' ? publicId : `${folder}/${publicId}`;
+
+                    await cloudinary.uploader.destroy(fullPublicId, {
+                        resource_type: message.type === 'video' ? 'video' : 'image'
+                    });
+
+                    // Clear mediaUrl in DB
+                    await Message.findByIdAndUpdate(req.params.messageId, {
+                        mediaUrl: "",
+                        content: message.content || "Media viewed"
+                    });
+
+                    // Notify both participants
+                    const io = req.app.get("io");
+                    if (io) {
+                        io.to(message.chatId.toString()).emit("message_edited", {
+                            message: { 
+                                ...message.toObject(), 
+                                _id: message._id.toString(),
+                                chatId: message.chatId.toString(),
+                                mediaUrl: "",
+                                viewedBy: [...message.viewedBy, req.user._id]
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error("[ViewOnce] Deletion failed:", err);
+                }
+            }
         }
         res.json({ success: true });
     } catch (err) {

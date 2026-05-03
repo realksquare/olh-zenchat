@@ -951,6 +951,7 @@ select {
 /* ── Messages area ────────────────────────────────────── */
 
 .chat-messages {
+  position: relative;
   flex: 1;
   overflow-y: auto;
   padding: var(--space-4);
@@ -1004,7 +1005,7 @@ select {
 
 .message-row {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: var(--space-2);
   margin-bottom: var(--space-1);
   max-width: 65%;
@@ -1069,10 +1070,10 @@ select {
 
 .message-bubble.mine.status-seen,
 .message-bubble.mine.status-read {
-  background: #059669;
-  /* Darker Emerald for seen/read */
+  background: #0d9488;
+  /* Muted Teal/Green for seen/read */
   color: #fff;
-  box-shadow: 0 4px 15px rgba(5, 150, 105, 0.2);
+  box-shadow: 0 4px 15px rgba(13, 148, 136, 0.2);
 }
 
 .message-text {
@@ -1113,7 +1114,7 @@ select {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  z-index: 50;
+  z-index: 1000;
   min-width: 110px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   opacity: 0;
@@ -2524,11 +2525,11 @@ select {
 .scroll-down-btn {
   position: absolute;
   right: 15px;
-  bottom: 120px;
-  background: var(--primary);
+  bottom: 20px;
+  background: var(--color-primary);
   color: white;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -3668,19 +3669,35 @@ select {
   cursor: pointer;
 }
 
-.aura-duration-select {
-  background: #1e293b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  outline: none;
-  cursor: pointer;
+.aura-duration-options {
+  display: flex;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 2px;
+  border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  gap: 2px;
 }
 
-.aura-duration-select option {
-  background: #0f172a;
+.duration-opt {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.duration-opt.active {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.duration-opt:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05);
   color: #fff;
 }
 
@@ -4323,7 +4340,7 @@ select {
   border-radius: 100px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   position: absolute;
-  bottom: -10px;
+  bottom: -4px;
   z-index: 10;
   min-width: 20px;
   text-align: center;

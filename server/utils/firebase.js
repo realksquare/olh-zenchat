@@ -43,9 +43,7 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
                 tag: "zenchat-notif",
                 renotify: true,
             },
-            fcm_options: {
-                link: "/"
-            }
+            fcm_options: {}
         },
         android: {
             priority: "high",

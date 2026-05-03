@@ -115,10 +115,18 @@ const ChatWindow = ({ onBack }) => {
             setTimeout(() => {
                 messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
                 setShowScrollDown(false);
-            }, 150);
-        });
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && activeChat?._id) {
+                fetchMessages(activeChat._id);
+            }
+        };
+
         window.addEventListener('focus', markIfVisible);
-        return () => window.removeEventListener('focus', markIfVisible);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => {
+            window.removeEventListener('focus', markIfVisible);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
     }, [activeChat?._id]);
 
     useEffect(() => {

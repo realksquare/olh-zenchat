@@ -95,7 +95,7 @@ const registerSocketHandlers = (io) => {
                         chatId: { $in: chatIds },
                         senderId: { $ne: new mongoose.Types.ObjectId(userId) },
                         status: { $in: ["sent", "delivered"] },
-                    }).populate("senderId", "username avatar").populate("replyTo");
+                    }).populate("senderId", "username avatar createdAt").populate("replyTo");
 
                     if (pendingMessages.length > 0) {
                         await Message.updateMany(
@@ -186,7 +186,7 @@ const registerSocketHandlers = (io) => {
                 });
 
                 const populated = await Message.findById(message._id)
-                    .populate("senderId", "username avatar")
+                    .populate("senderId", "username avatar createdAt")
                     .populate("replyTo");
 
                 const sender = await User.findById(userId).select("privacySettings contacts");
@@ -365,7 +365,7 @@ const registerSocketHandlers = (io) => {
                     messageId,
                     { content: newContent.trim(), isEdited: true, editedAt: new Date() },
                     { new: true }
-                ).populate("senderId", "username avatar").populate("replyTo");
+                ).populate("senderId", "username avatar createdAt").populate("replyTo");
 
                 const editPayload = { ...updated.toObject(), chatId: chatId.toString() };
                 io.to(chatId).emit("message_edited", { message: editPayload });

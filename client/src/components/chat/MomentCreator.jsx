@@ -142,15 +142,20 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                         </button>
                                         <span>{music.title} • {music.artist}</span>
                                     </div>
-                                    <select value={duration} onChange={(e) => { 
-                                        const newDur = Number(e.target.value);
-                                        setDuration(newDur);
-                                        if (startTime + newDur > 30) setStartTime(30 - newDur);
-                                    }} className="aura-duration-select">
-                                        <option value={18}>18s vibe</option>
-                                        <option value={24}>24s vibe</option>
-                                        <option value={30}>30s vibe</option>
-                                    </select>
+                                    <div className="aura-duration-options">
+                                        {[18, 24, 30].map((d) => (
+                                            <button 
+                                                key={d}
+                                                className={`duration-opt ${duration === d ? 'active' : ''}`}
+                                                onClick={() => {
+                                                    setDuration(d);
+                                                    if (startTime + d > 30) setStartTime(30 - d);
+                                                }}
+                                            >
+                                                {d}s
+                                            </button>
+                                        ))}
+                                    </div>
                                     <button className="aura-remove-music" onClick={() => { setMusic(null); setIsPlaying(false); }}>
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                                     </button>

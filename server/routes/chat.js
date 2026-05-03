@@ -15,7 +15,7 @@ router.get("/", async (req, res) => {
             participants: req.user._id,
             deletedBy: { $ne: req.user._id }
         })
-            .populate("participants", "username avatar isOnline lastSeen isVerified")
+            .populate("participants", "username avatar isOnline lastSeen isVerified createdAt")
             .populate({
                 path: "lastMessage",
                 populate: { path: "senderId", select: "username" },
@@ -109,7 +109,7 @@ router.post("/", async (req, res) => {
         });
 
         const populated = await Chat.findById(newChat._id)
-            .populate("participants", "username avatar isOnline lastSeen isVerified")
+            .populate("participants", "username avatar isOnline lastSeen isVerified createdAt")
             .populate({
                 path: "lastMessage",
                 populate: { path: "senderId", select: "username" },
@@ -153,7 +153,7 @@ router.get("/:chatId", async (req, res) => {
             _id: req.params.chatId,
             participants: req.user._id,
         })
-            .populate("participants", "username avatar isOnline lastSeen isVerified")
+            .populate("participants", "username avatar isOnline lastSeen isVerified createdAt")
             .populate({
                 path: "lastMessage",
                 populate: { path: "senderId", select: "username" },
