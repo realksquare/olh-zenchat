@@ -264,7 +264,6 @@ const ChatWindow = ({ onBack }) => {
             </div>
 
             <div className="chat-messages" ref={messagesContainerRef} onScroll={handleScroll}>
-                <ScrollDownBtn onClick={scrollToBottom} show={showScrollDown} />
                 {isLoadingMessages && (
                     <div className="messages-loading">
                         {[1, 2, 3, 4].map((i) => (
@@ -296,6 +295,7 @@ const ChatWindow = ({ onBack }) => {
                 {isTyping && <TypingIndicator scramble={typeof typingScramble === "string" ? typingScramble : ""} />}
                 <div ref={messagesEndRef} />
             </div>
+            <ScrollDownBtn onClick={scrollToBottom} show={showScrollDown} />
 
             <MessageInput
                 chatId={activeChat._id}

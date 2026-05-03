@@ -22,10 +22,13 @@ export const useMomentStore = create((set, get) => ({
         try {
             const res = await axiosInstance.post("/moments", momentData);
             const newMoment = res.data.moment || res.data;
-            set((state) => ({
-                moments: [newMoment, ...state.moments],
-                isLoading: false
-            }));
+            set((state) => {
+                if (state.moments.some(m => m._id === newMoment._id)) return state;
+                return {
+                    moments: [newMoment, ...state.moments],
+                    isLoading: false
+                };
+            });
             return { success: true, moment: newMoment };
         } catch (err) {
             set({ error: "Failed to create moment", isLoading: false });
@@ -61,7 +64,7 @@ export const useMomentStore = create((set, get) => ({
 
     addMoment: (moment) => {
         set((state) => {
-            if (state.moments.some(m => m._id === moment._id)) return state;
+            if (state.moments.some(m => m._id?.toString() === moment._id?.toString())) return state;
             return { moments: [moment, ...state.moments] };
         });
     },

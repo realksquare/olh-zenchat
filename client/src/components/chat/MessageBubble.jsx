@@ -130,17 +130,17 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                         }
                     }}
                 >
-                    {isViewOnce && !isMe && !isViewedByMe && !tempVisible ? (
+                    {isViewOnce && (isMe || isViewedByMe || isViewedByAnyone || !message.mediaUrl) && !tempVisible ? (
+                        <div className="view-once-placeholder viewed">
+                            <span>{isMe ? "Media sent" : "Media viewed"}</span>
+                        </div>
+                    ) : isViewOnce && !isMe && !tempVisible ? (
                         <div className="view-once-placeholder" onClick={handleViewOnce}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                 <circle cx="12" cy="12" r="3" />
                             </svg>
                             <span>View once media</span>
-                        </div>
-                    ) : isViewOnce && !isMe && (isViewedByMe || isViewedByAnyone) && !tempVisible ? (
-                        <div className="view-once-placeholder viewed">
-                            <span>Media viewed</span>
                         </div>
                     ) : (
                         <>
@@ -169,7 +169,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                                     )}
                                 </div>
                             )}
-                            {(message.type === "image" || message.type === "video") && message.mediaUrl && (
+                            {(message.type === "image" || message.type === "video") && message.mediaUrl && !isViewOnce && (
                                 <div className="message-media-wrap">
                                     {message.type === "image" ? (
                                         <img src={getThumbnailUrl(message.mediaUrl)} alt="Sent image" className="message-image" loading="lazy" />
