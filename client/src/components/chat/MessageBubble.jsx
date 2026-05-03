@@ -73,8 +73,10 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
         }
     };
 
-    // Fallback: treat messages with no content/media and no special type as deleted for everyone
-    const isGhostDeleted = !message.content && !message.mediaUrl && !message.music && message.type === "text" && !message.deletedForEveryone;
+    // Fallback: treat messages with no content/media as deleted for everyone
+    // BUT only if older than 5 seconds — prevents false-positives on in-transit optimistic messages
+    const messageAgeMs = Date.now() - new Date(message.createdAt).getTime();
+    const isGhostDeleted = !message.content && !message.mediaUrl && !message.music && message.type === "text" && !message.deletedForEveryone && messageAgeMs > 5000;
 
     if (message.deletedForEveryone || isGhostDeleted) {
         return (
@@ -194,12 +196,6 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                     )}
                     
                     <div className="message-meta">
-                        {message.wasEncrypted && (
-                            <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: '3px', opacity: 0.6 }}>
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                            </svg>
-                        )}
                         {message.starredBy?.includes(user?._id) && (
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="#eab308" stroke="#eab308" style={{ marginRight: '2px' }}>
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />

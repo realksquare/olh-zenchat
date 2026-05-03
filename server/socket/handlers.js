@@ -261,15 +261,12 @@ const registerSocketHandlers = (io) => {
                             const unreadCount = unreadMessages.length;
                             const hasMedia = unreadMessages.some(m => m.type === 'image' || m.type === 'video');
                             const hasText = unreadMessages.some(m => m.type === 'text');
-                            const allEncrypted = unreadMessages.filter(m => m.type === 'text').every(m => m.content?.startsWith('{"v":1,'));
 
                             const notifSenderName = senderIsContact ? `${senderName} ✨` : senderName;
                             const title = "ZenChat";
                             let body = `New message from ${notifSenderName}!`;
 
-                            if (allEncrypted && !hasMedia) {
-                                body = `${unreadCount > 1 ? `${unreadCount} new` : 'New'} encrypted ${unreadCount > 1 ? 'messages' : 'message'} from ${notifSenderName}`;
-                            } else if (unreadCount === 1) {
+                            if (unreadCount === 1) {
                                 body = hasMedia ? `1 new media from ${notifSenderName}!` : `1 new message from ${notifSenderName}!`;
                             } else if (unreadCount > 1) {
                                 if (hasMedia && hasText) {
@@ -280,7 +277,6 @@ const registerSocketHandlers = (io) => {
                                     body = `${unreadCount} new messages from ${notifSenderName}!`;
                                 }
                             }
-
 
                             const pwaTokens = tokens.filter(t => t.deviceType === 'pwa');
                             const browserTokens = tokens.filter(t => t.deviceType === 'browser');
@@ -315,7 +311,22 @@ const registerSocketHandlers = (io) => {
                             }
 
                             if (pushSuccess) {
-                                console.log(`[Push] Info: Message ${message._id} push accepted by FCM. Waiting for device delivery receipt...`);
+                                console.log(`[Push] FCM accepted message ${message._id}. Marking as delivered.`);
+                                // FCM acceptance = reliable delivery indicator — update status now
+                                await Message.findOneAndUpdate(
+                                    { _id: message._id, status: "sent" },
+                                    { status: "delivered" }
+                                );
+                                // Notify sender their message was delivered
+                                const senderData = onlineUsers.get(userId);
+                                if (senderData && senderData.sockets) {
+                                    senderData.sockets.forEach((dType, sId) => {
+                                        io.to(sId).emit("message_delivered", {
+                                            chatId: chatId.toString(),
+                                            messageId: message._id.toString()
+                                        });
+                                    });
+                                }
                             } else {
                                 console.log(`[Push] Final: Notification flow finished with NO successful deliveries.`);
                             }

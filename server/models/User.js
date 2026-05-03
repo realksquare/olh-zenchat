@@ -79,10 +79,6 @@ const userSchema = new mongoose.Schema(
         isSuspended: {
             type: Boolean,
             default: false
-        },
-        publicKey: {
-            type: Object,
-            default: null
         }
     },
     { timestamps: true }
@@ -112,8 +108,7 @@ userSchema.methods.toPublicJSON = function () {
         lastSeen: this.lastSeen,
         role: this.role,
         isVerified: this.isVerified,
-        privacySettings: this.privacySettings,
-        publicKey: this.publicKey || null
+        privacySettings: this.privacySettings
     };
 };
 
@@ -132,8 +127,7 @@ userSchema.methods.toPrivateJSON = function () {
         isVerified: this.isVerified,
         isSuspended: this.isSuspended,
         contacts: this.contacts,
-        fcmTokens: this.fcmTokens,
-        publicKey: this.publicKey || null
+        fcmTokens: this.fcmTokens
     };
 };
 

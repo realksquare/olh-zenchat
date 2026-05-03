@@ -140,13 +140,14 @@ export const useChatStore = create(
                     const existingIndex = nextMessages.findIndex(m => {
                         const mId = m._id?.toString();
                         const msgId = message._id?.toString();
-                        const mCid = m.cid || m._id; // Fallback if cid is missing
-                        const msgCid = message.cid;
 
-                        // Case 1: Match by server ID
-                        if (msgId && mId === msgId) return true;
-                        // Case 2: Match by client ID (optimistic UI)
-                        if (msgCid && mCid === msgCid) return true;
+                        // Case 1: Match by server ID (exact _id match)
+                        if (msgId && mId && mId === msgId) return true;
+                        // Case 2: Match by client ID — only when BOTH messages explicitly have a cid
+                        if (message.cid && m.cid && m.cid === message.cid) return true;
+                        // Case 3: Incoming server msg (has _id) matches optimistic msg (has cid, temp _id)
+                        // — when server echoes back the message with the real _id and cid
+                        if (message.cid && m.cid && message._id && m.cid === message.cid) return true;
                         
                         return false;
                     });
