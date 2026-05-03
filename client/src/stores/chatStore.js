@@ -100,14 +100,28 @@ export const useChatStore = create(
                 set({ isLoadingMessages: true });
                 try {
                     const { data } = await axiosInstance.get(`/messages/${chatId}`);
-                    data.messages.forEach(msg => persistMessage({ ...msg, chatId }));
+                    data.messages.forEach(msg => persistMessage({ ...msg, chatId: chatId.toString() }));
                     
                     set((state) => {
-                        const messages = data.messages;
-                        const unreadCounts = { ...state.unreadCounts };
+                        const newMessages = data.messages;
+                        const existingMessages = state.messages[chatId.toString()] || [];
                         
-                        // If all messages are ghosted or read, zero it out
-                        const hasRealUnread = messages.some(m => 
+                        // Merge logic: prefer server messages, but keep existing ones if not in server response
+                        const merged = [...existingMessages];
+                        newMessages.forEach(newMsg => {
+                            const idx = merged.findIndex(m => m._id?.toString() === newMsg._id?.toString() || (newMsg.cid && m.cid === newMsg.cid));
+                            if (idx !== -1) {
+                                merged[idx] = { ...merged[idx], ...newMsg };
+                            } else {
+                                merged.push(newMsg);
+                            }
+                        });
+
+                        // Final sort to ensure chronological order
+                        merged.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+                        const unreadCounts = { ...state.unreadCounts };
+                        const hasRealUnread = merged.some(m => 
                             m.senderId?.toString() !== user?._id && 
                             m.status !== "read" && 
                             !m.deletedForEveryone &&
@@ -115,16 +129,17 @@ export const useChatStore = create(
                         );
                         
                         if (!hasRealUnread) {
-                            unreadCounts[chatId] = 0;
+                            unreadCounts[chatId.toString()] = 0;
                         }
 
                         return {
-                            messages: { ...state.messages, [chatId]: messages },
+                            messages: { ...state.messages, [chatId.toString()]: merged },
                             unreadCounts,
                             isLoadingMessages: false,
                         };
                     });
-                } catch (_) {
+                } catch (err) {
+                    console.error("[Store] fetchMessages error:", err);
                     set({ isLoadingMessages: false });
                 }
             },

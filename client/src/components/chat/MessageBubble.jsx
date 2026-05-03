@@ -76,7 +76,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
     // Fallback: treat messages with no content/media as deleted for everyone
     // BUT only if older than 5 seconds — prevents false-positives on in-transit optimistic messages
     const messageAgeMs = Date.now() - new Date(message.createdAt).getTime();
-    const isGhostDeleted = !message.content && !message.mediaUrl && !message.music && message.type === "text" && !message.deletedForEveryone && messageAgeMs > 5000;
+    const isGhostDeleted = !message.content && !message.mediaUrl && !message.music && message.type === "text" && !message.deletedForEveryone && messageAgeMs > 15000;
 
     if (message.deletedForEveryone || isGhostDeleted) {
         return (

@@ -59,14 +59,32 @@ router.get("/:chatId", async (req, res) => {
             .skip(skip)
             .limit(limit);
 
-        await Message.updateMany(
-            { 
-                chatId: req.params.chatId, 
-                senderId: { $ne: req.user._id }, 
-                status: { $ne: "read" } 
-            },
-            { status: "read" }
-        );
+        // Mark as read and notify sender
+        const unreadCount = await Message.countDocuments({
+            chatId: req.params.chatId,
+            senderId: { $ne: req.user._id },
+            status: { $ne: "read" }
+        });
+
+        if (unreadCount > 0) {
+            await Message.updateMany(
+                { 
+                    chatId: req.params.chatId, 
+                    senderId: { $ne: req.user._id }, 
+                    status: { $ne: "read" } 
+                },
+                { status: "read" }
+            );
+
+            const io = req.app.get("io");
+            if (io) {
+                // Notify other participants that messages were read
+                io.to(req.params.chatId).emit("messages_read", { 
+                    chatId: req.params.chatId, 
+                    readBy: req.user._id 
+                });
+            }
+        }
 
         res.json({ messages: messages.reverse() });
     } catch (err) {

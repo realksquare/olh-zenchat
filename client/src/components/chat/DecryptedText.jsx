@@ -18,12 +18,13 @@ const DecryptedText = ({ text, animate = false }) => {
         const intervalTime = 60;
 
         const interval = setInterval(() => {
-            const result = text.split("").map((char, index) => {
+            const safeText = text || "";
+            const result = safeText.split("").map((char, index) => {
                 // Reveal logic: reveal progressively from left to right
-                const revealThreshold = (iteration / maxIterations) * text.length;
+                const revealThreshold = (iteration / maxIterations) * safeText.length;
                 
                 if (index < revealThreshold) {
-                    return text[index];
+                    return safeText[index];
                 }
                 
                 const lowerChar = char.toLowerCase();
