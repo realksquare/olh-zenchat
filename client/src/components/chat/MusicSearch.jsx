@@ -48,7 +48,7 @@ const MusicSearch = ({ onSelect, onClose }) => {
                                 <img 
                                     src={track.coverUrl || '/default-music.png'} 
                                     alt="Cover" 
-                                    className={`track-cover ${track.source === 'Spotify' ? 'aura-spotify' : track.source === 'iTunes' ? 'aura-itunes' : ''}`} 
+                                    className={`track-cover ${track.source === 'Deezer' ? 'aura-deezer' : track.source === 'iTunes' ? 'aura-itunes' : ''}`} 
                                 />
                                 <div className="track-info">
                                     <div className="track-name-scroll">

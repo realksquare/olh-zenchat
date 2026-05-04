@@ -5219,7 +5219,7 @@ select {
 
 
 /* === Spotify/iTunes Aura === */
-.track-cover.aura-spotify { box-shadow: 0 0 0 2px #1db954; border-radius: var(--radius-md); }
+.track-cover.aura-deezer { box-shadow: 0 0 0 2px #1db954; border-radius: var(--radius-md); }
 .track-cover.aura-itunes { box-shadow: 0 0 0 2px #fa243c; border-radius: var(--radius-md); }
 
 /* === MomentViewer Dropdown === */
