@@ -168,45 +168,42 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 {error && <div className="error-message">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="profile-form">
-                    <div className="profile-avatar-container" style={{ position: 'relative', width: '110px', height: '110px', margin: '0 auto 1.5rem' }}>
-                        <div 
-                            className="avatar avatar-lg profile-avatar-edit"
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            {(avatarPreview && !imageError) ? (
-                                <img 
-                                    src={avatarPreview} 
-                                    alt="Avatar preview" 
-                                    onError={(e) => {
-                                        setImageError(true);
-                                    }}
-                                />
-                            ) : (
-                                <span>{getInitials(username || user?.username || "??")}</span>
-                            )}
-                            <div className="avatar-edit-overlay">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                                    <circle cx="12" cy="13" r="4" />
-                                </svg>
-                            </div>
-                        </div>
-                        <input type="file" accept="image/*" ref={fileInputRef} style={{ display: "none" }} onChange={handleFileChange} />
-                        {avatarPreview && (
-                            <button 
-                                type="button" 
-                                className="avatar-reset-btn"
-                                onClick={() => {
-                                    setAvatarFile(null);
-                                    setAvatarPreview("");
-                                }}
-                                title="Remove photo"
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem' }}>
+                        <div className="profile-avatar-container">
+                            <div
+                                className="avatar avatar-lg profile-avatar-edit"
+                                onClick={() => fileInputRef.current?.click()}
                             >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
-                            </button>
-                        )}
+                                {(avatarPreview && !imageError) ? (
+                                    <img
+                                        src={avatarPreview}
+                                        alt="Avatar preview"
+                                        onError={() => setImageError(true)}
+                                    />
+                                ) : (
+                                    <span>{getInitials(username || user?.username || "??")}</span>
+                                )}
+                                <div className="avatar-edit-overlay">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                        <circle cx="12" cy="13" r="4" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <input type="file" accept="image/*" ref={fileInputRef} style={{ display: "none" }} onChange={handleFileChange} />
+                            {avatarPreview && (
+                                <button
+                                    type="button"
+                                    className="avatar-reset-btn"
+                                    onClick={() => { setAvatarFile(null); setAvatarPreview(""); }}
+                                    title="Remove photo"
+                                >
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>

@@ -1,12 +1,14 @@
 import { memo, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { format } from "date-fns";
-import { VerifiedTick } from "./Icons";
+import { VerifiedTick, DualBadge } from "./Icons";
 import { useMomentStore } from "../../stores/momentStore";
+import { useAuthStore } from "../../stores/authStore";
 
-const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = false }) => {
+const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = false, isContact = false }) => {
     const getHaloColor = useMomentStore((s) => s.getHaloColor);
-    
+    const { user: currentUser } = useAuthStore();
+
     // Safety exit
     if (!isOpen || !user) return null;
 
@@ -14,7 +16,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
     const username = typeof user.username === 'string' ? user.username : 'User';
     const fullName = typeof user.fullName === 'string' ? user.fullName : null;
     const userId = typeof user._id === 'string' ? user._id : (user._id?.toString() || 'unknown');
-    
+
     const canSeeFullName = (() => {
         const privacy = user.privacySettings?.fullName || "everyone";
         if (privacy === "everyone") return true;
@@ -34,7 +36,8 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
     })();
 
     const initials = username.slice(0, 2).toUpperCase();
-    const haloColor = getHaloColor(userId);
+    // Pass currentUserId so grey aura is shown when all moments are viewed
+    const haloColor = getHaloColor(userId, currentUser?._id);
 
     return createPortal(
         <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000 }}>
@@ -46,7 +49,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                 </button>
 
                 <div className="user-card-header">
-                    <div 
+                    <div
                         className={`avatar avatar-xl ${hasMoments ? 'moments-halo-thin' : ''}`}
                         style={hasMoments ? { '--halo-color': haloColor } : {}}
                     >
@@ -61,9 +64,15 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
 
                 <div className="user-card-body">
                     <div className="user-card-info">
-                        <h2 className="user-card-username" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <h2 className="user-card-username" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                             @{username}
-                            {user.isVerified && <VerifiedTick />}
+                            {isContact && user.isVerified ? (
+                                <DualBadge />
+                            ) : isContact ? (
+                                <span>✨</span>
+                            ) : user.isVerified ? (
+                                <VerifiedTick />
+                            ) : null}
                         </h2>
                         {canSeeFullName && fullName && (
                             <p className="user-card-fullname">{fullName}</p>

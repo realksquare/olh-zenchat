@@ -28,10 +28,10 @@ const MusicSearch = ({ onSelect, onClose }) => {
         <div className="aura-music-search-container">
             <div className="aura-music-search-inner">
                 <div className="music-search-header">
-                    <input 
-                        type="text" 
-                        placeholder="Search track (30s preview)..." 
-                        value={query} 
+                    <input
+                        type="text"
+                        placeholder="Search track (30s preview)..."
+                        value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         autoFocus
                     />
@@ -47,8 +47,16 @@ const MusicSearch = ({ onSelect, onClose }) => {
                             <div key={track.id} className="music-track-item" onClick={() => onSelect(track)}>
                                 <img src={track.coverUrl} alt="Cover" className="track-cover" />
                                 <div className="track-info">
-                                    <span className="track-name">{track.title}</span>
-                                    <span className="track-artist">• {track.artist}</span>
+                                    <div className="track-name-scroll">
+                                        <span className={track.title.length > 22 ? "marquee-text" : ""}>
+                                            {track.title}
+                                        </span>
+                                    </div>
+                                    <div className="track-artist-scroll">
+                                        <span className={track.artist.length > 26 ? "marquee-text" : ""}>
+                                            • {track.artist}
+                                        </span>
+                                    </div>
                                 </div>
                                 <button className="select-btn">Select</button>
                             </div>

@@ -3,7 +3,7 @@ import { useChatStore } from "../../stores/chatStore";
 import { useAuthStore } from "../../stores/authStore";
 import { formatDistanceToNow } from "date-fns";
 import { useMomentStore } from "../../stores/momentStore";
-import { VerifiedTick } from "../ui/Icons";
+import { VerifiedTick, DualBadge } from "../ui/Icons";
 import axiosInstance from "../../utils/axios";
 
 const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
@@ -32,8 +32,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         c => c.userId?.toString() === otherUser?._id?.toString() || c.userId === otherUser?._id
     );
 
-    // Display name: contact name gets sparkle suffix
-    const displayName = isContact ? `${otherUser?.username} ✨` : otherUser?.username;
+    // Display name: contact gets ✨, shown as badge component not string
+    const displayName = otherUser?.username;
 
     const isLastMessageFromThem =
         liveChat.lastMessage?.senderId !== user?._id &&
@@ -157,9 +157,15 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
 
             <div className="chat-card-info">
                 <div className="chat-card-row">
-                    <span className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`} style={{ display: 'flex', alignItems: 'center' }}>
+                    <span className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                         {displayName}
-                        {otherUser?.isVerified && <VerifiedTick />}
+                        {isContact && otherUser?.isVerified ? (
+                            <DualBadge />
+                        ) : isContact ? (
+                            <span style={{ marginLeft: '4px' }}>✨</span>
+                        ) : otherUser?.isVerified ? (
+                            <VerifiedTick />
+                        ) : null}
                     </span>
                     <span className="chat-card-time">
                         {liveChat.updatedAt ? formatDistanceToNow(new Date(liveChat.updatedAt), { addSuffix: false }) : ""}

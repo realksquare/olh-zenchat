@@ -5030,3 +5030,189 @@ select {
 .track-name { color: #f1f5f9; font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .track-artist { color: #94a3b8; font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .scroll-down-btn.visible { opacity: 1 !important; pointer-events: auto !important; transform: translateY(0) !important; }
+
+/* =====================================================
+   NEW ADDITIONS - May 2026 Refinements
+   ===================================================== */
+
+/* moments-aura: MomentViewer header ring (uses --aura-color) */
+.moments-aura {
+  position: relative;
+  border: 2.5px solid var(--aura-color, #3b82f6) !important;
+  box-shadow: 0 0 0 1px var(--aura-color, #3b82f6), 0 0 12px var(--aura-color, #3b82f6);
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.moments-aura::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border: 1.5px solid var(--aura-color, #3b82f6);
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: halo-pulse 2s infinite;
+  pointer-events: none;
+}
+
+/* avatar-aura-wrap: circular padded wrapper so ::after ring is never clipped */
+.avatar-aura-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  padding: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+/* Floating mute button — bottom-right overlay on MomentViewer */
+.aura-mute-overlay {
+  position: absolute;
+  bottom: 72px;
+  right: 16px;
+  z-index: 30;
+  background: rgba(0, 0, 0, 0.55) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.25) !important;
+  color: #fff !important;
+  border-radius: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0 !important;
+  pointer-events: auto;
+}
+.aura-mute-overlay:hover { transform: scale(1.12); background: rgba(255,255,255,0.12) !important; }
+.aura-mute-overlay svg { pointer-events: none; }
+
+/* DualBadge: crossfade sparkle <-> verified tick every 3s */
+.dual-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 24px;
+  height: 18px;
+  margin-left: 4px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.dual-badge-sparkle {
+  position: absolute;
+  font-size: 14px;
+  line-height: 1;
+  animation: dual-badge-cycle 6s ease-in-out infinite;
+}
+.dual-badge svg {
+  position: absolute;
+  left: 0;
+  margin-left: 0 !important;
+  animation: dual-badge-cycle-alt 6s ease-in-out infinite;
+}
+@keyframes dual-badge-cycle {
+  0%   { opacity: 1; transform: scale(1); }
+  35%  { opacity: 1; transform: scale(1); }
+  45%  { opacity: 0; transform: scale(0.6); }
+  85%  { opacity: 0; transform: scale(0.6); }
+  95%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes dual-badge-cycle-alt {
+  0%   { opacity: 0; transform: scale(0.6); }
+  40%  { opacity: 0; transform: scale(0.6); }
+  50%  { opacity: 1; transform: scale(1); }
+  90%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.6); }
+}
+
+/* Music track: left-aligned, scrollable long names */
+.track-name-scroll,
+.track-artist-scroll {
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+  min-width: 0;
+}
+.track-name-scroll .marquee-text,
+.track-artist-scroll .marquee-text {
+  display: inline-block;
+  animation: marquee-scroll 8s linear infinite;
+  padding-right: 40px;
+}
+
+/* Avatar delete button: anchor precisely to avatar bottom-right */
+.profile-avatar-container {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem !important;
+}
+.profile-avatar-container .avatar-reset-btn {
+  position: absolute !important;
+  bottom: 0 !important;
+  right: 0 !important;
+  transform: translate(30%, 30%) !important;
+  width: 26px !important;
+  height: 26px !important;
+  z-index: 20 !important;
+}
+
+/* === Avatar delete button: exact anchor on 80px avatar-lg === */
+.profile-avatar-container {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 80px !important;
+  height: 80px !important;
+}
+.profile-avatar-container > .avatar-reset-btn {
+  position: absolute !important;
+  bottom: -2px !important;
+  right: -2px !important;
+  transform: none !important;
+  width: 24px !important;
+  height: 24px !important;
+  z-index: 20 !important;
+  background: #f43f5e !important;
+  border: 2px solid #0d1117 !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4) !important;
+  transition: transform 0.15s, background 0.15s;
+}
+.profile-avatar-container > .avatar-reset-btn:hover {
+  transform: scale(1.18) !important;
+  background: #e11d48 !important;
+}
+
+/* === Music search: left-align and overflow hidden for marquee === */
+.track-info {
+  text-align: left !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+.track-name-scroll,
+.track-artist-scroll {
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 100%;
+  display: block;
+}
+.track-name { text-align: left !important; }
+.track-artist { text-align: left !important; }
+

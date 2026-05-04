@@ -19,3 +19,16 @@ export const HelpIcon = memo(({ size = 18 }) => (
         <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
     </svg>
 ));
+
+/**
+ * DualBadge — crossfades ✨ and VerifiedTick every 3s in the same slot.
+ * Use when a user is both a contact AND verified.
+ */
+export const DualBadge = memo(() => (
+    <span className="dual-badge" aria-label="Contact & Verified" title="Contact & Verified">
+        <span className="dual-badge-sparkle">✨</span>
+        <span className="dual-badge-tick">
+            <VerifiedTick style={{ marginLeft: 0, position: 'relative', top: 0 }} />
+        </span>
+    </span>
+));

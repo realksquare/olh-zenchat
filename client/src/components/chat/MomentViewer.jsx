@@ -185,8 +185,8 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                 <div className={`aura-viewer-header ${(!hasMedia) ? 'with-bg' : ''}`}>
                     <div className="aura-user-meta-container">
                         <div className="aura-user-meta">
-                            <div className="avatar-with-countdown">
-                                <div className="avatar avatar-md moments-halo" style={{ '--halo-color': haloColor }}>
+                            <div className="avatar-aura-wrap">
+                                <div className="avatar avatar-md moments-aura" style={{ '--aura-color': haloColor }}>
                                     {user?.avatar ? (
                                         <img src={user.avatar} alt={user.username} />
                                     ) : (
@@ -237,15 +237,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                     )}
                                 </button>
                             )}
-                            {(currentMoment.type === "video" || currentMoment.music) && (
-                                <button className="aura-speaker-btn" onClick={() => setIsMuted(!isMuted)}>
-                                    {isMuted ? (
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M11 5L6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>
-                                    ) : (
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M11 5L6 9H2v6h4l5 4V5z" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" /></svg>
-                                    )}
-                                </button>
-                            )}
                         </div>
 
                         <button className="aura-viewer-close" onClick={handleClose}>
@@ -255,6 +246,21 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                         </button>
                     </div>
                 </div>
+
+                {/* Floating mute overlay — bottom-right, only when audio is present */}
+                {(currentMoment.type === "video" || currentMoment.music) && (
+                    <button
+                        className="aura-mute-overlay"
+                        onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
+                        title={isMuted ? "Unmute" : "Mute"}
+                    >
+                        {isMuted ? (
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M11 5L6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>
+                        ) : (
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M11 5L6 9H2v6h4l5 4V5z" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" /></svg>
+                        )}
+                    </button>
+                )}
 
                 <div className="aura-viewer-media">
                     {currentMoment.type === "video" ? (
