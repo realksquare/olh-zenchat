@@ -20,7 +20,7 @@ router.post(
     [
         body("username").trim().isLength({ min: 3, max: 20 }),
         body("email").isEmail().normalizeEmail(),
-        body("password").isLength({ min: 6 }),
+        body("password").isLength({ min: 7, max: 18 }).matches(/\d/).withMessage("Password must contain at least one number"),
     ],
     async (req, res) => {
         const errors = validationResult(req);
@@ -122,7 +122,7 @@ router.put(
     [
         body("username").optional().trim().isLength({ min: 3, max: 20 }),
         body("email").optional().isEmail().normalizeEmail(),
-        body("password").optional().isLength({ min: 6 }),
+        body("password").optional().isLength({ min: 7, max: 18 }).matches(/\d/).withMessage("Password must contain at least one number"),
     ],
     async (req, res) => {
         const errors = validationResult(req);

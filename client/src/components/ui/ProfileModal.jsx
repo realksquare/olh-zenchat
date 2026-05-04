@@ -74,6 +74,11 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+        if (password) {
+            if (password.length < 7) { setError("Password must be at least 7 characters"); return; }
+            if (password.length > 18) { setError("Password must be at most 18 characters"); return; }
+            if (!/\d/.test(password)) { setError("Password must contain at least one number"); return; }
+        }
         const formData = new FormData();
         if (username !== user.username) formData.append("username", username);
         if (fullName !== user.fullName) formData.append("fullName", fullName);
@@ -163,8 +168,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 {error && <div className="error-message">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="profile-form">
-                    <div className="profile-avatar-section">
-                    <div className="profile-avatar-container" style={{ margin: "0 auto 1.5rem" }}>
+                    <div className="profile-avatar-container" style={{ position: 'relative', width: '110px', height: '110px', margin: '0 auto 1.5rem' }}>
                         <div 
                             className="avatar avatar-lg profile-avatar-edit"
                             onClick={() => fileInputRef.current?.click()}
@@ -196,14 +200,13 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                     setAvatarFile(null);
                                     setAvatarPreview("");
                                 }}
-                                title="Reset to initials"
+                                title="Remove photo"
                             >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                                 </svg>
                             </button>
                         )}
-                    </div>
                     </div>
 
                     <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
@@ -224,7 +227,20 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
 
                     <div className="form-group">
                         <label>New Password (optional)</label>
-                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Leave blank to keep current" minLength={6} />
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="7-18 chars, one number"
+                            minLength={7}
+                            maxLength={18}
+                        />
+                        {password && (() => {
+                            if (password.length < 7) return <span className="field-hint field-hint-error">At least 7 characters</span>;
+                            if (password.length > 18) return <span className="field-hint field-hint-error">At most 18 characters</span>;
+                            if (!/\d/.test(password)) return <span className="field-hint field-hint-error">Must contain at least one number</span>;
+                            return <span className="field-hint field-hint-ok">Password looks good</span>;
+                        })()}
                     </div>
 
                     <div className="privacy-section" style={{ marginTop: "1.25rem", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "1.25rem" }}>

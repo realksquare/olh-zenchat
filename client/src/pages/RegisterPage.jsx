@@ -2,21 +2,34 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 
+const validatePassword = (pw) => {
+    if (pw.length < 7) return "At least 7 characters";
+    if (pw.length > 18) return "At most 18 characters";
+    if (!/\d/.test(pw)) return "Must contain at least one number";
+    return null;
+};
+
 const RegisterPage = () => {
     const navigate = useNavigate();
     const { register, isLoading, error, clearError } = useAuthStore();
     const [form, setForm] = useState({ username: "", email: "", password: "" });
+    const [pwError, setPwError] = useState("");
 
     const handleChange = (e) => {
         clearError();
         setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+        if (e.target.name === "password") setPwError("");
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const err = validatePassword(form.password);
+        if (err) { setPwError(err); return; }
         const result = await register(form.username, form.email, form.password);
         if (result.success) navigate("/");
     };
+
+    const pwHint = validatePassword(form.password);
 
     return (
         <div className="auth-page">
@@ -77,11 +90,20 @@ const RegisterPage = () => {
                             type="password"
                             autoComplete="new-password"
                             required
-                            placeholder="Min. 6 characters"
-                            minLength={6}
+                            placeholder="7-18 chars, one number"
+                            minLength={7}
+                            maxLength={18}
                             value={form.password}
                             onChange={handleChange}
                         />
+                        {form.password && (
+                            <span className={`field-hint ${pwHint ? "field-hint-error" : "field-hint-ok"}`}>
+                                {pwHint || "Password looks good"}
+                            </span>
+                        )}
+                        {pwError && !form.password && (
+                            <span className="field-hint field-hint-error">{pwError}</span>
+                        )}
                     </div>
 
                     <button type="submit" className="btn-primary" disabled={isLoading}>

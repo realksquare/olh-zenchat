@@ -14,14 +14,27 @@ const HomePage = () => {
 
     useEffect(() => {
         if (token) {
-            // Force empty state on refresh
             useChatStore.getState().setActiveChat(null);
         }
     }, [token]);
 
     useEffect(() => {
-        setShowChat(!!activeChat?._id);
+        const hasChat = !!activeChat?._id;
+        setShowChat(hasChat);
+        if (hasChat) {
+            window.history.pushState({ chat: true }, "");
+        }
     }, [activeChat?._id]);
+
+    useEffect(() => {
+        const handlePopState = (e) => {
+            if (showChat) {
+                handleBackToSidebar();
+            }
+        };
+        window.addEventListener("popstate", handlePopState);
+        return () => window.removeEventListener("popstate", handlePopState);
+    }, [showChat]);
 
     const handleBackToSidebar = () => {
         useChatStore.getState().setActiveChat(null);

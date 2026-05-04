@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./stores/authStore";
 import { useChatStore } from "./stores/chatStore";
@@ -27,22 +27,42 @@ const GuestRoute = ({ children }) => {
 const NetworkBanner = () => {
   const { socket } = useSocket();
   const [status, setStatus] = useState("online");
+  const [visible, setVisible] = useState(false);
+  const hideTimer = useRef(null);
+
+  const showBanner = (s) => {
+    setStatus(s);
+    setVisible(true);
+    clearTimeout(hideTimer.current);
+  };
+
+  const hideBanner = () => {
+    clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => setVisible(false), 2000);
+  };
 
   useEffect(() => {
-    const onOffline = () => setStatus("offline");
-    const onOnline = () => setStatus(socket?.connected ? "online" : "reconnecting");
+    const onOffline = () => { showBanner("offline"); };
+    const onOnline = () => {
+      setStatus(socket?.connected ? "online" : "reconnecting");
+      if (socket?.connected) hideBanner();
+    };
     window.addEventListener("offline", onOffline);
     window.addEventListener("online", onOnline);
     return () => {
       window.removeEventListener("offline", onOffline);
       window.removeEventListener("online", onOnline);
+      clearTimeout(hideTimer.current);
     };
   }, [socket]);
 
   useEffect(() => {
     if (!socket) return;
-    const onDisconnect = () => setStatus((s) => s !== "offline" ? "reconnecting" : s);
-    const onConnect = () => setStatus("online");
+    const onDisconnect = () => { showBanner("reconnecting"); };
+    const onConnect = () => {
+      showBanner("online");
+      hideBanner();
+    };
     socket.on("disconnect", onDisconnect);
     socket.on("connect", onConnect);
     return () => {
@@ -51,7 +71,7 @@ const NetworkBanner = () => {
     };
   }, [socket]);
 
-  if (status === "online") return null;
+  if (!visible || status === "online") return null;
 
   return (
     <div className="network-banner" data-status={status}>
@@ -63,7 +83,7 @@ const NetworkBanner = () => {
       ) : (
         <>
           <span className="banner-spinner" />
-          Reconnecting…
+          Reconnecting
         </>
       )}
     </div>

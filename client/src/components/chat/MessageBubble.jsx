@@ -130,9 +130,13 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                         }
                     }}
                 >
-                    {isViewOnce && (isMe || isViewedByMe || isViewedByAnyone || !message.mediaUrl) && !tempVisible ? (
+                    {isViewOnce && isMe ? (
                         <div className="view-once-placeholder viewed">
-                            <span>{isMe ? "Media sent" : "Media viewed"}</span>
+                            <span>Media sent</span>
+                        </div>
+                    ) : isViewOnce && !isMe && (isViewedByMe || isViewedByAnyone || !message.mediaUrl) && !tempVisible ? (
+                        <div className="view-once-placeholder viewed">
+                            <span>Media viewed</span>
                         </div>
                     ) : isViewOnce && !isMe && !tempVisible ? (
                         <div className="view-once-placeholder" onClick={handleViewOnce}>

@@ -100,35 +100,39 @@ export const useChatStore = create(
                 set({ isLoadingMessages: true });
                 try {
                     const { data } = await axiosInstance.get(`/messages/${chatId}`);
-                    data.messages.forEach(msg => persistMessage({ ...msg, chatId: chatId.toString() }));
-                    
+                    const serverMessages = data.messages;
+
+                    serverMessages.forEach(msg => persistMessage({ ...msg, chatId: chatId.toString() }));
+
                     set((state) => {
-                        const newMessages = data.messages;
+                        const currentUserId = useAuthStore.getState().user?._id;
                         const existingMessages = state.messages[chatId.toString()] || [];
-                        
-                        // Merge logic: prefer server messages, but keep existing ones if not in server response
-                        const merged = [...existingMessages];
-                        newMessages.forEach(newMsg => {
-                            const idx = merged.findIndex(m => m._id?.toString() === newMsg._id?.toString() || (newMsg.cid && m.cid === newMsg.cid));
-                            if (idx !== -1) {
-                                merged[idx] = { ...merged[idx], ...newMsg };
-                            } else {
-                                merged.push(newMsg);
-                            }
+
+                        // Build a map of server messages by _id for O(1) lookup
+                        const serverById = new Map(serverMessages.map(m => [m._id?.toString(), m]));
+
+                        // Collect optimistic messages (temp-id) that haven't been confirmed by server yet
+                        const pendingOptimistic = existingMessages.filter(m => {
+                            const id = m._id?.toString() || "";
+                            if (!id.startsWith("temp-")) return false;
+                            // Keep only if no server message has same cid
+                            if (!m.cid) return false;
+                            return !serverMessages.some(s => s.cid === m.cid);
                         });
 
-                        // Final sort to ensure chronological order
+                        // Merge: server messages are authoritative, append pending optimistic at end
+                        const merged = [...serverMessages, ...pendingOptimistic];
                         merged.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
                         const unreadCounts = { ...state.unreadCounts };
                         const hasRealUnread = merged.some(m => {
                             const senderIdStr = m.senderId?._id?.toString() || m.senderId?.toString();
-                            return senderIdStr !== user?._id && 
-                            m.status !== "read" && 
-                            !m.deletedForEveryone &&
-                            (m.content || m.mediaUrl || m.music);
+                            return senderIdStr !== currentUserId &&
+                                m.status !== "read" &&
+                                !m.deletedForEveryone &&
+                                (m.content || m.mediaUrl || m.music);
                         });
-                        
+
                         if (!hasRealUnread) {
                             unreadCounts[chatId.toString()] = 0;
                         }

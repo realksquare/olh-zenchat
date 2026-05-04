@@ -2,18 +2,29 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 
+const validatePassword = (pw) => {
+    if (pw.length < 7) return "Password must be at least 7 characters";
+    if (pw.length > 18) return "Password must be at most 18 characters";
+    if (!/\d/.test(pw)) return "Password must contain at least one number";
+    return null;
+};
+
 const LoginPage = () => {
     const navigate = useNavigate();
     const { login, isLoading, error, clearError } = useAuthStore();
     const [form, setForm] = useState({ email: "", password: "" });
+    const [pwError, setPwError] = useState("");
 
     const handleChange = (e) => {
         clearError();
         setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+        if (e.target.name === "password") setPwError("");
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const err = validatePassword(form.password);
+        if (err) { setPwError(err); return; }
         const result = await login(form.email, form.password);
         if (result.success) navigate("/");
     };
@@ -38,7 +49,7 @@ const LoginPage = () => {
                             <>
                                 <strong>Account Suspended</strong>
                                 <p style={{ fontSize: '0.85rem', marginTop: '4px' }}>
-                                    Your account has been suspended for violating terms. 
+                                    Your account has been suspended for violating terms.
                                     Contact admin for further details.
                                 </p>
                             </>
@@ -69,10 +80,13 @@ const LoginPage = () => {
                             type="password"
                             autoComplete="current-password"
                             required
-                            placeholder="••••••••"
+                            placeholder="Your password"
+                            minLength={7}
+                            maxLength={18}
                             value={form.password}
                             onChange={handleChange}
                         />
+                        {pwError && <span className="field-hint field-hint-error">{pwError}</span>}
                     </div>
 
                     <button type="submit" className="btn-primary" disabled={isLoading}>
@@ -89,4 +103,4 @@ const LoginPage = () => {
     );
 };
 
-export default LoginPage;
+export default LoginPage;
