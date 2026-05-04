@@ -65,37 +65,43 @@ router.get("/search", protect, async (req, res) => {
         const { q } = req.query;
         if (!q) return res.status(400).json({ message: "Query required" });
 
-        const token = await getSpotifyToken();
-        if (!token) {
-            // Fallback to iTunes if Spotify is not configured
-            const results = await searchITunes(q);
-            return res.json(results);
-        }
+        const [token, itunesResults] = await Promise.all([
+            getSpotifyToken(),
+            searchITunes(q)
+        ]);
 
-        const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=25`, {
-            headers: {
-                "Authorization": `Bearer ${token}`
+        let spotifyResults = [];
+        if (token) {
+            try {
+                const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=25`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (data.tracks && data.tracks.items) {
+                    spotifyResults = data.tracks.items.map(track => ({
+                        id: `spotify-${track.id}`,
+                        title: track.name,
+                        artist: track.artists.map(a => a.name).join(", "),
+                        previewUrl: track.preview_url,
+                        coverUrl: track.album.images[0]?.url || "",
+                        totalDuration: Math.floor(track.duration_ms / 1000),
+                        source: "Spotify"
+                    }));
+                }
+            } catch (err) {
+                console.error("Spotify search error:", err.message);
             }
-        });
-
-        const data = await response.json();
-        
-        if (!data.tracks) {
-            const results = await searchITunes(q);
-            return res.json(results);
         }
 
-        const tracks = data.tracks.items.map(track => ({
-            id: `spotify-${track.id}`,
-            title: track.name,
-            artist: track.artists.map(a => a.name).join(", "),
-            previewUrl: track.preview_url,
-            coverUrl: track.album.images[0]?.url || "",
-            totalDuration: Math.floor(track.duration_ms / 1000),
-            source: "Spotify"
-        }));
+        // Interleave results to mix them nicely
+        const combined = [];
+        const maxLen = Math.max(spotifyResults.length, itunesResults.length);
+        for (let i = 0; i < maxLen; i++) {
+            if (spotifyResults[i]) combined.push(spotifyResults[i]);
+            if (itunesResults[i]) combined.push(itunesResults[i]);
+        }
 
-        res.json(tracks);
+        res.json(combined);
     } catch (err) {
         console.error("Music search error:", err.message);
         const fallback = await searchITunes(req.query.q);

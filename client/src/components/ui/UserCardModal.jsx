@@ -1,7 +1,7 @@
 import { memo, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { format } from "date-fns";
-import { VerifiedTick, DualBadge } from "./Icons";
+import { VerifiedTick } from "./Icons";
 import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
 
@@ -64,15 +64,9 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
 
                 <div className="user-card-body">
                     <div className="user-card-info">
-                        <h2 className="user-card-username" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                        <h2 className={`user-card-username ${isContact ? "chat-card-name-contact" : ""}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             @{username}
-                            {isContact && user.isVerified ? (
-                                <DualBadge />
-                            ) : isContact ? (
-                                <span>✨</span>
-                            ) : user.isVerified ? (
-                                <VerifiedTick />
-                            ) : null}
+                            {user.isVerified && <VerifiedTick />}
                         </h2>
                         {canSeeFullName && fullName && (
                             <p className="user-card-fullname">{fullName}</p>

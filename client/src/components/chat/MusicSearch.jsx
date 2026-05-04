@@ -45,7 +45,11 @@ const MusicSearch = ({ onSelect, onClose }) => {
                     ) : results.length > 0 ? (
                         results.map(track => (
                             <div key={track.id} className="music-track-item" onClick={() => onSelect(track)}>
-                                <img src={track.coverUrl} alt="Cover" className="track-cover" />
+                                <img 
+                                    src={track.coverUrl || '/default-music.png'} 
+                                    alt="Cover" 
+                                    className={`track-cover ${track.source === 'Spotify' ? 'aura-spotify' : track.source === 'iTunes' ? 'aura-itunes' : ''}`} 
+                                />
                                 <div className="track-info">
                                     <div className="track-name-scroll">
                                         <span className={track.title.length > 22 ? "marquee-text" : ""}>

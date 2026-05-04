@@ -11,13 +11,18 @@ const NotificationPrompt = () => {
     useEffect(() => {
         const checkPermission = async () => {
             if (!user) return;
-            if (Notification.permission === "default") {
+            if (Notification.permission === "default" && !sessionStorage.getItem("notifPromptDismissed")) {
                 const timer = setTimeout(() => setShow(true), 3000);
                 return () => clearTimeout(timer);
             }
         };
         checkPermission();
     }, [user]);
+
+    const handleDismiss = () => {
+        sessionStorage.setItem("notifPromptDismissed", "true");
+        setShow(false);
+    };
 
     const handleEnable = async () => {
         setIsLoading(true);
@@ -32,10 +37,10 @@ const NotificationPrompt = () => {
                 });
                 setFCMToken(token);
             }
-            setShow(false); // Close regardless of token if they interacted
+            handleDismiss(); // Close regardless of token if they interacted
         } catch (err) {
             console.error("Failed to enable notifications", err);
-            setShow(false);
+            handleDismiss();
         } finally {
             setIsLoading(false);
         }
@@ -50,7 +55,7 @@ const NotificationPrompt = () => {
                 <h3>Stay Connected!</h3>
                 <p>Enable push notifications for instant updates when you're offline!</p>
                 <div className="notif-prompt-actions">
-                    <button className="notif-btn-later" onClick={() => setShow(false)} disabled={isLoading}>Later</button>
+                    <button className="notif-btn-later" onClick={handleDismiss} disabled={isLoading}>Later</button>
                     <button className="notif-btn-enable" onClick={handleEnable} disabled={isLoading}>
                         {isLoading ? "Please wait..." : "Enable Now"}
                     </button>

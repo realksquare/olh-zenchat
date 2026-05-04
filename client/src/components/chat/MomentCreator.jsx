@@ -67,10 +67,11 @@ const MomentCreator = ({ isOpen, onClose }) => {
         if (!content && !music) return;
         const ownMomentsCount = moments.filter(m => (m.userId?._id || m.userId) === user?._id).length;
         if (ownMomentsCount >= 5) {
-            showToast("Slow down... only 5 #moments. per cycle. 🌪️");
+            showToast("Upload limit reached (5 moments maximum).");
             return;
         }
         setIsUploading(true);
+
         try {
             let type = music ? "music" : "text";
             await createMoment({ type, content, music: music ? { ...music, duration, startTime } : null });

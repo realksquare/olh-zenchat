@@ -3,7 +3,7 @@ import { useChatStore } from "../../stores/chatStore";
 import { useAuthStore } from "../../stores/authStore";
 import { formatDistanceToNow } from "date-fns";
 import { useMomentStore } from "../../stores/momentStore";
-import { VerifiedTick, DualBadge } from "../ui/Icons";
+import { VerifiedTick } from "../ui/Icons";
 import axiosInstance from "../../utils/axios";
 
 const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
@@ -157,15 +157,9 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
 
             <div className="chat-card-info">
                 <div className="chat-card-row">
-                    <span className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                    <span className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`} style={{ display: 'flex', alignItems: 'center' }}>
                         {displayName}
-                        {isContact && otherUser?.isVerified ? (
-                            <DualBadge />
-                        ) : isContact ? (
-                            <span style={{ marginLeft: '4px' }}>✨</span>
-                        ) : otherUser?.isVerified ? (
-                            <VerifiedTick />
-                        ) : null}
+                        {otherUser?.isVerified && <VerifiedTick />}
                     </span>
                     <span className="chat-card-time">
                         {liveChat.updatedAt ? formatDistanceToNow(new Date(liveChat.updatedAt), { addSuffix: false }) : ""}

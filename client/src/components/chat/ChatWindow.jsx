@@ -7,7 +7,7 @@ import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
 import TypingIndicator from "./TypingIndicator";
 import { formatDistanceToNow } from "date-fns";
-import { VerifiedTick, DualBadge } from "../ui/Icons";
+import { VerifiedTick } from "../ui/Icons";
 import UserCardModal from "../ui/UserCardModal";
 import { useMomentStore } from "../../stores/momentStore";
 
@@ -231,15 +231,9 @@ const ChatWindow = ({ onBack }) => {
                     onClick={() => setShowUserCard(true)}
                     style={{ cursor: 'pointer' }}
                 >
-                    <span className="chat-header-name" style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                        {displayName}
-                        {isContact && otherUser?.isVerified ? (
-                            <DualBadge />
-                        ) : isContact ? (
-                            <span style={{ marginLeft: '3px' }}>✨</span>
-                        ) : otherUser?.isVerified ? (
-                            <VerifiedTick />
-                        ) : null}
+                    <span className="chat-header-name" style={{ display: 'flex', alignItems: 'center' }}>
+                        <span className={isContact ? "chat-card-name-contact" : ""}>{displayName}</span>
+                        {otherUser?.isVerified && <VerifiedTick />}
                     </span>
                     <span className={`chat-header-status ${(otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) ? "status-online" : ""}`}>
                         {getStatusText()}

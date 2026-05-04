@@ -12,6 +12,8 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showMusicInfo, setShowMusicInfo] = useState(false);
+    const [showMenu, setShowMenu] = useState(false);
+
     const audioRef = useRef(null);
     const videoRef = useRef(null);
     
@@ -199,7 +201,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                 <div className="aura-user-title-row">
                                     <span className="aura-username">{user?.username}</span>
                                     <span className="aura-moment-counter">
-                                        {currentIndex + 1} of {moments.length}
+                                        {currentIndex + 1}/{moments.length}
                                     </span>
                                 </div>
                                 <div className="aura-metadata-wrapper">
@@ -228,14 +230,35 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                     <span style={{ fontSize: '0.9rem', fontWeight: '700' }}>{getViewCount(currentMoment._id, currentMoment.userId)}</span>
                                 </div>
                             )}
-                            {isOwn && (
-                                <button className="aura-trash-btn" onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); }} title="Let go." disabled={isDeleting}>
-                                    {isDeleting ? (
-                                        <div className="aura-mini-spinner" />
-                                    ) : (
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+
+                            {(isOwn || currentMoment.type === "video" || currentMoment.music) && (
+                                <div className="aura-menu-container" style={{ position: 'relative' }}>
+                                    <button className="aura-menu-trigger" onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}>
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                            <circle cx="12" cy="12" r="1" />
+                                            <circle cx="12" cy="5" r="1" />
+                                            <circle cx="12" cy="19" r="1" />
+                                        </svg>
+                                    </button>
+                                    {showMenu && (
+                                        <div className="aura-dropdown-menu" onClick={(e) => e.stopPropagation()}>
+                                            {(currentMoment.type === "video" || currentMoment.music) && (
+                                                <button className="aura-dropdown-item" onClick={() => { setIsMuted(!isMuted); setShowMenu(false); }}>
+                                                    {isMuted ? (
+                                                        <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M11 5L6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg> Unmute Audio</>
+                                                    ) : (
+                                                        <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M11 5L6 9H2v6h4l5 4V5z" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" /></svg> Mute Audio</>
+                                                    )}
+                                                </button>
+                                            )}
+                                            {isOwn && (
+                                                <button className="aura-dropdown-item danger" onClick={() => { setShowDeleteConfirm(true); setShowMenu(false); }} disabled={isDeleting}>
+                                                    {isDeleting ? <div className="aura-mini-spinner" /> : <><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg> Delete Moment</>}
+                                                </button>
+                                            )}
+                                        </div>
                                     )}
-                                </button>
+                                </div>
                             )}
                         </div>
 
@@ -246,21 +269,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                         </button>
                     </div>
                 </div>
-
-                {/* Floating mute overlay — bottom-right, only when audio is present */}
-                {(currentMoment.type === "video" || currentMoment.music) && (
-                    <button
-                        className="aura-mute-overlay"
-                        onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }}
-                        title={isMuted ? "Unmute" : "Mute"}
-                    >
-                        {isMuted ? (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M11 5L6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>
-                        ) : (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M11 5L6 9H2v6h4l5 4V5z" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" /></svg>
-                        )}
-                    </button>
-                )}
 
                 <div className="aura-viewer-media">
                     {currentMoment.type === "video" ? (
