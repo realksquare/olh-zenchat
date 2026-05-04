@@ -42,32 +42,34 @@ const NetworkBanner = () => {
   };
 
   useEffect(() => {
-    const onOffline = () => { showBanner("offline"); };
-    const onOnline = () => {
-      setStatus(socket?.connected ? "online" : "reconnecting");
-      if (socket?.connected) hideBanner();
+    const handleStatusChange = () => {
+      if (!navigator.onLine) {
+        showBanner("offline");
+      } else if (socket && !socket.connected) {
+        showBanner("reconnecting");
+      } else {
+        showBanner("online");
+        hideBanner();
+      }
     };
-    window.addEventListener("offline", onOffline);
-    window.addEventListener("online", onOnline);
-    return () => {
-      window.removeEventListener("offline", onOffline);
-      window.removeEventListener("online", onOnline);
-      clearTimeout(hideTimer.current);
-    };
-  }, [socket]);
 
-  useEffect(() => {
-    if (!socket) return;
-    const onDisconnect = () => { showBanner("reconnecting"); };
-    const onConnect = () => {
-      showBanner("online");
-      hideBanner();
-    };
-    socket.on("disconnect", onDisconnect);
-    socket.on("connect", onConnect);
+    window.addEventListener("offline", handleStatusChange);
+    window.addEventListener("online", handleStatusChange);
+    
+    if (socket) {
+      socket.on("disconnect", handleStatusChange);
+      socket.on("connect", handleStatusChange);
+      handleStatusChange(); // Initial check
+    }
+
     return () => {
-      socket.off("disconnect", onDisconnect);
-      socket.off("connect", onConnect);
+      window.removeEventListener("offline", handleStatusChange);
+      window.removeEventListener("online", handleStatusChange);
+      if (socket) {
+        socket.off("disconnect", handleStatusChange);
+        socket.off("connect", handleStatusChange);
+      }
+      clearTimeout(hideTimer.current);
     };
   }, [socket]);
 
