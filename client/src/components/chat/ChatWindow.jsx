@@ -231,9 +231,9 @@ const ChatWindow = ({ onBack }) => {
                     onClick={() => setShowUserCard(true)}
                     style={{ cursor: 'pointer' }}
                 >
-                    <span className="chat-header-name" style={{ display: 'flex', alignItems: 'center' }}>
-                        <span className={isContact ? "chat-card-name-contact" : ""}>{displayName}</span>
-                        {otherUser?.isVerified && <VerifiedTick />}
+                    <span className="chat-header-name" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span className={isContact ? "chat-card-name-contact" : ""} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</span>
+                        {otherUser?.isVerified && <span style={{ flexShrink: 0, display: 'flex' }}><VerifiedTick /></span>}
                     </span>
                     <span className={`chat-header-status ${(otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) ? "status-online" : ""}`}>
                         {getStatusText()}

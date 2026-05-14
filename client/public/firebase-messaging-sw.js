@@ -109,11 +109,5 @@ self.addEventListener('message', (event) => {
 });
 
 self.addEventListener('fetch', function(event) {
-    if (event.request.mode === 'navigate') {
-        event.respondWith(
-            fetch(event.request).catch(function() {
-                return caches.match('/index.html') || new Response('You are offline. Please reconnect.', { headers: { 'Content-Type': 'text/html' } });
-            })
-        );
-    }
+    // Empty fetch listener to satisfy PWA requirements without interfering
 });

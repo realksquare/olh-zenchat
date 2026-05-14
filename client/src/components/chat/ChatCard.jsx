@@ -157,9 +157,9 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
 
             <div className="chat-card-info">
                 <div className="chat-card-row">
-                    <span className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`} style={{ display: 'flex', alignItems: 'center' }}>
-                        {displayName}
-                        {otherUser?.isVerified && <VerifiedTick />}
+                    <span className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</span>
+                        {otherUser?.isVerified && <span style={{ flexShrink: 0, display: 'flex' }}><VerifiedTick /></span>}
                     </span>
                     <span className="chat-card-time">
                         {liveChat.updatedAt ? formatDistanceToNow(new Date(liveChat.updatedAt), { addSuffix: false }) : ""}
