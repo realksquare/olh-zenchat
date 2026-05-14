@@ -33,7 +33,16 @@ export const requestNotificationPermission = async () => {
             if (!import.meta.env.VITE_FIREBASE_VAPID_KEY) {
                 console.error("VITE_FIREBASE_VAPID_KEY is missing from environment variables!");
             }
-            const registration = await navigator.serviceWorker.ready;
+            let registration = await navigator.serviceWorker.getRegistration();
+            if (!registration) {
+                registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            }
+            
+            await Promise.race([
+                navigator.serviceWorker.ready,
+                new Promise((_, reject) => setTimeout(() => reject(new Error("Service Worker timeout")), 5000))
+            ]);
+
             const token = await getToken(messaging, {
                 vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
                 serviceWorkerRegistration: registration,
