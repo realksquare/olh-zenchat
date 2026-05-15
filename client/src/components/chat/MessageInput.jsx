@@ -159,7 +159,7 @@ const MediaPreview = ({ files, onRemove }) => {
     );
 };
 
-const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCancelReply }) => {
+const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCancelReply, disabled = false }) => {
     const [content, setContent] = useState("");
     const [isViewOnce, setIsViewOnce] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -376,7 +376,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     };
 
     const hasMedia = stagedFiles.length > 0;
-    const sendDisabled = uploading || (!content.trim() && !hasMedia) || (isViewOnce && !hasMedia);
+    const sendDisabled = disabled || uploading || (!content.trim() && !hasMedia) || (isViewOnce && !hasMedia);
 
     return (
         <div className="message-input-wrap">
@@ -425,8 +425,9 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 <button
                     className="attachment-btn"
                     onClick={() => setShowMediaPopup(true)}
-                    disabled={uploading || hasMedia >= MAX_FILES}
+                    disabled={disabled || uploading || hasMedia >= MAX_FILES}
                     title="Attach media"
+                    style={{ opacity: disabled ? 0.5 : 1 }}
                 >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
@@ -437,8 +438,9 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 <button
                     className={`view-once-btn ${isViewOnce ? "active" : ""}`}
                     onClick={() => setIsViewOnce(!isViewOnce)}
-                    disabled={uploading}
+                    disabled={disabled || uploading}
                     title={isViewOnce ? "View-Once ON - for uploaded media" : "Enable View-Once for media"}
+                    style={{ opacity: disabled ? 0.5 : 1 }}
                 >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -450,6 +452,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     ref={textareaRef}
                     className="message-textarea"
                     placeholder={
+                        disabled ? "Sending disabled in Fav mode..." :
                         uploading ? "Uploading..." :
                             hasMedia ? "Add a caption (optional)..." :
                                 isViewOnce ? "Upload a file to send view-once media..." :
@@ -459,9 +462,10 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     value={content}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
-                    disabled={uploading || (isViewOnce && !hasMedia)}
+                    disabled={disabled || uploading || (isViewOnce && !hasMedia)}
                     rows={1}
                     aria-label="Message input"
+                    style={{ opacity: disabled ? 0.5 : 1, cursor: disabled ? 'not-allowed' : 'text' }}
                 />
 
                 <button

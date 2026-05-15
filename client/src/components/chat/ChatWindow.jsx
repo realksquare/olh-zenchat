@@ -277,7 +277,7 @@ const ChatWindow = ({ onBack }) => {
             </div>
 
             <div className="chat-messages" ref={messagesContainerRef} onScroll={handleScroll}>
-                {(hasMoreMessages[activeChat?._id] || isLoadingOlderMessages) && !isLoadingMessages && (
+                {(hasMoreMessages[activeChat?._id] || isLoadingOlderMessages) && !isLoadingMessages && (!showOnlyStarred || messages.length > 18) && (
                     <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 4px' }}>
                         <button
                             className="load-more-btn"
@@ -319,7 +319,7 @@ const ChatWindow = ({ onBack }) => {
 
                 {!isLoadingMessages && messages.length === 0 && (
                     <div className="messages-empty">
-                        <span>No messages yet - say Hi!</span>
+                        <span>{showOnlyStarred ? 'No messages marked as "Fav"' : 'No messages yet - say Hi!'}</span>
                     </div>
                 )}
 
@@ -368,6 +368,7 @@ const ChatWindow = ({ onBack }) => {
                 replyingTo={replyingTo}
                 onCancelEdit={() => setEditingMessage(null)}
                 onCancelReply={() => setReplyingTo(null)}
+                disabled={showOnlyStarred}
             />
 
             {deletingMessage && (

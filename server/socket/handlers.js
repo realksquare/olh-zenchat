@@ -80,7 +80,7 @@ const registerSocketHandlers = (io) => {
                             onlineUsers.delete(userId);
                             disconnectTimeouts.delete(userId);
                             broadcastUserStatus(userId, false, now);
-                        }, 30000);
+                        }, 2000);
                         disconnectTimeouts.set(userId, timeout);
                     }
                 }

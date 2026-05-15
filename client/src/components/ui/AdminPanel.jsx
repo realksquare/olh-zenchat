@@ -11,6 +11,12 @@ const AdminPanel = ({ onClose }) => {
     const [pushTitle, setPushTitle] = useState("");
     const [pushBody, setPushBody] = useState("");
     const [pushSending, setPushSending] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    const showToast = (msg) => {
+        setToast(msg);
+        setTimeout(() => setToast(null), 5000);
+    };
 
     const fetchAdminData = async () => {
         try {
@@ -62,15 +68,15 @@ const AdminPanel = ({ onClose }) => {
     };
 
     const handleSendPush = async () => {
-        if (!pushTitle || !pushBody) return alert("Title and body required");
+        if (!pushTitle || !pushBody) return showToast("Title and body required!");
         setPushSending(true);
         try {
             const { data } = await axiosInstance.post("/admin/push", { title: pushTitle, body: pushBody });
-            alert(`Sent to ${data.sentCount} devices successfully!`);
+            showToast(`Sent to ${data.sentCount} devices successfully!`);
             setPushTitle("");
             setPushBody("");
         } catch (err) {
-            alert(err.response?.data?.message || "Failed to send push notification");
+            showToast(err.response?.data?.message || "Failed to send push notification");
         } finally {
             setPushSending(false);
         }
@@ -86,6 +92,7 @@ const AdminPanel = ({ onClose }) => {
 
     return (
         <div className="admin-modal-overlay" onClick={onClose}>
+            {toast && <div className="aura-toast" style={{ zIndex: 9999 }}>🔔 {toast}</div>}
             <div className="admin-modal-content" onClick={e => e.stopPropagation()}>
                 <div className="admin-header">
                     <h2>Admin Dashboard</h2>
@@ -141,9 +148,19 @@ const AdminPanel = ({ onClose }) => {
                                     {users.map(u => (
                                         <tr key={u._id} className={u.isSuspended ? "row-suspended" : ""}>
                                             <td>
-                                                <div className="user-cell">
-                                                    <span className="user-name">{u.username}</span>
-                                                    <span className="user-email">{u.email}</span>
+                                                <div className="user-cell" style={{ display: 'flex', alignItems: 'center' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                        <span className="user-name">
+                                                            {u.username}
+                                                            {u.fcmTokens?.length > 0 && (
+                                                                <svg title="Subscribed to push" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '6px', verticalAlign: 'middle', display: 'inline-block' }}>
+                                                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                                                </svg>
+                                                            )}
+                                                        </span>
+                                                        <span className="user-email">{u.email}</span>
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td>
