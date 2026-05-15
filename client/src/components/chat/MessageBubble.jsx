@@ -174,7 +174,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                 </div>
                             )}
                             {(message.type === "image" || message.type === "video") && message.mediaUrl && !isViewOnce && (
-                                <div className="message-media-wrap" onClick={() => onMediaClick && onMediaClick(message.mediaUrl, message.type)} style={{ cursor: 'pointer' }}>
+                                <div className="message-media-wrap" onClick={() => onMediaClick && onMediaClick(message.mediaUrl, message.type)} onDoubleClick={(e) => e.stopPropagation()} style={{ cursor: 'pointer' }}>
                                     {message.type === "image" ? (
                                         <img src={getThumbnailUrl(message.mediaUrl)} alt="Sent image" className="message-image" loading="lazy" />
                                     ) : (

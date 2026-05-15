@@ -15,9 +15,10 @@ import MediaViewerModal from "../ui/MediaViewerModal";
 const EMPTY_MESSAGES = [];
 const EMPTY_CONTACTS = [];
 
-const ScrollDownBtn = ({ onClick, show }) => (
+const ScrollDownBtn = ({ onClick, show, isLifted }) => (
     <button
         className={`scroll-down-btn ${show ? 'visible' : ''}`}
+        style={{ marginBottom: isLifted ? '54px' : '0', transition: 'margin-bottom 0.2s ease-out' }}
         onClick={onClick}
         aria-label="Scroll to bottom"
     >
@@ -341,7 +342,7 @@ const ChatWindow = ({ onBack }) => {
                 {isTyping && <TypingIndicator scramble={typeof typingScramble === "string" ? typingScramble : ""} />}
                 <div ref={messagesEndRef} />
             </div>
-            <ScrollDownBtn onClick={scrollToBottom} show={showScrollDown} />
+            <ScrollDownBtn onClick={scrollToBottom} show={showScrollDown} isLifted={!!replyingTo} />
 
             <MessageInput
                 chatId={activeChat._id}
