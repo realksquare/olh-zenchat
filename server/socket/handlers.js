@@ -15,7 +15,8 @@ const cleanupInstantMessages = async (uid, io) => {
         const deleted = await Message.deleteMany({
             chatId: { $in: chatIds },
             disappearingMode: "instant",
-            status: "read"
+            status: "read",
+            senderId: { $ne: uid }
         });
 
         if (deleted.deletedCount > 0) {
