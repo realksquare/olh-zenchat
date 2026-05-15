@@ -209,7 +209,7 @@ export const useChatStore = create(
                         // If we are replacing an optimistic message (temp ID) with a real one (server ID)
                         // we MUST remove the temp ID from the local database
                         if (oldMsg._id !== message._id && oldMsg._id?.toString().startsWith('temp-')) {
-                            import("../db/zenDB").then(db => db.db.messages.delete(oldMsg._id));
+                            db.messages.delete(oldMsg._id);
                         }
 
                         // Merge server data over local data
@@ -223,7 +223,7 @@ export const useChatStore = create(
                     }
 
                     // 2. Persist the (final) message to IndexedDB
-                    import("../db/zenDB").then(db => db.persistMessage({ ...message, chatId }));
+                    persistMessage({ ...message, chatId });
 
                     const currentUserId = useAuthStore.getState().user?._id;
                     const isFromMe =
