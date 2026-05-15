@@ -182,7 +182,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         <div className="modal-overlay moments-aura-overlay" onClick={onClose} style={{ zIndex: 10000 }}>
             {toast && <div className="aura-toast" style={{ zIndex: 10001, bottom: '20px' }}>{toast}</div>}
             {isSubscribing && <LoadingOverlay message="Subscribing..." subMessage="Setting up your secure connection" />}
-            <div className="moments-aura-content profile-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "95%", padding: 0, overflow: 'hidden' }}>
+            <div className="moments-aura-content profile-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "95%", padding: 0 }}>
                 <div className="moments-aura-header">
                     <h2 className="moments-aura-title">Profile & Settings</h2>
                     <button className="aura-close-btn" onClick={onClose}>
