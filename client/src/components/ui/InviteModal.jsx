@@ -7,12 +7,12 @@ const InviteModal = ({ isOpen, onClose, username }) => {
     const tabsRef = useRef(null);
 
     const inviteLink = `${window.location.origin}/register?ref=${username}`;
-    const inviteMessage = `Hey! You should check out ZenChat! 🚀 It's the most reliable, privacy-focused chat app I've used.\n\n` +
-        `📉 Ultra-low data usage\n` +
-        `💸 No paywalls, no ads, no trackers\n` +
-        `🧘 Zero distractions, just pure focus\n` +
-        `🔒 Privacy-first architecture\n` +
-        `⚡️ Lightweight and lightning-fast\n\n` +
+    const inviteMessage = `Hey! You should check out ZenChat! It's the most reliable, privacy-focused chat app I've used.\n\n` +
+        `• Ultra-low data usage\n` +
+        `• No paywalls, no ads, no trackers\n` +
+        `• Zero distractions, just pure focus\n` +
+        `• Privacy-first architecture\n` +
+        `• Lightweight and lightning-fast\n\n` +
         `Join me here: ${inviteLink}`;
 
     const handleAction = () => {
@@ -24,7 +24,11 @@ const InviteModal = ({ isOpen, onClose, username }) => {
                 window.open(`https://wa.me/?text=${encodedMsg}`, "_blank");
                 break;
             case "linkedin":
-                window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`, "_blank");
+                // LinkedIn's share-offsite only takes URL, so we use a text-based intent or copy to clipboard
+                navigator.clipboard.writeText(inviteMessage);
+                window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodedMsg}`, "_blank");
+                setCopied(true);
+                setTimeout(() => setCopied(false), 3000);
                 break;
             case "email":
                 window.open(`mailto:?subject=Join me on ZenChat!&body=${encodedMsg}`, "_blank");
@@ -49,7 +53,7 @@ const InviteModal = ({ isOpen, onClose, username }) => {
     const tabs = [
         { id: "whatsapp", label: "WhatsApp", icon: <WhatsAppIcon />, instr: "Open WhatsApp to share directly with your contacts, groups, or as a Status update." },
         { id: "instagram", label: "Instagram", icon: <InstagramIcon />, instr: "Click 'Copy Link' to copy your invite. Then open Instagram to paste it into a DM or as a Story sticker." },
-        { id: "linkedin", label: "LinkedIn", icon: <LinkedInIcon />, instr: "Share your referral link as a professional post or send it as a direct message to your network." },
+        { id: "linkedin", label: "LinkedIn", icon: <LinkedInIcon />, instr: "Message copied! Paste it into your professional post or send it as a direct message to your network." },
         { id: "email", label: "Email", icon: <EmailIcon />, instr: "Send a pre-formatted email invitation to your friends and colleagues." },
         { id: "copy", label: "Copy Link", icon: <CopyIcon />, instr: "Simply copy the full invitation text and link to your clipboard to paste anywhere." }
     ];
