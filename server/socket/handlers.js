@@ -101,9 +101,8 @@ const registerSocketHandlers = (io) => {
                                 const now = new Date();
                                 await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
                                 broadcastUserStatus(userId, false, now);
-                                // Trigger instant message cleanup when going offline
                                 await cleanupInstantMessages(userId, io);
-                            }, 2000); // 2 seconds grace period before marking offline
+                            }, 2000);
                             disconnectTimeouts.set(userId + "_inactive", timeout);
                         }
                     } else {
@@ -133,7 +132,6 @@ const registerSocketHandlers = (io) => {
                                 disconnectTimeouts.delete(userId + "_inactive");
                             }
                             broadcastUserStatus(userId, false, now);
-                            // Trigger instant message cleanup when going offline (disconnect)
                             await cleanupInstantMessages(userId, io);
                         }, 2000);
                         disconnectTimeouts.set(userId, timeout);

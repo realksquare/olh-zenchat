@@ -83,7 +83,7 @@ const DisappearingBanner = memo(({ mode, onDisable }) => {
                 <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
             <span>
-                Disappearing messages ON &mdash; disappear after <strong>{MODE_LABELS[mode] || mode}</strong>.
+                Disappearing messages ON - disappear after <strong>{MODE_LABELS[mode] || mode}</strong>.
                 &nbsp;<span style={{ opacity: 0.6, fontSize: '0.72rem' }}>Double-tap to turn off</span>
             </span>
         </div>
@@ -206,7 +206,6 @@ const ChatWindow = ({ onBack }) => {
             }, 150);
         });
 
-        window.addEventListener('focus', markIfVisible);
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible' && activeChat?._id) {
                 markIfVisible();
