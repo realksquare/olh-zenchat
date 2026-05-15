@@ -10,12 +10,12 @@ import axios from "axios";
 const ACCEPTED_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const ACCEPTED_VIDEO = ["video/mp4", "video/quicktime", "video/webm", "video/mpeg", "video/x-msvideo"];
 const ACCEPTED_RAW = [
-    "application/pdf", 
-    "application/msword", 
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
-    "application/zip", 
-    "application/x-zip-compressed", 
-    "application/x-rar-compressed", 
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/zip",
+    "application/x-zip-compressed",
+    "application/x-rar-compressed",
     "text/plain",
     "application/octet-stream"
 ];
@@ -66,7 +66,7 @@ const MediaUploadPopup = ({ onClose, onFilesSelected, showToast }) => {
             const isImage = ACCEPTED_IMAGE.includes(file.type);
             const isVideo = ACCEPTED_VIDEO.includes(file.type);
             const isDoc = ACCEPTED_RAW.includes(file.type) || (file.name.match(/\.(pdf|doc|docx|zip|rar|txt)$/i));
-            
+
             if (!isImage && !isVideo && !isDoc) {
                 errors.push(`${file.name}: unsupported format`);
                 continue;
@@ -75,7 +75,7 @@ const MediaUploadPopup = ({ onClose, onFilesSelected, showToast }) => {
             let limit = 10 * 1024 * 1024; // Default 10MB
             if (isImage) limit = 7 * 1024 * 1024;
             if (isVideo) limit = 18 * 1024 * 1024;
-            
+
             if (file.size > limit) {
                 const limitText = isImage ? "7 MB" : isVideo ? "18 MB" : "10 MB";
                 errors.push(`${file.name}: exceeds ${limitText} limit`);
@@ -223,20 +223,17 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             'a': '4', 'e': '3', 'i': '1', 'o': '0', 's': '5', 't': '7', 'b': '8', 'g': '6'
         };
         const chars = "░▒▓█";
-        
-        // Take the last few characters to keep the flicker dynamic
+
         const segment = text.toLowerCase().slice(-10);
         let result = "";
-        
+
         for (let i = 0; i < segment.length; i++) {
             const char = segment[i];
-            // Increase probability of leet characters
             if (leetMap[char] && Math.random() > 0.1) {
                 result += leetMap[char];
             } else if (char === " ") {
                 result += "_";
             } else if (Math.random() > 0.5) {
-                // Hacker symbols
                 const symbols = "01<>/_";
                 result += symbols.charAt(Math.floor(Math.random() * symbols.length));
             } else {
@@ -252,7 +249,6 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             isTypingRef.current = true;
             startTyping(chatId, scramble);
         } else {
-            // Update scramble periodically even if already typing
             startTyping(chatId, scramble);
         }
         clearTimeout(typingTimeoutRef.current);
@@ -293,9 +289,9 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 const isImage = ACCEPTED_IMAGE.includes(file.type);
                 const isDoc = !isImage && !isVideo;
                 const msgType = isVideo ? "video" : isImage ? "image" : "file";
-                
+
                 const tempId = `temp-${Date.now()}-${Math.random()}`;
-                
+
                 addMessage(chatId, {
                     _id: tempId,
                     cid: tempId,
@@ -312,7 +308,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
 
                 let fileToUpload = file;
                 if (isImage) fileToUpload = await compressImage(file);
-                
+
                 const formData = new FormData();
                 formData.append("file", fileToUpload);
                 formData.append("upload_preset", uploadPreset);
@@ -333,7 +329,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 sendMessage(chatId, files.length === 1 ? textContent : (isDoc ? file.name : ""), msgType, downloadURL, replyingTo?._id, isViewOnce, tempId);
             }
             if (soundEnabled) playSendSound();
-            onCancelReply(); 
+            onCancelReply();
         } catch (error) {
             console.error(error);
         } finally {
@@ -432,16 +428,15 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                                 if (replyingTo.senderId === user?._id || replyingTo.senderId?._id === user?._id) return "yourself";
                                 const sender = replyingTo.senderId;
                                 if (typeof sender === 'object' && sender?.username) return sender.username;
-                                // Fallback to finding the other participant if we only have an ID
                                 const activeChat = useChatStore.getState().activeChat;
                                 const other = activeChat?.participants?.find(p => (p._id || p) === (sender?._id || sender));
                                 return other?.username || "them";
                             })()}
                         </div>
                         <div className="reply-to-text">
-                            {replyingTo.type === "image" ? "Image" : 
-                             replyingTo.type === "video" ? "Video" : 
-                             replyingTo.content}
+                            {replyingTo.type === "image" ? "Image" :
+                                replyingTo.type === "video" ? "Video" :
+                                    replyingTo.content}
                         </div>
                     </div>
                     <button className="reply-cancel-btn" onClick={onCancelReply}>
@@ -488,11 +483,11 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     className="message-textarea"
                     placeholder={
                         disabled ? "Sending disabled in Fav mode..." :
-                        uploading ? "Uploading..." :
-                            hasMedia ? "Add a caption (optional)..." :
-                                isViewOnce ? "Upload a file to send view-once media..." :
-                                    editingMessage ? "Edit your message..." :
-                                        "Type a message..."
+                            uploading ? "Uploading..." :
+                                hasMedia ? "Add a caption (optional)..." :
+                                    isViewOnce ? "Upload a file to send view-once media..." :
+                                        editingMessage ? "Edit your message..." :
+                                            "Type a message..."
                     }
                     value={content}
                     onChange={handleChange}

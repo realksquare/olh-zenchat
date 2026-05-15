@@ -3,15 +3,6 @@ import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import DecryptedText from "./DecryptedText";
 
-const MODE_LABELS_BUBBLE = {
-    instant: 'viewing',
-    '1h': '1 hour',
-    '8h': '8 hours',
-    '24h': '1 day',
-    '7d': '7 days',
-};
-
-
 const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick }) => {
     const [mobileDropdown, setMobileDropdown] = useState(false);
     const { user } = useAuthStore();
@@ -82,8 +73,6 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         }
     };
 
-    // Fallback: treat messages with no content/media as deleted for everyone
-    // BUT only if older than 5 seconds — prevents false-positives on in-transit optimistic messages
     const messageAgeMs = Date.now() - new Date(message.createdAt).getTime();
     const isGhostDeleted = !message.content && !message.mediaUrl && !message.music && message.type === "text" && !message.deletedForEveryone && messageAgeMs > 15000;
 
@@ -114,7 +103,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const isViewedByAnyone = message.viewedBy?.length > 0;
 
     return (
-        <div 
+        <div
             id={`msg-${message._id}`}
             className={`message-row ${isMe ? "mine" : "theirs"} ${isNew ? "message-slide-up" : ""}`}
             onDoubleClick={() => !message.deletedForEveryone && onEdit({ action: "reply", ...message })}
@@ -158,12 +147,12 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                     ) : (
                         <>
                             {message.replyTo && (
-                                <div 
-                                    className="replied-message-preview" 
-                                    onClick={(e) => { 
-                                        e.stopPropagation(); 
+                                <div
+                                    className="replied-message-preview"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
                                         const targetId = message.replyTo?._id || message.replyTo;
-                                        scrollToMessage(targetId); 
+                                        scrollToMessage(targetId);
                                     }}
                                 >
                                     {repliedToMessage ? (
@@ -189,25 +178,25 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                     ) : message.type === "video" ? (
                                         <video src={message.mediaUrl} className="message-video" style={{ maxWidth: '100%', borderRadius: '8px' }} />
                                     ) : (
-                                        <div className="file-attachment-card" style={{ 
-                                            background: 'rgba(255,255,255,0.05)', 
-                                            border: '1px solid rgba(255,255,255,0.08)', 
-                                            borderRadius: '12px', 
-                                            padding: '12px 16px', 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
+                                        <div className="file-attachment-card" style={{
+                                            background: 'rgba(255,255,255,0.05)',
+                                            border: '1px solid rgba(255,255,255,0.08)',
+                                            borderRadius: '12px',
+                                            padding: '12px 16px',
+                                            display: 'flex',
+                                            alignItems: 'center',
                                             gap: '12px',
                                             minWidth: '180px'
                                         }}>
-                                            <div className="file-icon" style={{ 
-                                                background: 'rgba(59, 130, 246, 0.15)', 
-                                                color: '#3b82f6', 
-                                                width: '36px', 
-                                                height: '36px', 
-                                                borderRadius: '10px', 
-                                                display: 'flex', 
-                                                alignItems: 'center', 
-                                                justifyContent: 'center' 
+                                            <div className="file-icon" style={{
+                                                background: 'rgba(59, 130, 246, 0.15)',
+                                                color: '#3b82f6',
+                                                width: '36px',
+                                                height: '36px',
+                                                borderRadius: '10px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
                                             }}>
                                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
@@ -221,11 +210,11 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                     Attachment
                                                 </div>
                                             </div>
-                                            <a 
-                                                href={message.mediaUrl} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer" 
-                                                download 
+                                            <a
+                                                href={message.mediaUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                download
                                                 onClick={(e) => e.stopPropagation()}
                                                 style={{ color: '#94a3b8', padding: '4px', borderRadius: '6px', transition: 'all 0.2s' }}
                                                 onMouseEnter={e => e.currentTarget.style.color = '#fff'}
@@ -241,9 +230,9 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                             )}
                             {message.content && (
                                 <span className="message-text">
-                                    <DecryptedText 
-                                        text={message.content} 
-                                        animate={isNew && !isMe && message.canSeeScramble} 
+                                    <DecryptedText
+                                        text={message.content}
+                                        animate={isNew && !isMe && message.canSeeScramble}
                                     />
                                 </span>
                             )}
@@ -255,7 +244,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                             )}
                         </>
                     )}
-                    
+
                     <div className="message-meta">
                         {message.starredBy?.includes(user?._id) && (
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="#eab308" stroke="#eab308" style={{ marginRight: '2px' }}>
@@ -263,7 +252,6 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                             </svg>
                         )}
                         {message.isEdited && <span className="message-edited-label">(edited)</span>}
-                        {/* Clock icon + timestamp as a paired unit */}
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                             {message.disappearingMode && message.disappearingMode !== "off" && (
                                 <svg

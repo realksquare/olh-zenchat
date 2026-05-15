@@ -207,6 +207,9 @@ const registerSocketHandlers = (io) => {
 
         socket.on("send_message", async ({ chatId, content, type, mediaUrl, replyTo, isViewOnce, cid }) => {
             try {
+                const chat = await Chat.findById(chatId);
+                if (!chat) return;
+
                 const message = await Message.create({
                     chatId,
                     senderId: userId,
@@ -217,6 +220,7 @@ const registerSocketHandlers = (io) => {
                     isViewOnce: isViewOnce || false,
                     cid: cid || null,
                     status: "sent",
+                    disappearingMode: chat.disappearingMode || "off"
                 });
 
                 await Chat.findByIdAndUpdate(chatId, {
@@ -503,9 +507,35 @@ const registerSocketHandlers = (io) => {
                 const senderIdCriteria = { $ne: new mongoose.Types.ObjectId(userId) };
                 const chatIdCriteria = new mongoose.Types.ObjectId(chatId);
 
+                const updatePipeline = [
+                    {
+                        $set: {
+                            status: "read",
+                            expiresAt: {
+                                $cond: {
+                                    if: { $and: [{ $ne: ["$disappearingMode", "off"] }, { $eq: ["$expiresAt", null] }] },
+                                    then: {
+                                        $switch: {
+                                            branches: [
+                                                { case: { $eq: ["$disappearingMode", "instant"] }, then: { $add: ["$$NOW", 2 * 60 * 1000] } },
+                                                { case: { $eq: ["$disappearingMode", "1h"] }, then: { $add: ["$$NOW", 60 * 60 * 1000] } },
+                                                { case: { $eq: ["$disappearingMode", "8h"] }, then: { $add: ["$$NOW", 8 * 60 * 60 * 1000] } },
+                                                { case: { $eq: ["$disappearingMode", "24h"] }, then: { $add: ["$$NOW", 24 * 60 * 60 * 1000] } },
+                                                { case: { $eq: ["$disappearingMode", "7d"] }, then: { $add: ["$$NOW", 7 * 24 * 60 * 60 * 1000] } }
+                                            ],
+                                            default: "$expiresAt"
+                                        }
+                                    },
+                                    else: "$expiresAt"
+                                }
+                            }
+                        }
+                    }
+                ];
+
                 await Message.updateMany(
                     { chatId: chatIdCriteria, senderId: senderIdCriteria, status: { $ne: "read" } },
-                    { status: "read" }
+                    updatePipeline
                 );
 
                 const chat = await Chat.findById(chatId);
