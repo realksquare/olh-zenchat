@@ -3,7 +3,7 @@ import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import DecryptedText from "./DecryptedText";
 
-const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete }) => {
+const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick }) => {
     const [mobileDropdown, setMobileDropdown] = useState(false);
     const { user } = useAuthStore();
     const { toggleStarMessage, markViewOnceAsViewed, messages } = useChatStore();
@@ -174,11 +174,11 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete 
                                 </div>
                             )}
                             {(message.type === "image" || message.type === "video") && message.mediaUrl && !isViewOnce && (
-                                <div className="message-media-wrap">
+                                <div className="message-media-wrap" onClick={() => onMediaClick && onMediaClick(message.mediaUrl, message.type)} style={{ cursor: 'pointer' }}>
                                     {message.type === "image" ? (
                                         <img src={getThumbnailUrl(message.mediaUrl)} alt="Sent image" className="message-image" loading="lazy" />
                                     ) : (
-                                        <video src={message.mediaUrl} controls className="message-video" style={{ maxWidth: '100%', borderRadius: '8px' }} />
+                                        <video src={message.mediaUrl} className="message-video" style={{ maxWidth: '100%', borderRadius: '8px' }} />
                                     )}
                                 </div>
                             )}

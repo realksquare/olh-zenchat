@@ -28,7 +28,7 @@ const SplashScreen = ({ isReady }) => {
                         <span></span>
                         <span></span>
                     </div>
-                    <p>Waking up the servers...</p>
+                    <p>Powered by your browser...</p>
                 </div>
             </div>
         </div>

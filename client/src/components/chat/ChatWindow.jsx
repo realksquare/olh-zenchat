@@ -10,6 +10,7 @@ import { formatDistanceToNow } from "date-fns";
 import { VerifiedTick } from "../ui/Icons";
 import UserCardModal from "../ui/UserCardModal";
 import { useMomentStore } from "../../stores/momentStore";
+import MediaViewerModal from "../ui/MediaViewerModal";
 
 const EMPTY_MESSAGES = [];
 const EMPTY_CONTACTS = [];
@@ -71,6 +72,7 @@ const ChatWindow = ({ onBack }) => {
     const [deletingMessage, setDeletingMessage] = useState(null);
     const [showScrollDown, setShowScrollDown] = useState(false);
     const [showUserCard, setShowUserCard] = useState(false);
+    const [selectedMedia, setSelectedMedia] = useState(null);
     const messagesContainerRef = useRef(null);
 
     const handleMessageAction = (msg) => {
@@ -327,6 +329,12 @@ const ChatWindow = ({ onBack }) => {
                         otherUser={otherUser}
                         onEdit={handleMessageAction}
                         onDelete={setDeletingMessage}
+                        onMediaClick={(url, type) => {
+                            const senderName = (msg.senderId?._id === user?._id || msg.senderId === user?._id) 
+                                ? "me" 
+                                : (msg.senderId?.username || otherUser?.username || "user");
+                            setSelectedMedia({ url, type, username: senderName });
+                        }}
                     />
                 ))}
 
@@ -371,6 +379,15 @@ const ChatWindow = ({ onBack }) => {
                 hasMoments={hasMoments}
                 isContact={isContact}
             />
+
+            {selectedMedia && (
+                <MediaViewerModal
+                    url={selectedMedia.url}
+                    type={selectedMedia.type}
+                    username={selectedMedia.username}
+                    onClose={() => setSelectedMedia(null)}
+                />
+            )}
         </div>
     );
 };
