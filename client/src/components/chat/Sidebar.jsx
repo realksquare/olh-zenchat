@@ -8,6 +8,7 @@ import ChatCard from "./ChatCard";
 import ProfileModal from "../ui/ProfileModal";
 import AdminPanel from "../ui/AdminPanel";
 import FAQModal from "../ui/FAQModal";
+import InviteModal from "../ui/InviteModal";
 import MomentsRow from "./MomentsRow";
 import MomentCreator from "./MomentCreator";
 import MomentViewer from "./MomentViewer";
@@ -35,6 +36,7 @@ const Sidebar = ({ onChatSelect }) => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isAdminOpen, setIsAdminOpen] = useState(false);
     const [isFAQOpen, setIsFAQOpen] = useState(false);
+    const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [isMomentCreatorOpen, setIsMomentCreatorOpen] = useState(false);
     const [activeViewerMoments, setActiveViewerMoments] = useState(null);
     const [activeTab, setActiveTab] = useState("recents");
@@ -95,27 +97,8 @@ const Sidebar = ({ onChatSelect }) => {
         onChatSelect();
     };
 
-    const handleInviteClick = async () => {
-        const inviteLink = `${window.location.origin}/register?ref=${user?.username}`;
-        const shareData = {
-            title: 'Join me on ZenChat!',
-            text: 'Hey! I\'ve been using ZenChat and it\'s awesome. Sign up using my link to connect with me instantly!',
-            url: inviteLink
-        };
-        
-        if (navigator.share) {
-            try {
-                await navigator.share(shareData);
-            } catch (err) {
-                if (err.name !== 'AbortError') {
-                    navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
-                    alert("Invite link copied to clipboard!");
-                }
-            }
-        } else {
-            navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
-            alert("Invite link copied to clipboard!");
-        }
+    const handleInviteClick = () => {
+        setIsInviteOpen(true);
     };
 
     const getInitials = (name) => name ? name.slice(0, 2).toUpperCase() : "??";
@@ -373,6 +356,11 @@ const Sidebar = ({ onChatSelect }) => {
 
             {isAdminOpen && <AdminPanel onClose={() => setIsAdminOpen(false)} />}
             {isFAQOpen && <FAQModal isOpen={isFAQOpen} onClose={() => setIsFAQOpen(false)} />}
+            <InviteModal 
+                isOpen={isInviteOpen} 
+                onClose={() => setIsInviteOpen(false)} 
+                username={user?.username} 
+            />
         </div>
     );
 };
