@@ -128,9 +128,24 @@ const App = () => {
             useMomentStore.getState().fetchMoments();
         }
 
+        const clearNotifications = async () => {
+            try {
+                if ('serviceWorker' in navigator) {
+                    const registration = await navigator.serviceWorker.ready;
+                    const notifications = await registration.getNotifications();
+                    notifications.forEach(notification => notification.close());
+                }
+            } catch (err) {
+                console.error("Error clearing notifications:", err);
+            }
+        };
+
         const handleVisibilityChange = () => {
             if (socket && socket.connected) {
                 socket.emit("set_active_status", { isActive: document.visibilityState === "visible" });
+            }
+            if (document.visibilityState === "visible") {
+                clearNotifications();
             }
         };
 
@@ -139,6 +154,9 @@ const App = () => {
         // Initial state
         if (socket && socket.connected) {
             socket.emit("set_active_status", { isActive: document.visibilityState === "visible" });
+        }
+        if (document.visibilityState === "visible") {
+            clearNotifications();
         }
 
         const checkHealth = async () => {
