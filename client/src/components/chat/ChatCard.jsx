@@ -104,6 +104,25 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         }
     };
 
+    const handleToggleContact = async (e) => {
+        e.stopPropagation();
+        setContactLoading(true);
+        await toggleContact(otherUser?._id);
+        setContactLoading(false);
+        setShowMenu(false);
+    };
+
+    const handleToggleVerify = async (e) => {
+        e.stopPropagation();
+        try {
+            const { data } = await axiosInstance.post(`/admin/verify/${otherUserId}`);
+            if (otherUser) otherUser.isVerified = data.user.isVerified;
+            setShowMenu(false);
+        } catch (err) { 
+            console.error(err);
+        }
+    };
+
     const menuBtnStyle = {
         background: "transparent",
         border: "none",
