@@ -24,7 +24,6 @@ const InviteModal = ({ isOpen, onClose, username }) => {
                 window.open(`https://wa.me/?text=${encodedMsg}`, "_blank");
                 break;
             case "linkedin":
-                // LinkedIn's share-offsite only takes URL, so we use a text-based intent or copy to clipboard
                 navigator.clipboard.writeText(inviteMessage);
                 window.open(`https://www.linkedin.com/feed/?shareActive=true&text=${encodedMsg}`, "_blank");
                 setCopied(true);
@@ -65,7 +64,7 @@ const InviteModal = ({ isOpen, onClose, username }) => {
     return createPortal(
         <div className="modal-overlay moments-aura-overlay" onClick={onClose} style={{ zIndex: 10000 }}>
             {copied && <div className="aura-toast" style={{ zIndex: 10001, bottom: '20px' }}>📋 Invitation copied to clipboard!</div>}
-            
+
             <div className="moments-aura-content invite-modal-v3" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "95%", padding: 0 }}>
                 <div className="moments-aura-header">
                     <h2 className="moments-aura-title">Invite People</h2>
@@ -80,10 +79,10 @@ const InviteModal = ({ isOpen, onClose, username }) => {
                     <button onClick={() => scrollTabs('left')} style={{ ...arrowStyle, left: 0 }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                     </button>
-                    
+
                     <div ref={tabsRef} className="invite-v2-tabs" style={{ display: 'flex', overflowX: 'auto', padding: '0 32px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                         {tabs.map(tab => (
-                            <button 
+                            <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 style={{
@@ -126,7 +125,7 @@ const InviteModal = ({ isOpen, onClose, username }) => {
                         </p>
                     </div>
 
-                    <button 
+                    <button
                         onClick={handleAction}
                         style={{
                             width: '100%',
