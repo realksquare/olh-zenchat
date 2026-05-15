@@ -2,152 +2,132 @@ import { useState, memo } from "react";
 import { createPortal } from "react-dom";
 
 const InviteModal = ({ isOpen, onClose, username }) => {
+    const [activeTab, setActiveTab] = useState("whatsapp");
     const [copied, setCopied] = useState(false);
+    
     const inviteLink = `${window.location.origin}/register?ref=${username}`;
-    const inviteMessage = `Hey! I've been using ZenChat and it's awesome. Sign up using my link to connect with me instantly! 🎉\n\nJoin here: ${inviteLink}`;
+    const inviteMessage = `Hey! You should check out ZenChat! 🚀 It's the most reliable, privacy-focused chat app I've used.\n\n` +
+        `📉 Ultra-low data usage\n` +
+        `💸 No paywalls, no ads, no trackers\n` +
+        `🧘 Zero distractions, just pure focus\n` +
+        `🔒 Privacy-first architecture\n` +
+        `⚡️ Lightweight and lightning-fast\n\n` +
+        `Join me here: ${inviteLink}`;
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(inviteMessage);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
-
-    const shareSocial = (platform) => {
-        let url = "";
+    const handleAction = () => {
         const encodedMsg = encodeURIComponent(inviteMessage);
         const encodedUrl = encodeURIComponent(inviteLink);
 
-        switch (platform) {
+        switch (activeTab) {
             case "whatsapp":
-                url = `https://wa.me/?text=${encodedMsg}`;
+                window.open(`https://wa.me/?text=${encodedMsg}`, "_blank");
                 break;
             case "linkedin":
-                url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+                window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`, "_blank");
                 break;
             case "email":
-                url = `mailto:?subject=Join me on ZenChat!&body=${encodedMsg}`;
+                window.open(`mailto:?subject=Join me on ZenChat!&body=${encodedMsg}`, "_blank");
+                break;
+            case "instagram":
+            case "copy":
+                navigator.clipboard.writeText(inviteMessage);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 3000);
                 break;
             default:
                 break;
         }
-
-        if (url) window.open(url, "_blank");
     };
+
+    const tabs = [
+        { id: "whatsapp", label: "WhatsApp", icon: <WhatsAppIcon />, instr: "Open WhatsApp to share directly with your contacts, groups, or as a Status update." },
+        { id: "instagram", label: "Instagram", icon: <InstagramIcon />, instr: "Click 'Continue' to copy your invite. Then open Instagram to paste it into a DM or as a Story sticker." },
+        { id: "linkedin", label: "LinkedIn", icon: <LinkedInIcon />, instr: "Share your referral link as a professional post or send it as a direct message to your network." },
+        { id: "email", label: "Email", icon: <EmailIcon />, instr: "Send a pre-formatted email invitation to your friends and colleagues." },
+        { id: "copy", label: "Copy Link", icon: <CopyIcon />, instr: "Simply copy the full invitation text and link to your clipboard to paste anywhere." }
+    ];
 
     if (!isOpen) return null;
 
     return createPortal(
         <div className="modal-overlay" onClick={onClose} style={{ zIndex: 10000 }}>
-            <div className="modal-content invite-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "420px", width: "90%" }}>
-                <div className="modal-header">
-                    <h2>Invite People</h2>
-                    <button className="close-btn" onClick={onClose}>&times;</button>
+            {copied && <div className="aura-toast" style={{ zIndex: 10001, bottom: '20px' }}>📋 Invitation copied to clipboard!</div>}
+            
+            <div className="modal-content invite-modal-v2" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "95%", padding: 0, overflow: 'hidden' }}>
+                <div className="invite-v2-header" style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Invite People</h2>
+                    <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
                 </div>
 
-                <div className="invite-body" style={{ padding: "20px 0" }}>
-                    <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginBottom: "20px" }}>
-                        Share your unique referral link to grow your network and unlock exclusive rewards!
-                    </p>
-
-                    <div className="invite-link-box" style={{ 
-                        background: "rgba(255,255,255,0.05)", 
-                        padding: "12px", 
-                        borderRadius: "12px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        marginBottom: "24px"
-                    }}>
-                        <input 
-                            type="text" 
-                            readOnly 
-                            value={inviteLink} 
-                            style={{ 
-                                background: "transparent", 
-                                border: "none", 
-                                color: "#fff", 
-                                flex: 1, 
-                                fontSize: "0.85rem",
-                                outline: "none"
-                            }} 
-                        />
+                <div className="invite-v2-tabs" style={{ display: 'flex', overflowX: 'auto', background: 'rgba(0,0,0,0.2)', padding: '0 10px' }}>
+                    {tabs.map(tab => (
                         <button 
-                            onClick={handleCopy}
-                            style={{ 
-                                background: copied ? "#22c55e" : "#3b82f6",
-                                color: "#fff",
-                                border: "none",
-                                padding: "6px 12px",
-                                borderRadius: "8px",
-                                fontSize: "0.75rem",
-                                fontWeight: "600",
-                                cursor: "pointer",
-                                transition: "all 0.2s"
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            style={{
+                                padding: '15px 20px',
+                                background: 'none',
+                                border: 'none',
+                                borderBottom: activeTab === tab.id ? '2px solid #3b82f6' : '2px solid transparent',
+                                color: activeTab === tab.id ? '#fff' : '#64748b',
+                                fontSize: '0.85rem',
+                                fontWeight: activeTab === tab.id ? '600' : '400',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                                transition: 'all 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
                             }}
                         >
-                            {copied ? "Copied!" : "Copy"}
+                            {tab.icon}
+                            {tab.label}
                         </button>
-                    </div>
-
-                    <div className="social-grid" style={{ 
-                        display: "grid", 
-                        gridTemplateColumns: "repeat(2, 1fr)", 
-                        gap: "12px" 
-                    }}>
-                        <button className="social-share-btn" onClick={() => shareSocial("whatsapp")} style={socialBtnStyle}>
-                            <WhatsAppIcon />
-                            WhatsApp
-                        </button>
-                        <button className="social-share-btn" onClick={() => handleCopy()} style={socialBtnStyle}>
-                            <InstagramIcon />
-                            Instagram
-                        </button>
-                        <button className="social-share-btn" onClick={() => shareSocial("linkedin")} style={socialBtnStyle}>
-                            <LinkedInIcon />
-                            LinkedIn
-                        </button>
-                        <button className="social-share-btn" onClick={() => shareSocial("email")} style={socialBtnStyle}>
-                            <EmailIcon />
-                            Email
-                        </button>
-                    </div>
+                    ))}
                 </div>
 
-                <div className="modal-footer" style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "15px", textAlign: "center" }}>
-                    <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
-                        Referral bonuses are automatically credited upon sign-up.
+                <div className="invite-v2-body" style={{ padding: '30px 20px' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+                        <div style={{ fontSize: '2.5rem', marginBottom: '15px' }}>
+                            {tabs.find(t => t.id === activeTab)?.icon}
+                        </div>
+                        <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem' }}>Share via {tabs.find(t => t.id === activeTab)?.label}</h3>
+                        <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1.5, maxWidth: '300px', margin: '0 auto' }}>
+                            {tabs.find(t => t.id === activeTab)?.instr}
+                        </p>
+                    </div>
+
+                    <button 
+                        onClick={handleAction}
+                        style={{
+                            width: '100%',
+                            padding: '14px',
+                            background: '#3b82f6',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '12px',
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                            transition: 'transform 0.2s, background 0.2s'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                        onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                    >
+                        {activeTab === "copy" || activeTab === "instagram" ? "Copy Invitation" : "Continue to " + tabs.find(t => t.id === activeTab)?.label}
+                    </button>
+                </div>
+
+                <div style={{ padding: '15px', background: 'rgba(255,255,255,0.02)', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ fontSize: '0.7rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Unlock rewards with every new member
                     </span>
                 </div>
             </div>
-            <style>{`
-                .social-share-btn {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 10px;
-                    padding: 12px;
-                    background: rgba(255,255,255,0.03);
-                    border: 1px solid rgba(255,255,255,0.08);
-                    border-radius: 12px;
-                    color: #fff;
-                    font-size: 0.9rem;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                }
-                .social-share-btn:hover {
-                    background: rgba(255,255,255,0.08);
-                    border-color: rgba(255,255,255,0.2);
-                    transform: translateY(-2px);
-                }
-            `}</style>
         </div>,
         document.body
     );
-};
-
-const socialBtnStyle = {
-    // Shared via CSS above
 };
 
 const WhatsAppIcon = () => (
@@ -178,5 +158,14 @@ const EmailIcon = () => (
         <path d="M22 2 11 13"></path>
     </svg>
 );
+
+const CopyIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    </svg>
+);
+
+export default memo(InviteModal);
 
 export default memo(InviteModal);
