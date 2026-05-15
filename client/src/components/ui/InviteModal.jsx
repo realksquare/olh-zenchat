@@ -1,9 +1,10 @@
-import { useState, memo } from "react";
+import { useState, useRef, memo } from "react";
 import { createPortal } from "react-dom";
 
 const InviteModal = ({ isOpen, onClose, username }) => {
     const [activeTab, setActiveTab] = useState("whatsapp");
     const [copied, setCopied] = useState(false);
+    const tabsRef = useRef(null);
 
     const inviteLink = `${window.location.origin}/register?ref=${username}`;
     const inviteMessage = `Hey! You should check out ZenChat! 🚀 It's the most reliable, privacy-focused chat app I've used.\n\n` +
@@ -39,9 +40,15 @@ const InviteModal = ({ isOpen, onClose, username }) => {
         }
     };
 
+    const scrollTabs = (dir) => {
+        if (tabsRef.current) {
+            tabsRef.current.scrollBy({ left: dir === 'left' ? -100 : 100, behavior: 'smooth' });
+        }
+    };
+
     const tabs = [
         { id: "whatsapp", label: "WhatsApp", icon: <WhatsAppIcon />, instr: "Open WhatsApp to share directly with your contacts, groups, or as a Status update." },
-        { id: "instagram", label: "Instagram", icon: <InstagramIcon />, instr: "Click 'Continue' to copy your invite. Then open Instagram to paste it into a DM or as a Story sticker." },
+        { id: "instagram", label: "Instagram", icon: <InstagramIcon />, instr: "Click 'Copy Link' to copy your invite. Then open Instagram to paste it into a DM or as a Story sticker." },
         { id: "linkedin", label: "LinkedIn", icon: <LinkedInIcon />, instr: "Share your referral link as a professional post or send it as a direct message to your network." },
         { id: "email", label: "Email", icon: <EmailIcon />, instr: "Send a pre-formatted email invitation to your friends and colleagues." },
         { id: "copy", label: "Copy Link", icon: <CopyIcon />, instr: "Simply copy the full invitation text and link to your clipboard to paste anywhere." }
@@ -49,85 +56,134 @@ const InviteModal = ({ isOpen, onClose, username }) => {
 
     if (!isOpen) return null;
 
+    const currentTab = tabs.find(t => t.id === activeTab);
+
     return createPortal(
         <div className="modal-overlay" onClick={onClose} style={{ zIndex: 10000 }}>
             {copied && <div className="aura-toast" style={{ zIndex: 10001, bottom: '20px' }}>📋 Invitation copied to clipboard!</div>}
-
+            
             <div className="modal-content invite-modal-v2" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "95%", padding: 0, overflow: 'hidden' }}>
-                <div className="invite-v2-header" style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Invite People</h2>
-                    <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+                <button className="modal-close" onClick={onClose} style={{ top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', position: 'absolute', color: '#94a3b8' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+
+                <div className="invite-v2-header" style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>Invite People</h2>
                 </div>
 
-                <div className="invite-v2-tabs" style={{ display: 'flex', overflowX: 'auto', background: 'rgba(0,0,0,0.2)', padding: '0 10px' }}>
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            style={{
-                                padding: '15px 20px',
-                                background: 'none',
-                                border: 'none',
-                                borderBottom: activeTab === tab.id ? '2px solid #3b82f6' : '2px solid transparent',
-                                color: activeTab === tab.id ? '#fff' : '#64748b',
-                                fontSize: '0.85rem',
-                                fontWeight: activeTab === tab.id ? '600' : '400',
-                                cursor: 'pointer',
-                                whiteSpace: 'nowrap',
-                                transition: 'all 0.2s',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px'
-                            }}
-                        >
-                            {tab.icon}
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-
-                <div className="invite-v2-body" style={{ padding: '30px 20px' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '25px' }}>
-                        <div style={{ fontSize: '2.5rem', marginBottom: '15px' }}>
-                            {tabs.find(t => t.id === activeTab)?.icon}
-                        </div>
-                        <h3 style={{ margin: '0 0 10px 0', fontSize: '1.1rem' }}>Share via {tabs.find(t => t.id === activeTab)?.label}</h3>
-                        <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1.5, maxWidth: '300px', margin: '0 auto' }}>
-                            {tabs.find(t => t.id === activeTab)?.instr}
-                        </p>
+                <div style={{ position: 'relative', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                    <button onClick={() => scrollTabs('left')} style={{ ...arrowStyle, left: 0 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    
+                    <div ref={tabsRef} className="invite-v2-tabs" style={{ display: 'flex', overflowX: 'auto', padding: '0 30px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                        {tabs.map(tab => (
+                            <button 
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                style={{
+                                    padding: '16px 20px',
+                                    background: 'none',
+                                    border: 'none',
+                                    borderBottom: activeTab === tab.id ? '2px solid #3b82f6' : '2px solid transparent',
+                                    color: activeTab === tab.id ? '#fff' : '#64748b',
+                                    fontSize: '0.85rem',
+                                    fontWeight: activeTab === tab.id ? '600' : '400',
+                                    cursor: 'pointer',
+                                    whiteSpace: 'nowrap',
+                                    transition: 'all 0.2s',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                }}
+                            >
+                                {tab.icon}
+                                {tab.label}
+                            </button>
+                        ))}
                     </div>
 
-                    <button
-                        onClick={handleAction}
-                        style={{
-                            width: '100%',
-                            padding: '14px',
-                            background: '#3b82f6',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '12px',
-                            fontSize: '1rem',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-                            transition: 'transform 0.2s, background 0.2s'
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                        onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-                    >
-                        {activeTab === "copy" || activeTab === "instagram" ? "Copy Invitation" : "Continue to " + tabs.find(t => t.id === activeTab)?.label}
+                    <button onClick={() => scrollTabs('right')} style={{ ...arrowStyle, right: 0 }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </button>
                 </div>
 
-                <div style={{ padding: '15px', background: 'rgba(255,255,255,0.02)', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                    <span style={{ fontSize: '0.7rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        Unlock rewards with every new member
-                    </span>
+                <div className="invite-v2-body" style={{ padding: '35px 24px' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                        <div style={{ fontSize: '2.8rem', marginBottom: '18px', display: 'flex', justifyContent: 'center' }}>
+                            {currentTab?.icon}
+                        </div>
+                        <h3 style={{ margin: '0 0 10px 0', fontSize: '1.15rem', fontWeight: 600 }}>
+                            {activeTab === "copy" ? "Copy Link" : `Share via ${currentTab?.label}`}
+                        </h3>
+                        <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1.6, maxWidth: '320px', margin: '0 auto' }}>
+                            {currentTab?.instr}
+                        </p>
+                    </div>
+
+                    <button 
+                        onClick={handleAction}
+                        style={{
+                            width: '100%',
+                            padding: '15px',
+                            background: '#3b82f6',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '14px',
+                            fontSize: '1rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            boxShadow: '0 8px 20px rgba(59, 130, 246, 0.25)',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={e => {
+                            e.currentTarget.style.transform = 'translateY(-2px)';
+                            e.currentTarget.style.background = '#2563eb';
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.background = '#3b82f6';
+                        }}
+                    >
+                        {activeTab === "copy" || activeTab === "instagram" ? "Copy Link" : "Continue to " + currentTab?.label}
+                    </button>
                 </div>
             </div>
+            <style>{`
+                .invite-v2-tabs::-webkit-scrollbar { display: none; }
+                .banner-spinner {
+                    width: 14px;
+                    height: 14px;
+                    border: 2px solid rgba(255,255,255,0.3);
+                    border-top-color: #fff;
+                    border-radius: 50%;
+                    animation: spin 0.8s linear infinite;
+                }
+                @keyframes spin { to { transform: rotate(360deg); } }
+            `}</style>
         </div>,
         document.body
     );
+};
+
+const arrowStyle = {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: '30px',
+    background: 'rgba(0,0,0,0.4)',
+    backdropFilter: 'blur(4px)',
+    border: 'none',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    zIndex: 2,
+    transition: 'all 0.2s',
+    opacity: 0.6
 };
 
 const WhatsAppIcon = () => (

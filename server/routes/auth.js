@@ -47,13 +47,21 @@ router.post(
                     if (referrer) {
                         user.contacts.push({ userId: referrer._id, tag: "general" });
                         await user.save();
-                        
+
+                        // Increment referral registrations for referrer
+                        referrer.referralStats.registrations += 1;
+                        await referrer.save();
+
+                        // Add user to referrer's contacts as well
+                        referrer.contacts.push({ userId: user._id, tag: "general" });
+                        await referrer.save();
+
+                        // Create a private chat between them
                         const Chat = require("../models/Chat");
                         const Message = require("../models/Message");
-                        
                         let chat = await Chat.findOne({
-                            participants: { $all: [user._id, referrer._id] },
-                            isGroup: false
+                            isGroup: false,
+                            participants: { $all: [user._id, referrer._id] }
                         });
 
                         if (!chat) {
@@ -63,31 +71,48 @@ router.post(
                             });
                         }
 
+                        // Send welcome message
                         const msgContent = `Hey! I just joined ZenChat using your invite link! 🎉`;
-                        const message = await Message.create({
+                        await Message.create({
                             chatId: chat._id,
                             senderId: user._id,
                             content: msgContent,
                             type: "text",
                             status: "sent"
                         });
-                        
-                        chat.lastMessage = message._id;
-                        await chat.save();
                     }
-                } catch (e) {
-                    console.error("Referral processing failed:", e);
+                } catch (err) {
+                    console.error("Referral processing error:", err);
                 }
             }
 
-            const token = generateToken(user);
-
-            res.status(201).json({ token, user: user.toPrivateJSON() });
-        } catch (err) {
+            res.status(201).json({
+                message: "User created successfully",
+                token: generateToken(user),
+                user: user.toPrivateJSON(),
+            });
+        } catch (error) {
+            console.error("Registration error:", error);
             res.status(500).json({ message: "Server error" });
         }
     }
 );
+
+// @route   POST /api/auth/referral/click/:username
+// @desc    Track a referral link click
+// @access  Public
+router.post("/referral/click/:username", async (req, res) => {
+    try {
+        const { username } = req.params;
+        await User.findOneAndUpdate(
+            { username },
+            { $inc: { "referralStats.clicks": 1 } }
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ message: "Error tracking click" });
+    }
+});
 
 router.post(
     "/login",

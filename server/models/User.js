@@ -79,6 +79,10 @@ const userSchema = new mongoose.Schema(
         isSuspended: {
             type: Boolean,
             default: false
+        },
+        referralStats: {
+            clicks: { type: Number, default: 0 },
+            registrations: { type: Number, default: 0 }
         }
     },
     { timestamps: true }

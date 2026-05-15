@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
+import axiosInstance from "../utils/axios";
 
 const validatePassword = (pw) => {
     if (pw.length < 7) return "At least 7 characters";
@@ -14,6 +15,14 @@ const RegisterPage = () => {
     const { register, isLoading, error, clearError } = useAuthStore();
     const [form, setForm] = useState({ username: "", email: "", password: "" });
     const [pwError, setPwError] = useState("");
+
+    useEffect(() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        const refParam = searchParams.get("ref");
+        if (refParam) {
+            axiosInstance.post(`/auth/referral/click/${refParam}`).catch(() => {});
+        }
+    }, []);
 
     const handleChange = (e) => {
         clearError();
