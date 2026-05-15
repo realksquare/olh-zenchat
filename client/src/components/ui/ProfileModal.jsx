@@ -194,7 +194,6 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
 
                 <div style={{ padding: '24px' }}>
 
-                {error && <div className="error-message">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="profile-form">
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem', marginTop: '0.25rem' }}>
