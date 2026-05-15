@@ -75,12 +75,15 @@ export const useChatStore = create(
             deleteInstantMessages: (chatId) => {
                 set((state) => {
                     const msgs = state.messages[chatId] || [];
-                    const nextMsgs = msgs.filter(m => !(m.disappearingMode === 'instant' && m.status === 'read'));
-                    
-                    // Also delete from local IndexedDB
+                    // The server deleted ALL instant+read messages for BOTH sides.
+                    // Mirror that: remove every instant message locally (server is source of truth).
+                    const isInstant = (m) => m.disappearingMode === 'instant';
+                    const nextMsgs = msgs.filter(m => !isInstant(m));
+
+                    // Also purge from local IndexedDB cache
                     msgs.forEach(m => {
-                        if (m.disappearingMode === 'instant' && m.status === 'read') {
-                            db.messages.delete(m._id);
+                        if (isInstant(m)) {
+                            db.messages.delete(m._id).catch(() => {});
                         }
                     });
 
@@ -89,6 +92,7 @@ export const useChatStore = create(
                     };
                 });
             },
+
 
             togglePinChat: async (chatId) => {
                 const { user } = useAuthStore.getState();

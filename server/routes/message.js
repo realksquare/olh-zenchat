@@ -248,21 +248,35 @@ router.patch("/:chatId/read", async (req, res) => {
 
 router.delete("/:chatId/instant", async (req, res) => {
     try {
+        // Security: ensure user is a participant
+        const chat = await Chat.findOne({
+            _id: req.params.chatId,
+            participants: req.user._id,
+        });
+        if (!chat) {
+            return res.status(404).json({ message: "Chat not found" });
+        }
+
+        // Delete ALL instant+read messages in this chat for BOTH sides
         const deleted = await Message.deleteMany({
             chatId: req.params.chatId,
             disappearingMode: "instant",
             status: "read",
-            senderId: { $ne: req.user._id } // only delete the ones they've read from others? Actually if it's instant, both sides should disappear upon reading.
-            // Wait, if it deletes for everyone, it deletes from the DB.
         });
 
         const io = req.app.get("io");
-        if (io && deleted.deletedCount > 0) {
-            io.to(req.params.chatId).emit("instant_messages_deleted", { chatId: req.params.chatId });
+        if (io) {
+            // Emit to all participants (both sender and recipient)
+            chat.participants.forEach(pid => {
+                io.to(pid.toString()).emit("instant_messages_deleted", {
+                    chatId: req.params.chatId,
+                });
+            });
         }
 
         res.json({ success: true, deletedCount: deleted.deletedCount });
     } catch (err) {
+        console.error("[instant-delete]", err);
         res.status(500).json({ message: "Server error" });
     }
 });
