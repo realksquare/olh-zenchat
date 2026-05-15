@@ -62,106 +62,104 @@ const InstallPWA = () => {
     if (!showModal) return null;
 
     return createPortal(
-        <div
-            className="modal-overlay"
-            onClick={handleDismiss}
-            style={{ zIndex: 9999 }}
-        >
+        <div className="modal-overlay moments-aura-overlay" onClick={handleDismiss} style={{ zIndex: 9999 }}>
             <div
-                className="modal-content"
+                className="moments-aura-content pwa-install-popup"
                 onClick={(e) => e.stopPropagation()}
-                style={{ maxWidth: "380px", textAlign: "center", padding: "2rem", overflow: 'hidden' }}
+                style={{ maxWidth: "400px", width: "95%", padding: 0, overflow: 'hidden' }}
             >
-                {isSuccess ? (
-                    <>
-                        <div style={{
-                            width: "72px", height: "72px", borderRadius: "50%",
-                            background: "rgba(34, 197, 94, 0.2)", color: "#22c55e",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            margin: "0 auto 1.25rem",
-                            fontSize: '32px'
-                        }}>✓</div>
-                        <h2 style={{ marginBottom: "0.5rem" }}>Installed!</h2>
-                        <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
-                            ZenChat has been successfully added to your device.
-                        </p>
-                    </>
-                ) : (
-                    <>
-                        {/* App Icon */}
-                        <div style={{
-                            width: "72px", height: "72px", borderRadius: "20px",
-                            background: "linear-gradient(135deg, #3da5d9, #1e7bb8)",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            margin: "0 auto 1.25rem",
-                            boxShadow: "0 8px 24px rgba(61,165,217,0.35)"
-                        }}>
-                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                            </svg>
-                        </div>
+                <div className="moments-aura-header">
+                    <h2 className="moments-aura-title">{isSuccess ? "Installed" : "Install ZenChat"}</h2>
+                    <button className="aura-close-btn" onClick={handleDismiss}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
 
-                        <h2 style={{ marginBottom: "0.5rem", fontSize: "1.3rem" }}>Install ZenChat</h2>
-                        <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginBottom: "1.75rem", lineHeight: 1.5 }}>
-                            Add ZenChat to your home screen for faster access, offline support, and a native app experience.
-                        </p>
-
-                        <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
-                            <button
-                                onClick={handleDismiss}
-                                className="btn"
-                                disabled={isLoading}
-                                style={{
-                                    background: "rgba(255,255,255,0.06)",
-                                    color: "#94a3b8",
-                                    flex: 1,
-                                    border: "1px solid rgba(255,255,255,0.08)"
-                                }}
-                            >
-                                Not now
-                            </button>
-                            <button
-                                onClick={handleInstall}
-                                className="btn btn-primary"
-                                disabled={isLoading}
-                                style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", position: 'relative' }}
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <span className="banner-spinner" style={{ width: 14, height: 14 }}></span>
-                                        Installing...
-                                    </>
-                                ) : (
-                                    <>
-                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                            <polyline points="7 10 12 15 17 10"></polyline>
-                                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                                        </svg>
-                                        Install
-                                    </>
-                                )}
-                            </button>
-                        </div>
-
-                        {isLoading && (
+                <div style={{ padding: '0 28px 28px', textAlign: 'center' }}>
+                    {isSuccess ? (
+                        <>
                             <div style={{
-                                width: '100%', height: '3px', background: 'rgba(255,255,255,0.1)',
-                                marginTop: '1.5rem', borderRadius: '4px', overflow: 'hidden'
+                                width: "72px", height: "72px", borderRadius: "50%",
+                                background: "rgba(34, 197, 94, 0.15)", color: "#10b981",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                margin: "0 auto 1.5rem", fontSize: '32px'
+                            }}>✓</div>
+                            <p style={{ color: "#94a3b8", fontSize: "0.95rem", lineHeight: 1.6 }}>
+                                ZenChat has been successfully added to your device.
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <div style={{
+                                width: "80px", height: "80px", borderRadius: "24px",
+                                background: "linear-gradient(135deg, #3da5d9, #1e7bb8)",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                margin: "0 auto 1.5rem",
+                                boxShadow: "0 12px 32px rgba(61,165,217,0.3)"
                             }}>
-                                <div style={{
-                                    height: '100%', background: '#3b82f6', width: '0%',
-                                    animation: 'progressAnim 3s linear forwards'
-                                }}></div>
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
                             </div>
-                        )}
-                    </>
-                )}
+
+                            <p style={{ color: "#94a3b8", fontSize: "0.95rem", marginBottom: "2rem", lineHeight: 1.6 }}>
+                                Add ZenChat to your home screen for faster access, offline support, and a premium native experience.
+                            </p>
+
+                            <div style={{ display: "flex", gap: "1rem" }}>
+                                <button
+                                    onClick={handleDismiss}
+                                    className="btn btn-outline"
+                                    disabled={isLoading}
+                                    style={{ flex: 1, padding: '12px' }}
+                                >
+                                    Not now
+                                </button>
+                                <button
+                                    onClick={handleInstall}
+                                    className="btn btn-primary"
+                                    disabled={isLoading}
+                                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", padding: '12px' }}
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <span className="banner-spinner" style={{ width: 14, height: 14 }}></span>
+                                            Wait...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="7 10 12 15 17 10"></polyline>
+                                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                                            </svg>
+                                            Install
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            {isLoading && (
+                                <div style={{
+                                    width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)',
+                                    marginTop: '2rem', borderRadius: '4px', overflow: 'hidden'
+                                }}>
+                                    <div style={{
+                                        height: '100%', background: '#3b82f6', width: '0%',
+                                        animation: 'progressAnim 3s linear forwards'
+                                    }}></div>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
             </div>
             <style>{`
                 @keyframes progressAnim {
                     from { width: 0%; }
-                    to { width: 90%; }
+                    to { width: 95%; }
                 }
             `}</style>
         </div>,
