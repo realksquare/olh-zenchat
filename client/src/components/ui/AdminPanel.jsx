@@ -148,7 +148,16 @@ const AdminPanel = ({ onClose }) => {
                                     {users.map(u => (
                                         <tr key={u._id} className={u.isSuspended ? "row-suspended" : ""}>
                                             <td>
-                                                <div className="user-cell" style={{ display: 'flex', alignItems: 'center' }}>
+                                                <div className="user-cell" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                    <div className="avatar avatar-sm" style={{ flexShrink: 0, width: '36px', height: '36px', borderRadius: '50%', background: '#1e293b', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                                        {u.avatar ? (
+                                                            <img src={u.avatar} alt={u.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                        ) : (
+                                                            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#94a3b8' }}>
+                                                                {u.username?.slice(0, 2).toUpperCase()}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                         <span className="user-name">
                                                             {u.username}
