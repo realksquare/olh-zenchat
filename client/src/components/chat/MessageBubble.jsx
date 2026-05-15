@@ -3,6 +3,15 @@ import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import DecryptedText from "./DecryptedText";
 
+const MODE_LABELS_BUBBLE = {
+    instant: 'viewing',
+    '1h': '1 hour',
+    '8h': '8 hours',
+    '24h': '1 day',
+    '7d': '7 days',
+};
+
+
 const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick }) => {
     const [mobileDropdown, setMobileDropdown] = useState(false);
     const { user } = useAuthStore();
@@ -248,22 +257,36 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                     )}
                     
                     <div className="message-meta">
-                        {message.disappearingMode && message.disappearingMode !== "off" && (
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '2px', opacity: 0.7 }}>
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 16 14"></polyline>
-                            </svg>
-                        )}
                         {message.starredBy?.includes(user?._id) && (
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="#eab308" stroke="#eab308" style={{ marginRight: '2px' }}>
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                             </svg>
                         )}
                         {message.isEdited && <span className="message-edited-label">(edited)</span>}
-                        <span className="message-time">
-                            {new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {/* Clock icon + timestamp as a paired unit */}
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            {message.disappearingMode && message.disappearingMode !== "off" && (
+                                <svg
+                                    width="10" height="10"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    style={{ opacity: 0.65, flexShrink: 0 }}
+                                    title={`Disappears after ${MODE_LABELS_BUBBLE[message.disappearingMode] || message.disappearingMode}`}
+                                >
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                            )}
+                            <span className="message-time">
+                                {new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            </span>
                         </span>
                     </div>
+
                 </div>
 
                 <div className={`message-dropdown ${mobileDropdown ? "mobile-visible" : ""} ${!isMe ? "theirs-dropdown" : ""}`}>

@@ -17,6 +17,7 @@ import axiosInstance from "../../utils/axios";
 const EMPTY_MESSAGES = [];
 const EMPTY_CONTACTS = [];
 
+
 const ScrollDownBtn = ({ onClick, show, isLifted }) => (
     <button
         className={`scroll-down-btn ${show ? 'visible' : ''}`}
@@ -30,6 +31,66 @@ const ScrollDownBtn = ({ onClick, show, isLifted }) => (
         </svg>
     </button>
 );
+
+const MODE_LABELS = {
+    instant: 'viewing',
+    '1h': '1 hour',
+    '8h': '8 hours',
+    '24h': '1 day',
+    '7d': '7 days',
+};
+
+const DisappearingBanner = memo(({ mode, onDisable }) => {
+    const lastTapRef = useRef(0);
+
+    const handleDoubleClick = () => onDisable();
+
+    // Mobile double-tap detection (no native dblclick on touch)
+    const handleTouchEnd = (e) => {
+        const now = Date.now();
+        if (now - lastTapRef.current < 350) {
+            e.preventDefault();
+            onDisable();
+        }
+        lastTapRef.current = now;
+    };
+
+    return (
+        <div
+            onDoubleClick={handleDoubleClick}
+            onTouchEnd={handleTouchEnd}
+            title="Double-tap to turn off disappearing messages"
+            style={{
+                padding: '7px 14px',
+                background: 'rgba(59, 130, 246, 0.1)',
+                borderTop: '1px solid rgba(59, 130, 246, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '7px',
+                color: '#60a5fa',
+                fontSize: '0.78rem',
+                backdropFilter: 'blur(10px)',
+                cursor: 'pointer',
+                userSelect: 'none',
+                transition: 'background 0.15s ease',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.18)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
+        >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>
+                Disappearing messages ON &mdash; disappear after <strong>{MODE_LABELS[mode] || mode}</strong>.
+                &nbsp;<span style={{ opacity: 0.6, fontSize: '0.72rem' }}>Double-tap to turn off</span>
+            </span>
+        </div>
+    );
+});
+
+
 
 const ChatWindow = ({ onBack }) => {
     const { user } = useAuthStore();
@@ -437,29 +498,10 @@ const ChatWindow = ({ onBack }) => {
             <ScrollDownBtn onClick={scrollToBottom} show={showScrollDown} isLifted={!!replyingTo} />
 
             {activeChat?.disappearingMode && activeChat.disappearingMode !== 'off' && !showOnlyStarred && (
-                <div style={{
-                    padding: '8px 12px',
-                    background: 'rgba(59, 130, 246, 0.1)',
-                    borderTop: '1px solid rgba(59, 130, 246, 0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    color: '#60a5fa',
-                    fontSize: '0.8rem',
-                    backdropFilter: 'blur(10px)'
-                }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    <span>Disappearing messages is ON. New messages disappear after {
-                        activeChat.disappearingMode === 'instant' ? 'viewing' :
-                        activeChat.disappearingMode === '1h' ? '1 hour' :
-                        activeChat.disappearingMode === '8h' ? '8 hours' :
-                        activeChat.disappearingMode === '24h' ? '1 day' : '7 days'
-                    }.</span>
-                </div>
+                <DisappearingBanner
+                    mode={activeChat.disappearingMode}
+                    onDisable={() => handleToggleDisappearing('off')}
+                />
             )}
 
             <MessageInput
