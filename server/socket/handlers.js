@@ -80,7 +80,7 @@ const registerSocketHandlers = (io) => {
                                 const now = new Date();
                                 await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
                                 broadcastUserStatus(userId, false, now);
-                            }, 5000); // 5 seconds grace period before marking offline
+                            }, 2000); // 2 seconds grace period before marking offline
                             disconnectTimeouts.set(userId + "_inactive", timeout);
                         }
                     } else {
@@ -121,7 +121,7 @@ const registerSocketHandlers = (io) => {
                                     const now = new Date();
                                     await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
                                     broadcastUserStatus(userId, false, now);
-                                }, 5000);
+                                }, 2000);
                                 disconnectTimeouts.set(userId + "_inactive", timeout);
                             }
                         }
