@@ -10,10 +10,20 @@ const NotificationPrompt = () => {
     const { user } = useAuthStore();
 
     useEffect(() => {
-        if (!user) return;
+        if (!user || !('Notification' in window)) return;
         
-        // Show after 5s if not dismissed this session and permission not granted
-        if (Notification.permission === "default" && !sessionStorage.getItem("notifPromptDismissed")) {
+        // Don't show if already granted or blocked
+        if (Notification.permission !== "default") return;
+
+        // Check if already subscribed on this device type
+        const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+        const deviceType = isPWA ? "pwa" : "browser";
+        const isSubscribed = user?.fcmTokens?.some(t => t.deviceType === deviceType);
+
+        if (isSubscribed) return;
+
+        // Show after 5s if not dismissed this session
+        if (!sessionStorage.getItem("notifPromptDismissed")) {
             const timer = setTimeout(() => setShow(true), 5000);
             return () => clearTimeout(timer);
         }
