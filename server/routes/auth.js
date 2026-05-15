@@ -43,7 +43,7 @@ router.post(
             
             if (referredBy) {
                 try {
-                    const referrer = await User.findById(referredBy);
+                    const referrer = await User.findOne({ username: referredBy });
                     if (referrer) {
                         user.contacts.push({ userId: referrer._id, tag: "general" });
                         await user.save();

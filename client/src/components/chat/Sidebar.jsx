@@ -96,7 +96,7 @@ const Sidebar = ({ onChatSelect }) => {
     };
 
     const handleInviteClick = async () => {
-        const inviteLink = `${window.location.origin}/register?ref=${user?._id}`;
+        const inviteLink = `${window.location.origin}/register?ref=${user?.username}`;
         const shareData = {
             title: 'Join me on ZenChat!',
             text: 'Hey! I\'ve been using ZenChat and it\'s awesome. Sign up using my link to connect with me instantly!',
