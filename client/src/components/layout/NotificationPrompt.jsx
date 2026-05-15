@@ -6,19 +6,17 @@ import axiosInstance from "../../utils/axios";
 const NotificationPrompt = () => {
     const [show, setShow] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
     const { user } = useAuthStore();
 
-    const [success, setSuccess] = useState(false);
-
     useEffect(() => {
-        const checkPermission = async () => {
-            if (!user) return;
-            if (Notification.permission === "default" && !sessionStorage.getItem("notifPromptDismissed")) {
-                const timer = setTimeout(() => setShow(true), 3000);
-                return () => clearTimeout(timer);
-            }
-        };
-        checkPermission();
+        if (!user) return;
+        
+        // Show after 5s if not dismissed this session and permission not granted
+        if (Notification.permission === "default" && !sessionStorage.getItem("notifPromptDismissed")) {
+            const timer = setTimeout(() => setShow(true), 5000);
+            return () => clearTimeout(timer);
+        }
     }, [user]);
 
     const handleDismiss = () => {
@@ -27,22 +25,25 @@ const NotificationPrompt = () => {
     };
 
     const handleEnable = async () => {
-        setIsLoading(true);
         try {
             const token = await requestNotificationPermission();
             if (token) {
+                setIsLoading(true);
                 const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
                 const { data } = await axiosInstance.put("/auth/me", { 
                     fcmToken: token,
                     deviceType: isPWA ? "pwa" : "browser",
                     notificationsEnabled: true
                 });
+                
                 if (data?.user) {
                     useAuthStore.getState().updateUser(data.user);
                     localStorage.setItem("zenchat_user", JSON.stringify(data.user));
                 }
+                
                 setSuccess(true);
-                setTimeout(() => handleDismiss(), 2000);
+                sessionStorage.setItem("notifPromptDismissed", "true");
+                setTimeout(() => setShow(false), 3000);
             } else {
                 handleDismiss();
             }
@@ -58,12 +59,12 @@ const NotificationPrompt = () => {
 
     return (
         <div className="notif-prompt-overlay">
-            <div className="notif-prompt-card">
+            <div className="notif-prompt-card" style={{ overflow: 'hidden' }}>
                 {success ? (
                     <>
                         <div className="notif-prompt-icon" style={{ background: 'rgba(34, 197, 94, 0.2)', color: '#22c55e' }}>✓</div>
                         <h3>Success!</h3>
-                        <p>Push notifications are now enabled for this browser.</p>
+                        <p>Push notifications are now active.</p>
                     </>
                 ) : (
                     <>
@@ -75,15 +76,43 @@ const NotificationPrompt = () => {
                             <button className="notif-btn-enable" onClick={handleEnable} disabled={isLoading} style={{ position: 'relative' }}>
                                 {isLoading ? (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span className="banner-spinner" style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff' }}></span>
+                                        <span className="banner-spinner" />
                                         Enabling...
                                     </div>
                                 ) : "Enable Now"}
                             </button>
                         </div>
+                        {isLoading && (
+                            <div style={{
+                                width: '100%', height: '3px', background: 'rgba(255,255,255,0.1)',
+                                marginTop: '1.5rem', borderRadius: '4px', overflow: 'hidden'
+                            }}>
+                                <div style={{
+                                    height: '100%', background: '#3b82f6', width: '0%',
+                                    animation: 'progressAnim 3s linear forwards'
+                                }}></div>
+                            </div>
+                        )}
                     </>
                 )}
             </div>
+            <style>{`
+                .banner-spinner {
+                    width: 14px;
+                    height: 14px;
+                    border: 2px solid rgba(255,255,255,0.3);
+                    border-top-color: #fff;
+                    border-radius: 50%;
+                    animation: spin 0.8s linear infinite;
+                }
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+                @keyframes progressAnim {
+                    from { width: 0%; }
+                    to { width: 100%; }
+                }
+            `}</style>
         </div>
     );
 };
