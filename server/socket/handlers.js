@@ -71,6 +71,26 @@ const registerSocketHandlers = (io) => {
             socket.on("set_active_status", ({ isActive }) => {
                 if (userData && userData.sockets.has(socket.id)) {
                     userData.sockets.get(socket.id).isActive = isActive;
+
+                    const isAnyActive = Array.from(userData.sockets.values()).some(s => s.isActive);
+                    
+                    if (!isAnyActive) {
+                        if (!disconnectTimeouts.has(userId + "_inactive")) {
+                            const timeout = setTimeout(async () => {
+                                const now = new Date();
+                                await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
+                                broadcastUserStatus(userId, false, now);
+                            }, 5000); // 5 seconds grace period before marking offline
+                            disconnectTimeouts.set(userId + "_inactive", timeout);
+                        }
+                    } else {
+                        if (disconnectTimeouts.has(userId + "_inactive")) {
+                            clearTimeout(disconnectTimeouts.get(userId + "_inactive"));
+                            disconnectTimeouts.delete(userId + "_inactive");
+                        }
+                        User.findByIdAndUpdate(userId, { isOnline: true }).exec();
+                        broadcastUserStatus(userId, true);
+                    }
                 }
             });
 
@@ -85,9 +105,26 @@ const registerSocketHandlers = (io) => {
                             await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
                             onlineUsers.delete(userId);
                             disconnectTimeouts.delete(userId);
+                            if (disconnectTimeouts.has(userId + "_inactive")) {
+                                clearTimeout(disconnectTimeouts.get(userId + "_inactive"));
+                                disconnectTimeouts.delete(userId + "_inactive");
+                            }
                             broadcastUserStatus(userId, false, now);
                         }, 2000);
                         disconnectTimeouts.set(userId, timeout);
+                    } else {
+                        // Re-evaluate if remaining sockets are active
+                        const isAnyActive = Array.from(userData.sockets.values()).some(s => s.isActive);
+                        if (!isAnyActive) {
+                            if (!disconnectTimeouts.has(userId + "_inactive")) {
+                                const timeout = setTimeout(async () => {
+                                    const now = new Date();
+                                    await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
+                                    broadcastUserStatus(userId, false, now);
+                                }, 5000);
+                                disconnectTimeouts.set(userId + "_inactive", timeout);
+                            }
+                        }
                     }
                 }
             });
