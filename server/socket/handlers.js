@@ -22,8 +22,8 @@ const registerSocketHandlers = (io) => {
                 onlineUsers.set(userId, { sockets: new Map(), hasPWA: false });
             }
             const userData = onlineUsers.get(userId);
-            userData.sockets.set(socket.id, deviceType || "browser");
-            userData.hasPWA = Array.from(userData.sockets.values()).includes("pwa");
+            userData.sockets.set(socket.id, { deviceType: deviceType || "browser", isActive: true });
+            userData.hasPWA = Array.from(userData.sockets.values()).some(s => s.deviceType === "pwa");
 
             const broadcastUserStatus = async (uid, isOnline, lastSeen = null) => {
                 try {
@@ -49,7 +49,7 @@ const registerSocketHandlers = (io) => {
                         }
 
                         if (canSee) {
-                            targetData.sockets.forEach((dType, sId) => {
+                            targetData.sockets.forEach((sData, sId) => {
                                 if (isOnline) {
                                     io.to(sId).emit("user_online", { userId: uid });
                                 } else {
@@ -68,10 +68,16 @@ const registerSocketHandlers = (io) => {
                 broadcastUserStatus(userId, true);
             }
 
+            socket.on("set_active_status", ({ isActive }) => {
+                if (userData && userData.sockets.has(socket.id)) {
+                    userData.sockets.get(socket.id).isActive = isActive;
+                }
+            });
+
             socket.on("disconnect", () => {
                 if (userData && userData.sockets.has(socket.id)) {
                     userData.sockets.delete(socket.id);
-                    userData.hasPWA = Array.from(userData.sockets.values()).includes("pwa");
+                    userData.hasPWA = Array.from(userData.sockets.values()).some(s => s.deviceType === "pwa");
 
                     if (userData.sockets.size === 0) {
                         const timeout = setTimeout(async () => {
@@ -103,19 +109,16 @@ const registerSocketHandlers = (io) => {
                             { status: "delivered" }
                         );
 
-                        // Push missed messages directly to the newly-connected recipient
-                        // This ensures offline messages render immediately without waiting for fetchMessages REST call
                         pendingMessages.forEach((msg) => {
                             socket.emit("receive_message", {
                                 message: { ...msg.toObject(), chatId: msg.chatId.toString() }
                             });
                         });
 
-                        // Notify senders their messages were delivered
                         pendingMessages.forEach((msg) => {
                             const senderSockets = onlineUsers.get(msg.senderId._id?.toString() || msg.senderId.toString());
                             if (senderSockets && senderSockets.sockets) {
-                                senderSockets.sockets.forEach((dType, socketId) => {
+                                senderSockets.sockets.forEach((sData, socketId) => {
                                     io.to(socketId).emit("message_delivered", {
                                         messageId: msg._id.toString(),
                                         chatId: msg.chatId.toString(),
@@ -219,16 +222,13 @@ const registerSocketHandlers = (io) => {
 
                     const userData = onlineUsers.get(pIdStr);
                     if (userData && userData.sockets && userData.sockets.size > 0) {
-                        console.log(`[Socket] Emitting receive_message to user ${pIdStr} (${userData.sockets.size} sockets)`);
-                        userData.sockets.forEach((dType, socketId) => {
+                        userData.sockets.forEach((sData, socketId) => {
                             if (pIdStr === userId.toString()) {
                                 io.to(socketId).emit("receive_message", { message: messagePayloadBase });
                             } else {
                                 io.to(socketId).emit("receive_message", { message: messagePayload });
                             }
                         });
-                    } else {
-                        console.log(`[Socket] User ${pIdStr} has no active sockets. Skipping emission.`);
                     }
                 });
 
@@ -237,28 +237,18 @@ const registerSocketHandlers = (io) => {
                 otherParticipants.forEach((participant) => {
                     const pIdStr = participant._id?.toString() || participant.toString();
                     const userData = onlineUsers.get(pIdStr);
-                    if (userData && userData.sockets && userData.sockets.size > 0) {
+                    
+                    const hasActiveSocket = userData && userData.sockets && Array.from(userData.sockets.values()).some(s => s.isActive);
+
+                    if (hasActiveSocket) {
                         isDelivered = true;
                     } else {
-                        console.log(`[Push] User ${pIdStr} is offline. Starting notification flow...`);
-
+                        // User has no active sockets (either offline or minimized/away) -> Send Push
                         User.findById(pIdStr).then(async (offlineUser) => {
-                            if (!offlineUser) {
-                                console.log(`[Push] Error: User ${pIdStr} not found in DB.`);
-                                return;
-                            }
-                            if (!offlineUser.notificationsEnabled) {
-                                console.log(`[Push] Info: Notifications disabled for user ${pIdStr}.`);
-                                return;
-                            }
+                            if (!offlineUser || !offlineUser.notificationsEnabled) return;
 
                             const tokens = offlineUser.fcmTokens || [];
-                            console.log(`[Push] Token Verify: User ${pIdStr} has ${tokens.length} tokens and ${offlineUser.fcmToken ? '1 legacy token' : 'no legacy token'}.`);
-
-                            if (tokens.length === 0 && !offlineUser.fcmToken) {
-                                console.log(`[Push] Skip: No tokens found for user ${pIdStr}.`);
-                                return;
-                            }
+                            if (tokens.length === 0 && !offlineUser.fcmToken) return;
 
                             const senderName = populated.senderId.username;
                             const senderIsContact = offlineUser.contacts?.some(
@@ -296,47 +286,34 @@ const registerSocketHandlers = (io) => {
                             let targetTokens = [];
                             if (pwaTokens.length > 0) {
                                 targetTokens = pwaTokens.map(t => t.token);
-                                console.log(`[Push] Targeting ${targetTokens.length} PWA tokens.`);
                             } else if (browserTokens.length > 0) {
                                 targetTokens = browserTokens.map(t => t.token);
-                                console.log(`[Push] Targeting ${targetTokens.length} Browser tokens.`);
                             } else if (offlineUser.fcmToken) {
                                 targetTokens = [offlineUser.fcmToken];
-                                console.log(`[Push] Targeting legacy token.`);
                             }
 
                             let pushSuccess = false;
                             for (const tkn of targetTokens) {
-                                console.log(`[Push] Sending to token: ${tkn.substring(0, 10)}...`);
                                 const success = await sendPushNotification(offlineUser._id, tkn, title, body, {
                                     chatId: chatId.toString(),
                                     messageId: message._id.toString(),
                                     type: 'new_message',
                                     isViewOnce: populated.isViewOnce ? "true" : "false"
                                 });
-                                if (success) {
-                                    pushSuccess = true;
-                                    console.log(`[Push] Success: Notification reached device (Token: ${tkn.substring(0, 10)}...)`);
-                                } else {
-                                    console.log(`[Push] Failed: Notification could not reach device (Token: ${tkn.substring(0, 10)}...)`);
-                                }
+                                if (success) pushSuccess = true;
                             }
 
                             if (pushSuccess) {
-                                console.log(`[Push] FCM accepted message ${message._id}. Marking as delivered.`);
-                                // Only mark as delivered if not already read/delivered
                                 const currentMsg = await Message.findById(message._id);
                                 if (currentMsg && currentMsg.status === "sent") {
                                     await Message.findByIdAndUpdate(message._id, { status: "delivered" });
                                     const senderData = onlineUsers.get(userId);
-                                    senderData?.sockets?.forEach((dt, sId) => {
+                                    senderData?.sockets?.forEach((sData, sId) => {
                                         io.to(sId).emit("message_delivered", { chatId: chatId.toString(), messageId: message._id.toString() });
                                     });
                                 }
-                            } else {
-                                console.log(`[Push] Final: Notification flow finished with NO successful deliveries.`);
                             }
-                        }).catch(err => console.error(`[Push] Critical Error:`, err));
+                        }).catch(err => console.error(`[Push] Error:`, err));
                     }
                 });
 
@@ -345,7 +322,7 @@ const registerSocketHandlers = (io) => {
                     if (currentMsg && currentMsg.status === "sent") {
                         await Message.findByIdAndUpdate(message._id, { status: "delivered" });
                         const senderData = onlineUsers.get(userId);
-                        senderData?.sockets?.forEach((dt, sId) => {
+                        senderData?.sockets?.forEach((sData, sId) => {
                             io.to(sId).emit("message_delivered", { chatId: chatId.toString(), messageId: message._id.toString() });
                         });
                     }
@@ -374,7 +351,7 @@ const registerSocketHandlers = (io) => {
                 chat.participants.filter(p => p.toString() !== userId).forEach(participantId => {
                     const userData = onlineUsers.get(participantId.toString());
                     if (userData && userData.sockets) {
-                        userData.sockets.forEach((dType, socketId) => {
+                        userData.sockets.forEach((sData, socketId) => {
                             const room = io.sockets.adapter.rooms.get(chatId);
                             if (!room?.has(socketId)) {
                                 io.to(socketId).emit("message_edited", { message: editPayload });
@@ -385,7 +362,7 @@ const registerSocketHandlers = (io) => {
 
                 const myData = onlineUsers.get(userId);
                 if (myData && myData.sockets) {
-                    myData.sockets.forEach((dType, socketId) => {
+                    myData.sockets.forEach((sData, socketId) => {
                         if (socketId !== socket.id) io.to(socketId).emit("message_edited", { message: editPayload });
                     });
                 }
@@ -407,7 +384,7 @@ const registerSocketHandlers = (io) => {
                     chat.participants.filter(p => p.toString() !== userId).forEach(participantId => {
                         const userData = onlineUsers.get(participantId.toString());
                         if (userData && userData.sockets) {
-                            userData.sockets.forEach((dType, socketId) => {
+                            userData.sockets.forEach((sData, socketId) => {
                                 const room = io.sockets.adapter.rooms.get(chatId);
                                 if (!room?.has(socketId)) io.to(socketId).emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "everyone" });
                             });
@@ -416,7 +393,7 @@ const registerSocketHandlers = (io) => {
 
                     const myData = onlineUsers.get(userId);
                     if (myData && myData.sockets) {
-                        myData.sockets.forEach((dType, socketId) => {
+                        myData.sockets.forEach((sData, socketId) => {
                             if (socketId !== socket.id) io.to(socketId).emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "everyone" });
                         });
                     }
@@ -457,7 +434,7 @@ const registerSocketHandlers = (io) => {
                         const recipientAllowsSender = allows(recipient, userId, recipientPrivacy);
                         const mutualConsent = senderAllowsRecipient && recipientAllowsSender;
 
-                        userData.sockets.forEach((dType, sId) => {
+                        userData.sockets.forEach((sData, sId) => {
                             io.to(sId).emit("typing_status", {
                                 userId,
                                 chatId,
@@ -477,7 +454,7 @@ const registerSocketHandlers = (io) => {
                 .forEach(participantId => {
                     const userData = onlineUsers.get(participantId.toString());
                     if (userData && userData.sockets) {
-                        userData.sockets.forEach((dType, sId) => {
+                        userData.sockets.forEach((sData, sId) => {
                             io.to(sId).emit("typing_status", { userId, chatId, isTyping: false });
                         });
                     }
@@ -502,7 +479,7 @@ const registerSocketHandlers = (io) => {
                     .forEach(participantId => {
                         const userData = onlineUsers.get(participantId.toString());
                         if (userData && userData.sockets) {
-                            userData.sockets.forEach((dType, socketId) => {
+                            userData.sockets.forEach((sData, socketId) => {
                                 io.to(socketId).emit("messages_read", { chatId: chatId.toString(), readBy: userId });
                             });
                         }
@@ -510,7 +487,7 @@ const registerSocketHandlers = (io) => {
 
                 const myData = onlineUsers.get(userId);
                 if (myData && myData.sockets) {
-                    myData.sockets.forEach((dType, socketId) => {
+                    myData.sockets.forEach((sData, socketId) => {
                         if (socketId !== socket.id) {
                             io.to(socketId).emit("messages_read", { chatId: chatId.toString(), readBy: userId });
                         }

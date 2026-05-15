@@ -120,29 +120,45 @@ const App = () => {
     }
   }, [token, user?._id]);
 
-  useEffect(() => {
-    checkAuth();
-    if (token) {
-      initLocalData();
-      fetchChats();
-      useMomentStore.getState().fetchMoments();
-    }
-    const checkHealth = async () => {
-      try {
-        await axiosInstance.get("/messages/health");
-        setServerReady(true);
-      } catch (err) {
-        setTimeout(checkHealth, 2000);
-      }
-    };
-    checkHealth();
+    useEffect(() => {
+        checkAuth();
+        if (token) {
+            initLocalData();
+            fetchChats();
+            useMomentStore.getState().fetchMoments();
+        }
 
-    const prime = () => { primeAudioContext(); };
-    window.addEventListener('touchstart', prime, { once: true });
-    window.addEventListener('mousedown', prime, { once: true });
+        const handleVisibilityChange = () => {
+            if (socket && socket.connected) {
+                socket.emit("set_active_status", { isActive: document.visibilityState === "visible" });
+            }
+        };
 
-    return () => { };
-  }, [token, user?._id, socket]);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        
+        // Initial state
+        if (socket && socket.connected) {
+            socket.emit("set_active_status", { isActive: document.visibilityState === "visible" });
+        }
+
+        const checkHealth = async () => {
+            try {
+                await axiosInstance.get("/messages/health");
+                setServerReady(true);
+            } catch (err) {
+                setTimeout(checkHealth, 2000);
+            }
+        };
+        checkHealth();
+
+        const prime = () => { primeAudioContext(); };
+        window.addEventListener('touchstart', prime, { once: true });
+        window.addEventListener('mousedown', prime, { once: true });
+
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, [token, user?._id, socket]);
 
   return (
     <>
