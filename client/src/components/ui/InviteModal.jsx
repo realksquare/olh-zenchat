@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 const InviteModal = ({ isOpen, onClose, username }) => {
     const [activeTab, setActiveTab] = useState("whatsapp");
     const [copied, setCopied] = useState(false);
-    
+
     const inviteLink = `${window.location.origin}/register?ref=${username}`;
     const inviteMessage = `Hey! You should check out ZenChat! 🚀 It's the most reliable, privacy-focused chat app I've used.\n\n` +
         `📉 Ultra-low data usage\n` +
@@ -52,7 +52,7 @@ const InviteModal = ({ isOpen, onClose, username }) => {
     return createPortal(
         <div className="modal-overlay" onClick={onClose} style={{ zIndex: 10000 }}>
             {copied && <div className="aura-toast" style={{ zIndex: 10001, bottom: '20px' }}>📋 Invitation copied to clipboard!</div>}
-            
+
             <div className="modal-content invite-modal-v2" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "95%", padding: 0, overflow: 'hidden' }}>
                 <div className="invite-v2-header" style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h2 style={{ margin: 0, fontSize: '1.2rem' }}>Invite People</h2>
@@ -61,7 +61,7 @@ const InviteModal = ({ isOpen, onClose, username }) => {
 
                 <div className="invite-v2-tabs" style={{ display: 'flex', overflowX: 'auto', background: 'rgba(0,0,0,0.2)', padding: '0 10px' }}>
                     {tabs.map(tab => (
-                        <button 
+                        <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             style={{
@@ -97,7 +97,7 @@ const InviteModal = ({ isOpen, onClose, username }) => {
                         </p>
                     </div>
 
-                    <button 
+                    <button
                         onClick={handleAction}
                         style={{
                             width: '100%',
@@ -165,7 +165,5 @@ const CopyIcon = () => (
         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
     </svg>
 );
-
-export default memo(InviteModal);
 
 export default memo(InviteModal);
