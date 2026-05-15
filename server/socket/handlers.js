@@ -20,7 +20,6 @@ const cleanupInstantMessages = async (uid, io) => {
             });
 
             if (deleted.deletedCount > 0) {
-                // Update chat's lastMessage to the most recent surviving message
                 const latestMsg = await Message.findOne({ chatId: chat._id })
                     .sort({ createdAt: -1 })
                     .select("_id");
@@ -105,7 +104,7 @@ const registerSocketHandlers = (io) => {
                     userData.sockets.get(socket.id).isActive = isActive;
 
                     const isAnyActive = Array.from(userData.sockets.values()).some(s => s.isActive);
-                    
+
                     if (!isAnyActive) {
                         if (!disconnectTimeouts.has(userId + "_inactive")) {
                             const timeout = setTimeout(async () => {
@@ -313,13 +312,12 @@ const registerSocketHandlers = (io) => {
                 otherParticipants.forEach((participant) => {
                     const pIdStr = participant._id?.toString() || participant.toString();
                     const userData = onlineUsers.get(pIdStr);
-                    
+
                     const hasActiveSocket = userData && userData.sockets && Array.from(userData.sockets.values()).some(s => s.isActive);
 
                     if (hasActiveSocket) {
                         isDelivered = true;
                     } else {
-                        // User has no active sockets (either offline or minimized/away) -> Send Push
                         User.findById(pIdStr).then(async (offlineUser) => {
                             if (!offlineUser || !offlineUser.notificationsEnabled) return;
 

@@ -117,6 +117,7 @@ export const SocketProvider = ({ children }) => {
             useChatStore.getState().deleteInstantMessages(chatId);
         };
 
+
         const handleNewMoment = (payload) => {
             const m = payload?.moment || payload;
             if (m && m._id) {

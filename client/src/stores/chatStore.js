@@ -76,8 +76,6 @@ export const useChatStore = create(
                 const currentUserId = useAuthStore.getState().user?._id;
                 set((state) => {
                     const msgs = state.messages[chatId] || [];
-                    // Mirror exactly what the server deleted:
-                    // instant + read + sent by someone else (not current user)
                     const shouldRemove = (m) =>
                         m.disappearingMode === 'instant' &&
                         m.status === 'read' &&
@@ -86,12 +84,23 @@ export const useChatStore = create(
                     const nextMsgs = msgs.filter(m => !shouldRemove(m));
 
                     msgs.forEach(m => {
-                        if (shouldRemove(m)) {
-                            db.messages.delete(m._id).catch(() => {});
-                        }
+                        if (shouldRemove(m)) db.messages.delete(m._id).catch(() => {});
                     });
 
-                    return { messages: { ...state.messages, [chatId]: nextMsgs } };
+                    // Update the chat's lastMessage to the latest surviving message
+                    const latest = [...nextMsgs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+                    const nextChats = state.chats.map(c =>
+                        c._id === chatId ? { ...c, lastMessage: latest || null } : c
+                    );
+                    const nextActive = state.activeChat?._id === chatId
+                        ? { ...state.activeChat, lastMessage: latest || null }
+                        : state.activeChat;
+
+                    return {
+                        messages: { ...state.messages, [chatId]: nextMsgs },
+                        chats: nextChats,
+                        activeChat: nextActive,
+                    };
                 });
             },
 
