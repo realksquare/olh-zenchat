@@ -14,6 +14,8 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const [showMusicInfo, setShowMusicInfo] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
 
+    const [totalDuration, setTotalDuration] = useState(10);
+
     const audioRef = useRef(null);
     const videoRef = useRef(null);
     
@@ -39,13 +41,13 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         if (isOpen) {
             // Only close if we had moments and they were all removed
             // We check allMoments.length to ensure we don't close prematurely during sync
-            if (moments.length === 0 && allMoments.length > 0) {
+            if (moments.length === 0) {
                 onClose();
             } else if (currentIndex >= moments.length && moments.length > 0) {
                 setCurrentIndex(moments.length - 1);
             }
         }
-    }, [moments.length, allMoments.length, isOpen, currentIndex, onClose]);
+    }, [moments.length, isOpen, currentIndex, onClose]);
 
 
     const stopAudio = () => {
@@ -68,9 +70,20 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
 
     const confirmDelete = async (e) => {
         if (e) e.stopPropagation();
+        if (!currentMoment) return;
         setIsDeleting(true);
         try {
-            await deleteMoment(currentMoment._id);
+            const idToDelete = currentMoment._id;
+            // If it's the last moment, close first to avoid UI errors
+            if (moments.length === 1) {
+                handleClose();
+                setTimeout(() => deleteMoment(idToDelete), 500);
+            } else {
+                await deleteMoment(idToDelete);
+                setShowDeleteConfirm(false);
+            }
+        } catch (err) {
+            console.error("Delete failed:", err);
             setShowDeleteConfirm(false);
         } finally {
             setIsDeleting(false);
@@ -85,13 +98,14 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         setShowMusicInfo(false);
         viewMoment(currentMoment._id, currentUser?._id);
 
-        let totalDuration = 10;
+        let duration = 10;
         if (currentMoment.type === "video") {
-            // Placeholder, will be updated by onLoadedMetadata
+            // Will be updated by onLoadedMetadata
         } else if (currentMoment.music && currentMoment.music.duration) {
-            totalDuration = currentMoment.music.duration;
+            duration = currentMoment.music.duration;
         }
-        setTimeLeft(totalDuration);
+        setTotalDuration(duration);
+        setTimeLeft(duration);
 
         if (currentMoment.music?.previewUrl) {
             audioRef.current = new Audio(currentMoment.music.previewUrl);
@@ -179,7 +193,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                             <div 
                                 className={`aura-progress-fill solid ${idx === currentIndex ? 'active' : (idx < currentIndex ? 'completed' : '')}`} 
                                 style={{
-                                    ...(idx === currentIndex ? { '--duration': `${currentMoment.music?.duration || 10}s` } : {}),
+                                    ...(idx === currentIndex ? { '--duration': `${totalDuration}s` } : {}),
                                     background: '#ffffff',
                                     height: '100%',
                                     width: idx < currentIndex ? '100%' : (idx === currentIndex ? undefined : '0%'), // Let CSS animation handle current, force 100% for completed
@@ -285,7 +299,11 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                             autoPlay
                             muted={isMuted}
                             playsInline
-                            onLoadedMetadata={(e) => setTimeLeft(Math.ceil(e.target.duration))}
+                            onLoadedMetadata={(e) => {
+                                const dur = Math.ceil(e.target.duration);
+                                setTotalDuration(dur);
+                                setTimeLeft(dur);
+                            }}
                         />
                     ) : hasMedia ? (
                         <div className="aura-media-content" key={currentMoment._id}>

@@ -86,32 +86,22 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         if (pressTimer.current) clearTimeout(pressTimer.current);
     };
 
+    const [showDeletePrompt, setShowDeletePrompt] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const handleDelete = async (e) => {
-        e.stopPropagation();
-        if (window.confirm("Delete this chat?")) {
-            await deleteChatForUser(chat._id);
-        }
-        setShowMenu(false);
-    };
-
-    const handleToggleContact = async (e) => {
-        e.stopPropagation();
-        setContactLoading(true);
-        await toggleContact(otherUser?._id);
-        setContactLoading(false);
-        setShowMenu(false);
-    };
-
-    const handleToggleVerify = async (e) => {
-        e.stopPropagation();
+        if (e) e.stopPropagation();
+        setIsDeleting(true);
         try {
-            const { data } = await axiosInstance.post(`/admin/verify/${otherUserId}`);
-            // Force re-fetch or local update if needed, but since we are using liveChat, 
-            // the socket will likely broadcast the change or the next fetch will catch it.
-            // For immediate feedback:
-            if (otherUser) otherUser.isVerified = data.user.isVerified;
+            await deleteChatForUser(chat._id);
+            setShowDeletePrompt(false);
             setShowMenu(false);
-        } catch (err) { alert(err.response?.data?.message || "Failed"); }
+        } catch (err) {
+            console.error("Chat delete error:", err);
+            setShowDeletePrompt(false);
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     const menuBtnStyle = {
@@ -129,100 +119,133 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     };
 
     return (
-        <div
-            className={`chat-card ${isActive ? "active" : ""} ${hasUnread ? "unread" : ""}`}
-            onClick={handleClick}
-            onKeyDown={handleKeyDown}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            onTouchMove={handleTouchEnd}
-            role="button"
-            tabIndex={0}
-            onMouseLeave={() => setShowMenu(false)}
-            style={{ position: "relative" }}
-        >
-            <div className="chat-card-avatar-wrap">
-                <div 
-                    className={`avatar avatar-md ${hasMoments ? 'moments-halo' : ''}`}
-                    style={hasMoments ? { '--halo-color': useMomentStore.getState().getHaloColor(otherUserId, user?._id) } : {}}
-                >
-                    {otherUser?.avatar ? (
-                        <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
-                    ) : (
-                        <span>{otherUser?.username?.slice(0, 2).toUpperCase()}</span>
-                    )}
+        <>
+            <div
+                className={`chat-card ${isActive ? "active" : ""} ${hasUnread ? "unread" : ""}`}
+                onClick={handleClick}
+                onKeyDown={handleKeyDown}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                onTouchMove={handleTouchEnd}
+                role="button"
+                tabIndex={0}
+                onMouseLeave={() => setShowMenu(false)}
+                style={{ position: "relative" }}
+            >
+                <div className="chat-card-avatar-wrap">
+                    <div 
+                        className={`avatar avatar-md ${hasMoments ? 'moments-halo' : ''}`}
+                        style={hasMoments ? { '--halo-color': useMomentStore.getState().getHaloColor(otherUserId, user?._id) } : {}}
+                    >
+                        {otherUser?.avatar ? (
+                            <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
+                        ) : (
+                            <span>{otherUser?.username?.slice(0, 2).toUpperCase()}</span>
+                        )}
+                    </div>
+                    {isOnline && <span className="online-dot" />}
                 </div>
-                {isOnline && <span className="online-dot" />}
-            </div>
 
-            <div className="chat-card-info">
-                <div className="chat-card-row">
-                    <span className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</span>
-                        {otherUser?.isVerified && <span style={{ flexShrink: 0, display: 'flex' }}><VerifiedTick /></span>}
-                    </span>
-                    <span className="chat-card-time">
-                        {liveChat.updatedAt ? formatDistanceToNow(new Date(liveChat.updatedAt), { addSuffix: false }) : ""}
-                    </span>
+                <div className="chat-card-info">
+                    <div className="chat-card-row">
+                        <span className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</span>
+                            {otherUser?.isVerified && <span style={{ flexShrink: 0, display: 'flex' }}><VerifiedTick /></span>}
+                        </span>
+                        <span className="chat-card-time">
+                            {liveChat.updatedAt ? formatDistanceToNow(new Date(liveChat.updatedAt), { addSuffix: false }) : ""}
+                        </span>
+                    </div>
+                    <div className="chat-card-bottom-row">
+                        <span className={`chat-card-preview ${isTyping ? "preview-typing" : ""} ${hasUnread ? "preview-unread" : ""}`}>
+                            {preview.text}
+                        </span>
+                        {hasUnread && !showMenu && (
+                            <span className="unread-badge">{displayUnreadCount > 3 ? "3+" : displayUnreadCount}</span>
+                        )}
+                    </div>
                 </div>
-                <div className="chat-card-bottom-row">
-                    <span className={`chat-card-preview ${isTyping ? "preview-typing" : ""} ${hasUnread ? "preview-unread" : ""}`}>
-                        {preview.text}
-                    </span>
-                    {hasUnread && !showMenu && (
-                        <span className="unread-badge">{displayUnreadCount > 3 ? "3+" : displayUnreadCount}</span>
-                    )}
-                </div>
-            </div>
 
-            <div className="chat-card-actions" onClick={(e) => e.stopPropagation()}>
-                <button
-                    className="chat-card-menu-btn"
-                    onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
-                    style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", marginLeft: "4px", opacity: showMenu ? 1 : 0.45 }}
-                >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" />
-                    </svg>
-                </button>
-            </div>
-
-            {showMenu && (
-                <div className="chat-card-menu">
-                    {/* Pin/Unpin */}
-                    <button onClick={(e) => { e.stopPropagation(); onPin(); setShowMenu(false); }}
-                        style={{ ...menuBtnStyle, color: isPinned ? "var(--color-primary)" : "#94a3b8" }}>
-                        <span>📌</span>
-                        {isPinned ? "Unpin Chat" : "Pin Chat"}
-                    </button>
-
-                    {/* Admin: Verify */}
-                    {(user?.role === "co_admin" || user?.role === "master_admin") && (
-                        <button onClick={handleToggleVerify}
-                            style={{ ...menuBtnStyle, color: otherUser?.isVerified ? "var(--color-primary)" : "#94a3b8", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: '8px', marginBottom: '4px' }}>
-                            <VerifiedTick style={{ marginLeft: 0 }} />
-                            {otherUser?.isVerified ? "Remove Verification" : "Verify User"}
-                        </button>
-                    )}
-
-                    {/* Tag as Contact */}
-                    <button onClick={handleToggleContact} disabled={contactLoading}
-                        style={{ ...menuBtnStyle, color: isContact ? "#f59e0b" : "#94a3b8" }}>
-                        <span style={{ fontSize: '14px' }}>{isContact ? "⭐" : "👤"}</span>
-                        {contactLoading ? "..." : isContact ? "Remove Contact" : "Tag as Contact"}
-                    </button>
-
-                    {/* Delete */}
-                    <button onClick={handleDelete}
-                        style={{ ...menuBtnStyle, color: "#ef4444", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <div className="chat-card-actions" onClick={(e) => e.stopPropagation()}>
+                    <button
+                        className="chat-card-menu-btn"
+                        onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
+                        style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", marginLeft: "4px", opacity: showMenu ? 1 : 0.45 }}
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" />
                         </svg>
-                        Delete Chat
                     </button>
                 </div>
+
+                {showMenu && (
+                    <div className="chat-card-menu">
+                        {/* Pin/Unpin */}
+                        <button onClick={(e) => { e.stopPropagation(); onPin(); setShowMenu(false); }}
+                            style={{ ...menuBtnStyle, color: isPinned ? "var(--color-primary)" : "#94a3b8" }}>
+                            <span>📌</span>
+                            {isPinned ? "Unpin Chat" : "Pin Chat"}
+                        </button>
+
+                        {/* Admin: Verify */}
+                        {(user?.role === "co_admin" || user?.role === "master_admin") && (
+                            <button onClick={handleToggleVerify}
+                                style={{ ...menuBtnStyle, color: otherUser?.isVerified ? "var(--color-primary)" : "#94a3b8", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: '8px', marginBottom: '4px' }}>
+                                <VerifiedTick style={{ marginLeft: 0 }} />
+                                {otherUser?.isVerified ? "Remove Verification" : "Verify User"}
+                            </button>
+                        )}
+
+                        {/* Tag as Contact */}
+                        <button onClick={handleToggleContact} disabled={contactLoading}
+                            style={{ ...menuBtnStyle, color: isContact ? "#f59e0b" : "#94a3b8" }}>
+                            <span style={{ fontSize: '14px' }}>{isContact ? "⭐" : "👤"}</span>
+                            {contactLoading ? "..." : isContact ? "Remove Contact" : "Tag as Contact"}
+                        </button>
+
+                        {/* Delete */}
+                        <button onClick={(e) => { e.stopPropagation(); setShowDeletePrompt(true); }}
+                            style={{ ...menuBtnStyle, color: "#ef4444", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
+                            Delete Chat
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {showDeletePrompt && createPortal(
+                <div className="modal-overlay moments-aura-overlay" onClick={() => setShowDeletePrompt(false)} style={{ zIndex: 20000 }}>
+                    <div className="moments-aura-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "320px", padding: "32px", textAlign: "center" }}>
+                        <div style={{ fontSize: "40px", marginBottom: "16px" }}>🗑️</div>
+                        <h3 style={{ color: "#fff", fontSize: "1.25rem", fontWeight: "800", marginBottom: "12px" }}>Delete Chat?</h3>
+                        <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.9rem", marginBottom: "24px", lineHeight: "1.5" }}>
+                            This will remove the entire chat thread for you. This action cannot be undone.
+                        </p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            <button 
+                                className="btn btn-primary" 
+                                onClick={handleDelete} 
+                                disabled={isDeleting}
+                                style={{ background: "#ef4444", borderColor: "#ef4444" }}
+                            >
+                                {isDeleting ? "Deleting..." : "Delete Permanently"}
+                            </button>
+                            <button 
+                                className="btn btn-outline" 
+                                onClick={() => setShowDeletePrompt(false)}
+                                disabled={isDeleting}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
             )}
-        </div>
+        </>
+    );
     );
 };
 

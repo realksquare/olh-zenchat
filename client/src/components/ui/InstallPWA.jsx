@@ -8,7 +8,6 @@ const InstallPWA = () => {
     const [isSuccess, setIsSuccess] = useState(false);
 
     useEffect(() => {
-        // Don't show if already running as installed PWA or if dismissed in this session
         const isStandalone =
             window.matchMedia("(display-mode: standalone)").matches ||
             window.navigator.standalone === true;
@@ -18,7 +17,6 @@ const InstallPWA = () => {
         const handler = (e) => {
             e.preventDefault();
             setDeferredPrompt(e);
-            // Small delay so it shows after login animation settles
             setTimeout(() => {
                 if (!sessionStorage.getItem("pwaPromptDismissed")) {
                     setShowModal(true);
@@ -33,11 +31,11 @@ const InstallPWA = () => {
     const handleInstall = async () => {
         if (!deferredPrompt) return;
         setIsLoading(true);
-        
+
         try {
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
-            
+
             if (outcome === 'accepted') {
                 setIsSuccess(true);
                 sessionStorage.setItem("pwaPromptDismissed", "true");

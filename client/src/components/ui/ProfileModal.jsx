@@ -143,12 +143,18 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         try {
             if (!('Notification' in window)) {
                 showToast("🌪️ Notifications not supported.");
+                setIsSubscribing(false);
                 return;
             }
             if (Notification.permission === "denied") {
                 showToast("🌪️ Notifications blocked in browser settings.");
+                setIsSubscribing(false);
                 return;
             }
+
+            // Small delay to ensure the LoadingOverlay renders before the native prompt
+            await new Promise(resolve => setTimeout(resolve, 250));
+
             const token = await requestNotificationPermission();
             if (token) {
                 const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
@@ -166,6 +172,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 showToast("🌪️ Could not get push token.");
             }
         } catch (err) {
+            console.error("Sub error:", err);
             showToast("🌪️ Failed to enable notifications.");
         } finally {
             setIsSubscribing(false);
