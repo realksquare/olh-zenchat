@@ -246,7 +246,6 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
             )}
         </>
     );
-    );
 };
 
 export default memo(ChatCard);
