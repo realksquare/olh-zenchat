@@ -10,19 +10,29 @@ const disconnectTimeouts = new Map();
 const cleanupInstantMessages = async (uid, io) => {
     try {
         const chats = await Chat.find({ participants: uid });
-        const chatIds = chats.map(c => c._id);
 
-        const deleted = await Message.deleteMany({
-            chatId: { $in: chatIds },
-            disappearingMode: "instant",
-            status: "read",
-            senderId: { $ne: uid }
-        });
-
-        if (deleted.deletedCount > 0) {
-            chatIds.forEach(chatId => {
-                io.to(chatId.toString()).emit("instant_messages_deleted", { chatId: chatId.toString() });
+        for (const chat of chats) {
+            const deleted = await Message.deleteMany({
+                chatId: chat._id,
+                disappearingMode: "instant",
+                status: "read",
+                senderId: { $ne: uid }
             });
+
+            if (deleted.deletedCount > 0) {
+                // Update chat's lastMessage to the most recent surviving message
+                const latestMsg = await Message.findOne({ chatId: chat._id })
+                    .sort({ createdAt: -1 })
+                    .select("_id");
+
+                await Chat.findByIdAndUpdate(chat._id, {
+                    lastMessage: latestMsg ? latestMsg._id : null
+                });
+
+                io.to(chat._id.toString()).emit("instant_messages_deleted", {
+                    chatId: chat._id.toString()
+                });
+            }
         }
     } catch (err) {
         console.error("[Cleanup] Instant messages failed:", err);

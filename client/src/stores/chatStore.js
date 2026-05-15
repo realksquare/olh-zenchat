@@ -73,25 +73,28 @@ export const useChatStore = create(
             },
 
             deleteInstantMessages: (chatId) => {
+                const currentUserId = useAuthStore.getState().user?._id;
                 set((state) => {
                     const msgs = state.messages[chatId] || [];
-                    // The server deleted ALL instant+read messages for BOTH sides.
-                    // Mirror that: remove every instant message locally (server is source of truth).
-                    const isInstant = (m) => m.disappearingMode === 'instant';
-                    const nextMsgs = msgs.filter(m => !isInstant(m));
+                    // Mirror exactly what the server deleted:
+                    // instant + read + sent by someone else (not current user)
+                    const shouldRemove = (m) =>
+                        m.disappearingMode === 'instant' &&
+                        m.status === 'read' &&
+                        (m.senderId?._id || m.senderId)?.toString() !== currentUserId?.toString();
 
-                    // Also purge from local IndexedDB cache
+                    const nextMsgs = msgs.filter(m => !shouldRemove(m));
+
                     msgs.forEach(m => {
-                        if (isInstant(m)) {
+                        if (shouldRemove(m)) {
                             db.messages.delete(m._id).catch(() => {});
                         }
                     });
 
-                    return {
-                        messages: { ...state.messages, [chatId]: nextMsgs }
-                    };
+                    return { messages: { ...state.messages, [chatId]: nextMsgs } };
                 });
             },
+
 
 
             togglePinChat: async (chatId) => {
