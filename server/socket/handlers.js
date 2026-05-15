@@ -232,7 +232,7 @@ const registerSocketHandlers = (io) => {
 
         socket.on("send_message", async ({ chatId, content, type, mediaUrl, replyTo, isViewOnce, cid }) => {
             try {
-                const chat = await Chat.findById(chatId);
+                const chat = await Chat.findById(chatId).populate("participants", "privacySettings contacts");
                 if (!chat) return;
 
                 const message = await Message.create({
@@ -266,7 +266,6 @@ const registerSocketHandlers = (io) => {
                     chatId: chatId.toString(),
                 };
 
-                const chat = await Chat.findById(chatId).populate("participants", "privacySettings contacts");
                 const participants = chat.participants;
 
                 const allows = (userA, userBId, privacy) => {
