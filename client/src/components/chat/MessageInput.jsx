@@ -292,6 +292,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
 
                 const tempId = `temp-${Date.now()}-${Math.random()}`;
 
+                const activeChat = useChatStore.getState().activeChat;
                 addMessage(chatId, {
                     _id: tempId,
                     cid: tempId,
@@ -303,7 +304,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     status: "sending",
                     progress: 0,
                     replyTo: replyingTo?._id,
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    disappearingMode: activeChat?.disappearingMode || "off"
                 });
 
                 let fileToUpload = file;
@@ -359,6 +361,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             onCancelEdit();
         } else {
             const tempId = `temp-${Date.now()}-${Math.random()}`;
+            const activeChat = useChatStore.getState().activeChat;
             addMessage(chatId, {
                 _id: tempId,
                 cid: tempId,
@@ -367,7 +370,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 content: filteredContent,
                 type: "text",
                 status: "sending",
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                disappearingMode: activeChat?.disappearingMode || "off"
             });
             sendMessage(chatId, filteredContent, "text", "", replyingTo?._id, false, tempId);
             if (soundEnabled) playSendSound();

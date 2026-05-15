@@ -7,6 +7,27 @@ const { sendPushNotification } = require("../utils/firebase");
 const onlineUsers = new Map();
 const disconnectTimeouts = new Map();
 
+const cleanupInstantMessages = async (uid, io) => {
+    try {
+        const chats = await Chat.find({ participants: uid });
+        const chatIds = chats.map(c => c._id);
+
+        const deleted = await Message.deleteMany({
+            chatId: { $in: chatIds },
+            disappearingMode: "instant",
+            status: "read"
+        });
+
+        if (deleted.deletedCount > 0) {
+            chatIds.forEach(chatId => {
+                io.to(chatId.toString()).emit("instant_messages_deleted", { chatId: chatId.toString() });
+            });
+        }
+    } catch (err) {
+        console.error("[Cleanup] Instant messages failed:", err);
+    }
+};
+
 const registerSocketHandlers = (io) => {
     io.on("connection", (socket) => {
         const { userId, deviceType } = socket.handshake.auth;
@@ -80,6 +101,8 @@ const registerSocketHandlers = (io) => {
                                 const now = new Date();
                                 await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
                                 broadcastUserStatus(userId, false, now);
+                                // Trigger instant message cleanup when going offline
+                                await cleanupInstantMessages(userId, io);
                             }, 2000); // 2 seconds grace period before marking offline
                             disconnectTimeouts.set(userId + "_inactive", timeout);
                         }
@@ -110,6 +133,8 @@ const registerSocketHandlers = (io) => {
                                 disconnectTimeouts.delete(userId + "_inactive");
                             }
                             broadcastUserStatus(userId, false, now);
+                            // Trigger instant message cleanup when going offline (disconnect)
+                            await cleanupInstantMessages(userId, io);
                         }, 2000);
                         disconnectTimeouts.set(userId, timeout);
                     } else {
@@ -121,6 +146,8 @@ const registerSocketHandlers = (io) => {
                                     const now = new Date();
                                     await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
                                     broadcastUserStatus(userId, false, now);
+                                    // Trigger instant message cleanup
+                                    await cleanupInstantMessages(userId, io);
                                 }, 2000);
                                 disconnectTimeouts.set(userId + "_inactive", timeout);
                             }

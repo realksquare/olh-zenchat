@@ -196,29 +196,20 @@ const ChatWindow = ({ onBack }) => {
             markAsRead(chatId);
         };
 
-        const triggerInstantCleanup = () => {
-            if (activeChat?.disappearingMode === 'instant') {
-                axiosInstance.delete(`/messages/${chatId}/instant`).catch(e => console.error('[instant-delete]', e));
-            }
-        };
 
         joinChat(chatId);
         fetchMessages(chatId).then(() => {
             markIfVisible();
-            // On mount/re-enter: clean up any already-read instant messages (catches page refresh)
-            triggerInstantCleanup();
             setTimeout(() => {
                 messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
                 setShowScrollDown(false);
             }, 150);
         });
 
+        window.addEventListener('focus', markIfVisible);
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible' && activeChat?._id) {
                 markIfVisible();
-            } else if (document.visibilityState === 'hidden') {
-                // User backgrounded the app/tab — purge read instant messages for both sides
-                triggerInstantCleanup();
             }
         };
 
@@ -227,8 +218,6 @@ const ChatWindow = ({ onBack }) => {
         return () => {
             window.removeEventListener('focus', markIfVisible);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
-            // Also purge on unmount (back button, switching chats)
-            triggerInstantCleanup();
         };
     }, [activeChat?._id, activeChat?.disappearingMode]);
 
