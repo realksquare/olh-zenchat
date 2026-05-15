@@ -59,26 +59,25 @@ const InviteModal = ({ isOpen, onClose, username }) => {
     const currentTab = tabs.find(t => t.id === activeTab);
 
     return createPortal(
-        <div className="modal-overlay" onClick={onClose} style={{ zIndex: 10000 }}>
+        <div className="modal-overlay moments-aura-overlay" onClick={onClose} style={{ zIndex: 10000 }}>
             {copied && <div className="aura-toast" style={{ zIndex: 10001, bottom: '20px' }}>📋 Invitation copied to clipboard!</div>}
             
-            <div className="modal-content invite-modal-v2" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "95%", padding: 0, overflow: 'hidden', background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <button className="modal-close" onClick={onClose} style={{ top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', position: 'absolute', color: '#94a3b8', zIndex: 10 }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                </button>
-
-                <div className="invite-v2-header" style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
-                    <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600 }}>Invite People</h2>
+            <div className="moments-aura-content invite-modal-v3" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "95%", padding: 0, overflow: 'hidden' }}>
+                <div className="moments-aura-header">
+                    <h2 className="moments-aura-title">Invite People</h2>
+                    <button className="aura-close-btn" onClick={onClose}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
                 </div>
 
-                <div style={{ position: 'relative', background: 'rgba(0,0,0,0.25)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                <div style={{ position: 'relative', background: 'rgba(0,0,0,0.15)', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                     <button onClick={() => scrollTabs('left')} style={{ ...arrowStyle, left: 0 }}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                     </button>
                     
-                    <div ref={tabsRef} className="invite-v2-tabs" style={{ display: 'flex', overflowX: 'auto', padding: '0 30px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    <div ref={tabsRef} className="invite-v2-tabs" style={{ display: 'flex', overflowX: 'auto', padding: '0 32px', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                         {tabs.map(tab => (
                             <button 
                                 key={tab.id}
@@ -115,7 +114,7 @@ const InviteModal = ({ isOpen, onClose, username }) => {
                         <div style={{ fontSize: '2.8rem', marginBottom: '18px', display: 'flex', justifyContent: 'center' }}>
                             {currentTab?.icon}
                         </div>
-                        <h3 style={{ margin: '0 0 10px 0', fontSize: '1.15rem', fontWeight: 600 }}>
+                        <h3 style={{ margin: '0 0 10px 0', fontSize: '1.15rem', fontWeight: 600, color: '#fff' }}>
                             {activeTab === "copy" ? "Copy Link" : `Share via ${currentTab?.label}`}
                         </h3>
                         <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1.6, maxWidth: '320px', margin: '0 auto' }}>

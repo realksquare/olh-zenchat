@@ -170,15 +170,19 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                   user?.fcmTokens?.some(t => t.deviceType === currentDeviceType);
 
     return createPortal(
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay moments-aura-overlay" onClick={onClose} style={{ zIndex: 10000 }}>
             {isSubscribing && <LoadingOverlay message="Subscribing..." subMessage="Setting up your secure connection" />}
-            <div className="modal-content profile-modal" onClick={(e) => e.stopPropagation()}>
-                <button className="modal-close" onClick={onClose}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                </button>
-                <h2>Profile & Settings</h2>
+            <div className="moments-aura-content profile-modal-v3" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "95%", padding: 0, overflow: 'hidden' }}>
+                <div className="moments-aura-header">
+                    <h2 className="moments-aura-title">Profile & Settings</h2>
+                    <button className="aura-close-btn" onClick={onClose}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div style={{ padding: '24px' }}>
 
                 {error && <div className="error-message">{error}</div>}
 
@@ -337,6 +341,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                         {isLoading ? "Saving..." : "Save Changes"}
                     </button>
                 </form>
+                </div>
             </div>
         </div>,
         document.body
