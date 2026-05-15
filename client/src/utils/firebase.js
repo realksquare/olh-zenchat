@@ -3,12 +3,12 @@ import { getMessaging, getToken, onMessage, deleteToken } from "firebase/messagi
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDuPbl1-IEdxnDctJgELm_VAQoSrLvWEM8",
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "olh-zenchat.firebaseapp.com",
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "olh-zenchat",
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "olh-zenchat.firebasestorage.app",
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "598009129757",
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:598009129757:web:5c20c07e1864c88778cff4",
 };
 
 let app;
@@ -26,38 +26,53 @@ export { ref, uploadBytesResumable, getDownloadURL };
 
 export const requestNotificationPermission = async () => {
     try {
-        if (!messaging) return null;
+        if (!messaging) throw new Error("Firebase messaging is not initialized.");
         
+        if (!('serviceWorker' in navigator)) {
+            throw new Error("Service workers are not supported (requires HTTPS or localhost).");
+        }
+
         const permission = await Notification.requestPermission();
         if (permission === "granted") {
             if (!import.meta.env.VITE_FIREBASE_VAPID_KEY) {
                 console.error("VITE_FIREBASE_VAPID_KEY is missing from environment variables!");
             }
-            let registration = await navigator.serviceWorker.getRegistration();
-            if (!registration) {
-                registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-            }
             
-            await Promise.race([
-                navigator.serviceWorker.ready,
-                new Promise((_, reject) => setTimeout(() => reject(new Error("Service Worker timeout")), 5000))
-            ]);
+            let registration;
+            try {
+                registration = await navigator.serviceWorker.getRegistration();
+                if (!registration) {
+                    registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                }
+                await Promise.race([
+                    navigator.serviceWorker.ready,
+                    new Promise((_, reject) => setTimeout(() => reject(new Error("Service Worker timeout")), 5000))
+                ]);
+            } catch (swErr) {
+                console.error("Service worker registration failed:", swErr);
+                throw new Error("Failed to register Service Worker. Please clear cache and try again.");
+            }
 
-            const token = await getToken(messaging, {
-                vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-                serviceWorkerRegistration: registration,
-            });
-            return token;
+            try {
+                const tokenOptions = { serviceWorkerRegistration: registration };
+                if (import.meta.env.VITE_FIREBASE_VAPID_KEY) {
+                    tokenOptions.vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
+                }
+                const token = await getToken(messaging, tokenOptions);
+                return token;
+            } catch (tokenErr) {
+                console.error("Token generation failed:", tokenErr);
+                throw new Error("Push token generation failed. Check your Firebase VAPID key config.");
+            }
         } else {
             console.warn("Notification permission denied");
-            return null;
+            throw new Error("Notification permission denied by user.");
         }
     } catch (err) {
         console.error("An error occurred while retrieving token: ", err);
-        return null;
+        throw err;
     }
 };
-
 export const disableNotificationPermission = async () => {
     try {
         if (!messaging) return false;

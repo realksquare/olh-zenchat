@@ -157,7 +157,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 setError("Could not get push token. Try again or check browser permissions.");
             }
         } catch (err) {
-            setError("Failed to enable notifications. Please try again.");
+            setError(err.message || "Failed to enable notifications. Please try again.");
         } finally {
             setIsSubscribing(false);
         }
