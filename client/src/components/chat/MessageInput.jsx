@@ -9,7 +9,17 @@ import axios from "axios";
 
 const ACCEPTED_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const ACCEPTED_VIDEO = ["video/mp4", "video/quicktime", "video/webm", "video/mpeg", "video/x-msvideo"];
-const ACCEPTED_ALL = [...ACCEPTED_IMAGE, ...ACCEPTED_VIDEO];
+const ACCEPTED_RAW = [
+    "application/pdf", 
+    "application/msword", 
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", 
+    "application/zip", 
+    "application/x-zip-compressed", 
+    "application/x-rar-compressed", 
+    "text/plain",
+    "application/octet-stream"
+];
+const ACCEPTED_ALL = [...ACCEPTED_IMAGE, ...ACCEPTED_VIDEO, ...ACCEPTED_RAW];
 const MAX_FILES = 3;
 
 const compressImage = (file, targetKB = 300) => new Promise((resolve) => {
@@ -45,7 +55,7 @@ const formatFileSize = (bytes) => {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const MediaUploadPopup = ({ onClose, onFilesSelected }) => {
+const MediaUploadPopup = ({ onClose, onFilesSelected, showToast }) => {
     const fileInputRef = useRef(null);
     const [dragOver, setDragOver] = useState(false);
 
@@ -53,14 +63,22 @@ const MediaUploadPopup = ({ onClose, onFilesSelected }) => {
         const valid = [];
         const errors = [];
         for (const file of files) {
-            if (!ACCEPTED_ALL.includes(file.type)) {
+            const isImage = ACCEPTED_IMAGE.includes(file.type);
+            const isVideo = ACCEPTED_VIDEO.includes(file.type);
+            const isDoc = ACCEPTED_RAW.includes(file.type) || (file.name.match(/\.(pdf|doc|docx|zip|rar|txt)$/i));
+            
+            if (!isImage && !isVideo && !isDoc) {
                 errors.push(`${file.name}: unsupported format`);
                 continue;
             }
-            const isVideo = ACCEPTED_VIDEO.includes(file.type);
-            const limit = isVideo ? 7 * 1024 * 1024 : 3 * 1024 * 1024;
+
+            let limit = 10 * 1024 * 1024; // Default 10MB
+            if (isImage) limit = 7 * 1024 * 1024;
+            if (isVideo) limit = 18 * 1024 * 1024;
+            
             if (file.size > limit) {
-                errors.push(`${file.name}: exceeds ${isVideo ? "7 MB" : "3 MB"} limit`);
+                const limitText = isImage ? "7 MB" : isVideo ? "18 MB" : "10 MB";
+                errors.push(`${file.name}: exceeds ${limitText} limit`);
                 continue;
             }
             valid.push(file);
@@ -71,9 +89,9 @@ const MediaUploadPopup = ({ onClose, onFilesSelected }) => {
     const handleFiles = (files) => {
         const list = Array.from(files).slice(0, MAX_FILES);
         const { valid, errors } = validate(list);
-        if (errors.length) alert("Some files were skipped:\n" + errors.join("\n"));
+        if (errors.length) showToast("🌪️ " + errors[0]);
         if (valid.length) onFilesSelected(valid);
-        onClose();
+        if (valid.length || !errors.length) onClose();
     };
 
     const handleDrop = (e) => {
@@ -83,46 +101,49 @@ const MediaUploadPopup = ({ onClose, onFilesSelected }) => {
     };
 
     return createPortal(
-        <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-overlay moments-aura-overlay" onClick={onClose} style={{ zIndex: 10000 }}>
             <div
-                className="media-upload-popup"
+                className="moments-aura-content media-upload-popup-v2"
                 onClick={(e) => e.stopPropagation()}
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
+                style={{ maxWidth: "400px", width: "95%", padding: 0 }}
             >
-                <div className="media-upload-header">
-                    <span className="media-upload-title">Media Upload</span>
-                    <button className="media-upload-close" onClick={onClose}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <div className="moments-aura-header">
+                    <h2 className="moments-aura-title">Media Upload</h2>
+                    <button className="aura-close-btn" onClick={onClose}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                         </svg>
                     </button>
                 </div>
 
-                <p className="media-upload-hint">
-                    Supported: JPG, PNG, WEBP, GIF (max 3 MB) &bull; MP4, MOV, WEBM, MPEG, AVI (max 7 MB)
-                </p>
-                <p className="media-upload-limit">Up to {MAX_FILES} files per message</p>
+                <div style={{ padding: '0 28px 28px' }}>
+                    <p className="media-upload-hint" style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+                        Images (max 7MB) &bull; Videos (max 18MB) &bull; Documents & Archives (max 10MB)
+                    </p>
 
-                <div
-                    className={`media-upload-dropzone ${dragOver ? "dragover" : ""}`}
-                    onClick={() => fileInputRef.current?.click()}
-                >
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5, marginBottom: 8 }}>
-                        <rect x="3" y="3" width="18" height="18" rx="3" />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <polyline points="21 15 16 10 5 21" />
-                    </svg>
-                    <span>Click or drag & drop to upload</span>
-                    <span className="media-upload-sub">Select up to {MAX_FILES} files</span>
+                    <div
+                        className={`media-upload-dropzone ${dragOver ? "dragover" : ""}`}
+                        onClick={() => fileInputRef.current?.click()}
+                        style={{ border: '2px dashed rgba(255,255,255,0.1)', borderRadius: '20px', padding: '40px 20px', transition: 'all 0.2s' }}
+                    >
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.3, marginBottom: 16 }}>
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        <span style={{ fontWeight: 600, color: '#f1f5f9' }}>Tap to browse or drop here</span>
+                        <span className="media-upload-sub" style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '4px' }}>Select up to {MAX_FILES} files</span>
+                    </div>
                 </div>
 
                 <input
                     ref={fileInputRef}
                     type="file"
                     multiple
-                    accept={ACCEPTED_ALL.join(",")}
+                    accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.mov,.webm,.mpeg,.avi,.pdf,.doc,.docx,.zip,.rar,.txt"
                     style={{ display: "none" }}
                     onChange={(e) => handleFiles(e.target.files)}
                 />
@@ -165,7 +186,13 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const [uploading, setUploading] = useState(false);
     const [showMediaPopup, setShowMediaPopup] = useState(false);
     const [stagedFiles, setStagedFiles] = useState([]);
+    const [toast, setToast] = useState(null);
     const { sendMessage, startTyping, stopTyping, editMessage } = useSocket();
+
+    const showToast = (msg) => {
+        setToast(msg);
+        setTimeout(() => setToast(null), 5000);
+    };
     const { addMessage, updateMessage } = useChatStore();
     const { user, soundEnabled } = useAuthStore();
     const textareaRef = useRef(null);
@@ -263,6 +290,10 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
 
             for (const file of files) {
                 const isVideo = ACCEPTED_VIDEO.includes(file.type);
+                const isImage = ACCEPTED_IMAGE.includes(file.type);
+                const isDoc = !isImage && !isVideo;
+                const msgType = isVideo ? "video" : isImage ? "image" : "file";
+                
                 const tempId = `temp-${Date.now()}-${Math.random()}`;
                 
                 addMessage(chatId, {
@@ -270,8 +301,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     cid: tempId,
                     chatId,
                     senderId: user?._id,
-                    content: files.length === 1 ? textContent : "",
-                    type: isVideo ? "video" : "image",
+                    content: files.length === 1 ? textContent : (isDoc ? file.name : ""),
+                    type: msgType,
                     mediaUrl: URL.createObjectURL(file),
                     status: "sending",
                     progress: 0,
@@ -279,13 +310,16 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     createdAt: new Date().toISOString()
                 });
 
-                const fileToUpload = isVideo ? file : await compressImage(file);
+                let fileToUpload = file;
+                if (isImage) fileToUpload = await compressImage(file);
+                
                 const formData = new FormData();
                 formData.append("file", fileToUpload);
                 formData.append("upload_preset", uploadPreset);
 
+                const uploadType = isVideo ? 'video' : isImage ? 'image' : 'raw';
                 const res = await axios.post(
-                    `https://api.cloudinary.com/v1_1/${cloudName}/${isVideo ? 'video' : 'image'}/upload`,
+                    `https://api.cloudinary.com/v1_1/${cloudName}/${uploadType}/upload`,
                     formData,
                     {
                         onUploadProgress: (p) => {
@@ -296,7 +330,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 );
 
                 const downloadURL = res.data.secure_url;
-                sendMessage(chatId, files.length === 1 ? textContent : "", isVideo ? "video" : "image", downloadURL, replyingTo?._id, isViewOnce, tempId);
+                sendMessage(chatId, files.length === 1 ? textContent : (isDoc ? file.name : ""), msgType, downloadURL, replyingTo?._id, isViewOnce, tempId);
             }
             if (soundEnabled) playSendSound();
             onCancelReply(); 
@@ -380,6 +414,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
 
     return (
         <div className="message-input-wrap">
+            {toast && <div className="aura-toast" style={{ zIndex: 10001, bottom: '80px' }}>{toast}</div>}
             {editingMessage && (
                 <div className="editing-banner">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
@@ -503,6 +538,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 <MediaUploadPopup
                     onClose={() => setShowMediaPopup(false)}
                     onFilesSelected={handleFilesSelected}
+                    showToast={showToast}
                 />
             )}
         </div>

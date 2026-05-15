@@ -20,11 +20,16 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [nameVisibility, setNameVisibility] = useState(user?.privacySettings?.fullName || "everyone");
     const [avatarVisibility, setAvatarVisibility] = useState(user?.privacySettings?.avatar || "everyone");
     const [typingVisibility, setTypingVisibility] = useState(user?.privacySettings?.typingIndicator || "everyone");
-    const [error, setError] = useState("");
+    const [toast, setToast] = useState(null);
     const [isSubscribing, setIsSubscribing] = useState(false);
     const [imageError, setImageError] = useState(false);
 
     const fileInputRef = useRef(null);
+
+    const showToast = (message) => {
+        setToast(message);
+        setTimeout(() => setToast(null), 5000);
+    };
 
     useEffect(() => {
         if (isOpen && user) {
@@ -38,7 +43,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setTypingVisibility(user.privacySettings?.typingIndicator || "everyone");
             setAvatarVisibility(user.privacySettings?.avatar || "everyone");
             setAvatarFile(null);
-            setError("");
+            setToast(null);
             setIsSubscribing(false);
             setImageError(false);
         }
@@ -58,11 +63,11 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         const file = e.target.files[0];
         if (file) {
             if (!file.type.startsWith('image/')) {
-                setError("Please select an image file.");
+                showToast("🌪️ Please select an image file.");
                 return;
             }
-            if (file.size > 5 * 1024 * 1024) {
-                setError("Image too large. Max 5MB.");
+            if (file.size > 7 * 1024 * 1024) {
+                showToast("🌪️ Image too large. Max 7MB.");
                 return;
             }
             setAvatarFile(file);
@@ -74,11 +79,11 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
+        setToast(null);
         if (password) {
-            if (password.length < 7) { setError("Password must be at least 7 characters"); return; }
-            if (password.length > 18) { setError("Password must be at most 18 characters"); return; }
-            if (!/\d/.test(password)) { setError("Password must contain at least one number"); return; }
+            if (password.length < 7) { showToast("🌪️ Password must be at least 7 characters"); return; }
+            if (password.length > 18) { showToast("🌪️ Password must be at most 18 characters"); return; }
+            if (!/\d/.test(password)) { showToast("🌪️ Password must contain one number"); return; }
         }
         const formData = new FormData();
         if (username !== user.username) formData.append("username", username);
@@ -99,10 +104,13 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         formData.append("privacySettings", JSON.stringify(privacySettings));
         const res = await updateProfile(formData);
         if (res.success) {
-            onSave?.();
-            onClose();
+            showToast("✨ Profile updated successfully!");
+            setTimeout(() => {
+                onSave?.();
+                onClose();
+            }, 1000);
         } else {
-            setError(res.message);
+            showToast("🌪️ " + res.message);
         }
     };
 
@@ -131,14 +139,14 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
 
     const handleSubscribe = async () => {
         setIsSubscribing(true);
-        setError("");
+        setToast(null);
         try {
             if (!('Notification' in window)) {
-                setError("Push notifications are not supported in this browser.");
+                showToast("🌪️ Notifications not supported.");
                 return;
             }
             if (Notification.permission === "denied") {
-                setError("Notifications are blocked. Enable them in your browser site settings.");
+                showToast("🌪️ Notifications blocked in browser settings.");
                 return;
             }
             const token = await requestNotificationPermission();
@@ -152,12 +160,13 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 if (data?.user) {
                     useAuthStore.getState().updateUser(data.user);
                     localStorage.setItem("zenchat_user", JSON.stringify(data.user));
+                    showToast("✨ Notifications enabled!");
                 }
             } else {
-                setError("Could not get push token. Try again or check browser permissions.");
+                showToast("🌪️ Could not get push token.");
             }
         } catch (err) {
-            setError(err.message || "Failed to enable notifications. Please try again.");
+            showToast("🌪️ Failed to enable notifications.");
         } finally {
             setIsSubscribing(false);
         }
@@ -167,12 +176,13 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
     const currentDeviceType = isPWA ? "pwa" : "browser";
     const isSubscribedInBrowser = Notification.permission === "granted" && 
-                                  user?.fcmTokens?.some(t => t.deviceType === currentDeviceType);
+                                   user?.fcmTokens?.some(t => t.deviceType === currentDeviceType);
 
     return createPortal(
         <div className="modal-overlay moments-aura-overlay" onClick={onClose} style={{ zIndex: 10000 }}>
+            {toast && <div className="aura-toast" style={{ zIndex: 10001, bottom: '20px' }}>{toast}</div>}
             {isSubscribing && <LoadingOverlay message="Subscribing..." subMessage="Setting up your secure connection" />}
-            <div className="moments-aura-content profile-modal-v3" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "95%", padding: 0, overflow: 'hidden' }}>
+            <div className="moments-aura-content profile-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "95%", padding: 0, overflow: 'hidden' }}>
                 <div className="moments-aura-header">
                     <h2 className="moments-aura-title">Profile & Settings</h2>
                     <button className="aura-close-btn" onClick={onClose}>
