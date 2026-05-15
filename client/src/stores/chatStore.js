@@ -257,11 +257,20 @@ export const useChatStore = create(
                         updatedUnreadCounts[chatId] = (state.unreadCounts[chatId] || 0) + 1;
                     }
 
+                    const senderId = (message.senderId?._id || message.senderId)?.toString();
+                    const updatedTypingUsers = { ...state.typingUsers };
+                    if (updatedTypingUsers[chatId]) {
+                        const chatTyping = { ...updatedTypingUsers[chatId] };
+                        delete chatTyping[senderId];
+                        updatedTypingUsers[chatId] = chatTyping;
+                    }
+
                     return {
                         messages: { ...state.messages, [chatId]: nextMessages },
                         chats: updatedChats,
                         activeChat: updatedActiveChat,
                         unreadCounts: updatedUnreadCounts,
+                        typingUsers: updatedTypingUsers,
                     };
                 });
             },
