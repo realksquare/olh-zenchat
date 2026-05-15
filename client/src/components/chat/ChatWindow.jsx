@@ -33,7 +33,7 @@ const ScrollDownBtn = ({ onClick, show, isLifted }) => (
 );
 
 const MODE_LABELS = {
-    instant: 'viewing',
+    instant: 'going offline',
     '1h': '1 hour',
     '8h': '8 hours',
     '24h': '1 day',
@@ -377,7 +377,7 @@ const ChatWindow = ({ onBack }) => {
                                 </div>
                                 {[
                                     { value: 'off', label: 'Off' },
-                                    { value: 'instant', label: 'Instant (after view)' },
+                                    { value: 'instant', label: 'Current session' },
                                     { value: '1h', label: '1 Hour' },
                                     { value: '8h', label: '8 Hours' },
                                     { value: '24h', label: '1 Day' },
