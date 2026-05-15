@@ -5,8 +5,9 @@ import { VerifiedTick } from "./Icons";
 import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
 
-const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = false, isContact = false }) => {
+const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = false, isContact = false, onViewMoments }) => {
     const getHaloColor = useMomentStore((s) => s.getHaloColor);
+    const moments = useMomentStore((s) => s.moments);
     const { user: currentUser } = useAuthStore();
 
     // Safety exit
@@ -38,6 +39,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
     const initials = username.slice(0, 2).toUpperCase();
     // Pass currentUserId so grey aura is shown when all moments are viewed
     const haloColor = getHaloColor(userId, currentUser?._id);
+    const userMomentsCount = moments.filter(m => (m.userId?._id || m.userId)?.toString() === userId).length;
 
     return createPortal(
         <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000 }}>
@@ -87,9 +89,9 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                     </div>
 
                     <div className="user-card-actions">
-                        {hasMoments && (
-                            <button className="btn btn-primary btn-full moments-btn">
-                                View Moments
+                        {hasMoments && userMomentsCount > 0 && (
+                            <button className="btn btn-primary btn-full moments-btn" onClick={onViewMoments}>
+                                View {userMomentsCount} {userMomentsCount === 1 ? '#moment.' : '#moments.'}
                             </button>
                         )}
                     </div>

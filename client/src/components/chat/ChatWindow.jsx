@@ -11,6 +11,7 @@ import { VerifiedTick } from "../ui/Icons";
 import UserCardModal from "../ui/UserCardModal";
 import { useMomentStore } from "../../stores/momentStore";
 import MediaViewerModal from "../ui/MediaViewerModal";
+import MomentViewer from "./MomentViewer";
 
 const EMPTY_MESSAGES = [];
 const EMPTY_CONTACTS = [];
@@ -74,6 +75,7 @@ const ChatWindow = ({ onBack }) => {
     const [showScrollDown, setShowScrollDown] = useState(false);
     const [showUserCard, setShowUserCard] = useState(false);
     const [selectedMedia, setSelectedMedia] = useState(null);
+    const [activeViewerMoments, setActiveViewerMoments] = useState(null);
     const messagesContainerRef = useRef(null);
 
     const handleMessageAction = (msg) => {
@@ -321,23 +323,39 @@ const ChatWindow = ({ onBack }) => {
                     </div>
                 )}
 
-                {!isLoadingMessages && messages.map((msg, idx) => (
-                    <MessageBubble
-                        key={msg._id}
-                        message={msg}
-                        isMe={msg.senderId?._id === user?._id || msg.senderId === user?._id}
-                        showAvatar={idx === 0 || messages[idx - 1]?.senderId?._id !== msg.senderId?._id}
-                        otherUser={otherUser}
-                        onEdit={handleMessageAction}
-                        onDelete={setDeletingMessage}
-                        onMediaClick={(url, type) => {
-                            const senderName = (msg.senderId?._id === user?._id || msg.senderId === user?._id) 
-                                ? "me" 
-                                : (msg.senderId?.username || otherUser?.username || "user");
-                            setSelectedMedia({ url, type, username: senderName });
-                        }}
-                    />
-                ))}
+                {!isLoadingMessages && messages.map((msg, idx) => {
+                    const prevMsg = messages[idx - 1];
+                    const msgDate = new Date(msg.createdAt).toLocaleDateString();
+                    const prevDate = prevMsg ? new Date(prevMsg.createdAt).toLocaleDateString() : null;
+                    const showDateDivider = msgDate !== prevDate;
+
+                    return (
+                        <div key={`wrap-${msg._id}`}>
+                            {showDateDivider && (
+                                <div className="message-date-divider" style={{ textAlign: 'center', margin: '20px 0', fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>
+                                    <span style={{ background: 'rgba(30, 37, 48, 0.6)', padding: '6px 14px', borderRadius: '16px', backdropFilter: 'blur(4px)' }}>
+                                        {new Date(msg.createdAt).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: new Date(msg.createdAt).getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined })}
+                                    </span>
+                                </div>
+                            )}
+                            <MessageBubble
+                                key={msg._id}
+                                message={msg}
+                                isMe={msg.senderId?._id === user?._id || msg.senderId === user?._id}
+                                showAvatar={idx === 0 || messages[idx - 1]?.senderId?._id !== msg.senderId?._id || showDateDivider}
+                                otherUser={otherUser}
+                                onEdit={handleMessageAction}
+                                onDelete={setDeletingMessage}
+                                onMediaClick={(url, type) => {
+                                    const senderName = (msg.senderId?._id === user?._id || msg.senderId === user?._id) 
+                                        ? "me" 
+                                        : (msg.senderId?.username || otherUser?.username || "user");
+                                    setSelectedMedia({ url, type, username: senderName });
+                                }}
+                            />
+                        </div>
+                    );
+                })}
 
                 {isTyping && <TypingIndicator scramble={typeof typingScramble === "string" ? typingScramble : ""} />}
                 <div ref={messagesEndRef} />
@@ -379,6 +397,17 @@ const ChatWindow = ({ onBack }) => {
                 isOnline={otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())}
                 hasMoments={hasMoments}
                 isContact={isContact}
+                onViewMoments={() => {
+                    const moments = useMomentStore.getState().moments.filter(m => (m.userId?._id || m.userId)?.toString() === otherUser?._id?.toString());
+                    setActiveViewerMoments(moments);
+                    setShowUserCard(false);
+                }}
+            />
+
+            <MomentViewer 
+                moments={activeViewerMoments || []}
+                isOpen={!!activeViewerMoments}
+                onClose={() => setActiveViewerMoments(null)}
             />
 
             {selectedMedia && (
