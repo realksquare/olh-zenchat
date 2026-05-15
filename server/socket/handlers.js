@@ -16,7 +16,7 @@ const cleanupInstantMessages = async (uid, io) => {
                 chatId: chat._id,
                 disappearingMode: "instant",
                 status: "read",
-                senderId: { $ne: uid }
+                senderId: { $ne: new mongoose.Types.ObjectId(uid) }
             });
 
             if (deleted.deletedCount > 0) {
