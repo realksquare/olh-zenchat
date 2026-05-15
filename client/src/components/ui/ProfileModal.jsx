@@ -186,7 +186,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem', marginTop: '0.25rem' }}>
                         <div className="profile-avatar-container">
                             <div
-                                className="avatar avatar-lg profile-avatar-edit"
+                                className="avatar profile-avatar-edit"
                                 onClick={() => fileInputRef.current?.click()}
                             >
                                 {(avatarPreview && !imageError) ? (
