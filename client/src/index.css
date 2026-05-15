@@ -297,6 +297,8 @@ select {
   overflow: hidden;
   position: relative;
   background: #0e1117;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .sidebar-panel {
@@ -910,8 +912,8 @@ select {
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   background: #161b22;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
 }
 
@@ -1864,7 +1866,17 @@ select {
 
 /* Ensure chat header has a solid background when sticky */
 .chat-header {
-  background: var(--color-bg-primary, #0e1117);
+  background: #161b22;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chat-window {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
 }
 
 /* ── Sidebar Tabs ─────────────────────────────────────── */
@@ -3891,7 +3903,8 @@ select {
 .moments-aura-viewer-content {
   width: 100%;
   max-width: 500px;
-  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   background: #000;
   display: flex;
   flex-direction: column;
