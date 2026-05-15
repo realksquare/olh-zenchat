@@ -6,7 +6,7 @@ import axiosInstance from "../../utils/axios";
 const NotificationPrompt = () => {
     const [show, setShow] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const { user, setFCMToken } = useAuthStore();
+    const { user } = useAuthStore();
 
     useEffect(() => {
         const checkPermission = async () => {
@@ -35,9 +35,8 @@ const NotificationPrompt = () => {
                     deviceType: isPWA ? "pwa" : "browser",
                     notificationsEnabled: true
                 });
-                setFCMToken(token);
             }
-            handleDismiss(); // Close regardless of token if they interacted
+            handleDismiss();
         } catch (err) {
             console.error("Failed to enable notifications", err);
             handleDismiss();

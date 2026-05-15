@@ -13,8 +13,10 @@ export const useChatStore = create(
             typingUsers: {},
             onlineUsers: new Set(),
             unreadCounts: {},
-            isLoadingChats: false,
+            hasMoreMessages: {},
             isLoadingMessages: false,
+            isLoadingOlderMessages: false,
+            isLoadingChats: false,
             isOffline: !navigator.onLine,
 
             initLocalData: async () => {
@@ -99,7 +101,7 @@ export const useChatStore = create(
 
                 set({ isLoadingMessages: true });
                 try {
-                    const { data } = await axiosInstance.get(`/messages/${chatId}`);
+                    const { data } = await axiosInstance.get(`/messages/${chatId}?limit=18`);
                     const serverMessages = data.messages;
 
                     serverMessages.forEach(msg => persistMessage({ ...msg, chatId: chatId.toString() }));
@@ -108,19 +110,15 @@ export const useChatStore = create(
                         const currentUserId = useAuthStore.getState().user?._id;
                         const existingMessages = state.messages[chatId.toString()] || [];
 
-                        // Build a map of server messages by _id for O(1) lookup
                         const serverById = new Map(serverMessages.map(m => [m._id?.toString(), m]));
 
-                        // Collect optimistic messages (temp-id) that haven't been confirmed by server yet
                         const pendingOptimistic = existingMessages.filter(m => {
                             const id = m._id?.toString() || "";
                             if (!id.startsWith("temp-")) return false;
-                            // Keep only if no server message has same cid
                             if (!m.cid) return false;
                             return !serverMessages.some(s => s.cid === m.cid);
                         });
 
-                        // Merge: server messages are authoritative, append pending optimistic at end
                         const merged = [...serverMessages, ...pendingOptimistic];
                         merged.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
@@ -141,11 +139,48 @@ export const useChatStore = create(
                             messages: { ...state.messages, [chatId.toString()]: merged },
                             unreadCounts,
                             isLoadingMessages: false,
+                            hasMoreMessages: {
+                                ...state.hasMoreMessages,
+                                [chatId.toString()]: serverMessages.length >= 18
+                            }
                         };
                     });
                 } catch (err) {
                     console.error("[Store] fetchMessages error:", err);
                     set({ isLoadingMessages: false });
+                }
+            },
+
+            fetchOlderMessages: async (chatId) => {
+                const state = get();
+                const existing = state.messages[chatId.toString()] || [];
+                if (existing.length === 0) return;
+
+                set({ isLoadingOlderMessages: true });
+                try {
+                    const page = Math.floor(existing.length / 18) + 1;
+                    const { data } = await axiosInstance.get(`/messages/${chatId}?limit=18&page=${page}`);
+                    const older = data.messages;
+
+                    older.forEach(msg => persistMessage({ ...msg, chatId: chatId.toString() }));
+
+                    set((s) => {
+                        const existingIds = new Set((s.messages[chatId.toString()] || []).map(m => m._id?.toString()));
+                        const newOld = older.filter(m => !existingIds.has(m._id?.toString()));
+                        const merged = [...newOld, ...(s.messages[chatId.toString()] || [])];
+                        merged.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                        return {
+                            messages: { ...s.messages, [chatId.toString()]: merged },
+                            isLoadingOlderMessages: false,
+                            hasMoreMessages: {
+                                ...s.hasMoreMessages,
+                                [chatId.toString()]: older.length >= 18
+                            }
+                        };
+                    });
+                } catch (err) {
+                    console.error("[Store] fetchOlderMessages error:", err);
+                    set({ isLoadingOlderMessages: false });
                 }
             },
 
@@ -621,7 +656,8 @@ export const useChatStore = create(
             partialize: (state) => {
                 const { 
                     activeChat, onlineUsers, typingUsers, 
-                    isLoadingChats, isLoadingMessages, ...rest 
+                    isLoadingChats, isLoadingMessages, isLoadingOlderMessages,
+                    hasMoreMessages, ...rest 
                 } = state;
                 return rest;
             },

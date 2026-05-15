@@ -31,15 +31,18 @@ const ChatWindow = ({ onBack }) => {
     const { user } = useAuthStore();
     const contacts = useAuthStore((s) => s.user?.contacts || EMPTY_CONTACTS);
     const {
-        activeChat, fetchMessages, isLoadingMessages,
-        typingUsers, markChatAsRead, onlineUsers
+        activeChat, fetchMessages, fetchOlderMessages, isLoadingMessages, isLoadingOlderMessages,
+        typingUsers, markChatAsRead, onlineUsers, hasMoreMessages
     } = useChatStore(useShallow((s) => ({
         activeChat: s.activeChat,
         fetchMessages: s.fetchMessages,
+        fetchOlderMessages: s.fetchOlderMessages,
         isLoadingMessages: s.isLoadingMessages,
+        isLoadingOlderMessages: s.isLoadingOlderMessages,
         typingUsers: s.typingUsers,
         markChatAsRead: s.markChatAsRead,
-        onlineUsers: s.onlineUsers
+        onlineUsers: s.onlineUsers,
+        hasMoreMessages: s.hasMoreMessages
     })));
 
     const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
@@ -50,13 +53,18 @@ const ChatWindow = ({ onBack }) => {
     );
 
     const messages = useMemo(() => {
+        const currentUserId = user?._id;
         const sorted = [...rawMessages].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-        if (!showOnlyStarred) return sorted;
-        return sorted.filter(m => m.starredBy?.includes(user?._id));
+        const visible = sorted.filter(m =>
+            !m.deletedFor?.some(id => id?.toString() === currentUserId?.toString())
+        );
+        if (!showOnlyStarred) return visible;
+        return visible.filter(m => m.starredBy?.includes(user?._id));
     }, [rawMessages, showOnlyStarred, user?._id]);
 
     const { joinChat, leaveChat, markAsRead, deleteMessage } = useSocket();
     const messagesEndRef = useRef(null);
+    const isLoadingOlderRef = useRef(false);
 
     const [editingMessage, setEditingMessage] = useState(null);
     const [replyingTo, setReplyingTo] = useState(null);
@@ -120,7 +128,7 @@ const ChatWindow = ({ onBack }) => {
 
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible' && activeChat?._id) {
-                fetchMessages(activeChat._id);
+                markIfVisible();
             }
         };
 
@@ -139,7 +147,7 @@ const ChatWindow = ({ onBack }) => {
     }, [activeChat?._id]);
 
     useEffect(() => {
-        if (!showScrollDown) {
+        if (!showScrollDown && !isLoadingOlderRef.current) {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }
     }, [messages.length, showScrollDown]);
@@ -264,6 +272,36 @@ const ChatWindow = ({ onBack }) => {
             </div>
 
             <div className="chat-messages" ref={messagesContainerRef} onScroll={handleScroll}>
+                {(hasMoreMessages[activeChat?._id] || isLoadingOlderMessages) && !isLoadingMessages && (
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 4px' }}>
+                        <button
+                            className="load-more-btn"
+                            onClick={async () => {
+                                const container = messagesContainerRef.current;
+                                const prevScrollHeight = container?.scrollHeight || 0;
+                                isLoadingOlderRef.current = true;
+                                await fetchOlderMessages(activeChat._id);
+                                isLoadingOlderRef.current = false;
+                                requestAnimationFrame(() => {
+                                    if (container) {
+                                        container.scrollTop = container.scrollHeight - prevScrollHeight;
+                                    }
+                                });
+                            }}
+                            disabled={isLoadingOlderMessages}
+                        >
+                            {isLoadingOlderMessages ? (
+                                <span className="banner-spinner" style={{ width: 14, height: 14 }} />
+                            ) : (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="17 11 12 6 7 11" />
+                                    <polyline points="17 18 12 13 7 18" />
+                                </svg>
+                            )}
+                            {isLoadingOlderMessages ? 'Loading...' : 'Load older messages'}
+                        </button>
+                    </div>
+                )}
                 {isLoadingMessages && (
                     <div className="messages-loading">
                         {[1, 2, 3, 4].map((i) => (

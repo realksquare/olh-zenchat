@@ -53,6 +53,13 @@ const Sidebar = ({ onChatSelect }) => {
     }, []);
 
     useEffect(() => {
+        if (sessionStorage.getItem("showFAQOnLoad") === "1") {
+            sessionStorage.removeItem("showFAQOnLoad");
+            setIsFAQOpen(true);
+        }
+    }, []);
+
+    useEffect(() => {
         const delayDebounce = setTimeout(async () => {
             if (search.trim().length < 2) {
                 setSearchResults([]);

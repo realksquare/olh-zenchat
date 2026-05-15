@@ -26,7 +26,10 @@ const RegisterPage = () => {
         const err = validatePassword(form.password);
         if (err) { setPwError(err); return; }
         const result = await register(form.username, form.email, form.password);
-        if (result.success) navigate("/");
+        if (result.success) {
+            sessionStorage.setItem("showFAQOnLoad", "1");
+            navigate("/");
+        }
     };
 
     const pwHint = validatePassword(form.password);

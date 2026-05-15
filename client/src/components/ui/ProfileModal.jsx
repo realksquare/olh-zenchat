@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import { requestNotificationPermission } from "../../utils/firebase";
+import axiosInstance from "../../utils/axios";
 import LoadingOverlay from "./LoadingOverlay";
 
 const ProfileModal = ({ isOpen, onClose, onSave }) => {
@@ -130,19 +131,33 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
 
     const handleSubscribe = async () => {
         setIsSubscribing(true);
+        setError("");
         try {
+            if (!('Notification' in window)) {
+                setError("Push notifications are not supported in this browser.");
+                return;
+            }
+            if (Notification.permission === "denied") {
+                setError("Notifications are blocked. Enable them in your browser site settings.");
+                return;
+            }
             const token = await requestNotificationPermission();
             if (token) {
-                const formData = new FormData();
-                formData.append("notificationsEnabled", "true");
-                formData.append("fcmToken", token);
                 const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-                formData.append("deviceType", isPWA ? "pwa" : "browser");
-                await updateProfile(formData);
-                window.location.reload();
+                const { data } = await axiosInstance.put("/auth/me", {
+                    notificationsEnabled: true,
+                    fcmToken: token,
+                    deviceType: isPWA ? "pwa" : "browser"
+                });
+                if (data?.user) {
+                    useAuthStore.getState().updateUser(data.user);
+                    localStorage.setItem("zenchat_user", JSON.stringify(data.user));
+                }
             } else {
-                setError("Failed to enable notifications. Permission denied or error.");
+                setError("Could not get push token. Try again or check browser permissions.");
             }
+        } catch (err) {
+            setError("Failed to enable notifications. Please try again.");
         } finally {
             setIsSubscribing(false);
         }
@@ -168,7 +183,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 {error && <div className="error-message">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="profile-form">
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem', marginTop: '0.25rem' }}>
                         <div className="profile-avatar-container">
                             <div
                                 className="avatar avatar-lg profile-avatar-edit"

@@ -476,16 +476,16 @@ select {
 
 .profile-avatar-container {
   position: relative;
-  width: 110px;
-  height: 110px;
+  width: 130px;
+  height: 130px;
   margin: 0 auto;
 }
 
 .profile-avatar-edit {
-  width: 110px !important;
-  height: 110px !important;
+  width: 130px !important;
+  height: 130px !important;
   border-radius: 50% !important;
-  font-size: 2rem !important;
+  font-size: 2.5rem !important;
   cursor: pointer;
   position: relative;
   border: 3px solid rgba(255, 255, 255, 0.05);
@@ -5031,7 +5031,7 @@ select {
 .field-hint { display: block; font-size: 0.75rem; margin-top: 4px; font-weight: 500; }
 .field-hint-error { color: #f87171; }
 .field-hint-ok    { color: #34d399; }
-.profile-avatar-container { position: relative; width: 110px; height: 110px; margin: 0 auto; }
+.profile-avatar-container { position: relative; width: 130px; height: 130px; margin: 0 auto; }
 .avatar-reset-btn { position: absolute !important; bottom: 2px !important; right: 2px !important; width: 24px !important; height: 24px !important; background: #f43f5e !important; color: #fff !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; border: 2px solid #0f1117 !important; cursor: pointer; z-index: 20 !important; padding: 0 !important; }
 .avatar-reset-btn:hover { transform: scale(1.15) !important; background: #e11d48 !important; }
 .aura-user-meta { overflow: visible !important; }
@@ -5183,8 +5183,8 @@ select {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 80px !important;
-  height: 80px !important;
+  width: 130px !important;
+  height: 130px !important;
 }
 .profile-avatar-container > .avatar-reset-btn {
   position: absolute !important;
@@ -5248,3 +5248,28 @@ select {
 
 /* === Mobile fix === */
 @media (max-width: 768px) { .chat-window { position: fixed; inset: 0; overscroll-behavior-y: none; } }
+
+.load-more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+  font-family: inherit;
+}
+.load-more-btn:hover:not(:disabled) {
+  background: rgba(61, 165, 217, 0.1);
+  border-color: rgba(61, 165, 217, 0.3);
+  color: var(--color-primary);
+}
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
