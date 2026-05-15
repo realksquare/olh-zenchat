@@ -2,6 +2,7 @@ const express = require("express");
 const User = require("../models/User");
 const Message = require("../models/Message");
 const authMiddleware = require("../middleware/auth");
+const { sendPushNotification } = require("../utils/firebase");
 
 const router = express.Router();
 
@@ -120,6 +121,30 @@ router.delete("/users/:userId", authMiddleware, adminCheck, async (req, res) => 
         await User.findByIdAndDelete(req.params.userId);
         res.json({ message: "User deleted successfully" });
     } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.post("/push", authMiddleware, adminCheck, async (req, res) => {
+    try {
+        const { title, body } = req.body;
+        if (!title || !body) return res.status(400).json({ message: "Title and body required" });
+
+        // Find all users who have at least one fcm token
+        const users = await User.find({ "fcmTokens.0": { $exists: true } });
+        let sentCount = 0;
+        
+        for (const u of users) {
+            for (const t of u.fcmTokens) {
+                if (t.token) {
+                    await sendPushNotification(u._id, t.token, title, body);
+                    sentCount++;
+                }
+            }
+        }
+        res.json({ message: "Push sent successfully", sentCount });
+    } catch (err) {
+        console.error("Broadcast push error:", err);
         res.status(500).json({ message: "Server error" });
     }
 });

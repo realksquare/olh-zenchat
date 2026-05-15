@@ -330,7 +330,7 @@ const ChatWindow = ({ onBack }) => {
                     const showDateDivider = msgDate !== prevDate;
 
                     return (
-                        <div key={`wrap-${msg._id}`}>
+                        <div key={`wrap-${msg._id}`} style={{ display: 'contents' }}>
                             {showDateDivider && (
                                 <div className="message-date-divider" style={{ textAlign: 'center', margin: '20px 0', fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>
                                     <span style={{ background: 'rgba(30, 37, 48, 0.6)', padding: '6px 14px', borderRadius: '16px', backdropFilter: 'blur(4px)' }}>

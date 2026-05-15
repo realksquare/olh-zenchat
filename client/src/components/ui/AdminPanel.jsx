@@ -7,7 +7,10 @@ const AdminPanel = ({ onClose }) => {
     const [stats, setStats] = useState(null);
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState("stats"); // "stats" | "users"
+    const [activeTab, setActiveTab] = useState("stats"); // "stats" | "users" | "push"
+    const [pushTitle, setPushTitle] = useState("");
+    const [pushBody, setPushBody] = useState("");
+    const [pushSending, setPushSending] = useState(false);
 
     const fetchAdminData = async () => {
         try {
@@ -58,6 +61,21 @@ const AdminPanel = ({ onClose }) => {
         } catch (err) { alert(err.response?.data?.message || "Failed"); }
     };
 
+    const handleSendPush = async () => {
+        if (!pushTitle || !pushBody) return alert("Title and body required");
+        setPushSending(true);
+        try {
+            const { data } = await axiosInstance.post("/admin/push", { title: pushTitle, body: pushBody });
+            alert(`Sent to ${data.sentCount} devices successfully!`);
+            setPushTitle("");
+            setPushBody("");
+        } catch (err) {
+            alert(err.response?.data?.message || "Failed to send push notification");
+        } finally {
+            setPushSending(false);
+        }
+    };
+
     if (loading) return (
         <div className="admin-modal-overlay">
             <div className="admin-modal-content">
@@ -77,6 +95,7 @@ const AdminPanel = ({ onClose }) => {
                 <div className="admin-tabs">
                     <button className={activeTab === "stats" ? "active" : ""} onClick={() => setActiveTab("stats")}>Overview</button>
                     <button className={activeTab === "users" ? "active" : ""} onClick={() => setActiveTab("users")}>Manage Users</button>
+                    <button className={activeTab === "push" ? "active" : ""} onClick={() => setActiveTab("push")}>Push Notifs</button>
                 </div>
 
                 <div className="admin-body">
@@ -166,6 +185,33 @@ const AdminPanel = ({ onClose }) => {
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
+                    )}
+
+                    {activeTab === "push" && (
+                        <div className="admin-push-section" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <h3 style={{ margin: 0, color: 'white' }}>Send Global Push Notification</h3>
+                            <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem' }}>This will broadcast a push notification to all subscribed users globally.</p>
+                            <input 
+                                type="text" 
+                                placeholder="Notification Title (e.g. New Feature Update!)" 
+                                value={pushTitle} 
+                                onChange={e => setPushTitle(e.target.value)} 
+                                style={{ padding: '12px', borderRadius: '8px', border: '1px solid #334155', background: '#1e293b', color: 'white', fontSize: '1rem', outline: 'none' }}
+                            />
+                            <textarea 
+                                placeholder="Notification Body" 
+                                value={pushBody} 
+                                onChange={e => setPushBody(e.target.value)} 
+                                style={{ padding: '12px', borderRadius: '8px', border: '1px solid #334155', background: '#1e293b', color: 'white', minHeight: '100px', resize: 'vertical', fontSize: '0.95rem', outline: 'none', fontFamily: 'inherit' }}
+                            />
+                            <button 
+                                onClick={handleSendPush} 
+                                disabled={pushSending || !pushTitle || !pushBody} 
+                                style={{ padding: '12px', borderRadius: '8px', background: '#3b82f6', color: 'white', fontWeight: 'bold', border: 'none', cursor: (pushSending || !pushTitle || !pushBody) ? 'not-allowed' : 'pointer', opacity: (pushSending || !pushTitle || !pushBody) ? 0.6 : 1, transition: '0.2s' }}
+                            >
+                                {pushSending ? "Sending..." : "Send Broadcast"}
+                            </button>
                         </div>
                     )}
                 </div>

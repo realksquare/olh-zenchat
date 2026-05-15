@@ -173,12 +173,19 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     return createPortal(
         <div className={`modal-overlay moments-aura-viewer-overlay ${isClosing ? 'fading-out' : ''}`}>
             <div className="moments-aura-viewer-content" onClick={(e) => e.stopPropagation()} style={bgStyle}>
-                <div className="aura-progress-bars">
+                <div className="aura-progress-bars" style={{ display: 'flex', gap: '4px', position: 'absolute', top: '12px', left: '12px', right: '12px', zIndex: 10 }}>
                     {moments.map((_, idx) => (
-                        <div key={`${currentIndex}-${idx}`} className="aura-progress-bg">
+                        <div key={`${currentIndex}-${idx}`} className="aura-progress-bg" style={{ flex: 1, height: '3px', background: 'rgba(255, 255, 255, 0.3)', borderRadius: '2px', overflow: 'hidden' }}>
                             <div 
                                 className={`aura-progress-fill solid ${idx === currentIndex ? 'active' : (idx < currentIndex ? 'completed' : '')}`} 
-                                style={idx === currentIndex ? { '--duration': `${currentMoment.music?.duration || 10}s` } : {}}
+                                style={{
+                                    ...(idx === currentIndex ? { '--duration': `${currentMoment.music?.duration || 10}s` } : {}),
+                                    background: '#ffffff',
+                                    height: '100%',
+                                    width: idx < currentIndex ? '100%' : (idx === currentIndex ? undefined : '0%'), // Let CSS animation handle current, force 100% for completed
+                                    opacity: 1,
+                                    boxShadow: 'none' // Remove any blur
+                                }}
                             />
                         </div>
                     ))}
