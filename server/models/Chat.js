@@ -44,6 +44,11 @@ const chatSchema = new mongoose.Schema(
                 ref: "User",
             }
         ],
+        disappearingMode: {
+            type: String,
+            enum: ["off", "instant", "1h", "8h", "24h", "7d"],
+            default: "off"
+        },
     },
     { timestamps: true }
 );

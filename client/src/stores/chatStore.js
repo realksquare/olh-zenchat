@@ -64,6 +64,32 @@ export const useChatStore = create(
                 }));
             },
 
+            updateChat: (chatId, updates) => {
+                set((state) => {
+                    const nextChats = state.chats.map(c => c._id === chatId ? { ...c, ...updates } : c);
+                    const nextActive = state.activeChat?._id === chatId ? { ...state.activeChat, ...updates } : state.activeChat;
+                    return { chats: nextChats, activeChat: nextActive };
+                });
+            },
+
+            deleteInstantMessages: (chatId) => {
+                set((state) => {
+                    const msgs = state.messages[chatId] || [];
+                    const nextMsgs = msgs.filter(m => !(m.disappearingMode === 'instant' && m.status === 'read'));
+                    
+                    // Also delete from local IndexedDB
+                    msgs.forEach(m => {
+                        if (m.disappearingMode === 'instant' && m.status === 'read') {
+                            db.messages.delete(m._id);
+                        }
+                    });
+
+                    return {
+                        messages: { ...state.messages, [chatId]: nextMsgs }
+                    };
+                });
+            },
+
             togglePinChat: async (chatId) => {
                 const { user } = useAuthStore.getState();
                 if (!user) return;

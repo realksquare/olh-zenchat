@@ -245,4 +245,41 @@ router.post("/:chatId/unpin", async (req, res) => {
     }
 });
 
+router.put("/:chatId/disappearing", async (req, res) => {
+    try {
+        const { mode } = req.body;
+        const validModes = ["off", "instant", "1h", "8h", "24h", "7d"];
+        
+        if (!validModes.includes(mode)) {
+            return res.status(400).json({ message: "Invalid disappearing mode" });
+        }
+
+        const chat = await Chat.findOne({
+            _id: req.params.chatId,
+            participants: req.user._id,
+        });
+
+        if (!chat) {
+            return res.status(404).json({ message: "Chat not found" });
+        }
+
+        chat.disappearingMode = mode;
+        await chat.save();
+
+        const io = req.app.get("io");
+        if (io) {
+            chat.participants.forEach(pid => {
+                io.to(pid.toString()).emit("chat_updated", {
+                    chatId: chat._id,
+                    disappearingMode: mode
+                });
+            });
+        }
+
+        res.json({ success: true, mode });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 module.exports = router;

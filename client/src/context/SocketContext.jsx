@@ -109,6 +109,14 @@ export const SocketProvider = ({ children }) => {
             useChatStore.getState().removeChat(chatId);
         };
 
+        const handleChatUpdated = ({ chatId, disappearingMode }) => {
+            useChatStore.getState().updateChat(chatId, { disappearingMode });
+        };
+
+        const handleInstantMessagesDeleted = ({ chatId }) => {
+            useChatStore.getState().deleteInstantMessages(chatId);
+        };
+
         const handleNewMoment = (payload) => {
             const m = payload?.moment || payload;
             if (m && m._id) {
@@ -155,6 +163,8 @@ export const SocketProvider = ({ children }) => {
         socket.on("message_deleted", handleMessageDeleted);
         socket.on("new_chat", handleNewChat);
         socket.on("chat_deleted", handleChatDeleted);
+        socket.on("chat_updated", handleChatUpdated);
+        socket.on("instant_messages_deleted", handleInstantMessagesDeleted);
         socket.on("new_moment", handleNewMoment);
         socket.on("moment_deleted", handleMomentDeleted);
 
@@ -170,6 +180,8 @@ export const SocketProvider = ({ children }) => {
             socket.off("message_deleted", handleMessageDeleted);
             socket.off("new_chat", handleNewChat);
             socket.off("chat_deleted", handleChatDeleted);
+            socket.off("chat_updated", handleChatUpdated);
+            socket.off("instant_messages_deleted", handleInstantMessagesDeleted);
             socket.off("new_moment", handleNewMoment);
             socket.off("moment_deleted", handleMomentDeleted);
             socket.disconnect();

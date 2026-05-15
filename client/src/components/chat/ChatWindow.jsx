@@ -12,6 +12,7 @@ import UserCardModal from "../ui/UserCardModal";
 import { useMomentStore } from "../../stores/momentStore";
 import MediaViewerModal from "../ui/MediaViewerModal";
 import MomentViewer from "./MomentViewer";
+import axiosInstance from "../../utils/axios";
 
 const EMPTY_MESSAGES = [];
 const EMPTY_CONTACTS = [];
@@ -76,7 +77,19 @@ const ChatWindow = ({ onBack }) => {
     const [showUserCard, setShowUserCard] = useState(false);
     const [selectedMedia, setSelectedMedia] = useState(null);
     const [activeViewerMoments, setActiveViewerMoments] = useState(null);
+    const [showDisappearingMenu, setShowDisappearingMenu] = useState(false);
     const messagesContainerRef = useRef(null);
+
+    const handleToggleDisappearing = async (mode) => {
+        try {
+            await axiosInstance.put(`/chats/${activeChat._id}/disappearing`, { mode });
+            setShowDisappearingMenu(false);
+            // Local state will update via socket 'chat_updated' which we need to handle in chatStore
+            useChatStore.getState().updateChat(activeChat._id, { disappearingMode: mode });
+        } catch (err) {
+            console.error("Failed to update disappearing mode", err);
+        }
+    };
 
     const handleMessageAction = (msg) => {
         if (msg.action === "reply") {
@@ -134,6 +147,11 @@ const ChatWindow = ({ onBack }) => {
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible' && activeChat?._id) {
                 markIfVisible();
+            } else if (document.visibilityState === 'hidden' && activeChat?._id) {
+                if (activeChat.disappearingMode === 'instant') {
+                    // Tell server to delete read instant messages for this chat
+                    axiosInstance.delete(`/messages/${activeChat._id}/instant`).catch(e => console.error(e));
+                }
             }
         };
 
@@ -142,8 +160,12 @@ const ChatWindow = ({ onBack }) => {
         return () => {
             window.removeEventListener('focus', markIfVisible);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
+            // Also run instant delete on unmount
+            if (activeChat?.disappearingMode === 'instant') {
+                axiosInstance.delete(`/messages/${chatId}/instant`).catch(e => console.error(e));
+            }
         };
-    }, [activeChat?._id]);
+    }, [activeChat?._id, activeChat?.disappearingMode]);
 
     useEffect(() => {
         setEditingMessage(null);
@@ -273,6 +295,54 @@ const ChatWindow = ({ onBack }) => {
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                         </svg>
                     </button>
+                    <div style={{ position: 'relative' }}>
+                        <button
+                            className={`header-action-btn ${activeChat?.disappearingMode && activeChat.disappearingMode !== 'off' ? 'active' : ''}`}
+                            onClick={() => setShowDisappearingMenu(!showDisappearingMenu)}
+                            title="Disappearing Messages"
+                            style={{
+                                background: activeChat?.disappearingMode && activeChat.disappearingMode !== 'off' ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                                color: activeChat?.disappearingMode && activeChat.disappearingMode !== 'off' ? '#3b82f6' : '#94a3b8',
+                                padding: '8px',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s ease'
+                            }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </button>
+                        
+                        {showDisappearingMenu && (
+                            <div className="message-dropdown mobile-visible" style={{ right: 0, left: 'auto', top: 'calc(100% + 8px)', minWidth: '180px', transform: 'none' }}>
+                                <div style={{ padding: '8px 12px', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: '4px' }}>
+                                    Disappearing Messages
+                                </div>
+                                {[
+                                    { value: 'off', label: 'Off' },
+                                    { value: 'instant', label: 'Instant (after view)' },
+                                    { value: '1h', label: '1 Hour' },
+                                    { value: '8h', label: '8 Hours' },
+                                    { value: '24h', label: '1 Day' },
+                                    { value: '7d', label: '7 Days' }
+                                ].map(opt => (
+                                    <button 
+                                        key={opt.value}
+                                        className="message-dropdown-item" 
+                                        style={{ background: activeChat?.disappearingMode === opt.value ? 'rgba(61, 165, 217, 0.15)' : 'transparent', color: activeChat?.disappearingMode === opt.value ? '#3da5d9' : 'rgba(255,255,255,0.8)' }}
+                                        onClick={() => handleToggleDisappearing(opt.value)}
+                                    >
+                                        {activeChat?.disappearingMode === opt.value && <span style={{ marginRight: '4px' }}>✓</span>}
+                                        {opt.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -361,6 +431,32 @@ const ChatWindow = ({ onBack }) => {
                 <div ref={messagesEndRef} />
             </div>
             <ScrollDownBtn onClick={scrollToBottom} show={showScrollDown} isLifted={!!replyingTo} />
+
+            {activeChat?.disappearingMode && activeChat.disappearingMode !== 'off' && !showOnlyStarred && (
+                <div style={{
+                    padding: '8px 12px',
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    borderTop: '1px solid rgba(59, 130, 246, 0.2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    color: '#60a5fa',
+                    fontSize: '0.8rem',
+                    backdropFilter: 'blur(10px)'
+                }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>Disappearing messages is ON. New messages disappear after {
+                        activeChat.disappearingMode === 'instant' ? 'viewing' :
+                        activeChat.disappearingMode === '1h' ? '1 hour' :
+                        activeChat.disappearingMode === '8h' ? '8 hours' :
+                        activeChat.disappearingMode === '24h' ? '1 day' : '7 days'
+                    }.</span>
+                </div>
+            )}
 
             <MessageInput
                 chatId={activeChat._id}

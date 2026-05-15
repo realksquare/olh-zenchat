@@ -73,10 +73,19 @@ const messageSchema = new mongoose.Schema(
             type: String,
             default: null,
         },
+        disappearingMode: {
+            type: String,
+            default: "off"
+        },
+        expiresAt: {
+            type: Date,
+            default: null
+        }
     },
     { timestamps: true }
 );
 
 messageSchema.index({ chatId: 1, createdAt: -1 });
+messageSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 module.exports = mongoose.model("Message", messageSchema);
