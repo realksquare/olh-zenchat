@@ -3,6 +3,15 @@ import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import DecryptedText from "./DecryptedText";
 
+const MODE_LABELS_BUBBLE = {
+    instant: 'viewing',
+    '1h': '1 hour',
+    '8h': '8 hours',
+    '24h': '1 day',
+    '7d': '7 days',
+};
+
+
 const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick }) => {
     const [mobileDropdown, setMobileDropdown] = useState(false);
     const { user } = useAuthStore();
