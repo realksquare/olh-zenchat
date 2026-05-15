@@ -15,13 +15,14 @@ export const useAuthStore = create(
     error: null,
     soundEnabled: true,
 
-    register: async (username, email, password) => {
+    register: async (username, email, password, referredBy) => {
         set({ isLoading: true, error: null });
         try {
             const { data } = await axiosInstance.post("/auth/register", {
                 username,
                 email,
                 password,
+                referredBy
             });
             localStorage.setItem(TOKEN_KEY, data.token);
             localStorage.setItem(USER_KEY, JSON.stringify(data.user));

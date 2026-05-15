@@ -29,7 +29,7 @@ router.post(
         }
 
         try {
-            const { username, email, password } = req.body;
+            const { username, email, password, referredBy } = req.body;
 
             const existingUser = await User.findOne({
                 $or: [{ email }, { username }],
@@ -40,6 +40,46 @@ router.post(
             }
 
             const user = await User.create({ username, email, password });
+            
+            if (referredBy) {
+                try {
+                    const referrer = await User.findById(referredBy);
+                    if (referrer) {
+                        user.contacts.push({ userId: referrer._id, tag: "general" });
+                        await user.save();
+                        
+                        const Chat = require("../models/Chat");
+                        const Message = require("../models/Message");
+                        
+                        let chat = await Chat.findOne({
+                            participants: { $all: [user._id, referrer._id] },
+                            isGroup: false
+                        });
+
+                        if (!chat) {
+                            chat = await Chat.create({
+                                participants: [user._id, referrer._id],
+                                isGroup: false
+                            });
+                        }
+
+                        const msgContent = `Hey! I just joined ZenChat using your invite link! 🎉`;
+                        const message = await Message.create({
+                            chatId: chat._id,
+                            senderId: user._id,
+                            content: msgContent,
+                            type: "text",
+                            status: "sent"
+                        });
+                        
+                        chat.lastMessage = message._id;
+                        await chat.save();
+                    }
+                } catch (e) {
+                    console.error("Referral processing failed:", e);
+                }
+            }
+
             const token = generateToken(user);
 
             res.status(201).json({ token, user: user.toPrivateJSON() });

@@ -12,7 +12,7 @@ import MomentsRow from "./MomentsRow";
 import MomentCreator from "./MomentCreator";
 import MomentViewer from "./MomentViewer";
 import { useMomentStore } from "../../stores/momentStore";
-import { VerifiedTick, AdminIcon, HelpIcon } from "../ui/Icons";
+import { VerifiedTick, AdminIcon, HelpIcon, InviteIcon } from "../ui/Icons";
 
 const Sidebar = ({ onChatSelect }) => {
     const { user, logout } = useAuthStore();
@@ -93,6 +93,29 @@ const Sidebar = ({ onChatSelect }) => {
         const freshChat = useChatStore.getState().chats.find((c) => c._id === chat._id) || chat;
         setActiveChat(freshChat);
         onChatSelect();
+    };
+
+    const handleInviteClick = async () => {
+        const inviteLink = `${window.location.origin}/register?ref=${user?._id}`;
+        const shareData = {
+            title: 'Join me on ZenChat!',
+            text: 'Hey! I\'ve been using ZenChat and it\'s awesome. Sign up using my link to connect with me instantly!',
+            url: inviteLink
+        };
+        
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+                    alert("Invite link copied to clipboard!");
+                }
+            }
+        } else {
+            navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
+            alert("Invite link copied to clipboard!");
+        }
     };
 
     const getInitials = (name) => name ? name.slice(0, 2).toUpperCase() : "??";
@@ -319,21 +342,33 @@ const Sidebar = ({ onChatSelect }) => {
             />
 
             {(user?.role === "master_admin" || user?.role === "co_admin") ? (
-                <div className="sidebar-footer-dual">
-                    <button className="footer-btn admin-btn" onClick={() => setIsAdminOpen(true)}>
-                        <AdminIcon size={16} />
-                        Admin
+                <div style={{ display: 'flex', flexDirection: 'column', padding: '0 16px 16px', gap: '8px' }}>
+                    <button className="sidebar-admin-btn" style={{ margin: 0, background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.2)' }} onClick={handleInviteClick}>
+                        <InviteIcon size={18} />
+                        Invite People
+                    </button>
+                    <div className="sidebar-footer-dual" style={{ margin: 0 }}>
+                        <button className="footer-btn admin-btn" onClick={() => setIsAdminOpen(true)}>
+                            <AdminIcon size={16} />
+                            Admin
+                        </button>
+                        <button className="footer-btn faq-btn" onClick={() => setIsFAQOpen(true)}>
+                            <HelpIcon size={16} />
+                            FAQ
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <div className="sidebar-footer-dual" style={{ padding: '0 16px 16px' }}>
+                    <button className="footer-btn" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.2)' }} onClick={handleInviteClick}>
+                        <InviteIcon size={16} />
+                        Invite
                     </button>
                     <button className="footer-btn faq-btn" onClick={() => setIsFAQOpen(true)}>
                         <HelpIcon size={16} />
                         FAQ
                     </button>
                 </div>
-            ) : (
-                <button className="sidebar-admin-btn" onClick={() => setIsFAQOpen(true)}>
-                    <HelpIcon />
-                    Help & FAQ
-                </button>
             )}
 
             {isAdminOpen && <AdminPanel onClose={() => setIsAdminOpen(false)} />}

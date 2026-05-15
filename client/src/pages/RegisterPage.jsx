@@ -25,7 +25,11 @@ const RegisterPage = () => {
         e.preventDefault();
         const err = validatePassword(form.password);
         if (err) { setPwError(err); return; }
-        const result = await register(form.username, form.email, form.password);
+        
+        const searchParams = new URLSearchParams(window.location.search);
+        const refParam = searchParams.get("ref");
+        
+        const result = await register(form.username, form.email, form.password, refParam);
         if (result.success) {
             sessionStorage.setItem("showFAQOnLoad", "1");
             navigate("/");
