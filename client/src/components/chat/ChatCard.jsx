@@ -127,7 +127,14 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         e.stopPropagation();
         try {
             const { data } = await axiosInstance.post(`/admin/verify/${otherUserId}`);
-            if (otherUser) otherUser.isVerified = data.user.isVerified;
+            // Use store action to update verified status instead of direct mutation
+            useChatStore.getState().updateChat(chat._id, { 
+                participants: chat.participants.map(p => 
+                    (p._id?.toString() || p?.toString()) === otherUserId 
+                    ? { ...p, isVerified: data.user.isVerified } 
+                    : p
+                )
+            });
             setShowMenu(false);
         } catch (err) {
             console.error(err);

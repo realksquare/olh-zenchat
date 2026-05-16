@@ -8,7 +8,8 @@ import GuestOverlay from "../components/chat/GuestOverlay";
 
 const HomePage = () => {
     const { user, token } = useAuthStore();
-    const { activeChat, fetchChats } = useChatStore();
+    const activeChat = useChatStore((s) => s.activeChat);
+    const fetchChats = useChatStore((s) => s.fetchChats);
     const { joinChat, leaveChat } = useSocket();
     const [showChat, setShowChat] = useState(false);
 

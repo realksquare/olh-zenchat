@@ -40,8 +40,8 @@ const Sidebar = ({ onChatSelect }) => {
     const [isMomentCreatorOpen, setIsMomentCreatorOpen] = useState(false);
     const [activeViewerMoments, setActiveViewerMoments] = useState(null);
     const [activeTab, setActiveTab] = useState("recents");
-    const { fetchChats } = useChatStore();
-    const { fetchMoments } = useMomentStore();
+    const fetchChats = useChatStore((s) => s.fetchChats);
+    const fetchMoments = useMomentStore((s) => s.fetchMoments);
     
     const [pullY, setPullY] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);
