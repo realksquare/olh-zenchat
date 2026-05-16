@@ -99,7 +99,9 @@ const DELETED_PHRASES = [
     "Where are you now? Were you only imaginary?",
     "Every day wandering towards our North star, guess we got lost in the night...",
     "I wish you were around, but now it's too late...",
-    "Ooh, ooh, ooh, ooh - Birds fly in different directions..."
+    "Ooh, ooh, ooh, ooh - Birds fly in different directions...",
+    "Time doesn't hear if you ask it to wait",
+    "Wish we could turn back time, to the good old days..."
 ];
 
 const ChatWindow = ({ onBack }) => {
