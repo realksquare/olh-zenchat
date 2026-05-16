@@ -94,7 +94,6 @@ const NetworkBanner = () => {
 
 const App = () => {
   const { user, token, checkAuth } = useAuthStore();
-  const { initLocalData, fetchChats } = useChatStore();
   const { socket } = useSocket();
   const [serverReady, setServerReady] = useState(false);
 
@@ -121,10 +120,10 @@ const App = () => {
   }, [token, user?._id]);
 
     useEffect(() => {
-        checkAuth();
+    checkAuth();
         if (token) {
-            initLocalData();
-            fetchChats();
+            useChatStore.getState().initLocalData();
+            useChatStore.getState().fetchChats();
             useMomentStore.getState().fetchMoments();
         }
 
@@ -176,7 +175,7 @@ const App = () => {
         return () => {
             document.removeEventListener("visibilitychange", handleVisibilityChange);
         };
-    }, [token, user?._id, socket]);
+    }, [token, user?._id]);
 
   return (
     <>

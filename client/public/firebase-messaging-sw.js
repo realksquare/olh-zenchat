@@ -1,8 +1,10 @@
-// ZenChat Service Worker v1.3 - Simple Notifications
+// ZenChat Service Worker v1.4 - Notifications + Cache Control
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 
 importScripts('https://unpkg.com/dexie@4.0.8/dist/dexie.js');
+
+const CACHE_NAME = 'zenchat-v1.4';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDuPbl1-IEdxnDctJgELm_VAQoSrLvWEM8",
@@ -31,7 +33,6 @@ try {
     const messaging = firebase.messaging();
 
     messaging.onBackgroundMessage(async (payload) => {
-        // Delivery Receipt Logic
         const messageId = payload.data?.messageId;
         if (messageId) {
             try {
@@ -57,12 +58,10 @@ try {
         let title = payload.notification?.title || 'New Message';
         let body = payload.notification?.body || '';
 
-        // Mask view-once media content
         if (payload.data?.isViewOnce === "true") {
             body = "Image - Sent a view-once media";
         }
 
-        // Simple notification display
         const notificationOptions = {
             body: body,
             icon: '/favicon.svg',
@@ -99,15 +98,49 @@ self.addEventListener('notificationclick', (event) => {
     );
 });
 
-// Clear notifications when the app is opened/focused
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'CLEAR_NOTIFICATIONS') {
         self.registration.getNotifications().then((notifications) => {
             notifications.forEach((notification) => notification.close());
         });
     }
+    // Tell clients to skip waiting and activate new SW immediately
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
 });
 
-self.addEventListener('fetch', function(event) {
-    // Empty fetch listener to satisfy PWA requirements without interfering
+// Activate: wipe old caches immediately on SW update
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) =>
+            Promise.all(
+                cacheNames
+                    .filter((name) => name !== CACHE_NAME)
+                    .map((name) => caches.delete(name))
+            )
+        ).then(() => self.clients.claim())
+    );
+});
+
+// Network-first fetch: always try network, fall back to cache
+self.addEventListener('fetch', (event) => {
+    // Only handle GET requests for same-origin navigation/assets
+    if (event.request.method !== 'GET') return;
+    const url = new URL(event.request.url);
+    // Don't cache API or socket calls
+    if (url.pathname.startsWith('/api') || url.pathname.startsWith('/socket.io')) return;
+
+    event.respondWith(
+        fetch(event.request)
+            .then((response) => {
+                // Cache a clone of the fresh response
+                if (response && response.status === 200) {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+                }
+                return response;
+            })
+            .catch(() => caches.match(event.request))
+    );
 });
