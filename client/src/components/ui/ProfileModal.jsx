@@ -8,7 +8,7 @@ import LoadingOverlay from "./LoadingOverlay";
 
 const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const { user, updateProfile, isLoading, soundEnabled, toggleSound } = useAuthStore();
-    const { chats, messages } = useChatStore();
+    const { chats } = useChatStore();
 
     const [username, setUsername] = useState(user?.username || "");
     const [fullName, setFullName] = useState(user?.fullName || "");
@@ -48,7 +48,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setIsSubscribing(false);
             setImageError(false);
         }
-    }, [isOpen, user]);
+    }, [isOpen, user?._id]);
 
     useEffect(() => {
         return () => {
@@ -116,6 +116,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     };
 
     const handleExport = () => {
+        const messages = useChatStore.getState().messages;
         const exportData = {
             chats: chats.map(c => ({
                 id: c._id,

@@ -15,7 +15,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const [isUploading, setIsUploading] = useState(false);
     const audioRef = useRef(null);
     const seekTimeoutRef = useRef(null);
-    const { createMoment, moments } = useMomentStore();
+    const { createMoment } = useMomentStore();
     const { user } = useAuthStore();
 
     const showToast = (message) => {
@@ -65,7 +65,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
     const handleShare = async () => {
         if (!content && !music) return;
-        const ownMomentsCount = moments.filter(m => (m.userId?._id || m.userId) === user?._id).length;
+        const ownMomentsCount = useMomentStore.getState().moments.filter(m => (m.userId?._id || m.userId) === user?._id).length;
         if (ownMomentsCount >= 5) {
             showToast("Upload limit reached (5 moments maximum).");
             return;

@@ -21,7 +21,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     
     // Make the viewer reactive by pulling the latest moments for this user
     const allMoments = useMomentStore((s) => s.moments);
-    const { viewMoment, deleteMoment, getHaloColor, getViewCount } = useMomentStore();
     const { user: currentUser } = useAuthStore();
 
     const moments = useMemo(() => {
@@ -74,12 +73,11 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         setIsDeleting(true);
         try {
             const idToDelete = currentMoment._id;
-            // If it's the last moment, close first to avoid UI errors
             if (moments.length === 1) {
                 handleClose();
-                setTimeout(() => deleteMoment(idToDelete), 500);
+                setTimeout(() => useMomentStore.getState().deleteMoment(idToDelete), 500);
             } else {
-                await deleteMoment(idToDelete);
+                await useMomentStore.getState().deleteMoment(idToDelete);
                 setShowDeleteConfirm(false);
             }
         } catch (err) {
@@ -96,7 +94,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
 
         stopAudio();
         setShowMusicInfo(false);
-        viewMoment(currentMoment._id, currentUser?._id);
+        useMomentStore.getState().viewMoment(currentMoment._id, currentUser?._id);
 
         let duration = 10;
         if (currentMoment.type === "video") {
@@ -163,8 +161,8 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
 
     const haloColor = useMemo(() => {
         if (!currentMoment?.userId) return "#082f49";
-        return getHaloColor(currentMoment.userId, currentUser?._id);
-    }, [currentMoment, getHaloColor, currentUser?._id]);
+        return useMomentStore.getState().getHaloColor(currentMoment.userId, currentUser?._id);
+    }, [currentMoment, currentUser?._id]);
 
     if (!isOpen || !currentMoment) return null;
 

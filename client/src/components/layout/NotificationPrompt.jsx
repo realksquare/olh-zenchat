@@ -7,7 +7,9 @@ const NotificationPrompt = () => {
     const [show, setShow] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [success, setSuccess] = useState(false);
-    const { user } = useAuthStore();
+    const user = useAuthStore((s) => s.user);
+    const userId = user?._id;
+    const fcmTokens = user?.fcmTokens;
 
     useEffect(() => {
         if (!user || !('Notification' in window)) return;
@@ -27,7 +29,7 @@ const NotificationPrompt = () => {
             const timer = setTimeout(() => setShow(true), 5000);
             return () => clearTimeout(timer);
         }
-    }, [user]);
+    }, [userId, fcmTokens]);
 
     const handleDismiss = () => {
         sessionStorage.setItem("notifPromptDismissed", "true");

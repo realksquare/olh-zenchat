@@ -17,7 +17,7 @@ import { VerifiedTick, AdminIcon, HelpIcon, InviteIcon } from "../ui/Icons";
 
 const Sidebar = ({ onChatSelect }) => {
     const { user, logout } = useAuthStore();
-    const { hasActiveMoment, getHaloColor } = useMomentStore();
+    const { hasActiveMoment, getHaloColor } = useMomentStore.getState();
     const { 
         chats, activeChat, setActiveChat, 
         addChat, isLoadingChats, togglePinChat, onlineUsers 
@@ -74,11 +74,14 @@ const Sidebar = ({ onChatSelect }) => {
         if (pullY >= PULL_THRESHOLD) {
             setIsRefreshing(true);
             setPullY(PULL_THRESHOLD);
-            await Promise.all([fetchChats(), fetchMoments()]);
+            await Promise.all([
+                useChatStore.getState().fetchChats(),
+                useMomentStore.getState().fetchMoments()
+            ]);
             setIsRefreshing(false);
         }
         setPullY(0);
-    }, [pullY, fetchChats, fetchMoments]);
+    }, [pullY]);
 
     useEffect(() => {
         fetchMoments();
