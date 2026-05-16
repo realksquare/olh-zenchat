@@ -193,8 +193,10 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
         setToast(msg);
         setTimeout(() => setToast(null), 5000);
     };
-    const { addMessage, updateMessage } = useChatStore();
-    const { user, soundEnabled } = useAuthStore();
+    const addMessage = useChatStore((s) => s.addMessage);
+    const updateMessage = useChatStore((s) => s.updateMessage);
+    const userId = useAuthStore((s) => s.user?._id);
+    const soundEnabled = useAuthStore((s) => s.soundEnabled);
     const textareaRef = useRef(null);
     const typingTimeoutRef = useRef(null);
     const isTypingRef = useRef(false);
@@ -256,7 +258,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             isTypingRef.current = false;
             stopTyping(chatId);
         }, 1500);
-    }, [chatId, startTyping, stopTyping, content]);
+    }, [chatId, startTyping, stopTyping]);
 
     useEffect(() => {
         return () => {
@@ -297,7 +299,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     _id: tempId,
                     cid: tempId,
                     chatId,
-                    senderId: user?._id,
+                    senderId: userId,
                     content: files.length === 1 ? textContent : (isDoc ? file.name : ""),
                     type: msgType,
                     mediaUrl: URL.createObjectURL(file),
@@ -366,7 +368,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 _id: tempId,
                 cid: tempId,
                 chatId,
-                senderId: user?._id,
+                senderId: userId,
                 content: filteredContent,
                 type: "text",
                 status: "sending",

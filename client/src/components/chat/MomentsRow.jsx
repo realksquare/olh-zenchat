@@ -3,7 +3,9 @@ import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
 
 const MomentsRow = ({ onAddMoment, onViewMoment }) => {
-    const { user } = useAuthStore();
+    const userId = useAuthStore((s) => s.user?._id);
+    const userAvatar = useAuthStore((s) => s.user?.avatar);
+    const userUsername = useAuthStore((s) => s.user?.username);
     // Subscribe directly so the component re-renders when moments change
     const moments = useMomentStore((s) => s.moments);
     const getHaloColor = useMomentStore((s) => s.getHaloColor);
@@ -12,18 +14,18 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
         const groups = {};
         moments.forEach(m => {
             const uid = (m.userId?._id || m.userId)?.toString();
-            if (!uid || uid === user?._id?.toString()) return;
+            if (!uid || uid === userId?.toString()) return;
             if (!groups[uid]) {
                 groups[uid] = { user: m.userId, moments: [] };
             }
             groups[uid].moments.push(m);
         });
         return Object.values(groups);
-    }, [moments, user?._id]);
+    }, [moments, userId]);
 
     const myMoments = useMemo(() =>
-        moments.filter(m => (m.userId?._id || m.userId)?.toString() === user?._id?.toString())
-    , [moments, user?._id]);
+        moments.filter(m => (m.userId?._id || m.userId)?.toString() === userId?.toString())
+    , [moments, userId]);
 
     return (
         <div className="moments-row-container">
@@ -34,10 +36,10 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
                         className={`avatar avatar-md${myMoments.length > 0 ? ' moments-halo' : ''}`}
                         style={myMoments.length > 0 ? { '--halo-color': '#3b82f6' } : {}}
                     >
-                        {user?.avatar ? (
-                            <img src={user.avatar} alt="Me" />
+                        {userAvatar ? (
+                            <img src={userAvatar} alt="Me" />
                         ) : (
-                            <span>{user?.username?.slice(0, 2).toUpperCase()}</span>
+                            <span>{userUsername?.slice(0, 2).toUpperCase()}</span>
                         )}
                         <div className="add-moment-btn" onClick={(e) => { e.stopPropagation(); onAddMoment(); }}>
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
@@ -51,7 +53,7 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
                 {/* Contacts' moments — color computed live */}
                 {userGroups.map((group) => {
                     const uid = group.user?._id || group.user;
-                    const color = getHaloColor(uid, user?._id);
+                    const color = getHaloColor(uid, userId);
                     return (
                         <div
                             key={uid || Math.random()}
