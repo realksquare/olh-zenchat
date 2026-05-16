@@ -94,7 +94,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
 
         stopAudio();
         setShowMusicInfo(false);
-        useMomentStore.getState().viewMoment(currentMoment._id, currentUser?._id);
+        useMomentStore.getState().viewMoment(currentMoment._id, currentUserId);
 
         let duration = 10;
         if (currentMoment.type === "video") {
@@ -161,8 +161,8 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
 
     const haloColor = useMemo(() => {
         if (!currentMoment?.userId) return "#082f49";
-        return useMomentStore.getState().getHaloColor(currentMoment.userId, currentUser?._id);
-    }, [currentMoment, currentUser?._id]);
+        return useMomentStore.getState().getHaloColor(currentMoment.userId, currentUserId);
+    }, [currentMoment, currentUserId]);
 
     if (!isOpen || !currentMoment) return null;
 
@@ -170,7 +170,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     // Fix display logic: media should ALWAYS show if mediaUrl exists
     const hasMedia = !!currentMoment.mediaUrl;
     const hasText = !!currentMoment.content;
-    const isOwn = (user?._id || user) === currentUser?._id;
+    const isOwn = (user?._id || user) === currentUserId;
 
     const bgStyle = currentMoment.music?.coverUrl ? {
         '--vibe-bg': `url(${currentMoment.music.coverUrl})`,
