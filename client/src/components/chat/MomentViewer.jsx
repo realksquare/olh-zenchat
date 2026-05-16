@@ -21,7 +21,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     
     // Make the viewer reactive by pulling the latest moments for this user
     const allMoments = useMomentStore((s) => s.moments);
-    const { user: currentUser } = useAuthStore();
+    const currentUserId = useAuthStore((s) => s.user?._id);
 
     const moments = useMemo(() => {
         if (!initialMoments || initialMoments.length === 0) return [];

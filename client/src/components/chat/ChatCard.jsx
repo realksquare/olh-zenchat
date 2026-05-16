@@ -9,7 +9,7 @@ import axiosInstance from "../../utils/axios";
 
 const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     // ── Store subscriptions ───────────────────────────────────────────────────
-    const { user, toggleContact } = useAuthStore();
+    const { user, toggleContact } = useAuthStore((s) => ({ user: s.user, toggleContact: s.toggleContact }));
     const typingUsers = useChatStore((s) => s.typingUsers);
     const onlineUsers = useChatStore((s) => s.onlineUsers);
     const unreadCount = useChatStore((s) => s.unreadCounts[chat._id] || 0);

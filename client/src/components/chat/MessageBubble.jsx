@@ -15,8 +15,8 @@ const MODE_LABELS_BUBBLE = {
 
 const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick, canDelete = true, canReply = true }) => {
     const [mobileDropdown, setMobileDropdown] = useState(false);
-    const { user } = useAuthStore();
-    const { toggleStarMessage, markViewOnceAsViewed, messages } = useChatStore();
+    const { user } = useAuthStore((s) => ({ user: s.user }));
+    const { toggleStarMessage, markViewOnceAsViewed } = useChatStore.getState();
     const status = message?.status ?? "sent";
     const progress = message?.progress ?? 0;
     const outerRef = useRef(null);
@@ -24,8 +24,9 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const repliedToMessage = useMemo(() => {
         if (!message.replyTo) return null;
         if (typeof message.replyTo === 'object' && message.replyTo._id) return message.replyTo;
+        const messages = useChatStore.getState().messages;
         return messages[message.chatId]?.find(m => m._id === message.replyTo);
-    }, [message.replyTo, messages, message.chatId]);
+    }, [message.replyTo, message.chatId]);
 
     const scrollToMessage = (msgId) => {
         const el = document.getElementById(`msg-${msgId}`);

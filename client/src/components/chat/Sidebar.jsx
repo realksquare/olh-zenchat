@@ -16,7 +16,8 @@ import { useMomentStore } from "../../stores/momentStore";
 import { VerifiedTick, AdminIcon, HelpIcon, InviteIcon } from "../ui/Icons";
 
 const Sidebar = ({ onChatSelect }) => {
-    const { user, logout } = useAuthStore();
+    const user = useAuthStore((s) => s.user);
+    const logout = useAuthStore((s) => s.logout);
     const { hasActiveMoment, getHaloColor } = useMomentStore.getState();
     const { 
         chats, activeChat, setActiveChat, 
