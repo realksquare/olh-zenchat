@@ -577,7 +577,8 @@ const ChatWindow = ({ onBack }) => {
                 replyingTo={replyingTo}
                 onCancelEdit={() => setEditingMessage(null)}
                 onCancelReply={() => setReplyingTo(null)}
-                disabled={isDeleted}
+                disabled={isDeleted || showOnlyStarred}
+                disabledPlaceholder={isDeleted ? "Account deleted..." : "Sending disabled in Fav mode..."}
             />
 
             {deletingMessage && (

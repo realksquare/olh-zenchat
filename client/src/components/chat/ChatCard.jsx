@@ -1,4 +1,4 @@
-import { useState, useRef, memo, useMemo } from "react";
+import { useState, useRef, useEffect, memo, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useChatStore } from "../../stores/chatStore";
 import { useAuthStore } from "../../stores/authStore";

@@ -180,7 +180,7 @@ const MediaPreview = ({ files, onRemove }) => {
     );
 };
 
-const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCancelReply, disabled = false }) => {
+const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCancelReply, disabled = false, disabledPlaceholder = "Sending disabled..." }) => {
     const [content, setContent] = useState("");
     const [isViewOnce, setIsViewOnce] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -486,7 +486,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     ref={textareaRef}
                     className="message-textarea"
                     placeholder={
-                        disabled ? "Sending disabled in Fav mode..." :
+                        disabled ? disabledPlaceholder :
                             uploading ? "Uploading..." :
                                 hasMedia ? "Add a caption (optional)..." :
                                     isViewOnce ? "Upload a file to send view-once media..." :
