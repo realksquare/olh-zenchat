@@ -14,25 +14,10 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const unreadCount = useChatStore((s) => s.unreadCounts[chat._id] || 0);
     const deleteChatForUser = useChatStore((s) => s.deleteChatForUser);
     const liveChat = useChatStore((s) => s.chats.find((c) => c._id === chat._id)) || chat;
-    const storeMessages = useChatStore((s) => s.messages[chat._id] || []);
-    const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
-
     const [showUserCard, setShowUserCard] = useState(false);
     const nameContainerRef = useRef(null);
     const nameContentRef = useRef(null);
     const [marqueeDist, setMarqueeDist] = useState(0);
-
-    useEffect(() => {
-        if (nameContainerRef.current && nameContentRef.current) {
-            const containerWidth = nameContainerRef.current.offsetWidth;
-            const contentWidth = nameContentRef.current.scrollWidth;
-            if (contentWidth > containerWidth) {
-                setMarqueeDist(-(contentWidth - containerWidth + 10));
-            } else {
-                setMarqueeDist(0);
-            }
-        }
-    }, [displayName, liveChat.isGroup]);
     const [showMenu, setShowMenu] = useState(false);
     const [contactLoading, setContactLoading] = useState(false);
     const pressTimer = useRef(null);
@@ -57,8 +42,19 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         c => c.userId?.toString() === otherUser._id?.toString() || c.userId === otherUser._id
     );
 
-    // Display name: contact gets ✨, shown as badge component not string
     const displayName = isDeleted ? "(user_deleted)" : otherUser?.username;
+
+    useEffect(() => {
+        if (nameContainerRef.current && nameContentRef.current) {
+            const containerWidth = nameContainerRef.current.offsetWidth;
+            const contentWidth = nameContentRef.current.scrollWidth;
+            if (contentWidth > containerWidth) {
+                setMarqueeDist(-(contentWidth - containerWidth + 10));
+            } else {
+                setMarqueeDist(0);
+            }
+        }
+    }, [displayName, liveChat.isGroup]);
 
     const isLastMessageFromThem =
         liveChat.lastMessage?.senderId !== user?._id &&
