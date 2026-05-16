@@ -49,9 +49,10 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const typingScramble = isTyping ? chatTyping[otherUserId] : null;
     const isOnline = otherUser?.isOnline || (otherUserId && onlineUsers.has(otherUserId.toString()));
     const hasMoments = !!(otherUserId && hasActiveMoment(otherUserId.toString()));
-    const isContact = !!(otherUser && user?.contacts?.some(
-        c => c.userId?.toString() === otherUser._id?.toString() || c.userId === otherUser._id
-    ));
+    const isContact = !!(user?.contacts?.some(c => {
+        const uid = c.userId?._id?.toString() || c.userId?.toString();
+        return uid === otherUserId;
+    }));
     const displayName = isDeleted ? "(user_deleted)" : (otherUser?.username ?? "");
 
     // ── Marquee: measure overflow after paint ─────────────────────────────────

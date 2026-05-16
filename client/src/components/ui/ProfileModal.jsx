@@ -25,6 +25,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [imageError, setImageError] = useState(false);
 
     const fileInputRef = useRef(null);
+    const importInputRef = useRef(null);
 
     const showToast = (message) => {
         setToast(message);
@@ -135,6 +136,27 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         a.download = `zenchat_export_${new Date().toISOString().split("T")[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
+        showToast("Export downloaded.");
+    };
+
+    const handleImport = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                if (!data?.chats || !Array.isArray(data.chats)) {
+                    showToast("Invalid export file.");
+                    return;
+                }
+                showToast(`Read-only archive loaded - ${data.chats.length} chat(s) found. Use in-app chat history to view messages.`);
+            } catch {
+                showToast("Could not parse file. Make sure it is a valid ZenChat export.");
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = "";
     };
 
     const handleSubscribe = async () => {
@@ -348,9 +370,10 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                         <button type="button" className="btn btn-outline" onClick={handleExport} style={{ flex: 1, fontSize: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                             <span>Export</span>
                         </button>
-                        <button type="button" className="btn btn-outline" style={{ flex: 1, fontSize: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                        <button type="button" className="btn btn-outline" onClick={() => importInputRef.current?.click()} style={{ flex: 1, fontSize: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                             <span>Import</span>
                         </button>
+                        <input ref={importInputRef} type="file" accept=".json,application/json" style={{ display: "none" }} onChange={handleImport} />
                     </div>
 
                     <button type="submit" className="btn btn-primary" disabled={isLoading} style={{ width: "100%", marginTop: "1rem", padding: "12px" }}>
