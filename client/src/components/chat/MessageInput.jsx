@@ -193,7 +193,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
         setToast(msg);
         setTimeout(() => setToast(null), 5000);
     };
-    const { addMessage, updateMessage } = useChatStore();
+    const addMessage = useChatStore((s) => s.addMessage);
+    const updateMessage = useChatStore((s) => s.updateMessage);
     const { user, soundEnabled } = useAuthStore();
     const textareaRef = useRef(null);
     const typingTimeoutRef = useRef(null);
