@@ -50,7 +50,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         const uid = c.userId?._id?.toString() || c.userId?.toString();
         return uid === otherUserId;
     }));
-    const displayName = isDeleted ? "(user_deleted)" : (otherUser?.username ?? "");
+    const isDeletedUser = (otherUser?.username || "").includes("(user_deleted)");
+    const displayName = isDeleted || isDeletedUser ? "(user_deleted)" : (otherUser?.username ?? "");
 
 
     // ── Last-message preview ──────────────────────────────────────────────────

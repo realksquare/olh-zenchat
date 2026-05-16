@@ -234,8 +234,12 @@ const ChatWindow = ({ onBack }) => {
         const markIfVisible = () => {
             if (isMobile && !onBack) return;
             if (!isMobile && !document.hasFocus()) return;
-            markChatAsRead(chatId);
-            markAsRead(chatId);
+            
+            const unreadCount = useChatStore.getState().unreadCounts[chatId] || 0;
+            if (unreadCount > 0) {
+                markChatAsRead(chatId);
+                markAsRead(chatId);
+            }
         };
 
 
@@ -286,6 +290,12 @@ const ChatWindow = ({ onBack }) => {
         const { scrollTop, scrollHeight, clientHeight } = e.target;
         const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
         setShowScrollDown(!isNearBottom);
+
+        const unreadCount = useChatStore.getState().unreadCounts[activeChat?._id] || 0;
+        if (isNearBottom && activeChat?._id && unreadCount > 0) {
+            markChatAsRead(activeChat._id);
+            markAsRead(activeChat._id);
+        }
 
         const atTop = scrollTop === 0;
         const atBottom = scrollHeight - scrollTop - clientHeight <= 1;

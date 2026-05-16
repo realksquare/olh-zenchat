@@ -488,6 +488,9 @@ export const useChatStore = create(
             },
 
             markChatAsRead: (chatId) => {
+                const state = get();
+                if ((state.unreadCounts[chatId] || 0) === 0) return;
+
                 set((state) => {
                     const currentUserId = useAuthStore.getState().user?._id;
 
