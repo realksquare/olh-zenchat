@@ -1,6 +1,11 @@
-# ZenChat+ Feature Implementation Plan
+# ZenChat Feature Implementation Plan
 
-This document outlines the technical architecture and step-by-step implementation plan for the next set of premium features designed to make ZenChat+ unique.
+## Core Philosophy & Aesthetic: "The Human Connection"
+*ZenChat is not just a utility; it is a digital space designed to respect the human experience. Every feature must prioritize emotional resonance over raw efficiency. We build for the human spectrum - using natural physics, meaningful friction, and melancholic beauty to make every connection feel alive, personal, and deeply human.*
+
+---
+
+This document outlines the technical architecture and step-by-step implementation plan for the next set of premium features designed to make ZenChat unique.
 
 ---
 
@@ -130,3 +135,55 @@ This document outlines the technical architecture and step-by-step implementatio
   3. Replace the local reference with a tiny, heavily blurred placeholder (generated during the initial upload/fetch).
 **Client-Side (React UI)**
 - `MessageBubble.jsx`: If a media item has been purged locally, display the blurred placeholder with a "Tap to Download" icon, fetching it from Cloudinary only when explicitly requested.
+
+---
+
+## 8. Adaptive Bottom Sheets
+**Concept:** Modals that act as native slide-up sheets on mobile but standard centered modals on desktop.
+
+### Technical Plan
+**Client-Side (React UI)**
+- Create a reusable `AdaptiveModal` component.
+- **Mobile Logic:** Use `fixed bottom-0 left-0 w-full` styling. Implement a "drag handle" at the top. Use `framer-motion` to handle the `drag="y"` gesture so users can flick the menu down to close it.
+- **Desktop Logic:** Use a standard `max-w-md` centered overlay.
+- **Integration:** Migrate `InviteModal.jsx` and the message options menu to this new adaptive pattern.
+
+---
+
+## 9. PWA App Badging & Shortcuts
+**Concept:** Show unread counts on the home screen icon and add long-press quick actions.
+
+### Technical Plan
+**App Badging (`SocketContext.jsx`)**
+- Use the `navigator.setAppBadge(count)` API.
+- **Logic:** Whenever an incoming message is received and the app is not in the foreground, calculate the total unread count from the `chatStore` and update the badge. Clear it with `navigator.clearAppBadge()` when the user opens the app.
+**App Shortcuts (`public/manifest.json`)**
+- Define `shortcuts` in the PWA manifest.
+- **Shortcuts:** "New Chat", "Check Moments", and "Invite Friends".
+- These will appear when the user long-presses the app icon on Android/iOS.
+
+---
+
+## 10. Site-Native Pull-to-Refresh (Snapchat Style)
+**Concept:** A custom, branded refresh animation that feels deeply integrated into the app.
+
+### Technical Plan
+**Client-Side (React UI - `Sidebar.jsx`)**
+- Disable browser default pull-to-refresh: `overscroll-behavior-y: contain`.
+- **Implementation:**
+  1. Track `touchstart` and `touchmove` on the chat list.
+  2. If at scroll position 0, apply a `translateY` to the list as the user pulls down.
+  3. Render a custom SVG animation (e.g., a glowing ZenChat logo that fills up) in the gap created.
+  4. Once a threshold (e.g., 80px) is met, trigger `fetchChats()` and `fetchMoments()`.
+  5. Play a smooth snap-back animation once data is loaded.
+
+---
+
+## 11. Overscroll Bounce Physics
+**Concept:** Add the "rubber-band" effect to lists for a premium native feel.
+
+### Technical Plan
+**Client-Side (React UI)**
+- Use `framer-motion`'s `motion.div` for chat and message lists.
+- Set `drag="y"` with very tight constraints and high `dragElastic`.
+- This allows the list to "bounce" when the user hits the top or bottom of the scroll, rather than just hitting a hard wall. This is a subtle but massive indicator of a native-feeling app.

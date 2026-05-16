@@ -94,12 +94,10 @@ const DisappearingBanner = memo(({ mode, onDisable }) => {
 
 const DELETED_PHRASES = [
     "This warm spot became a cold void - never to be filled again.",
-    "The seat is empty, but the warmth of the words remains.",
-    "A conversation frozen in time, waiting for a reply that will never come.",
-    "They've moved beyond the reach of a message, into the quiet.",
-    "The connection is severed, but the memories are etched in time.",
-    "This thread has reached its final stitch.",
-    "Washed away by the tide of time, leaving only footprints."
+    "Another star, you fade away... Where are you now? Was it all in my fantasy?",
+    "Every day wandering towards our North star, guess we got lost in the night...",
+    "I wish you were around, but now it's too late...",
+    "Ooh, ooh, ooh, ooh - Birds fly in different directions..."
 ];
 
 const ChatWindow = ({ onBack }) => {
@@ -200,8 +198,21 @@ const ChatWindow = ({ onBack }) => {
 
     const isTyping = !!typingScramble;
 
+    const inferredOtherUserId = useMemo(() => {
+        if (otherUserId) return otherUserId;
+        if (!isDeleted) return null;
+        const msg = rawMessages.find(m => {
+            const sId = m.senderId?._id?.toString() || m.senderId?.toString();
+            return sId && sId !== user?._id?.toString();
+        });
+        return msg?.senderId?._id?.toString() || msg?.senderId?.toString();
+    }, [otherUserId, isDeleted, rawMessages, user?._id]);
+
     const isContact = contacts.some(
-        c => c.userId?.toString() === otherUser?._id?.toString() || c.userId === otherUser?._id
+        c => {
+            const uid = c.userId?._id?.toString() || c.userId?.toString();
+            return uid === otherUserId || (inferredOtherUserId && uid === inferredOtherUserId);
+        }
     );
     const displayName = isDeleted ? "(user_deleted)" : otherUser?.username;
 
@@ -543,7 +554,7 @@ const ChatWindow = ({ onBack }) => {
                     fontSize: '0.85rem',
                     fontStyle: 'italic'
                 }}>
-                    "{deletedPhrase}"
+                    "{isContact ? deletedPhrase : "The convo ends here, forever."}"
                     <div style={{ marginTop: '4px', fontSize: '0.7rem', opacity: 0.6 }}>
                         This account has been deleted.
                     </div>
