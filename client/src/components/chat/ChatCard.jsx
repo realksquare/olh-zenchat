@@ -60,7 +60,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         if (!nameContainerRef.current || !nameContentRef.current) return;
         const containerWidth = nameContainerRef.current.offsetWidth;
         const contentWidth = nameContentRef.current.scrollWidth;
-        setMarqueeDist(contentWidth > containerWidth ? -(contentWidth - containerWidth + 10) : 0);
+        const next = contentWidth > containerWidth ? -(contentWidth - containerWidth + 10) : 0;
+        setMarqueeDist(prev => (prev === next ? prev : next));
     }, [displayName, liveChat.isGroup]);
 
     // ── Last-message preview ──────────────────────────────────────────────────
