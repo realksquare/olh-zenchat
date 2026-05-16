@@ -105,7 +105,7 @@ const DELETED_PHRASES = [
 ];
 
 const ChatWindow = ({ onBack }) => {
-    const { user } = useAuthStore((s) => ({ user: s.user }));
+    const user = useAuthStore((s) => s.user);
     const contacts = useAuthStore((s) => s.user?.contacts || EMPTY_CONTACTS);
     const {
         activeChat, fetchMessages, fetchOlderMessages, isLoadingMessages, isLoadingOlderMessages,

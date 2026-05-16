@@ -15,7 +15,7 @@ const MODE_LABELS_BUBBLE = {
 
 const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick, canDelete = true, canReply = true }) => {
     const [mobileDropdown, setMobileDropdown] = useState(false);
-    const { user } = useAuthStore((s) => ({ user: s.user }));
+    const user = useAuthStore((s) => s.user);
     const { toggleStarMessage, markViewOnceAsViewed } = useChatStore.getState();
     const status = message?.status ?? "sent";
     const progress = message?.progress ?? 0;
