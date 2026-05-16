@@ -5411,3 +5411,41 @@ select {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ── Scroll Performance Overrides ──────────────────────── */
+/* GPU compositor promotion — keeps scroll off the main JS thread */
+.chat-messages {
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+  touch-action: pan-y;
+  overscroll-behavior-y: contain;
+}
+
+.sidebar-chats {
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+  touch-action: pan-y;
+}
+
+/* Skip layout/paint for off-screen messages — biggest win for long chats */
+.message-row {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 72px;
+}
+
+/* Isolate each chat card layout so sidebar scroll doesn't trigger full reflows */
+.chat-card {
+  contain: content;
+}
+
+/* Promote marquee and halo to their own GPU layers */
+.marquee-content {
+  will-change: transform;
+}
+
+.moments-halo,
+.moments-halo-thin {
+  will-change: transform;
+}
