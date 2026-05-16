@@ -93,9 +93,9 @@ const NetworkBanner = () => {
 };
 
 const App = () => {
-  const { user, token, checkAuth } = useAuthStore();
-  const initLocalData = useChatStore((s) => s.initLocalData);
-  const fetchChats = useChatStore((s) => s.fetchChats);
+  const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
+  const checkAuth = useAuthStore((s) => s.checkAuth);
   const { socket } = useSocket();
   const [serverReady, setServerReady] = useState(false);
 

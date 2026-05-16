@@ -17,7 +17,8 @@ import { VerifiedTick, AdminIcon, HelpIcon, InviteIcon } from "../ui/Icons";
 
 const Sidebar = ({ onChatSelect }) => {
     const { user, logout } = useAuthStore();
-    const { hasActiveMoment, getHaloColor } = useMomentStore();
+    const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
+    const getHaloColor = useMomentStore((s) => s.getHaloColor);
     const { 
         chats, activeChat, setActiveChat, 
         addChat, isLoadingChats, togglePinChat, onlineUsers 
