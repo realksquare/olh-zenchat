@@ -92,6 +92,16 @@ const DisappearingBanner = memo(({ mode, onDisable }) => {
 
 
 
+const DELETED_PHRASES = [
+    "This warm spot became a cold void - never to be filled again.",
+    "The seat is empty, but the warmth of the words remains.",
+    "A conversation frozen in time, waiting for a reply that will never come.",
+    "They've moved beyond the reach of a message, into the quiet.",
+    "The connection is severed, but the memories are etched in time.",
+    "This thread has reached its final stitch.",
+    "Washed away by the tide of time, leaving only footprints."
+];
+
 const ChatWindow = ({ onBack }) => {
     const { user } = useAuthStore();
     const contacts = useAuthStore((s) => s.user?.contacts || EMPTY_CONTACTS);
@@ -169,6 +179,12 @@ const ChatWindow = ({ onBack }) => {
         if (!activeChat || activeChat.isGroup) return false;
         return activeChat.participants.length === 2 && !otherUser;
     }, [activeChat, otherUser]);
+
+    const deletedPhrase = useMemo(() => {
+        if (!activeChat?._id) return DELETED_PHRASES[0];
+        const hash = activeChat._id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        return DELETED_PHRASES[hash % DELETED_PHRASES.length];
+    }, [activeChat?._id]);
 
     const typingScramble = useMemo(() => {
         if (!activeChat || !otherUser) return null;
@@ -527,7 +543,7 @@ const ChatWindow = ({ onBack }) => {
                     fontSize: '0.85rem',
                     fontStyle: 'italic'
                 }}>
-                    "Whispers in the wind; a soul moved beyond the screen."
+                    "{deletedPhrase}"
                     <div style={{ marginTop: '4px', fontSize: '0.7rem', opacity: 0.6 }}>
                         This account has been deleted.
                     </div>
