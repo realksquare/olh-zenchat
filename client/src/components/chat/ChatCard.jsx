@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, memo } from "react";
+import { useState, useRef, memo } from "react";
 import { createPortal } from "react-dom";
 import { useChatStore } from "../../stores/chatStore";
 import { useAuthStore } from "../../stores/authStore";
@@ -24,9 +24,6 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const [contactLoading, setContactLoading] = useState(false);
     const [showDeletePrompt, setShowDeletePrompt] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [marqueeDist, setMarqueeDist] = useState(0);
-    const nameContainerRef = useRef(null);
-    const nameContentRef = useRef(null);
     const pressTimer = useRef(null);
 
     // ── Derived participant data ───────────────────────────────────────────────
@@ -55,14 +52,6 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     }));
     const displayName = isDeleted ? "(user_deleted)" : (otherUser?.username ?? "");
 
-    // ── Marquee: measure overflow after paint ─────────────────────────────────
-    useEffect(() => {
-        if (!nameContainerRef.current || !nameContentRef.current) return;
-        const containerWidth = nameContainerRef.current.offsetWidth;
-        const contentWidth = nameContentRef.current.scrollWidth;
-        const next = contentWidth > containerWidth ? -(contentWidth - containerWidth + 10) : 0;
-        setMarqueeDist(prev => (prev === next ? prev : next));
-    }, [displayName, liveChat.isGroup]);
 
     // ── Last-message preview ──────────────────────────────────────────────────
     const isLastMessageFromThem =
@@ -184,21 +173,13 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                 {/* Info */}
                 <div className="chat-card-info">
                     <div className="chat-card-row">
-                        <div
-                            className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`}
-                            style={{ display: "flex", alignItems: "center", gap: "4px", overflow: "hidden", flex: 1, minWidth: 0 }}
-                        >
-                            <div className="marquee-container" ref={nameContainerRef}>
-                                <span
-                                    ref={nameContentRef}
-                                    className={`marquee-content ${marqueeDist < 0 ? "marquee-active" : ""}`}
-                                    style={marqueeDist < 0 ? { "--marquee-dist": `${marqueeDist}px` } : {}}
-                                >
-                                    {displayName}
-                                </span>
-                            </div>
+                            <span
+                                className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`}
+                                style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}
+                            >
+                                {displayName}
+                            </span>
                             {otherUser?.isVerified && <span style={{ flexShrink: 0, display: "flex" }}><VerifiedTick /></span>}
-                        </div>
                         <span className="chat-card-time">
                             {liveChat.updatedAt ? formatDistanceToNow(new Date(liveChat.updatedAt), { addSuffix: false }) : ""}
                         </span>
