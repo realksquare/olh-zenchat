@@ -94,7 +94,9 @@ const DisappearingBanner = memo(({ mode, onDisable }) => {
 
 const DELETED_PHRASES = [
     "This warm spot became a cold void - never to be filled again.",
-    "Another star, you fade away... Where are you now? Was it all in my fantasy?",
+    "Another star, you fade away...",
+    "Where are you now? Was it all in my fantasy?",
+    "Where are you now? Were you only imaginary?",
     "Every day wandering towards our North star, guess we got lost in the night...",
     "I wish you were around, but now it's too late...",
     "Ooh, ooh, ooh, ooh - Birds fly in different directions..."
