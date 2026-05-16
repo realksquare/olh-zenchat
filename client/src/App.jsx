@@ -121,63 +121,74 @@ const App = () => {
     }
   }, [token, user?._id]);
 
-    useEffect(() => {
-        checkAuth();
-        if (token) {
-            initLocalData();
-            fetchChats();
-            useMomentStore.getState().fetchMoments();
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    if (token) {
+      initLocalData();
+      fetchChats();
+      useMomentStore.getState().fetchMoments();
+    }
+  }, [token, initLocalData, fetchChats]);
+
+  useEffect(() => {
+    let healthTimer;
+    const checkHealth = async () => {
+      try {
+        await axiosInstance.get("/messages/health");
+        setServerReady(true);
+      } catch (err) {
+        healthTimer = setTimeout(checkHealth, 2000);
+      }
+    };
+    checkHealth();
+    return () => clearTimeout(healthTimer);
+  }, []);
+
+  useEffect(() => {
+    const clearNotifications = async () => {
+      try {
+        if ('serviceWorker' in navigator) {
+          const registration = await navigator.serviceWorker.ready;
+          const notifications = await registration.getNotifications();
+          notifications.forEach(notification => notification.close());
         }
+      } catch (err) {
+        console.error("Error clearing notifications:", err);
+      }
+    };
 
-        const clearNotifications = async () => {
-            try {
-                if ('serviceWorker' in navigator) {
-                    const registration = await navigator.serviceWorker.ready;
-                    const notifications = await registration.getNotifications();
-                    notifications.forEach(notification => notification.close());
-                }
-            } catch (err) {
-                console.error("Error clearing notifications:", err);
-            }
-        };
+    const handleVisibilityChange = () => {
+      if (socket && socket.connected) {
+        socket.emit("set_active_status", { isActive: document.visibilityState === "visible" });
+      }
+      if (document.visibilityState === "visible") {
+        clearNotifications();
+      }
+    };
 
-        const handleVisibilityChange = () => {
-            if (socket && socket.connected) {
-                socket.emit("set_active_status", { isActive: document.visibilityState === "visible" });
-            }
-            if (document.visibilityState === "visible") {
-                clearNotifications();
-            }
-        };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    if (socket && socket.connected) {
+      socket.emit("set_active_status", { isActive: document.visibilityState === "visible" });
+    }
+    if (document.visibilityState === "visible") {
+      clearNotifications();
+    }
 
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-        
-        // Initial state
-        if (socket && socket.connected) {
-            socket.emit("set_active_status", { isActive: document.visibilityState === "visible" });
-        }
-        if (document.visibilityState === "visible") {
-            clearNotifications();
-        }
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [socket]);
 
-        const checkHealth = async () => {
-            try {
-                await axiosInstance.get("/messages/health");
-                setServerReady(true);
-            } catch (err) {
-                setTimeout(checkHealth, 2000);
-            }
-        };
-        checkHealth();
-
-        const prime = () => { primeAudioContext(); };
-        window.addEventListener('touchstart', prime, { once: true });
-        window.addEventListener('mousedown', prime, { once: true });
-
-        return () => {
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
-        };
-    }, [token, user?._id, socket]);
+  useEffect(() => {
+    const prime = () => { primeAudioContext(); };
+    window.addEventListener('touchstart', prime, { once: true });
+    window.addEventListener('mousedown', prime, { once: true });
+    return () => {
+      window.removeEventListener('touchstart', prime);
+      window.removeEventListener('mousedown', prime);
+    };
+  }, []);
 
   return (
     <>
