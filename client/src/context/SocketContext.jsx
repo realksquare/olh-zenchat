@@ -10,18 +10,18 @@ const SocketContext = createContext(null);
 
 export const SocketProvider = ({ children }) => {
     const socketRef = useRef(null);
-    const user = useAuthStore((state) => state.user);
+    const userId = useAuthStore((state) => state.user?._id);
     const token = useAuthStore((state) => state.token);
 
     useEffect(() => {
-        if (!token || !user) return;
+        if (!token || !userId) return;
 
         const serverUrl = import.meta.env.VITE_API_URL || "/";
         const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
 
         socketRef.current = io(serverUrl, {
             auth: { 
-                userId: user._id,
+                userId: userId,
                 deviceType: isPWA ? "pwa" : "browser"
             },
             extraHeaders: { Authorization: `Bearer ${token}` },
@@ -201,7 +201,7 @@ export const SocketProvider = ({ children }) => {
             socket.disconnect();
             socketRef.current = null;
         };
-    }, [token, user?._id]);
+    }, [token, userId]);
 
     const joinChat = useCallback((chatId) => {
         socketRef.current?.emit("join_chat", { chatId });

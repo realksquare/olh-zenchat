@@ -93,12 +93,14 @@ const NetworkBanner = () => {
 };
 
 const App = () => {
-  const { user, token, checkAuth } = useAuthStore();
+  const token = useAuthStore((s) => s.token);
+  const userId = useAuthStore((s) => s.user?._id);
+  const checkAuth = useAuthStore((s) => s.checkAuth);
   const { socket } = useSocket();
   const [serverReady, setServerReady] = useState(false);
 
   useEffect(() => {
-    if (token && user) {
+    if (token && userId) {
       const registerFCM = async () => {
         try {
           if (Notification.permission !== "granted") return;
@@ -117,7 +119,7 @@ const App = () => {
       };
       registerFCM();
     }
-  }, [token, user?._id]);
+  }, [token, userId]);
 
     useEffect(() => {
     checkAuth();
@@ -175,7 +177,7 @@ const App = () => {
         return () => {
             document.removeEventListener("visibilitychange", handleVisibilityChange);
         };
-    }, [token, user?._id]);
+    }, [token, userId]);
 
   return (
     <>
