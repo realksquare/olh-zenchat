@@ -238,10 +238,23 @@ const ChatWindow = ({ onBack }) => {
         }
     }, [isTyping, showScrollDown]);
 
+    const bounceTimeout = useRef(null);
+
     const handleScroll = (e) => {
         const { scrollTop, scrollHeight, clientHeight } = e.target;
         const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
         setShowScrollDown(!isNearBottom);
+
+        const atTop = scrollTop === 0;
+        const atBottom = scrollHeight - scrollTop - clientHeight <= 1;
+        if ((atTop || atBottom) && !bounceTimeout.current) {
+            const cls = atTop ? 'bounce-top' : 'bounce-bottom';
+            messagesContainerRef.current?.classList.add(cls);
+            bounceTimeout.current = setTimeout(() => {
+                messagesContainerRef.current?.classList.remove(cls);
+                bounceTimeout.current = null;
+            }, 400);
+        }
     };
 
     const scrollToBottom = () => {

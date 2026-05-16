@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, memo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
@@ -40,12 +40,56 @@ const Sidebar = ({ onChatSelect }) => {
     const [isMomentCreatorOpen, setIsMomentCreatorOpen] = useState(false);
     const [activeViewerMoments, setActiveViewerMoments] = useState(null);
     const [activeTab, setActiveTab] = useState("recents");
+    const { fetchChats } = useChatStore();
     const { fetchMoments } = useMomentStore();
     
+    const [pullY, setPullY] = useState(0);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const pullStartY = useRef(0);
+    const isPulling = useRef(false);
+    const chatsRef = useRef(null);
+    const PULL_THRESHOLD = 72;
+
+    const handleTouchStart = useCallback((e) => {
+        if (chatsRef.current?.scrollTop === 0) {
+            pullStartY.current = e.touches[0].clientY;
+            isPulling.current = true;
+        }
+    }, []);
+
+    const handleTouchMove = useCallback((e) => {
+        if (!isPulling.current) return;
+        const delta = e.touches[0].clientY - pullStartY.current;
+        if (delta > 0) {
+            e.preventDefault();
+            setPullY(Math.min(delta * 0.45, PULL_THRESHOLD + 20));
+        }
+    }, []);
+
+    const handleTouchEnd = useCallback(async () => {
+        if (!isPulling.current) return;
+        isPulling.current = false;
+        if (pullY >= PULL_THRESHOLD) {
+            setIsRefreshing(true);
+            setPullY(PULL_THRESHOLD);
+            await Promise.all([fetchChats(), fetchMoments()]);
+            setIsRefreshing(false);
+        }
+        setPullY(0);
+    }, [pullY, fetchChats, fetchMoments]);
+
     useEffect(() => {
         fetchMoments();
     }, [fetchMoments]);
-    
+
+    useEffect(() => {
+        const el = chatsRef.current;
+        if (!el) return;
+        el.addEventListener('touchmove', handleTouchMove, { passive: false });
+        return () => el.removeEventListener('touchmove', handleTouchMove);
+    }, [handleTouchMove]);
+
+
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const tab = params.get("tab");
@@ -252,7 +296,32 @@ const Sidebar = ({ onChatSelect }) => {
                 )}
             </div>
 
-            <div className="sidebar-chats">
+            <div
+                className="sidebar-chats"
+                ref={chatsRef}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                style={{ transform: pullY > 0 ? `translateY(${pullY}px)` : undefined, transition: pullY === 0 ? 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)' : 'none' }}
+            >
+                {(pullY > 0 || isRefreshing) && (
+                    <div className="ptr-indicator" style={{ opacity: Math.min(pullY / PULL_THRESHOLD, 1), transform: `translateY(-${PULL_THRESHOLD + 16}px) scale(${0.6 + 0.4 * Math.min(pullY / PULL_THRESHOLD, 1)})` }}>
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                            <circle cx="16" cy="16" r="13" stroke="rgba(61,165,217,0.15)" strokeWidth="2.5"/>
+                            <circle
+                                cx="16" cy="16" r="13"
+                                stroke="#3da5d9"
+                                strokeWidth="2.5"
+                                strokeLinecap="round"
+                                strokeDasharray={`${2 * Math.PI * 13}`}
+                                strokeDashoffset={`${2 * Math.PI * 13 * (1 - Math.min(pullY / PULL_THRESHOLD, 1))}`}
+                                transform="rotate(-90 16 16)"
+                                style={{ transition: isRefreshing ? 'none' : 'stroke-dashoffset 0.05s linear' }}
+                                className={isRefreshing ? 'ptr-arc-spin' : ''}
+                            />
+                            <text x="16" y="20.5" textAnchor="middle" fontSize="10" fontWeight="700" fill="#3da5d9" fontFamily="inherit">Z</text>
+                        </svg>
+                    </div>
+                )}
                 {isLoadingChats && (
                     <div className="chats-loading">
                         {[1, 2, 3].map((i) => (
