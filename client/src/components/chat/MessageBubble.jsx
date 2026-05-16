@@ -46,9 +46,9 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     );
 
     const isNew = useMemo(() => {
-        const diff = Date.now() - new Date(message.createdAt).getTime();
-        return diff < 1500;
-    }, [message.createdAt]);
+        const createdAt = new Date(message.createdAt).getTime();
+        return (Date.now() - createdAt) < 5000;
+    }, []); // Check only on mount
 
     const [tempVisible, setTempVisible] = useState(false);
 
