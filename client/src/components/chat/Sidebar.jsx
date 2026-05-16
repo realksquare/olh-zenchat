@@ -280,12 +280,12 @@ const Sidebar = ({ onChatSelect }) => {
                     >
                         Contacts
                         {(() => {
-                            const onlineContactsCount = user?.contacts?.filter(c => {
+                            const count = user?.contacts?.reduce((acc, c) => {
                                 const uid = c.userId?._id?.toString() || c.userId?.toString();
-                                return onlineUsers.has(uid);
-                            }).length;
-                            return onlineContactsCount > 0 ? (
-                                <span className="sidebar-tab-badge online">{onlineContactsCount}</span>
+                                return onlineUsers.has(uid) ? acc + 1 : acc;
+                            }, 0);
+                            return count > 0 ? (
+                                <span className="sidebar-tab-badge online">{count}</span>
                             ) : null;
                         })()}
                     </button>
