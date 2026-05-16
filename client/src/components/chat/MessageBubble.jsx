@@ -13,7 +13,7 @@ const MODE_LABELS_BUBBLE = {
 
 
 
-const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick, canDelete = true }) => {
+const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick, canDelete = true, canReply = true }) => {
     const [mobileDropdown, setMobileDropdown] = useState(false);
     const { user } = useAuthStore();
     const { toggleStarMessage, markViewOnceAsViewed, messages } = useChatStore();
@@ -297,15 +297,17 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                         </svg>
                         <span>{message.starredBy?.includes(user?._id) ? "Unfav" : "Fav"}</span>
                     </button>
-                    <button
-                        className="message-dropdown-item"
-                        onMouseDown={(e) => { e.preventDefault(); setMobileDropdown(false); onEdit({ action: "reply", ...message }); }}
-                    >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
-                            <polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" />
-                        </svg>
-                        <span>Reply</span>
-                    </button>
+                    {canReply && (
+                        <button
+                            className="message-dropdown-item"
+                            onMouseDown={(e) => { e.preventDefault(); setMobileDropdown(false); onEdit({ action: "reply", ...message }); }}
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+                                <polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                            </svg>
+                            <span>Reply</span>
+                        </button>
+                    )}
                     {isMe && canDelete && (
                         <>
                             {isWithinEditWindow && (

@@ -532,6 +532,7 @@ const ChatWindow = ({ onBack }) => {
                                 onEdit={handleMessageAction}
                                 onDelete={setDeletingMessage}
                                 canDelete={!isDeleted}
+                                canReply={!isDeleted}
                                 onMediaClick={(url, type) => {
                                     const senderName = (msg.senderId?._id === user?._id || msg.senderId === user?._id)
                                         ? "me"
