@@ -20,9 +20,16 @@ const cleanupInstantMessages = async (uid, io) => {
             });
 
             if (deleted.deletedCount > 0) {
-                const latestMsg = await Message.findOne({ chatId: chat._id })
-                    .sort({ createdAt: -1 })
-                    .select("_id");
+                const latestMsg = await Message.findOne({ 
+                    chatId: chat._id,
+                    $or: [
+                        { disappearingMode: { $ne: "instant" } },
+                        { status: { $ne: "read" } },
+                        { senderId: new mongoose.Types.ObjectId(uid) }
+                    ]
+                })
+                .sort({ createdAt: -1 })
+                .select("_id");
 
                 await Chat.findByIdAndUpdate(chat._id, {
                     lastMessage: latestMsg ? latestMsg._id : null

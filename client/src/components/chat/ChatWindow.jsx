@@ -270,7 +270,8 @@ const ChatWindow = ({ onBack }) => {
 
     const handleDeleteConfirm = (deleteFor) => {
         if (!deletingMessage) return;
-        deleteMessage(activeChat._id, deletingMessage._id, deleteFor);
+        const msgId = deletingMessage._id || deletingMessage.cid;
+        deleteMessage(activeChat._id, msgId, deleteFor);
         setDeletingMessage(null);
     };
 
