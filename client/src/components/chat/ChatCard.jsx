@@ -13,6 +13,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const unreadCount = useChatStore((s) => s.unreadCounts[chat._id] || 0);
     const deleteChatForUser = useChatStore((s) => s.deleteChatForUser);
     const liveChat = useChatStore((s) => s.chats.find((c) => c._id === chat._id)) || chat;
+    const storeMessages = useChatStore((s) => s.messages[chat._id] || []);
     const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
 
     const [showMenu, setShowMenu] = useState(false);
@@ -59,8 +60,15 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
             }
             return { text: "3+ new messages", isUnread: true };
         }
-        if (!liveChat.lastMessage) return { text: "No messages yet", isUnread: false };
-        const { content, type, senderId } = liveChat.lastMessage;
+        // lastMessage may be null if it was a deleted instant message - fall back to store messages
+        const effectiveLastMsg = liveChat.lastMessage || (() => {
+            const visible = storeMessages
+                .filter(m => !m.deletedForEveryone && m.status !== 'sending')
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            return visible[0] || null;
+        })();
+        if (!effectiveLastMsg) return { text: "No messages yet", isUnread: false };
+        const { content, type, senderId } = effectiveLastMsg;
         const isMe = senderId?._id === user?._id || senderId === user?._id;
         if (type === "image") return { text: isMe ? "You sent an image" : "Sent an image", isUnread: false };
         if (type === "video") return { text: isMe ? "You sent a video" : "Sent a video", isUnread: false };

@@ -455,7 +455,12 @@ const registerSocketHandlers = (io) => {
         socket.on("delete_message", async ({ chatId, messageId, deleteFor }) => {
             try {
                 const message = await Message.findById(messageId);
-                if (!message || message.senderId.toString() !== userId) return;
+                // If message is already gone from DB, just clean it up locally for the requester
+                if (!message) {
+                    socket.emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "self" });
+                    return;
+                }
+                if (message.senderId.toString() !== userId) return;
 
                 if (deleteFor === "everyone") {
                     await Message.findByIdAndDelete(messageId);
