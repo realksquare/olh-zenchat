@@ -531,9 +531,10 @@ const ChatWindow = ({ onBack }) => {
                                 otherUser={otherUser}
                                 onEdit={handleMessageAction}
                                 onDelete={setDeletingMessage}
+                                canDelete={!isDeleted}
                                 onMediaClick={(url, type) => {
-                                    const senderName = (msg.senderId?._id === user?._id || msg.senderId === user?._id) 
-                                        ? "me" 
+                                    const senderName = (msg.senderId?._id === user?._id || msg.senderId === user?._id)
+                                        ? "me"
                                         : (msg.senderId?.username || otherUser?.username || "user");
                                     setSelectedMedia({ url, type, username: senderName });
                                 }}

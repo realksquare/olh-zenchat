@@ -13,7 +13,7 @@ const MODE_LABELS_BUBBLE = {
 
 
 
-const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick }) => {
+const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick, canDelete = true }) => {
     const [mobileDropdown, setMobileDropdown] = useState(false);
     const { user } = useAuthStore();
     const { toggleStarMessage, markViewOnceAsViewed, messages } = useChatStore();
@@ -306,7 +306,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                         </svg>
                         <span>Reply</span>
                     </button>
-                    {isMe && (
+                    {isMe && canDelete && (
                         <>
                             {isWithinEditWindow && (
                                 <button
