@@ -1,4 +1,5 @@
 import { useState, useRef, memo, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useChatStore } from "../../stores/chatStore";
 import { useAuthStore } from "../../stores/authStore";
 import { formatDistanceToNow } from "date-fns";
@@ -20,21 +21,22 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const [contactLoading, setContactLoading] = useState(false);
     const pressTimer = useRef(null);
 
-    const otherUser = liveChat.participants?.find((p) => (p._id?.toString() || p.toString()) !== user?._id?.toString());
-    const otherUserId = otherUser?._id?.toString() || otherUser?.toString();
+    const otherUser = liveChat.participants?.find((p) => p && (p._id?.toString() || p.toString()) !== user?._id?.toString());
+    const otherUserId = otherUser?._id?.toString() || otherUser?.toString() || (liveChat.participants?.find(p => p !== user?._id && p?._id !== user?._id));
     const chatTyping = typingUsers[liveChat._id];
-    const isTyping = chatTyping && !!chatTyping[otherUserId];
+    const isTyping = chatTyping && otherUserId && !!chatTyping[otherUserId];
     const typingScramble = isTyping ? chatTyping[otherUserId] : null;
-    const isOnline = otherUser?.isOnline || onlineUsers.has(otherUserId);
-    const hasMoments = hasActiveMoment(otherUserId);
+    const isOnline = otherUser?.isOnline || (otherUserId && onlineUsers.has(otherUserId.toString()));
+    const hasMoments = otherUserId && hasActiveMoment(otherUserId.toString());
 
     // Check if this user is a contact
-    const isContact = user?.contacts?.some(
-        c => c.userId?.toString() === otherUser?._id?.toString() || c.userId === otherUser?._id
+    const isContact = otherUser && user?.contacts?.some(
+        c => c.userId?.toString() === otherUser._id?.toString() || c.userId === otherUser._id
     );
 
     // Display name: contact gets ✨, shown as badge component not string
-    const displayName = otherUser?.username;
+    const isDeleted = liveChat.participants?.length === 2 && !otherUser;
+    const displayName = isDeleted ? "(user_deleted)" : otherUser?.username;
 
     const isLastMessageFromThem =
         liveChat.lastMessage?.senderId !== user?._id &&

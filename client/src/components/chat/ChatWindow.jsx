@@ -162,9 +162,14 @@ const ChatWindow = ({ onBack }) => {
         }
     };
 
-    const otherUser = useMemo(() =>
-        activeChat?.participants?.find((p) => (p._id?.toString() || p._id) !== user?._id?.toString()),
-        [activeChat, user?._id]);
+    const otherUser = useMemo(() => activeChat?.participants?.find((p) => p && (p._id?.toString() || p.toString()) !== user?._id?.toString()), [activeChat, user?._id]);
+    const otherUserId = otherUser?._id?.toString() || otherUser?.toString() || (activeChat?.participants?.find(p => p !== user?._id && p?._id !== user?._id));
+
+    const isDeleted = useMemo(() => {
+        if (!activeChat || activeChat.isGroup) return false;
+        return activeChat.participants.length === 2 && !otherUser;
+    }, [activeChat, otherUser]);
+
     const typingScramble = useMemo(() => {
         if (!activeChat || !otherUser) return null;
         const chatTyping = typingUsers[activeChat._id];
@@ -182,7 +187,7 @@ const ChatWindow = ({ onBack }) => {
     const isContact = contacts.some(
         c => c.userId?.toString() === otherUser?._id?.toString() || c.userId === otherUser?._id
     );
-    const displayName = otherUser?.username;
+    const displayName = isDeleted ? "(user_deleted)" : otherUser?.username;
 
     useEffect(() => {
         if (!activeChat?._id) return;
@@ -308,7 +313,7 @@ const ChatWindow = ({ onBack }) => {
     }
 
     return (
-        <div className="chat-window">
+        <div className={`chat-window ${isDeleted ? 'user-deleted-mode' : ''}`}>
             <div className="chat-header" style={{ position: 'sticky', top: 0, zIndex: 50 }}>
                 <button className="chat-back-btn" onClick={onBack} aria-label="Back to chats">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -512,13 +517,30 @@ const ChatWindow = ({ onBack }) => {
                 />
             )}
 
+            {isDeleted && (
+                <div className="deleted-user-banner" style={{
+                    padding: '12px',
+                    textAlign: 'center',
+                    background: 'rgba(30, 30, 30, 0.4)',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                    color: '#94a3b8',
+                    fontSize: '0.85rem',
+                    fontStyle: 'italic'
+                }}>
+                    "Whispers in the wind; a soul moved beyond the screen."
+                    <div style={{ marginTop: '4px', fontSize: '0.7rem', opacity: 0.6 }}>
+                        This account has been deleted.
+                    </div>
+                </div>
+            )}
+
             <MessageInput
                 chatId={activeChat._id}
                 editingMessage={editingMessage}
                 replyingTo={replyingTo}
                 onCancelEdit={() => setEditingMessage(null)}
                 onCancelReply={() => setReplyingTo(null)}
-                disabled={showOnlyStarred}
+                disabled={isDeleted}
             />
 
             {deletingMessage && (
