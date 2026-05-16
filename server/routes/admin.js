@@ -103,6 +103,12 @@ router.post("/suspend/:userId", authMiddleware, adminCheck, async (req, res) => 
 
         targetUser.isSuspended = !targetUser.isSuspended;
         await targetUser.save();
+
+        if (targetUser.isSuspended) {
+            const io = req.app.get("io");
+            io.to(targetUser._id.toString()).emit("force_logout", { reason: "account_suspended" });
+        }
+
         res.json({ user: targetUser.toPublicJSON() });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
@@ -119,6 +125,10 @@ router.delete("/users/:userId", authMiddleware, adminCheck, async (req, res) => 
         }
 
         await User.findByIdAndDelete(req.params.userId);
+
+        const io = req.app.get("io");
+        io.to(req.params.userId).emit("force_logout", { reason: "account_deleted" });
+
         res.json({ message: "User deleted successfully" });
     } catch (err) {
         res.status(500).json({ message: "Server error" });

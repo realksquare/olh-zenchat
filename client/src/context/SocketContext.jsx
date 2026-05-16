@@ -138,6 +138,11 @@ export const SocketProvider = ({ children }) => {
             }
         };
 
+        const handleForceLogout = () => {
+            useAuthStore.getState().logout();
+            window.location.href = "/login";
+        };
+
         socket.on("connect", async () => {
             const activeChat = useChatStore.getState().activeChat;
             if (activeChat?._id) {
@@ -174,6 +179,7 @@ export const SocketProvider = ({ children }) => {
         socket.on("instant_messages_deleted", handleInstantMessagesDeleted);
         socket.on("new_moment", handleNewMoment);
         socket.on("moment_deleted", handleMomentDeleted);
+        socket.on("force_logout", handleForceLogout);
 
         return () => {
             socket.off("connect");
@@ -191,6 +197,7 @@ export const SocketProvider = ({ children }) => {
             socket.off("instant_messages_deleted", handleInstantMessagesDeleted);
             socket.off("new_moment", handleNewMoment);
             socket.off("moment_deleted", handleMomentDeleted);
+            socket.off("force_logout", handleForceLogout);
             socket.disconnect();
             socketRef.current = null;
         };
