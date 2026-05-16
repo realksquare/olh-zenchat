@@ -233,7 +233,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                             {isPinned ? "Unpin Chat" : "Pin Chat"}
                         </button>
 
-                        {(user?.role === "co_admin" || user?.role === "master_admin") && (
+                        {(user?.role === "co_admin" || user?.role === "master_admin") && !isDeleted && (
                             <button onClick={handleToggleVerify}
                                 style={{ ...menuBtnStyle, color: otherUser?.isVerified ? "var(--color-primary)" : "#94a3b8", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: "8px", marginBottom: "4px" }}>
                                 <VerifiedTick style={{ marginLeft: 0 }} />
