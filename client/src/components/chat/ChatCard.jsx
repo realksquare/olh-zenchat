@@ -17,6 +17,22 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const storeMessages = useChatStore((s) => s.messages[chat._id] || []);
     const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
 
+    const [showUserCard, setShowUserCard] = useState(false);
+    const nameContainerRef = useRef(null);
+    const nameContentRef = useRef(null);
+    const [marqueeDist, setMarqueeDist] = useState(0);
+
+    useEffect(() => {
+        if (nameContainerRef.current && nameContentRef.current) {
+            const containerWidth = nameContainerRef.current.offsetWidth;
+            const contentWidth = nameContentRef.current.scrollWidth;
+            if (contentWidth > containerWidth) {
+                setMarqueeDist(-(contentWidth - containerWidth + 10));
+            } else {
+                setMarqueeDist(0);
+            }
+        }
+    }, [displayName, liveChat.isGroup]);
     const [showMenu, setShowMenu] = useState(false);
     const [contactLoading, setContactLoading] = useState(false);
     const pressTimer = useRef(null);
@@ -183,10 +199,18 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
 
                 <div className="chat-card-info">
                     <div className="chat-card-row">
-                        <span className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</span>
+                        <div className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`} style={{ display: 'flex', alignItems: 'center', gap: '4px', overflow: 'hidden' }}>
+                            <div className="marquee-container" ref={nameContainerRef}>
+                                <span 
+                                    ref={nameContentRef}
+                                    className={`marquee-content ${marqueeDist < 0 ? 'marquee-active' : ''}`}
+                                    style={marqueeDist < 0 ? { '--marquee-dist': `${marqueeDist}px` } : {}}
+                                >
+                                    {displayName}
+                                </span>
+                            </div>
                             {otherUser?.isVerified && <span style={{ flexShrink: 0, display: 'flex' }}><VerifiedTick /></span>}
-                        </span>
+                        </div>
                         <span className="chat-card-time">
                             {liveChat.updatedAt ? formatDistanceToNow(new Date(liveChat.updatedAt), { addSuffix: false }) : ""}
                         </span>
