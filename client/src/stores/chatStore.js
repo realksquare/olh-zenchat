@@ -104,6 +104,26 @@ export const useChatStore = create(
                 });
             },
 
+            purgeAllStuckMessages: () => {
+                set((state) => {
+                    const nextMessages = { ...state.messages };
+                    let changed = false;
+                    Object.keys(nextMessages).forEach(chatId => {
+                        const msgs = nextMessages[chatId] || [];
+                        const filtered = msgs.filter(m => m.status !== 'sending');
+                        if (filtered.length !== msgs.length) {
+                            nextMessages[chatId] = filtered;
+                            changed = true;
+                            // Also purge from IndexedDB
+                            msgs.forEach(m => {
+                                if (m.status === 'sending') db.messages.delete(m._id).catch(() => {});
+                            });
+                        }
+                    });
+                    return changed ? { messages: nextMessages } : state;
+                });
+            },
+
 
 
             togglePinChat: async (chatId) => {
@@ -356,15 +376,25 @@ export const useChatStore = create(
                     const currentUserId = useAuthStore.getState().user?._id;
 
                     const updatedMessages = (state.messages[chatId] || []).map((msg) => {
-                        if (msg._id?.toString() !== messageId?.toString()) return msg;
+                        const mId = (msg._id || msg.cid)?.toString();
+                        if (mId !== messageId?.toString()) return msg;
+
+                        // If it's a local/sending message, we just remove it (filter out later)
+                        if (msg.status === 'sending' || !msg._id || msg._id.toString().startsWith('temp-')) {
+                            return null;
+                        }
+
+                        // For established messages, apply deletion markers
                         if (deleteFor === "everyone") return { ...msg, deletedForEveryone: true, content: "", mediaUrl: "" };
                         if (deleteFor === "self") return { ...msg, deletedFor: [...(msg.deletedFor || []), currentUserId] };
                         return msg;
-                    });
+                    }).filter(Boolean);
 
-                    const deletedMsg = updatedMessages.find(
-                        m => m._id?.toString() === messageId?.toString()
+                    const deletedMsg = (state.messages[chatId] || []).find(
+                        m => (m._id || m.cid)?.toString() === messageId?.toString()
                     );
+
+
                     const isLastMessage =
                         state.chats.find(c => c._id?.toString() === chatId?.toString())
                             ?.lastMessage?._id?.toString() === messageId?.toString();

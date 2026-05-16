@@ -114,7 +114,10 @@ export const SocketProvider = ({ children }) => {
         };
 
         const handleInstantMessagesDeleted = ({ chatId }) => {
-            useChatStore.getState().deleteInstantMessages(chatId);
+            const store = useChatStore.getState();
+            store.deleteInstantMessages(chatId);
+            // Re-fetch chats to sync the new lastMessage from server
+            store.fetchChats();
         };
 
 
