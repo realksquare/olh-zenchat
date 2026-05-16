@@ -20,7 +20,7 @@ const cleanupInstantMessages = async (uid, io) => {
             });
 
             if (deleted.deletedCount > 0) {
-                const latestMsg = await Message.findOne({ 
+                const latestMsg = await Message.findOne({
                     chatId: chat._id,
                     $or: [
                         { disappearingMode: { $ne: "instant" } },
@@ -28,8 +28,8 @@ const cleanupInstantMessages = async (uid, io) => {
                         { senderId: new mongoose.Types.ObjectId(uid) }
                     ]
                 })
-                .sort({ createdAt: -1 })
-                .select("_id");
+                    .sort({ createdAt: -1 })
+                    .select("_id");
 
                 await Chat.findByIdAndUpdate(chat._id, {
                     lastMessage: latestMsg ? latestMsg._id : null
@@ -455,7 +455,6 @@ const registerSocketHandlers = (io) => {
         socket.on("delete_message", async ({ chatId, messageId, deleteFor }) => {
             try {
                 const message = await Message.findById(messageId);
-                // If message is already gone from DB, just clean it up locally for the requester
                 if (!message) {
                     socket.emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "self" });
                     return;

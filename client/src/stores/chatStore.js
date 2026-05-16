@@ -378,10 +378,13 @@ export const useChatStore = create(
                     const updatedMessages = (state.messages[chatId] || []).map((msg) => {
                         const mId = (msg._id || msg.cid)?.toString();
                         if (mId !== messageId?.toString()) return msg;
-                        // For 'delete for self' or any local/ghost message: fully remove it
+                        // For 'delete for self' or local/ghost messages: fully remove
                         if (deleteFor === "self" || msg.status === 'sending' || !msg._id) return null;
-                        // For 'delete for everyone': show tombstone for other users
-                        if (deleteFor === "everyone") return { ...msg, deletedForEveryone: true, content: "", mediaUrl: "" };
+                        // For 'delete for everyone': silently remove disappearing messages, tombstone regular ones
+                        if (deleteFor === "everyone") {
+                            if (msg.disappearingMode && msg.disappearingMode !== "off") return null;
+                            return { ...msg, deletedForEveryone: true, content: "", mediaUrl: "" };
+                        }
                         return msg;
                     }).filter(Boolean);
 

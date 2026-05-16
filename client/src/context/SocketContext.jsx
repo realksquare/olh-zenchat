@@ -116,9 +116,12 @@ export const SocketProvider = ({ children }) => {
         const handleInstantMessagesDeleted = ({ chatId }) => {
             const store = useChatStore.getState();
             store.deleteInstantMessages(chatId);
-            // Re-fetch chats to sync the new lastMessage from server
             store.fetchChats();
+            if (store.activeChat?._id === chatId) {
+                store.fetchMessages(chatId);
+            }
         };
+
 
 
         const handleNewMoment = (payload) => {
