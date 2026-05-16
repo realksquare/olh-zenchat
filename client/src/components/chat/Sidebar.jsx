@@ -82,7 +82,8 @@ const Sidebar = ({ onChatSelect }) => {
 
     useEffect(() => {
         fetchMoments();
-    }, [fetchMoments]);
+    }, []);
+
 
     const sidebarRef = useRef(null);
     useEffect(() => {
