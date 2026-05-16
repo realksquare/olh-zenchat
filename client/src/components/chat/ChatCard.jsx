@@ -21,8 +21,15 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const [contactLoading, setContactLoading] = useState(false);
     const pressTimer = useRef(null);
 
-    const otherUser = liveChat.participants?.find((p) => p && (p._id?.toString() || p.toString()) !== user?._id?.toString());
-    const otherUserId = otherUser?._id?.toString() || otherUser?.toString() || (liveChat.participants?.find(p => p !== user?._id && p?._id !== user?._id));
+    const otherParticipant = liveChat.participants?.find((p) => {
+        const pid = p?._id?.toString() || p?.toString();
+        return pid && pid !== user?._id?.toString();
+    });
+
+    const isDeleted = !otherParticipant || (typeof otherParticipant === 'string') || !otherParticipant.username;
+    const otherUser = isDeleted ? null : otherParticipant;
+    const otherUserId = otherUser?._id?.toString() || otherParticipant?._id?.toString() || otherParticipant?.toString();
+
     const chatTyping = typingUsers[liveChat._id];
     const isTyping = chatTyping && otherUserId && !!chatTyping[otherUserId];
     const typingScramble = isTyping ? chatTyping[otherUserId] : null;
@@ -35,7 +42,6 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     );
 
     // Display name: contact gets ✨, shown as badge component not string
-    const isDeleted = liveChat.participants?.length === 2 && !otherUser;
     const displayName = isDeleted ? "(user_deleted)" : otherUser?.username;
 
     const isLastMessageFromThem =

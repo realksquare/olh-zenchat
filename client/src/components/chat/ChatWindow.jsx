@@ -174,13 +174,20 @@ const ChatWindow = ({ onBack }) => {
         }
     };
 
-    const otherUser = useMemo(() => activeChat?.participants?.find((p) => p && (p._id?.toString() || p.toString()) !== user?._id?.toString()), [activeChat, user?._id]);
-    const otherUserId = otherUser?._id?.toString() || otherUser?.toString() || (activeChat?.participants?.find(p => p !== user?._id && p?._id !== user?._id));
+    const otherParticipant = useMemo(() => 
+        activeChat?.participants?.find((p) => {
+            const pid = p?._id?.toString() || p?.toString();
+            return pid && pid !== user?._id?.toString();
+        }), 
+    [activeChat, user?._id]);
 
     const isDeleted = useMemo(() => {
         if (!activeChat || activeChat.isGroup) return false;
-        return activeChat.participants.length === 2 && !otherUser;
-    }, [activeChat, otherUser]);
+        return !otherParticipant || (typeof otherParticipant === 'string') || !otherParticipant.username;
+    }, [activeChat, otherParticipant]);
+
+    const otherUser = isDeleted ? null : otherParticipant;
+    const otherUserId = otherUser?._id?.toString() || otherParticipant?._id?.toString() || otherParticipant?.toString();
 
     const deletedPhrase = useMemo(() => {
         if (!activeChat?._id) return DELETED_PHRASES[0];
@@ -189,16 +196,15 @@ const ChatWindow = ({ onBack }) => {
     }, [activeChat?._id]);
 
     const typingScramble = useMemo(() => {
-        if (!activeChat || !otherUser) return null;
+        if (!activeChat || !otherUserId) return null;
         const chatTyping = typingUsers[activeChat._id];
-        const otherId = otherUser._id?.toString() || otherUser._id;
-        return chatTyping?.[otherId] || null;
-    }, [typingUsers, activeChat?._id, otherUser?._id]);
+        return chatTyping?.[otherUserId] || null;
+    }, [typingUsers, activeChat?._id, otherUserId]);
 
     const hasMoments = useMemo(() => {
-        if (!otherUser) return false;
-        return hasActiveMoment(otherUser._id?.toString() || otherUser._id);
-    }, [otherUser, hasActiveMoment]);
+        if (!otherUserId) return false;
+        return hasActiveMoment(otherUserId);
+    }, [otherUserId, hasActiveMoment]);
 
     const isTyping = !!typingScramble;
 
