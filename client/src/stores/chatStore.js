@@ -378,17 +378,13 @@ export const useChatStore = create(
                     const updatedMessages = (state.messages[chatId] || []).map((msg) => {
                         const mId = (msg._id || msg.cid)?.toString();
                         if (mId !== messageId?.toString()) return msg;
-
-                        // If it's a local/sending message, we just remove it (filter out later)
-                        if (msg.status === 'sending' || !msg._id || msg._id.toString().startsWith('temp-')) {
-                            return null;
-                        }
-
-                        // For established messages, apply deletion markers
+                        // For 'delete for self' or any local/ghost message: fully remove it
+                        if (deleteFor === "self" || msg.status === 'sending' || !msg._id) return null;
+                        // For 'delete for everyone': show tombstone for other users
                         if (deleteFor === "everyone") return { ...msg, deletedForEveryone: true, content: "", mediaUrl: "" };
-                        if (deleteFor === "self") return { ...msg, deletedFor: [...(msg.deletedFor || []), currentUserId] };
                         return msg;
                     }).filter(Boolean);
+
 
                     const deletedMsg = (state.messages[chatId] || []).find(
                         m => (m._id || m.cid)?.toString() === messageId?.toString()

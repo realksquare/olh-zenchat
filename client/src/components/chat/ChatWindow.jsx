@@ -271,9 +271,15 @@ const ChatWindow = ({ onBack }) => {
     const handleDeleteConfirm = (deleteFor) => {
         if (!deletingMessage) return;
         const msgId = deletingMessage._id || deletingMessage.cid;
-        deleteMessage(activeChat._id, msgId, deleteFor);
+        // Optimistically remove from local store immediately - don't wait for server
+        useChatStore.getState().deleteMessage(activeChat._id, msgId, deleteFor);
+        // Also tell the server if it's a real message (fire-and-forget)
+        if (deletingMessage._id) {
+            deleteMessage(activeChat._id, msgId, deleteFor);
+        }
         setDeletingMessage(null);
     };
+
 
     if (!activeChat) {
         return (
