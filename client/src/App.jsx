@@ -121,17 +121,20 @@ const App = () => {
     }
   }, [token, user?._id]);
 
+  const hasInitialized = useRef(false);
   useEffect(() => {
+    if (hasInitialized.current) return;
     checkAuth();
+    hasInitialized.current = true;
   }, []);
 
   useEffect(() => {
     if (token) {
-      initLocalData();
-      fetchChats();
+      useChatStore.getState().initLocalData();
+      useChatStore.getState().fetchChats();
       useMomentStore.getState().fetchMoments();
     }
-  }, [token, initLocalData, fetchChats]);
+  }, [token]);
 
   useEffect(() => {
     let healthTimer;
@@ -147,6 +150,11 @@ const App = () => {
     return () => clearTimeout(healthTimer);
   }, []);
 
+  const socketRef = useRef(socket);
+  useEffect(() => {
+    socketRef.current = socket;
+  }, [socket]);
+
   useEffect(() => {
     const clearNotifications = async () => {
       try {
@@ -161,8 +169,9 @@ const App = () => {
     };
 
     const handleVisibilityChange = () => {
-      if (socket && socket.connected) {
-        socket.emit("set_active_status", { isActive: document.visibilityState === "visible" });
+      const s = socketRef.current;
+      if (s && s.connected) {
+        s.emit("set_active_status", { isActive: document.visibilityState === "visible" });
       }
       if (document.visibilityState === "visible") {
         clearNotifications();
@@ -170,15 +179,8 @@ const App = () => {
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    if (socket && socket.connected) {
-      socket.emit("set_active_status", { isActive: document.visibilityState === "visible" });
-    }
-    if (document.visibilityState === "visible") {
-      clearNotifications();
-    }
-
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [socket]);
+  }, []);
 
   useEffect(() => {
     const prime = () => { primeAudioContext(); };
