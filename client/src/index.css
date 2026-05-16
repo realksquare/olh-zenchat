@@ -5429,17 +5429,6 @@ select {
   touch-action: pan-y;
 }
 
-/* Skip layout/paint for off-screen messages — biggest win for long chats */
-.message-row {
-  content-visibility: auto;
-  contain-intrinsic-size: 0 72px;
-}
-
-/* Isolate each chat card layout so sidebar scroll doesn't trigger full reflows */
-.chat-card {
-  contain: content;
-}
-
 /* Promote marquee and halo to their own GPU layers */
 .marquee-content {
   will-change: transform;
