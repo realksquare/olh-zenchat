@@ -99,8 +99,9 @@ const App = () => {
   const { socket } = useSocket();
   const [serverReady, setServerReady] = useState(false);
 
+  const hasRegisteredFCM = useRef(false);
   useEffect(() => {
-    if (token && user) {
+    if (token && user && !hasRegisteredFCM.current) {
       const registerFCM = async () => {
         try {
           if (Notification.permission !== "granted") return;
@@ -112,6 +113,7 @@ const App = () => {
               deviceType: isPWA ? "pwa" : "browser",
               notificationsEnabled: true
             });
+            hasRegisteredFCM.current = true;
           }
         } catch (err) {
           console.error("FCM registration error:", err);

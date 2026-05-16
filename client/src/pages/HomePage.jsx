@@ -14,15 +14,9 @@ const HomePage = () => {
     const [showChat, setShowChat] = useState(false);
 
     useEffect(() => {
-        if (token) {
-            useChatStore.getState().setActiveChat(null);
-        }
-    }, [token]);
-
-    useEffect(() => {
         const hasChat = !!activeChat?._id;
         setShowChat(hasChat);
-        if (hasChat) {
+        if (hasChat && !window.history.state?.chat) {
             window.history.pushState({ chat: true }, "");
         }
     }, [activeChat?._id]);
