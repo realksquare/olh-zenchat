@@ -93,15 +93,13 @@ const NetworkBanner = () => {
 };
 
 const App = () => {
-  const user = useAuthStore((s) => s.user);
-  const token = useAuthStore((s) => s.token);
-  const checkAuth = useAuthStore((s) => s.checkAuth);
+  const { user, token, checkAuth } = useAuthStore();
+  const { initLocalData, fetchChats } = useChatStore();
   const { socket } = useSocket();
   const [serverReady, setServerReady] = useState(false);
 
-  const hasRegisteredFCM = useRef(false);
   useEffect(() => {
-    if (token && user && !hasRegisteredFCM.current) {
+    if (token && user) {
       const registerFCM = async () => {
         try {
           if (Notification.permission !== "granted") return;
@@ -113,7 +111,6 @@ const App = () => {
               deviceType: isPWA ? "pwa" : "browser",
               notificationsEnabled: true
             });
-            hasRegisteredFCM.current = true;
           }
         } catch (err) {
           console.error("FCM registration error:", err);
@@ -123,76 +120,63 @@ const App = () => {
     }
   }, [token, user?._id]);
 
-  const hasInitialized = useRef(false);
-  useEffect(() => {
-    if (hasInitialized.current) return;
-    checkAuth();
-    hasInitialized.current = true;
-  }, []);
-
-  useEffect(() => {
-    if (token) {
-      useChatStore.getState().initLocalData();
-      useChatStore.getState().fetchChats();
-      useMomentStore.getState().fetchMoments();
-    }
-  }, [token]);
-
-  useEffect(() => {
-    let healthTimer;
-    const checkHealth = async () => {
-      try {
-        await axiosInstance.get("/messages/health");
-        setServerReady(true);
-      } catch (err) {
-        healthTimer = setTimeout(checkHealth, 2000);
-      }
-    };
-    checkHealth();
-    return () => clearTimeout(healthTimer);
-  }, []);
-
-  const socketRef = useRef(socket);
-  useEffect(() => {
-    socketRef.current = socket;
-  }, [socket]);
-
-  useEffect(() => {
-    const clearNotifications = async () => {
-      try {
-        if ('serviceWorker' in navigator) {
-          const registration = await navigator.serviceWorker.ready;
-          const notifications = await registration.getNotifications();
-          notifications.forEach(notification => notification.close());
+    useEffect(() => {
+        checkAuth();
+        if (token) {
+            initLocalData();
+            fetchChats();
+            useMomentStore.getState().fetchMoments();
         }
-      } catch (err) {
-        console.error("Error clearing notifications:", err);
-      }
-    };
 
-    const handleVisibilityChange = () => {
-      const s = socketRef.current;
-      if (s && s.connected) {
-        s.emit("set_active_status", { isActive: document.visibilityState === "visible" });
-      }
-      if (document.visibilityState === "visible") {
-        clearNotifications();
-      }
-    };
+        const clearNotifications = async () => {
+            try {
+                if ('serviceWorker' in navigator) {
+                    const registration = await navigator.serviceWorker.ready;
+                    const notifications = await registration.getNotifications();
+                    notifications.forEach(notification => notification.close());
+                }
+            } catch (err) {
+                console.error("Error clearing notifications:", err);
+            }
+        };
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, []);
+        const handleVisibilityChange = () => {
+            if (socket && socket.connected) {
+                socket.emit("set_active_status", { isActive: document.visibilityState === "visible" });
+            }
+            if (document.visibilityState === "visible") {
+                clearNotifications();
+            }
+        };
 
-  useEffect(() => {
-    const prime = () => { primeAudioContext(); };
-    window.addEventListener('touchstart', prime, { once: true });
-    window.addEventListener('mousedown', prime, { once: true });
-    return () => {
-      window.removeEventListener('touchstart', prime);
-      window.removeEventListener('mousedown', prime);
-    };
-  }, []);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        
+        // Initial state
+        if (socket && socket.connected) {
+            socket.emit("set_active_status", { isActive: document.visibilityState === "visible" });
+        }
+        if (document.visibilityState === "visible") {
+            clearNotifications();
+        }
+
+        const checkHealth = async () => {
+            try {
+                await axiosInstance.get("/messages/health");
+                setServerReady(true);
+            } catch (err) {
+                setTimeout(checkHealth, 2000);
+            }
+        };
+        checkHealth();
+
+        const prime = () => { primeAudioContext(); };
+        window.addEventListener('touchstart', prime, { once: true });
+        window.addEventListener('mousedown', prime, { once: true });
+
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, [token, user?._id, socket]);
 
   return (
     <>

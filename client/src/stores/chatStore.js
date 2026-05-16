@@ -31,7 +31,6 @@ export const useChatStore = create(
             },
 
             fetchChats: async () => {
-                if (get().isLoadingChats) return;
                 const local = await getLocalChats();
                 if (local.length > 0 && get().chats.length === 0) {
                     set({ chats: local });
@@ -155,7 +154,6 @@ export const useChatStore = create(
             },
 
             fetchMessages: async (chatId) => {
-                if (get().isLoadingMessages) return;
                 const local = await getLocalMessages(chatId);
                 if (local.length > 0) {
                     set((state) => ({
@@ -488,9 +486,6 @@ export const useChatStore = create(
             },
 
             markChatAsRead: (chatId) => {
-                const state = get();
-                if ((state.unreadCounts[chatId] || 0) === 0) return;
-
                 set((state) => {
                     const currentUserId = useAuthStore.getState().user?._id;
 

@@ -11,8 +11,7 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
     const userGroups = useMemo(() => {
         const groups = {};
         moments.forEach(m => {
-            const userId = m.userId?._id || m.userId;
-            const uid = userId?.toString();
+            const uid = (m.userId?._id || m.userId)?.toString();
             if (!uid || uid === user?._id?.toString()) return;
             if (!groups[uid]) {
                 groups[uid] = { user: m.userId, moments: [] };
@@ -50,12 +49,12 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
                 </div>
 
                 {/* Contacts' moments — color computed live */}
-                {userGroups.map((group, index) => {
+                {userGroups.map((group) => {
                     const uid = group.user?._id || group.user;
                     const color = getHaloColor(uid, user?._id);
                     return (
                         <div
-                            key={uid || `moment-group-${index}`}
+                            key={uid || Math.random()}
                             className="moment-item"
                             onClick={() => onViewMoment(group.moments)}
                         >

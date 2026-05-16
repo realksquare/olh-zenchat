@@ -17,8 +17,7 @@ import { VerifiedTick, AdminIcon, HelpIcon, InviteIcon } from "../ui/Icons";
 
 const Sidebar = ({ onChatSelect }) => {
     const { user, logout } = useAuthStore();
-    const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
-    const getHaloColor = useMomentStore((s) => s.getHaloColor);
+    const { hasActiveMoment, getHaloColor } = useMomentStore();
     const { 
         chats, activeChat, setActiveChat, 
         addChat, isLoadingChats, togglePinChat, onlineUsers 
@@ -41,8 +40,8 @@ const Sidebar = ({ onChatSelect }) => {
     const [isMomentCreatorOpen, setIsMomentCreatorOpen] = useState(false);
     const [activeViewerMoments, setActiveViewerMoments] = useState(null);
     const [activeTab, setActiveTab] = useState("recents");
-    const fetchChats = useChatStore((s) => s.fetchChats);
-    const fetchMoments = useMomentStore((s) => s.fetchMoments);
+    const { fetchChats } = useChatStore();
+    const { fetchMoments } = useMomentStore();
     
     const [pullY, setPullY] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -281,12 +280,12 @@ const Sidebar = ({ onChatSelect }) => {
                     >
                         Contacts
                         {(() => {
-                            const count = user?.contacts?.reduce((acc, c) => {
+                            const onlineContactsCount = user?.contacts?.filter(c => {
                                 const uid = c.userId?._id?.toString() || c.userId?.toString();
-                                return onlineUsers.has(uid) ? acc + 1 : acc;
-                            }, 0);
-                            return count > 0 ? (
-                                <span className="sidebar-tab-badge online">{count}</span>
+                                return onlineUsers.has(uid);
+                            }).length;
+                            return onlineContactsCount > 0 ? (
+                                <span className="sidebar-tab-badge online">{onlineContactsCount}</span>
                             ) : null;
                         })()}
                     </button>

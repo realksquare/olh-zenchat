@@ -1,4 +1,4 @@
-import { useState, useRef, memo } from "react";
+import { useState, useRef, useEffect, memo } from "react";
 import { createPortal } from "react-dom";
 import { useChatStore } from "../../stores/chatStore";
 import { useAuthStore } from "../../stores/authStore";
@@ -24,6 +24,9 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const [contactLoading, setContactLoading] = useState(false);
     const [showDeletePrompt, setShowDeletePrompt] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [marqueeDist, setMarqueeDist] = useState(0);
+    const nameContainerRef = useRef(null);
+    const nameContentRef = useRef(null);
     const pressTimer = useRef(null);
 
     // ── Derived participant data ───────────────────────────────────────────────
@@ -50,9 +53,15 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         const uid = c.userId?._id?.toString() || c.userId?.toString();
         return uid === otherUserId;
     }));
-    const isDeletedUser = (otherUser?.username || "").includes("(user_deleted)");
-    const displayName = isDeleted || isDeletedUser ? "(user_deleted)" : (otherUser?.username ?? "");
+    const displayName = isDeleted ? "(user_deleted)" : (otherUser?.username ?? "");
 
+    // ── Marquee: measure overflow after paint ─────────────────────────────────
+    useEffect(() => {
+        if (!nameContainerRef.current || !nameContentRef.current) return;
+        const containerWidth = nameContainerRef.current.offsetWidth;
+        const contentWidth = nameContentRef.current.scrollWidth;
+        setMarqueeDist(contentWidth > containerWidth ? -(contentWidth - containerWidth + 10) : 0);
+    }, [displayName, liveChat.isGroup]);
 
     // ── Last-message preview ──────────────────────────────────────────────────
     const isLastMessageFromThem =
@@ -128,14 +137,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         e.stopPropagation();
         try {
             const { data } = await axiosInstance.post(`/admin/verify/${otherUserId}`);
-            // Use store action to update verified status instead of direct mutation
-            useChatStore.getState().updateChat(chat._id, { 
-                participants: chat.participants.map(p => 
-                    (p._id?.toString() || p?.toString()) === otherUserId 
-                    ? { ...p, isVerified: data.user.isVerified } 
-                    : p
-                )
-            });
+            if (otherUser) otherUser.isVerified = data.user.isVerified;
             setShowMenu(false);
         } catch (err) {
             console.error(err);
@@ -181,13 +183,21 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                 {/* Info */}
                 <div className="chat-card-info">
                     <div className="chat-card-row">
-                            <span
-                                className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`}
-                                style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}
-                            >
-                                {displayName}
-                            </span>
+                        <div
+                            className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`}
+                            style={{ display: "flex", alignItems: "center", gap: "4px", overflow: "hidden", flex: 1, minWidth: 0 }}
+                        >
+                            <div className="marquee-container" ref={nameContainerRef}>
+                                <span
+                                    ref={nameContentRef}
+                                    className={`marquee-content ${marqueeDist < 0 ? "marquee-active" : ""}`}
+                                    style={marqueeDist < 0 ? { "--marquee-dist": `${marqueeDist}px` } : {}}
+                                >
+                                    {displayName}
+                                </span>
+                            </div>
                             {otherUser?.isVerified && <span style={{ flexShrink: 0, display: "flex" }}><VerifiedTick /></span>}
+                        </div>
                         <span className="chat-card-time">
                             {liveChat.updatedAt ? formatDistanceToNow(new Date(liveChat.updatedAt), { addSuffix: false }) : ""}
                         </span>

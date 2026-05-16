@@ -147,7 +147,9 @@ export const SocketProvider = ({ children }) => {
             const activeChat = useChatStore.getState().activeChat;
             if (activeChat?._id) {
                 socket.emit("join_chat", { chatId: activeChat._id });
+                useChatStore.getState().fetchMessages(activeChat._id);
             }
+            useChatStore.getState().fetchChats();
             const queued = await drainOutbox();
             queued.forEach(({ id: _id, createdAt: _ts, ...payload }) => {
                 socket.emit("send_message", payload);

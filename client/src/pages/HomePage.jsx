@@ -8,15 +8,20 @@ import GuestOverlay from "../components/chat/GuestOverlay";
 
 const HomePage = () => {
     const { user, token } = useAuthStore();
-    const activeChat = useChatStore((s) => s.activeChat);
-    const fetchChats = useChatStore((s) => s.fetchChats);
+    const { activeChat, fetchChats } = useChatStore();
     const { joinChat, leaveChat } = useSocket();
     const [showChat, setShowChat] = useState(false);
 
     useEffect(() => {
+        if (token) {
+            useChatStore.getState().setActiveChat(null);
+        }
+    }, [token]);
+
+    useEffect(() => {
         const hasChat = !!activeChat?._id;
         setShowChat(hasChat);
-        if (hasChat && !window.history.state?.chat) {
+        if (hasChat) {
             window.history.pushState({ chat: true }, "");
         }
     }, [activeChat?._id]);

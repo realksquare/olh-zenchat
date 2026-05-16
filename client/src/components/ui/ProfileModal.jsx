@@ -8,8 +8,7 @@ import LoadingOverlay from "./LoadingOverlay";
 
 const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const { user, updateProfile, isLoading, soundEnabled, toggleSound } = useAuthStore();
-    const chats = useChatStore((s) => s.chats);
-    const messages = useChatStore((s) => s.messages);
+    const { chats, messages } = useChatStore();
 
     const [username, setUsername] = useState(user?.username || "");
     const [fullName, setFullName] = useState(user?.fullName || "");

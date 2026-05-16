@@ -15,7 +15,6 @@ createRoot(document.getElementById("root")).render(
   </StrictMode>
 );
 
-/*
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/firebase-messaging-sw.js').then((registration) => {
@@ -25,4 +24,3 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
-*/

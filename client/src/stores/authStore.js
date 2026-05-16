@@ -9,8 +9,8 @@ const USER_KEY = "zenchat_user";
 export const useAuthStore = create(
     persist(
         (set) => ({
-    token: null,
-    user: null,
+    token: localStorage.getItem(TOKEN_KEY) || null,
+    user: JSON.parse(localStorage.getItem(USER_KEY)) || null,
     isLoading: false,
     error: null,
     soundEnabled: true,
