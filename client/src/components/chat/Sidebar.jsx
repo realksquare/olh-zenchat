@@ -60,9 +60,11 @@ const Sidebar = ({ onChatSelect }) => {
     const handleTouchMove = useCallback((e) => {
         if (!isPulling.current) return;
         const delta = e.touches[0].clientY - pullStartY.current;
-        if (delta > 0) {
-            e.preventDefault();
+        if (delta > 0 && chatsRef.current?.scrollTop === 0) {
+            if (e.cancelable) e.preventDefault();
             setPullY(Math.min(delta * 0.45, PULL_THRESHOLD + 20));
+        } else {
+            isPulling.current = false;
         }
     }, []);
 
@@ -82,8 +84,9 @@ const Sidebar = ({ onChatSelect }) => {
         fetchMoments();
     }, [fetchMoments]);
 
+    const sidebarRef = useRef(null);
     useEffect(() => {
-        const el = chatsRef.current;
+        const el = sidebarRef.current;
         if (!el) return;
         el.addEventListener('touchmove', handleTouchMove, { passive: false });
         return () => el.removeEventListener('touchmove', handleTouchMove);
@@ -170,7 +173,34 @@ const Sidebar = ({ onChatSelect }) => {
     const unpinnedChats = useMemo(() => filteredChats.filter((c) => !c.pinnedBy?.includes(user?._id)), [filteredChats, user?._id]);
 
     return (
-        <div className="sidebar">
+        <div 
+            className="sidebar" 
+            ref={sidebarRef}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+        >
+            {(pullY > 0 || isRefreshing) && (
+                <div className="ptr-indicator" style={{ 
+                    opacity: Math.min(pullY / PULL_THRESHOLD, 1), 
+                    transform: `translateX(-50%) translateY(${Math.max(0, pullY - 40)}px) scale(${0.6 + 0.4 * Math.min(pullY / PULL_THRESHOLD, 1)})` 
+                }}>
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                        <circle cx="16" cy="16" r="13" stroke="rgba(61,165,217,0.15)" strokeWidth="2.5"/>
+                        <circle
+                            cx="16" cy="16" r="13"
+                            stroke="#3da5d9"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeDasharray={`${2 * Math.PI * 13}`}
+                            strokeDashoffset={`${2 * Math.PI * 13 * (1 - Math.min(pullY / PULL_THRESHOLD, 1))}`}
+                            transform="rotate(-90 16 16)"
+                            style={{ transition: isRefreshing ? 'none' : 'stroke-dashoffset 0.05s linear' }}
+                            className={isRefreshing ? 'ptr-arc-spin' : ''}
+                        />
+                        <text x="16" y="20.5" textAnchor="middle" fontSize="10" fontWeight="700" fill="#3da5d9" fontFamily="inherit">Z</text>
+                    </svg>
+                </div>
+            )}
             <div className="sidebar-profile">
                 <div
                     className={`avatar avatar-sm ${hasActiveMoment(user?._id) ? 'moments-halo-thin' : ''}`}
@@ -299,29 +329,11 @@ const Sidebar = ({ onChatSelect }) => {
             <div
                 className="sidebar-chats"
                 ref={chatsRef}
-                onTouchStart={handleTouchStart}
-                onTouchEnd={handleTouchEnd}
-                style={{ transform: pullY > 0 ? `translateY(${pullY}px)` : undefined, transition: pullY === 0 ? 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)' : 'none' }}
+                style={{ 
+                    transform: pullY > 0 ? `translateY(${pullY}px)` : undefined, 
+                    transition: pullY === 0 ? 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)' : 'none' 
+                }}
             >
-                {(pullY > 0 || isRefreshing) && (
-                    <div className="ptr-indicator" style={{ opacity: Math.min(pullY / PULL_THRESHOLD, 1), transform: `translateY(-${PULL_THRESHOLD + 16}px) scale(${0.6 + 0.4 * Math.min(pullY / PULL_THRESHOLD, 1)})` }}>
-                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                            <circle cx="16" cy="16" r="13" stroke="rgba(61,165,217,0.15)" strokeWidth="2.5"/>
-                            <circle
-                                cx="16" cy="16" r="13"
-                                stroke="#3da5d9"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeDasharray={`${2 * Math.PI * 13}`}
-                                strokeDashoffset={`${2 * Math.PI * 13 * (1 - Math.min(pullY / PULL_THRESHOLD, 1))}`}
-                                transform="rotate(-90 16 16)"
-                                style={{ transition: isRefreshing ? 'none' : 'stroke-dashoffset 0.05s linear' }}
-                                className={isRefreshing ? 'ptr-arc-spin' : ''}
-                            />
-                            <text x="16" y="20.5" textAnchor="middle" fontSize="10" fontWeight="700" fill="#3da5d9" fontFamily="inherit">Z</text>
-                        </svg>
-                    </div>
-                )}
                 {isLoadingChats && (
                     <div className="chats-loading">
                         {[1, 2, 3].map((i) => (

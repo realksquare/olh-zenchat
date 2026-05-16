@@ -73,6 +73,7 @@ html {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -297,8 +298,6 @@ select {
   overflow: hidden;
   position: relative;
   background: #0e1117;
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .sidebar-panel {
@@ -419,8 +418,10 @@ select {
 .sidebar {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100dvh;
   overflow: hidden;
+  overscroll-behavior-y: contain;
+  position: relative;
 }
 
 .sidebar-profile {
@@ -708,10 +709,8 @@ select {
 .sidebar-chats {
   flex: 1;
   overflow-y: auto;
-  overscroll-behavior-y: contain;
   scrollbar-width: thin;
   scrollbar-color: #1e2530 transparent;
-  position: relative;
 }
 
 .sidebar-chats::-webkit-scrollbar {
@@ -725,17 +724,20 @@ select {
 
 .ptr-indicator {
   position: absolute;
-  top: 0;
+  top: 12px;
   left: 50%;
-  translate: -50% 0;
-  width: 40px;
-  height: 40px;
+  transform: translateX(-50%);
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  z-index: 10;
-  filter: drop-shadow(0 0 8px rgba(61, 165, 217, 0.4));
+  z-index: 1000;
+  background: #1e2530;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
 }
 
 @keyframes ptr-spin {
@@ -963,10 +965,11 @@ select {
 .chat-window {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100dvh;
   width: 100%;
   overflow: hidden;
   position: relative;
+  overscroll-behavior-y: contain;
 }
 
 .chat-header {
@@ -1949,10 +1952,11 @@ select {
 .chat-window {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100dvh;
   width: 100%;
   overflow: hidden;
   position: relative;
+  overscroll-behavior-y: contain;
 }
 
 /* ── Sidebar Tabs ─────────────────────────────────────── */
@@ -5335,7 +5339,15 @@ select {
 .aura-dropdown-item.danger:hover { background: rgba(255, 77, 77, 0.1); }
 
 /* === Mobile fix === */
-@media (max-width: 768px) { .chat-window { position: fixed; inset: 0; overscroll-behavior-y: none; } }
+@media (max-width: 768px) { .chat-window {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  overscroll-behavior-y: contain;
+} }
 
 .load-more-btn {
   display: inline-flex;
