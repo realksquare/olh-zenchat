@@ -141,6 +141,6 @@ self.addEventListener('fetch', (event) => {
                 }
                 return response;
             })
-            .catch(() => caches.match(event.request))
+            .catch(() => caches.match(event.request).then((res) => res || new Response("Offline or resource unavailable", { status: 503, statusText: "Service Unavailable" })))
     );
 });
