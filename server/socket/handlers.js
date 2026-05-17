@@ -195,6 +195,7 @@ const registerSocketHandlers = (io) => {
                         });
 
                         pendingMessages.forEach((msg) => {
+                            if (!msg.senderId) return;
                             const senderSockets = onlineUsers.get(msg.senderId._id?.toString() || msg.senderId.toString());
                             if (senderSockets && senderSockets.sockets) {
                                 senderSockets.sockets.forEach((sData, socketId) => {

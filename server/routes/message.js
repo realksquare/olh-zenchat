@@ -115,7 +115,7 @@ router.get("/:chatId", async (req, res) => {
         const now = new Date();
         const messagesWithRead = messages.map(msg => {
             const m = msg.toObject();
-            if (m.senderId._id.toString() !== req.user._id.toString() && m.status !== "read") {
+            if (m.senderId && m.senderId._id && m.senderId._id.toString() !== req.user._id.toString() && m.status !== "read") {
                 m.status = "read";
                 if (m.disappearingMode && m.disappearingMode !== "off" && !m.expiresAt) {
                     if (m.disappearingMode === "instant") m.expiresAt = new Date(now.getTime() + 2 * 60 * 1000);

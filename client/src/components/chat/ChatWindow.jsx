@@ -571,7 +571,7 @@ const ChatWindow = ({ onBack }) => {
                     fontSize: '0.85rem',
                     fontStyle: 'italic'
                 }}>
-                    "{isContact ? deletedPhrase : "The convo ends here, forever."}"
+                    "{deletedPhrase}"
                     <div style={{ marginTop: '4px', fontSize: '0.7rem', opacity: 0.6 }}>
                         This account has been deleted.
                     </div>
