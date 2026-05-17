@@ -8,6 +8,7 @@ import ChatCard from "./ChatCard";
 import ProfileModal from "../ui/ProfileModal";
 import AdminPanel from "../ui/AdminPanel";
 import FAQModal from "../ui/FAQModal";
+import E2EEInfoModal from "../ui/E2EEInfoModal";
 import InviteModal from "../ui/InviteModal";
 import MomentsRow from "./MomentsRow";
 import MomentCreator from "./MomentCreator";
@@ -37,6 +38,8 @@ const Sidebar = ({ onChatSelect }) => {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isAdminOpen, setIsAdminOpen] = useState(false);
     const [isFAQOpen, setIsFAQOpen] = useState(false);
+    const [isE2EEInfoOpen, setIsE2EEInfoOpen] = useState(false);
+    const [hoverE2EE, setHoverE2EE] = useState(false);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [isMomentCreatorOpen, setIsMomentCreatorOpen] = useState(false);
     const [activeViewerMoments, setActiveViewerMoments] = useState(null);
@@ -259,6 +262,31 @@ const Sidebar = ({ onChatSelect }) => {
                     {user?.username}
                     {user?.isVerified && <VerifiedTick />}
                 </span>
+                <button 
+                    onClick={() => setIsE2EEInfoOpen(true)} 
+                    aria-label="E2EE Security Info" 
+                    title="E2EE Security Info"
+                    style={{ 
+                        color: hoverE2EE ? "var(--color-primary)" : "#475569",
+                        padding: "4px",
+                        borderRadius: "4px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: "8px",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "color 0.15s ease"
+                    }}
+                    onMouseEnter={() => setHoverE2EE(true)}
+                    onMouseLeave={() => setHoverE2EE(false)}
+                >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                </button>
                 <button className="sidebar-logout" onClick={logout} aria-label="Sign out" title="Sign out">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -477,6 +505,7 @@ const Sidebar = ({ onChatSelect }) => {
 
             {isAdminOpen && <AdminPanel onClose={() => setIsAdminOpen(false)} />}
             {isFAQOpen && <FAQModal isOpen={isFAQOpen} onClose={() => setIsFAQOpen(false)} />}
+            {isE2EEInfoOpen && <E2EEInfoModal isOpen={isE2EEInfoOpen} onClose={() => setIsE2EEInfoOpen(false)} />}
             <InviteModal 
                 isOpen={isInviteOpen} 
                 onClose={() => setIsInviteOpen(false)} 
