@@ -454,4 +454,30 @@ router.get("/users/:id/public-key", authMiddleware, async (req, res) => {
     }
 });
 
+// @route   PUT /api/auth/keys-backup
+// @desc    Update E2EE private key backup using a rotated recovery key
+// @access  Private
+router.put("/keys-backup", authMiddleware, async (req, res) => {
+    try {
+        const { encryptedPrivateKeyBackup } = req.body;
+
+        if (!encryptedPrivateKeyBackup) {
+            return res.status(400).json({ message: "encryptedPrivateKeyBackup is required" });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        user.encryptedPrivateKeyBackup = encryptedPrivateKeyBackup;
+        await user.save();
+
+        res.json({ success: true, message: "E2EE private key backup successfully updated!" });
+    } catch (err) {
+        console.error("[UpdateKeysBackup] Error:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+});
+
 module.exports = router;

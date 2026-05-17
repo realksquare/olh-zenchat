@@ -4,7 +4,8 @@ import {
     generateUserKeys,
     decryptPrivateKeyWithPassword,
     decryptPrivateKeyWithRecoveryKey,
-    decryptMessageContent
+    decryptMessageContent,
+    encryptPrivateKeyWithRecoveryKey
 } from "./crypto";
 
 // Generates a high-security random 16-character Recovery Key (e.g. ZNC-X9RT-K4WP-Q2LM)
@@ -94,6 +95,7 @@ export const setupE2EEForUser = async (user, password) => {
 
         await db.keys.put({ key: "privateKey", value: privateKeyJWK });
         await db.keys.put({ key: "publicKey", value: publicKey });
+        await db.keys.put({ key: "recoveryKey", value: recoveryKey });
         await db.keys.put({ key: "recoveryKeySaved", value: "false" }); // Flag so UI knows to prompt copy
 
         console.log("[E2EE] E2EE Cryptographic registration and sync fully completed!");
@@ -126,6 +128,8 @@ export const restoreE2EEWithRecoveryKey = async (user, recoveryKey) => {
 
         await db.keys.put({ key: "privateKey", value: privateKeyJWK });
         await db.keys.put({ key: "publicKey", value: user.publicKey });
+        await db.keys.put({ key: "recoveryKey", value: recoveryKey });
+        await db.keys.put({ key: "recoveryKeySaved", value: "true" });
         
         console.log("[E2EE] Cryptographic history fully restored successfully!");
         return true;
@@ -196,4 +200,32 @@ export const decryptMessageIfNeeded = async (message) => {
         }
     }
     return message;
+};
+
+/**
+ * Rotates the user's Recovery Key. Generates new Recovery Key,
+ * encrypts their active local private key with it, and uploads backup to server.
+ */
+export const rotateUserRecoveryKey = async (user, newRecoveryKey) => {
+    if (!db || !db.keys) throw new Error("Local database not initialized");
+    const keys = await getLocalE2EEKeys();
+    if (!keys || !keys.privateKey) throw new Error("Local E2EE private key not found");
+
+    const cryptoSalt = user?.cryptoSalt;
+    if (!cryptoSalt) throw new Error("User cryptographic salt not found");
+
+    const encryptedPrivateKeyBackup = await encryptPrivateKeyWithRecoveryKey(
+        keys.privateKey,
+        newRecoveryKey,
+        cryptoSalt
+    );
+
+    await axiosInstance.put("/auth/keys-backup", {
+        encryptedPrivateKeyBackup
+    });
+
+    await db.keys.put({ key: "recoveryKey", value: newRecoveryKey });
+    await db.keys.put({ key: "recoveryKeySaved", value: "true" });
+
+    return true;
 };

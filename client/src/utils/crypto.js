@@ -280,3 +280,18 @@ export const importPublicKey = async (publicKeyJWK) => {
         ["encrypt"]
     );
 };
+
+/**
+ * Encrypts an active private CryptoKey using a 16-character Recovery Key and the existing salt.
+ * Returns the hex-encrypted backup bundle.
+ */
+export const encryptPrivateKeyWithRecoveryKey = async (privateKey, recoveryKey, cryptoSalt) => {
+    const privateKeyJWK = await window.crypto.subtle.exportKey("jwk", privateKey);
+    const encoder = new TextEncoder();
+    const privateKeyBytes = encoder.encode(JSON.stringify(privateKeyJWK));
+
+    const saltBytes = hexToBytes(cryptoSalt);
+    const recoveryKeyDerived = await deriveKey(recoveryKey, saltBytes);
+
+    return await encryptAES(privateKeyBytes, recoveryKeyDerived);
+};

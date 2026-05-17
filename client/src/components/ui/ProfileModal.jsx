@@ -5,6 +5,8 @@ import { useChatStore } from "../../stores/chatStore";
 import { requestNotificationPermission } from "../../utils/firebase";
 import axiosInstance from "../../utils/axios";
 import LoadingOverlay from "./LoadingOverlay";
+import { db } from "../../db/zenDB";
+import { generateRecoveryKey, rotateUserRecoveryKey } from "../../utils/e2eeHelper";
 
 const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const { user, updateProfile, isLoading, soundEnabled, toggleSound } = useAuthStore();
@@ -23,6 +25,9 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [toast, setToast] = useState(null);
     const [isSubscribing, setIsSubscribing] = useState(false);
     const [imageError, setImageError] = useState(false);
+    const [showKeyText, setShowKeyText] = useState(false);
+    const [recoveryKeyText, setRecoveryKeyText] = useState("");
+    const [isE2EELoading, setIsE2EELoading] = useState(false);
 
     const fileInputRef = useRef(null);
     const importInputRef = useRef(null);
@@ -49,6 +54,18 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setImageError(false);
         }
     }, [isOpen, user?._id]);
+
+    useEffect(() => {
+        if (isOpen) {
+            (async () => {
+                if (db && db.keys) {
+                    const keyData = await db.keys.get("recoveryKey");
+                    setRecoveryKeyText(keyData ? keyData.value : "");
+                }
+            })();
+            setShowKeyText(false);
+        }
+    }, [isOpen]);
 
     useEffect(() => {
         return () => {
@@ -202,6 +219,27 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         }
     };
 
+    const handleShowRecoveryKey = () => {
+        setShowKeyText(!showKeyText);
+    };
+
+    const handleRotateRecoveryKey = async () => {
+        if (window.confirm("⚠️ Warning: Generating a new recovery key will overwrite your existing key backup on the server. If you forget your password, you will need this new recovery key to decrypt your chats on a new device. Are you sure you want to proceed?")) {
+            setIsE2EELoading(true);
+            try {
+                const newKey = generateRecoveryKey();
+                await rotateUserRecoveryKey(user, newKey);
+                setRecoveryKeyText(newKey);
+                showToast("✨ Secure new Recovery Key successfully generated and cached!");
+            } catch (err) {
+                console.error("[Settings] Rotation failed:", err);
+                showToast("🌪️ Key generation failed. Make sure E2EE is active on this device.");
+            } finally {
+                setIsE2EELoading(false);
+            }
+        }
+    };
+
     const getInitials = (name) => name ? name.slice(0, 2).toUpperCase() : "??";
     const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
     const currentDeviceType = isPWA ? "pwa" : "browser";
@@ -212,6 +250,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         <div className="modal-overlay moments-aura-overlay" onClick={onClose} style={{ zIndex: 10000 }}>
             {toast && <div className="aura-toast" style={{ zIndex: 10001, bottom: '20px' }}>{toast}</div>}
             {isSubscribing && <LoadingOverlay message="Subscribing..." subMessage="Setting up your secure connection" />}
+            {isE2EELoading && <LoadingOverlay message="Generating key..." subMessage="Performing zero-knowledge cryptographic operations" />}
             <div className="moments-aura-content profile-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "95%", padding: 0 }}>
                 <div className="moments-aura-header">
                     <h2 className="moments-aura-title">Profile & Settings</h2>
@@ -363,6 +402,56 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 <button type="button" className="profile-subscribe-btn" onClick={handleSubscribe} style={{ width: "100%", background: "#3b82f6", color: "white", border: "none", padding: "9px", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "600", cursor: "pointer" }}>
                                     Enable Push Notifications
                                 </button>
+                            )}
+                        </div>
+
+                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                            <div>
+                                <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem" }}>End-to-End Encryption (E2EE)</span>
+                                <span style={{ fontSize: "0.75rem", color: "#64748b", display: "block", marginTop: "2px" }}>Your personal backup recovery key provides off-grid zero-knowledge decryption.</span>
+                            </div>
+                            
+                            <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.25rem" }}>
+                                <button
+                                    type="button"
+                                    onClick={handleShowRecoveryKey}
+                                    style={{ flex: 1, background: "rgba(61, 165, 217, 0.15)", border: "1px solid rgba(61, 165, 217, 0.3)", color: "var(--color-primary)", padding: "7px 12px", borderRadius: "8px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
+                                >
+                                    <span>{showKeyText ? "Hide Recovery Key" : "View Recovery Key"}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleRotateRecoveryKey}
+                                    style={{ flex: 1, background: "rgba(255, 255, 255, 0.04)", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f1f5f9", padding: "7px 12px", borderRadius: "8px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer" }}
+                                >
+                                    Generate New Key
+                                </button>
+                            </div>
+
+                            {showKeyText && (
+                                <div style={{ background: "rgba(15, 23, 42, 0.6)", border: "1px solid rgba(255,255,255,0.08)", padding: "12px", borderRadius: "8px", marginTop: "0.5rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                                    {recoveryKeyText ? (
+                                        <>
+                                            <span style={{ fontFamily: "monospace", fontSize: "1rem", fontWeight: "700", letterSpacing: "1px", color: "var(--color-primary)" }}>
+                                                {recoveryKeyText}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(recoveryKeyText);
+                                                    showToast("✨ Recovery key copied to clipboard!");
+                                                }}
+                                                style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "#94a3b8", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "600", cursor: "pointer" }}
+                                            >
+                                                Copy Key
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <span style={{ fontSize: "0.75rem", color: "#f43f5e" }}>
+                                            ⚠️ Recovery key is not cached on this device. Generate a new one to secure your account.
+                                        </span>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
