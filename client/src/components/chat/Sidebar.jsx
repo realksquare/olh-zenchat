@@ -46,6 +46,7 @@ const Sidebar = ({ onChatSelect }) => {
     
     const [pullY, setPullY] = useState(0);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isKeyboardRefresh, setIsKeyboardRefresh] = useState(false);
     const pullStartY = useRef(0);
     const isPulling = useRef(false);
     const chatsRef = useRef(null);
@@ -94,6 +95,7 @@ const Sidebar = ({ onChatSelect }) => {
             const isCtrlR = (e.ctrlKey || e.metaKey) && e.key === "r";
             if (isF5 || isCtrlR) {
                 e.preventDefault();
+                setIsKeyboardRefresh(true);
                 setIsRefreshing(true);
                 setPullY(PULL_THRESHOLD);
                 await Promise.all([
@@ -104,7 +106,8 @@ const Sidebar = ({ onChatSelect }) => {
                 setTimeout(() => {
                     setIsRefreshing(false);
                     setPullY(0);
-                }, 800);
+                    setIsKeyboardRefresh(false);
+                }, 1000);
             }
         };
         window.addEventListener("keydown", handleKeyDown);
@@ -210,7 +213,14 @@ const Sidebar = ({ onChatSelect }) => {
             {(pullY > 0 || isRefreshing) && (
                 <div className="ptr-indicator" style={{ 
                     opacity: Math.min(pullY / PULL_THRESHOLD, 1), 
-                    transform: `translateX(-50%) translateY(${Math.max(0, pullY - 40)}px) scale(${0.6 + 0.4 * Math.min(pullY / PULL_THRESHOLD, 1)})` 
+                    position: isKeyboardRefresh ? 'fixed' : 'absolute',
+                    top: isKeyboardRefresh ? '24px' : '12px',
+                    left: '50%',
+                    transform: isKeyboardRefresh 
+                        ? 'translateX(-50%) scale(1)' 
+                        : `translateX(-50%) translateY(${Math.max(0, pullY - 40)}px) scale(${0.6 + 0.4 * Math.min(pullY / PULL_THRESHOLD, 1)})`,
+                    zIndex: isKeyboardRefresh ? 10000 : 1000,
+                    transition: isKeyboardRefresh ? 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease' : 'none'
                 }}>
                     <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
                         <circle cx="16" cy="16" r="13" stroke="rgba(61,165,217,0.15)" strokeWidth="2.5"/>
