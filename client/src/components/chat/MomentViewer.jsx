@@ -38,6 +38,15 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     // Handle array shrinking (deletion)
     useEffect(() => {
         if (isOpen) {
+            document.body.style.overflow = "hidden";
+            return () => {
+                document.body.style.overflow = "";
+            };
+        }
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (isOpen) {
             // Only close if we had moments and they were all removed
             // We check allMoments.length to ensure we don't close prematurely during sync
             if (moments.length === 0) {

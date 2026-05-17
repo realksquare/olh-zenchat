@@ -2898,6 +2898,24 @@ select {
   flex: 1;
 }
 
+.admin-body::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.admin-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.admin-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 100px;
+}
+
+.admin-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
 .admin-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -3605,6 +3623,12 @@ select {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: rgba(15, 23, 42, 0.98);
+  backdrop-filter: blur(40px) saturate(200%);
+  z-index: 100;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .moments-aura-title {

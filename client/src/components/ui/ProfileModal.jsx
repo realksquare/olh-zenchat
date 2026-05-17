@@ -77,6 +77,15 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     }, [isOpen]);
 
     useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+            return () => {
+                document.body.style.overflow = "";
+            };
+        }
+    }, [isOpen]);
+
+    useEffect(() => {
         return () => {
             if (avatarPreview && avatarPreview.startsWith("blob:")) {
                 URL.revokeObjectURL(avatarPreview);

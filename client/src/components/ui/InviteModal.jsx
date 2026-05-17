@@ -1,7 +1,15 @@
-import { useState, useRef, memo } from "react";
+import { useState, useRef, memo, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 const InviteModal = ({ isOpen, onClose, username }) => {
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+            return () => {
+                document.body.style.overflow = "";
+            };
+        }
+    }, [isOpen]);
     const [activeTab, setActiveTab] = useState("whatsapp");
     const [copied, setCopied] = useState(false);
     const tabsRef = useRef(null);

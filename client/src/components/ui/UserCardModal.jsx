@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { format } from "date-fns";
 import { VerifiedTick } from "./Icons";
@@ -6,6 +6,14 @@ import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
 
 const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = false, isContact = false, onViewMoments }) => {
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+            return () => {
+                document.body.style.overflow = "";
+            };
+        }
+    }, [isOpen]);
     const getHaloColor = useMomentStore((s) => s.getHaloColor);
     const moments = useMomentStore((s) => s.moments);
     const { user: currentUser } = useAuthStore();

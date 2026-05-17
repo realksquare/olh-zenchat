@@ -24,6 +24,15 @@ const MomentCreator = ({ isOpen, onClose }) => {
     };
 
     useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+            return () => {
+                document.body.style.overflow = "";
+            };
+        }
+    }, [isOpen]);
+
+    useEffect(() => {
         if (isOpen && music && music.previewUrl) {
             if (!audioRef.current) {
                 audioRef.current = new Audio(music.previewUrl);
