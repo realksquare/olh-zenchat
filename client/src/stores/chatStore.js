@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import axiosInstance from "../utils/axios";
 import { useAuthStore } from "./authStore";
 import { db, persistChat, persistMessage, getLocalChats, getLocalMessages } from "../db/zenDB";
+import { decryptMessageIfNeeded } from "../utils/e2eeHelper";
 
 export const useChatStore = create(
     persist(
@@ -165,7 +166,7 @@ export const useChatStore = create(
                 try {
                     const { data } = await axiosInstance.get(`/messages/${chatId}?limit=18`);
                     const serverMessages = data.messages;
-
+                    await Promise.all(serverMessages.map(msg => decryptMessageIfNeeded(msg)));
                     serverMessages.forEach(msg => persistMessage({ ...msg, chatId: chatId.toString() }));
 
                     set((state) => {
@@ -223,7 +224,7 @@ export const useChatStore = create(
                     const page = Math.floor(existing.length / 18) + 1;
                     const { data } = await axiosInstance.get(`/messages/${chatId}?limit=18&page=${page}`);
                     const older = data.messages;
-
+                    await Promise.all(older.map(msg => decryptMessageIfNeeded(msg)));
                     older.forEach(msg => persistMessage({ ...msg, chatId: chatId.toString() }));
 
                     set((s) => {

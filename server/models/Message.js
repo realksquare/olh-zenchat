@@ -80,6 +80,18 @@ const messageSchema = new mongoose.Schema(
         expiresAt: {
             type: Date,
             default: null
+        },
+        isEncrypted: {
+            type: Boolean,
+            default: false
+        },
+        encryptedSymmetricKey: {
+            type: String,
+            default: ""
+        },
+        iv: {
+            type: String,
+            default: ""
         }
     },
     { timestamps: true }

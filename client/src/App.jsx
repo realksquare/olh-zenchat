@@ -9,6 +9,7 @@ import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import HomePage from "./pages/HomePage";
 import InstallPWA from "./components/ui/InstallPWA";
+import RecoveryKeyModal from "./components/ui/RecoveryKeyModal";
 import { primeAudioContext } from "./utils/audio";
 import { requestNotificationPermission } from "./utils/firebase";
 import axiosInstance from "./utils/axios";
@@ -195,6 +196,7 @@ const App = () => {
       <NetworkBanner />
       <InstallPWA />
       <NotificationPrompt />
+      <RecoveryKeyModal />
       <Routes>
         <Route
           path="/login"

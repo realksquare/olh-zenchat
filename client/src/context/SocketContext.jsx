@@ -5,6 +5,8 @@ import { useChatStore } from "../stores/chatStore";
 import { playReceiveSound } from "../utils/audio";
 import { useMomentStore } from "../stores/momentStore";
 import { enqueueOutbox, drainOutbox } from "../db/zenDB";
+import { decryptMessageIfNeeded } from "../utils/e2eeHelper";
+import { encryptMessageContent } from "../utils/crypto";
 
 const SocketContext = createContext(null);
 
@@ -41,6 +43,9 @@ export const SocketProvider = ({ children }) => {
         };
 
         const handleReceiveMessage = async ({ message }) => {
+            // Decrypt transparently in background before saving/state updates
+            await decryptMessageIfNeeded(message);
+
             if (message.mediaUrl) {
                 message.mediaUrl = getThumbnailUrl(message.mediaUrl);
             }
@@ -225,8 +230,32 @@ export const SocketProvider = ({ children }) => {
         return () => window.removeEventListener("online", handleOnline);
     }, [flushOutbox]);
 
-    const sendMessage = useCallback((chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null) => {
-        const payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid };
+    const sendMessage = useCallback(async (chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null) => {
+        let payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid };
+
+        // Transparent E2EE Message Encryption
+        if (content && type === "text") {
+            try {
+                const activeChat = useChatStore.getState().activeChat;
+                const currentUserId = useAuthStore.getState().user?._id;
+                const otherParticipant = activeChat?.participants?.find(p => (p._id || p) !== currentUserId);
+                const otherParticipantId = otherParticipant?._id || otherParticipant;
+
+                if (otherParticipantId) {
+                    const { data } = await axiosInstance.get(`/auth/users/${otherParticipantId}/public-key`);
+                    if (data && data.publicKey) {
+                        const encrypted = await encryptMessageContent(content, data.publicKey);
+                        payload.content = encrypted.ciphertext;
+                        payload.encryptedSymmetricKey = encrypted.encryptedSymmetricKey;
+                        payload.iv = encrypted.iv;
+                        payload.isEncrypted = true;
+                    }
+                }
+            } catch (err) {
+                console.error("[SocketContext] Sender E2EE Encryption skipped/failed:", err);
+            }
+        }
+
         if (socketRef.current?.connected && navigator.onLine) {
             socketRef.current.emit("send_message", payload);
         } else {

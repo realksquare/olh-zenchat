@@ -403,4 +403,55 @@ router.post("/reset-password/:token", async (req, res) => {
     }
 });
 
+// @route   POST /api/auth/keys
+// @desc    Register cryptographic public and encrypted private keys
+// @access  Private
+router.post("/keys", authMiddleware, async (req, res) => {
+    try {
+        const { publicKey, encryptedPrivateKey, encryptedPrivateKeyBackup, cryptoSalt } = req.body;
+
+        if (!publicKey || !encryptedPrivateKey || !encryptedPrivateKeyBackup || !cryptoSalt) {
+            return res.status(400).json({ message: "All E2EE key fields are required" });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        user.publicKey = publicKey;
+        user.encryptedPrivateKey = encryptedPrivateKey;
+        user.encryptedPrivateKeyBackup = encryptedPrivateKeyBackup;
+        user.cryptoSalt = cryptoSalt;
+
+        await user.save();
+
+        res.json({ success: true, message: "Cryptographic keys successfully registered!" });
+    } catch (err) {
+        console.error("[RegisterKeys] Error:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+});
+
+// @route   GET /api/auth/users/:id/public-key
+// @desc    Get the E2EE public key of a user
+// @access  Private
+router.get("/users/:id/public-key", authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const targetUser = await User.findById(id);
+
+        if (!targetUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.json({
+            publicKey: targetUser.publicKey
+        });
+    } catch (err) {
+        console.error("[GetPublicKey] Error:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+});
+
 module.exports = router;

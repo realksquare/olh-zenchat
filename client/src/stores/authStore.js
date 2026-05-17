@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import axiosInstance from "../utils/axios";
 import { db } from "../db/zenDB";
+import { setupE2EEForUser } from "../utils/e2eeHelper";
 
 const TOKEN_KEY = "zenchat_token";
 const USER_KEY = "zenchat_user";
@@ -14,6 +15,9 @@ export const useAuthStore = create(
     isLoading: false,
     error: null,
     soundEnabled: true,
+    tempRecoveryKey: null,
+
+    clearTempRecoveryKey: () => set({ tempRecoveryKey: null }),
 
     register: async (username, email, password, referredBy) => {
         set({ isLoading: true, error: null });
@@ -30,7 +34,16 @@ export const useAuthStore = create(
                 await db.settings.put({ key: "token", value: data.token });
                 await db.settings.put({ key: "apiUrl", value: import.meta.env.VITE_API_URL || "" });
             }
-            set({ token: data.token, user: data.user, isLoading: false });
+
+            // Securely setup E2EE keys on registration
+            let recoveryKey = null;
+            try {
+                recoveryKey = await setupE2EEForUser(data.user, password);
+            } catch (e2eeErr) {
+                console.error("[AuthStore] E2EE key registration failed:", e2eeErr);
+            }
+
+            set({ token: data.token, user: data.user, tempRecoveryKey: recoveryKey, isLoading: false });
             return { success: true };
         } catch (err) {
             const message = err.response?.data?.message || "Registration failed";
@@ -49,7 +62,16 @@ export const useAuthStore = create(
                 await db.settings.put({ key: "token", value: data.token });
                 await db.settings.put({ key: "apiUrl", value: import.meta.env.VITE_API_URL || "" });
             }
-            set({ token: data.token, user: data.user, isLoading: false });
+
+            // Sync E2EE keys on login
+            let recoveryKey = null;
+            try {
+                recoveryKey = await setupE2EEForUser(data.user, password);
+            } catch (e2eeErr) {
+                console.error("[AuthStore] E2EE key sync failed:", e2eeErr);
+            }
+
+            set({ token: data.token, user: data.user, tempRecoveryKey: recoveryKey, isLoading: false });
             return { success: true };
         } catch (err) {
             const message = err.response?.data?.message || "Login failed";

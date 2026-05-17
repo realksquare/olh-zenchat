@@ -248,7 +248,7 @@ const registerSocketHandlers = (io) => {
             socket.leave(chatId);
         });
 
-        socket.on("send_message", async ({ chatId, content, type, mediaUrl, replyTo, isViewOnce, cid }) => {
+        socket.on("send_message", async ({ chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv }) => {
             try {
                 const chat = await Chat.findById(chatId).populate("participants", "privacySettings contacts");
                 if (!chat) return;
@@ -263,7 +263,10 @@ const registerSocketHandlers = (io) => {
                     isViewOnce: isViewOnce || false,
                     cid: cid || null,
                     status: "sent",
-                    disappearingMode: chat.disappearingMode || "off"
+                    disappearingMode: chat.disappearingMode || "off",
+                    isEncrypted: isEncrypted || false,
+                    encryptedSymmetricKey: encryptedSymmetricKey || "",
+                    iv: iv || ""
                 });
 
                 await Chat.findByIdAndUpdate(chatId, {
