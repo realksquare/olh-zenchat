@@ -169,9 +169,8 @@ const MediaPreview = ({ files, onRemove, onToggleQuality }) => {
         <div className="media-preview-strip">
             {files.map((item, i) => {
                 const { file, isHD } = item;
-                const isVideo = ACCEPTED_VIDEO.includes(file.type);
                 const isImg = ACCEPTED_IMAGE.includes(file.type);
-                const isMedia = isVideo || isImg;
+                const isMedia = isImg;
                 const url = URL.createObjectURL(file);
                 return (
                     <div 
@@ -665,9 +664,9 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     {isViewOnce && (
                         <span className="view-once-hint">View Once active</span>
                     )}
-                    {stagedFiles.some(f => getFileCategory(f.file) === "media") && (
+                    {stagedFiles.some(f => ACCEPTED_IMAGE.includes(f.file.type)) && (
                         <span className="view-once-hint" style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'var(--color-text-muted)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                            Double-tap media to toggle OG
+                            Double-tap image to toggle OG
                         </span>
                     )}
                 </div>
