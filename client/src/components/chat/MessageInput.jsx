@@ -153,29 +153,92 @@ const MediaUploadPopup = ({ onClose, onFilesSelected, showToast }) => {
     );
 };
 
-const MediaPreview = ({ files, onRemove }) => {
+const MediaPreview = ({ files, onRemove, onToggleHD }) => {
     if (!files.length) return null;
+    const hasMedia = files.some(f => ACCEPTED_IMAGE.includes(f.type) || ACCEPTED_VIDEO.includes(f.type));
+
     return (
-        <div className="media-preview-strip">
-            {files.map((f, i) => {
-                const isVideo = ACCEPTED_VIDEO.includes(f.type);
-                const url = URL.createObjectURL(f);
-                return (
-                    <div key={i} className="media-preview-item">
-                        {isVideo ? (
-                            <video src={url} className="media-preview-thumb" muted />
-                        ) : (
-                            <img src={url} alt={f.name} className="media-preview-thumb" />
-                        )}
-                        <span className="media-preview-name">{formatFileSize(f.size)}</span>
-                        <button className="media-preview-remove" onClick={() => onRemove(i)} title="Remove">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
-                        </button>
-                    </div>
-                );
-            })}
+        <div style={{ width: '100%' }}>
+            <div className="media-preview-strip">
+                {files.map((f, i) => {
+                    const isVideo = ACCEPTED_VIDEO.includes(f.type);
+                    const isImage = ACCEPTED_IMAGE.includes(f.type);
+                    const isMedia = isImage || isVideo;
+                    const url = URL.createObjectURL(f);
+                    const isHD = !!f.isHD;
+                    
+                    return (
+                        <div 
+                            key={i} 
+                            className="media-preview-item" 
+                            onDoubleClick={() => isMedia && onToggleHD(i)}
+                            title={isMedia ? "Double-click to toggle HD Quality" : ""}
+                            style={{ cursor: isMedia ? 'pointer' : 'default', position: 'relative' }}
+                        >
+                            {isVideo ? (
+                                <video src={url} className="media-preview-thumb" muted />
+                            ) : isImage ? (
+                                <img src={url} alt={f.name} className="media-preview-thumb" />
+                            ) : (
+                                <div className="media-preview-thumb doc-thumb" style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justify-content: 'center',
+                                    background: '#0e1117',
+                                    border: '1.5px solid rgba(255, 255, 255, 0.08)',
+                                    borderRadius: '8px',
+                                    width: '68px',
+                                    height: '68px',
+                                    color: '#64748b'
+                                }}>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                        <polyline points="14 2 14 8 20 8" />
+                                    </svg>
+                                </div>
+                            )}
+                            
+                            {isMedia && isHD && (
+                                <div className="hd-badge-overlay" style={{
+                                    position: 'absolute',
+                                    top: '4px',
+                                    left: '4px',
+                                    background: 'rgba(61, 165, 217, 0.9)',
+                                    color: '#ffffff',
+                                    fontSize: '8px',
+                                    fontWeight: '900',
+                                    padding: '1.5px 3.5px',
+                                    borderRadius: '4px',
+                                    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.3)',
+                                    pointerEvents: 'none',
+                                    letterSpacing: '0.5px',
+                                    zIndex: 10
+                                }}>
+                                    HD
+                                </div>
+                            )}
+
+                            <span className="media-preview-name">{formatFileSize(f.size)}</span>
+                            <button className="media-preview-remove" onClick={() => onRemove(i)} title="Remove">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                            </button>
+                        </div>
+                    );
+                })}
+            </div>
+            {hasMedia && (
+                <div style={{
+                    fontSize: '0.72rem',
+                    color: '#64748b',
+                    padding: '2px 16px 8px',
+                    fontWeight: 500,
+                    textAlign: 'left'
+                }}>
+                    💡 Double-tap/click any media thumbnail to toggle <strong>HD Quality</strong>
+                </div>
+            )}
         </div>
     );
 };
@@ -187,12 +250,20 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const [showMediaPopup, setShowMediaPopup] = useState(false);
     const [stagedFiles, setStagedFiles] = useState([]);
     const [toast, setToast] = useState(null);
-    const [sendOriginalQuality, setSendOriginalQuality] = useState(() => localStorage.getItem("zenchat_original_quality") === "true");
     const { sendMessage, startTyping, stopTyping, editMessage } = useSocket();
 
     const showToast = (msg) => {
         setToast(msg);
         setTimeout(() => setToast(null), 5000);
+    };
+
+    const toggleFileHD = (index) => {
+        setStagedFiles(prev => {
+            const copy = [...prev];
+            copy[index] = Object.assign(copy[index], { isHD: !copy[index].isHD });
+            showToast(copy[index].isHD ? "📸 HD Quality enabled (original file size)" : "⚡ Compressed quality enabled (optimized download)");
+            return copy;
+        });
     };
     const addMessage = useChatStore((s) => s.addMessage);
     const updateMessage = useChatStore((s) => s.updateMessage);
@@ -312,7 +383,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 });
 
                 let fileToUpload = file;
-                if (isImage && !sendOriginalQuality) fileToUpload = await compressImage(file);
+                if (isImage && !file.isHD) fileToUpload = await compressImage(file);
 
                 const formData = new FormData();
                 formData.append("file", fileToUpload);
@@ -402,6 +473,27 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     };
 
     const handleFilesSelected = (files) => {
+        const allFiles = [...stagedFiles, ...files];
+        let mediaCount = 0;
+        let docCount = 0;
+        for (const file of allFiles) {
+            const isImage = ACCEPTED_IMAGE.includes(file.type);
+            const isVideo = ACCEPTED_VIDEO.includes(file.type);
+            if (isImage || isVideo) {
+                mediaCount++;
+            } else {
+                docCount++;
+            }
+        }
+        if (mediaCount > 0 && docCount > 0) {
+            showToast("❌ Cannot mix media (images/videos) and documents (pdf/zip/etc.) in the same message!");
+            return;
+        }
+
+        if (allFiles.length > 1) {
+            setIsViewOnce(false);
+        }
+
         setStagedFiles(prev => {
             const combined = [...prev, ...files];
             return combined.slice(0, MAX_FILES);
@@ -413,6 +505,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     };
 
     const hasMedia = stagedFiles.length > 0;
+    const hasOnlyMedia = stagedFiles.length > 0 && stagedFiles.every(f => ACCEPTED_IMAGE.includes(f.type) || ACCEPTED_VIDEO.includes(f.type));
     const sendDisabled = disabled || uploading || (!content.trim() && !hasMedia) || (isViewOnce && !hasMedia);
 
     return (
@@ -455,14 +548,14 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             )}
 
             {hasMedia && (
-                <MediaPreview files={stagedFiles} onRemove={removeFile} />
+                <MediaPreview files={stagedFiles} onRemove={removeFile} onToggleHD={toggleFileHD} />
             )}
 
             <div className="message-input-box">
                 <button
                     className="attachment-btn"
                     onClick={() => setShowMediaPopup(true)}
-                    disabled={disabled || uploading || hasMedia >= MAX_FILES}
+                    disabled={disabled || uploading || stagedFiles.length >= MAX_FILES}
                     title="Attach media"
                     style={{ opacity: disabled ? 0.5 : 1 }}
                 >
@@ -472,47 +565,20 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     {hasMedia && <span className="attachment-badge">{stagedFiles.length}</span>}
                 </button>
 
-                <button
-                    className={`view-once-btn ${isViewOnce ? "active" : ""}`}
-                    onClick={() => setIsViewOnce(!isViewOnce)}
-                    disabled={disabled || uploading}
-                    title={isViewOnce ? "View-Once ON - for uploaded media" : "Enable View-Once for media"}
-                    style={{ opacity: disabled ? 0.5 : 1 }}
-                >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                        <circle cx="12" cy="12" r="3" />
-                    </svg>
-                </button>
-
-                <button
-                    className={`hd-quality-btn ${sendOriginalQuality ? "active" : ""}`}
-                    onClick={() => {
-                        const nextVal = !sendOriginalQuality;
-                        setSendOriginalQuality(nextVal);
-                        localStorage.setItem("zenchat_original_quality", String(nextVal));
-                        showToast(nextVal ? "📸 HD Quality enabled (original media)" : "⚡ Standard Quality enabled (78% compression)");
-                    }}
-                    disabled={disabled || uploading}
-                    title={sendOriginalQuality ? "HD Upload ON (Original quality)" : "Standard quality ON (Compressed upload)"}
-                    style={{ opacity: disabled ? 0.5 : 1, position: 'relative' }}
-                >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                        <line x1="8" y1="21" x2="16" y2="21"></line>
-                        <line x1="12" y1="17" x2="12" y2="21"></line>
-                    </svg>
-                    <span style={{
-                        position: 'absolute',
-                        fontSize: '6.5px',
-                        fontWeight: '900',
-                        color: sendOriginalQuality ? '#ffffff' : 'var(--color-text-muted)',
-                        bottom: '9px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        letterSpacing: '0.5px'
-                    }}>HD</span>
-                </button>
+                {stagedFiles.length === 1 && hasOnlyMedia && (
+                    <button
+                        className={`view-once-btn ${isViewOnce ? "active" : ""}`}
+                        onClick={() => setIsViewOnce(!isViewOnce)}
+                        disabled={disabled || uploading}
+                        title={isViewOnce ? "View-Once ON - for uploaded media" : "Enable View-Once for media"}
+                        style={{ opacity: disabled ? 0.5 : 1 }}
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
+                )}
 
                 <textarea
                     ref={textareaRef}
@@ -561,7 +627,12 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     {editingMessage ? " | Esc to cancel" : ""}
                 </span>
                 {isViewOnce && (
-                    <span className="view-once-hint">View Once is active for media</span>
+                    <span className="view-once-hint" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        👁️ View-Once Active
+                        <span style={{ fontSize: '0.68rem', opacity: 0.8, fontWeight: 'normal' }}>
+                            (Media will disappear after being viewed once)
+                        </span>
+                    </span>
                 )}
             </div>
 
