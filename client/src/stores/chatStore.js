@@ -24,9 +24,12 @@ export const useChatStore = create(
                 const localChats = await getLocalChats();
                 if (localChats.length > 0) {
                     const initialUnread = {};
-                    localChats.forEach(chat => {
+                    await Promise.all(localChats.map(async (chat) => {
+                        if (chat.lastMessage) {
+                            await decryptMessageIfNeeded(chat.lastMessage);
+                        }
                         initialUnread[chat._id] = chat.unreadCount || 0;
-                    });
+                    }));
                     set({ chats: localChats, unreadCounts: initialUnread });
                 }
             },
@@ -34,6 +37,11 @@ export const useChatStore = create(
             fetchChats: async () => {
                 const local = await getLocalChats();
                 if (local.length > 0 && get().chats.length === 0) {
+                    await Promise.all(local.map(async (chat) => {
+                        if (chat.lastMessage) {
+                            await decryptMessageIfNeeded(chat.lastMessage);
+                        }
+                    }));
                     set({ chats: local });
                 }
 
@@ -41,7 +49,10 @@ export const useChatStore = create(
                 try {
                     const { data } = await axiosInstance.get("/chats");
                     const initialUnread = {};
-                    data.chats.forEach(chat => {
+                    await Promise.all(data.chats.map(async (chat) => {
+                        if (chat.lastMessage) {
+                            await decryptMessageIfNeeded(chat.lastMessage);
+                        }
                         let count = chat.unreadCount || 0;
                         // Client-side fix: if last message is deleted for everyone or empty, and count is 1, sync it
                         if (count === 1 && chat.lastMessage && (chat.lastMessage.deletedForEveryone || (!chat.lastMessage.content && !chat.lastMessage.mediaUrl))) {
@@ -49,7 +60,7 @@ export const useChatStore = create(
                         }
                         initialUnread[chat._id] = count;
                         persistChat({ ...chat, unreadCount: count });
-                    });
+                    }));
                     set({ chats: data.chats, unreadCounts: initialUnread, isLoadingChats: false });
                 } catch (_) {
                     set({ isLoadingChats: false });
