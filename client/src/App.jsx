@@ -5,6 +5,8 @@ import { useChatStore } from "./stores/chatStore";
 import { useMomentStore } from "./stores/momentStore";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import HomePage from "./pages/HomePage";
 import InstallPWA from "./components/ui/InstallPWA";
 import { primeAudioContext } from "./utils/audio";
@@ -207,6 +209,22 @@ const App = () => {
           element={
             <GuestRoute>
               <RegisterPage />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <GuestRoute>
+              <ForgotPasswordPage />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/reset-password/:token"
+          element={
+            <GuestRoute>
+              <ResetPasswordPage />
             </GuestRoute>
           }
         />

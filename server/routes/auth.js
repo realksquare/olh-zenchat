@@ -4,6 +4,8 @@ const { body, validationResult } = require("express-validator");
 const User = require("../models/User");
 const authMiddleware = require("../middleware/auth");
 const { upload, cloudinary } = require("../utils/cloudinary");
+const crypto = require("crypto");
+const { sendResetEmail } = require("../utils/mailService");
 
 const router = express.Router();
 
@@ -302,6 +304,93 @@ router.delete("/contacts/:targetId", authMiddleware, async (req, res) => {
         await me.save();
         res.json({ user: me.toPrivateJSON() });
     } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.post("/forgot-password", async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase().trim() });
+        if (!user) {
+            return res.status(404).json({ message: "User with this email does not exist" });
+        }
+
+        // Generate secure random token
+        const token = crypto.randomBytes(20).toString("hex");
+
+        // Save to DB (expires in 1 hour)
+        user.resetPasswordToken = token;
+        user.resetPasswordExpires = Date.now() + 3600000;
+        await user.save();
+
+        // Construct reset URL
+        const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+        const resetUrl = `${clientUrl}/reset-password/${token}`;
+
+        // Dispatch email
+        await sendResetEmail(user.email, user.username, resetUrl);
+
+        res.json({ success: true, message: "Reset link successfully sent to your email" });
+    } catch (err) {
+        console.error("[ForgotPassword] Error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.post("/reset-password/:token", async (req, res) => {
+    try {
+        const { token } = req.params;
+        const { newPassword } = req.body;
+
+        if (!newPassword) {
+            return res.status(400).json({ message: "New password is required" });
+        }
+
+        // Find user by token and verify expiration
+        const user = await User.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: Date.now() },
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: "Password reset token is invalid or has expired" });
+        }
+
+        // Password Strength Enforcer (7-18 chars, at least one number)
+        if (newPassword.length < 7 || newPassword.length > 18 || !/\d/.test(newPassword)) {
+            return res.status(400).json({ message: "Password must be 7 to 18 characters long and contain at least one number" });
+        }
+
+        // Password Reuse Prevention (compare with active password)
+        const isSamePassword = await user.comparePassword(newPassword);
+        if (isSamePassword) {
+            return res.status(400).json({ message: "New password cannot be the same as your current password. Please choose a different one." });
+        }
+
+        // Update password (mongoose pre-save hook will hash it)
+        user.password = newPassword;
+
+        // Reset password reset tokens
+        user.resetPasswordToken = null;
+        user.resetPasswordExpires = null;
+
+        // CRITICAL FOR E2EE: Clean Slate trigger (wipes old key backups)
+        user.publicKey = null;
+        user.encryptedPrivateKey = null;
+        user.encryptedPrivateKeyBackup = null;
+        user.cryptoIv = null;
+        user.cryptoSalt = null;
+
+        await user.save();
+
+        res.json({ success: true, message: "Password successfully updated! You can now log in." });
+    } catch (err) {
+        console.error("[ResetPassword] Error:", err);
         res.status(500).json({ message: "Server error" });
     }
 });

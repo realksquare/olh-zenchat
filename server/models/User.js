@@ -83,6 +83,34 @@ const userSchema = new mongoose.Schema(
         referralStats: {
             clicks: { type: Number, default: 0 },
             registrations: { type: Number, default: 0 }
+        },
+        resetPasswordToken: {
+            type: String,
+            default: null
+        },
+        resetPasswordExpires: {
+            type: Date,
+            default: null
+        },
+        publicKey: {
+            type: String,
+            default: null
+        },
+        encryptedPrivateKey: {
+            type: String,
+            default: null
+        },
+        encryptedPrivateKeyBackup: {
+            type: String,
+            default: null
+        },
+        cryptoSalt: {
+            type: String,
+            default: null
+        },
+        cryptoIv: {
+            type: String,
+            default: null
         }
     },
     { timestamps: true }
@@ -131,7 +159,12 @@ userSchema.methods.toPrivateJSON = function () {
         isVerified: this.isVerified,
         isSuspended: this.isSuspended,
         contacts: this.contacts,
-        fcmTokens: this.fcmTokens
+        fcmTokens: this.fcmTokens,
+        publicKey: this.publicKey,
+        encryptedPrivateKey: this.encryptedPrivateKey,
+        encryptedPrivateKeyBackup: this.encryptedPrivateKeyBackup,
+        cryptoSalt: this.cryptoSalt,
+        cryptoIv: this.cryptoIv
     };
 };
 
