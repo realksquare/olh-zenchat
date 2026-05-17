@@ -75,7 +75,7 @@ const sendResetEmail = async (email, username, resetUrl) => {
             return true;
         } catch (error) {
             console.error("[SMTP] Error sending reset email via configured host:", error);
-            // Fall back to terminal printing if SMTP fails so the system never hangs
+            throw new Error(`SMTP Dispatch Failed: ${error.message}`);
         }
     }
 
