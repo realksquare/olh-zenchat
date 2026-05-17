@@ -458,42 +458,44 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                     </span>
                                 </div>
                                 
-                                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.25rem", position: "relative" }}>
-                                    <input
-                                        type={showActivationPassword ? "text" : "password"}
-                                        placeholder="Enter account password"
-                                        value={activationPassword}
-                                        onChange={(e) => setActivationPassword(e.target.value)}
-                                        style={{ flex: 1, padding: "8px 36px 8px 10px", borderRadius: "8px", background: "rgba(0, 0, 0, 0.4)", border: "1px solid rgba(255,255,255,0.15)", color: "white", fontSize: "0.78rem" }}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowActivationPassword(!showActivationPassword)}
-                                        style={{
-                                            position: "absolute",
-                                            right: "95px",
-                                            top: "50%",
-                                            transform: "translateY(-50%)",
-                                            background: "none",
-                                            border: "none",
-                                            color: "#64748b",
-                                            cursor: "pointer",
-                                            padding: 0,
-                                            display: "flex",
-                                            alignItems: "center"
-                                        }}
-                                        aria-label={showActivationPassword ? "Hide password" : "Show password"}
-                                    >
-                                        {showActivationPassword ? (
-                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                                        ) : (
-                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                        )}
-                                    </button>
+                                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.25rem", alignItems: "center" }}>
+                                    <div style={{ position: "relative", flex: 1, display: "flex" }}>
+                                        <input
+                                            type={showActivationPassword ? "text" : "password"}
+                                            placeholder="Enter account password"
+                                            value={activationPassword}
+                                            onChange={(e) => setActivationPassword(e.target.value)}
+                                            style={{ flex: 1, padding: "8px 36px 8px 10px", borderRadius: "8px", background: "rgba(0, 0, 0, 0.4)", border: "1px solid rgba(255,255,255,0.15)", color: "white", fontSize: "0.78rem", width: "100%" }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowActivationPassword(!showActivationPassword)}
+                                            style={{
+                                                position: "absolute",
+                                                right: "10px",
+                                                top: "50%",
+                                                transform: "translateY(-50%)",
+                                                background: "none",
+                                                border: "none",
+                                                color: "#64748b",
+                                                cursor: "pointer",
+                                                padding: 0,
+                                                display: "flex",
+                                                alignItems: "center"
+                                            }}
+                                            aria-label={showActivationPassword ? "Hide password" : "Show password"}
+                                        >
+                                            {showActivationPassword ? (
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                            ) : (
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            )}
+                                        </button>
+                                    </div>
                                     <button
                                         type="button"
                                         onClick={handleActivateE2EE}
-                                        style={{ background: "var(--color-primary)", color: "black", border: "none", padding: "8px 16px", borderRadius: "8px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer" }}
+                                        style={{ background: "var(--color-primary)", color: "black", border: "none", padding: "8px 16px", borderRadius: "8px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer", flexShrink: 0 }}
                                     >
                                         Sync
                                     </button>
@@ -510,42 +512,44 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                     </span>
                                 </div>
                                 
-                                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.25rem", position: "relative" }}>
-                                    <input
-                                        type={showActivationPassword ? "text" : "password"}
-                                        placeholder="Enter account password"
-                                        value={activationPassword}
-                                        onChange={(e) => setActivationPassword(e.target.value)}
-                                        style={{ flex: 1, padding: "8px 36px 8px 10px", borderRadius: "8px", background: "rgba(0, 0, 0, 0.4)", border: "1px solid rgba(255,255,255,0.15)", color: "white", fontSize: "0.78rem" }}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowActivationPassword(!showActivationPassword)}
-                                        style={{
-                                            position: "absolute",
-                                            right: "95px",
-                                            top: "50%",
-                                            transform: "translateY(-50%)",
-                                            background: "none",
-                                            border: "none",
-                                            color: "#64748b",
-                                            cursor: "pointer",
-                                            padding: 0,
-                                            display: "flex",
-                                            alignItems: "center"
-                                        }}
-                                        aria-label={showActivationPassword ? "Hide password" : "Show password"}
-                                    >
-                                        {showActivationPassword ? (
-                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                                        ) : (
-                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                        )}
-                                    </button>
+                                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.25rem", alignItems: "center" }}>
+                                    <div style={{ position: "relative", flex: 1, display: "flex" }}>
+                                        <input
+                                            type={showActivationPassword ? "text" : "password"}
+                                            placeholder="Enter account password"
+                                            value={activationPassword}
+                                            onChange={(e) => setActivationPassword(e.target.value)}
+                                            style={{ flex: 1, padding: "8px 36px 8px 10px", borderRadius: "8px", background: "rgba(0, 0, 0, 0.4)", border: "1px solid rgba(255,255,255,0.15)", color: "white", fontSize: "0.78rem", width: "100%" }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowActivationPassword(!showActivationPassword)}
+                                            style={{
+                                                position: "absolute",
+                                                right: "10px",
+                                                top: "50%",
+                                                transform: "translateY(-50%)",
+                                                background: "none",
+                                                border: "none",
+                                                color: "#64748b",
+                                                cursor: "pointer",
+                                                padding: 0,
+                                                display: "flex",
+                                                alignItems: "center"
+                                            }}
+                                            aria-label={showActivationPassword ? "Hide password" : "Show password"}
+                                        >
+                                            {showActivationPassword ? (
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                            ) : (
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            )}
+                                        </button>
+                                    </div>
                                     <button
                                         type="button"
                                         onClick={handleActivateE2EE}
-                                        style={{ background: "var(--color-primary)", color: "black", border: "none", padding: "8px 16px", borderRadius: "8px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer" }}
+                                        style={{ background: "var(--color-primary)", color: "black", border: "none", padding: "8px 16px", borderRadius: "8px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer", flexShrink: 0 }}
                                     >
                                         Activate
                                     </button>
@@ -557,8 +561,10 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                         ) : (
                             <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                                 <div>
-                                    <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem" }}>End-to-End Encryption (E2EE)</span>
-                                    <span style={{ fontSize: "0.75rem", color: "#64748b", display: "block", marginTop: "2px" }}>Your personal backup recovery key provides off-grid zero-knowledge decryption.</span>
+                                    <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem" }}>E2EE Offline Recovery Key</span>
+                                    <span style={{ fontSize: "0.72rem", color: "#94a3b8", display: "block", marginTop: "4px", lineHeight: "1.3" }}>
+                                        This key is used to generate your offline recovery key for both caching in local IndexedDB and for you to copy/note down. Keep it safe to restore and access your historical encrypted chats on a new device or if you reset your account password.
+                                    </span>
                                 </div>
                                 
                                 <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.25rem" }}>

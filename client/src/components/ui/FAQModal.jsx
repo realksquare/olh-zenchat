@@ -6,31 +6,31 @@ const FAQModal = ({ isOpen, onClose }) => {
     const faqContent = [
         {
             q: "What is ZenChat?",
-            a: "Minimalist, ultra-fast, and stunning. ZenChat is built from the ground up for lightning-speed delivery and visual excellence. Proudly crafted by the OLH DevTeam."
+            a: "It is a minimalist, lightning-fast chat app designed to look gorgeous and feel premium. It was built by our team at OLH to give you a clean, clutter-free messaging experience."
         },
         {
             q: "Who is behind OLH DevTeam?",
-            a: "Driven by engineering passion. Led by Krish, an ECE student in Chennai, OLH DevTeam is dedicated to building robust, minimalist digital products that create real-world societal value."
+            a: "We are led by Krish, an ECE engineering student based in Chennai. We are incredibly passionate about building robust, sleek, and highly practical software that makes a genuine difference in daily lives."
         },
         {
             q: "What are other notable works of OLH DevTeam?",
-            a: "Proven security solutions. OLH DevTeam is also behind CertiSure (secure digital certificate verification) and MediSure (tamper-proof medical records authentication)."
+            a: "We have built several security-focused products, including CertiSure (a digital certificate authentication system) and MediSure (a secure platform for medical records authentication)."
         },
         {
             q: "What are the standout features of ZenChat?",
-            a: "Power-packed messaging utilities. Enjoy real-time threads, upload progress, view-once self-destructing media, and chat pinning. All optimized to run flawlessly on poor 2G/3G connections with adaptive packet layout strategies (IETF RFC 8999)."
+            a: "You get instant messaging, threaded replies to keep discussions organized, view-once media that self-destructs after opening, and chat pinning. Everything is optimized to work beautifully even on unstable networks (ref. IETF RFC 8999)."
         },
         {
             q: "How does ZenChat ensure reliability on slow networks?",
-            a: "Unbreakable connection stability. We combine aggressive image compression, packet-chunked sockets, and service worker background sync. Your messages go through even with one bar of signal (W3C Service Worker & Google offline-first guidelines)."
+            a: "We use smart image compression, send websocket data in highly efficient small chunks, and use service workers to sync in the background. It means your messages reach their destination even if you only have one bar of cell service (ref. W3C & Google Web Dev guidelines)."
         },
         {
             q: "What is the tech stack?",
-            a: "Cutting-edge modern framework stack. Powered by React (frontend), Node.js/Express (backend), MongoDB (database), and real-time Socket.io. Scaled on premium cloud nodes for zero lag."
+            a: "ZenChat is built with React on the frontend, Node.js and Express powering the backend, MongoDB for data storage, and Socket.io for the instant messaging. The entire setup is hosted on Vercel and Render for optimal performance."
         },
         {
             q: "Who is the admin of OLH ZenChat?",
-            a: "Direct admin support. Managed by @admin_krish. Get in touch for immediate verification requests, feedback, or custom integrations."
+            a: "The master admin is @admin_krish. Feel free to reach out directly if you have any questions, need account verification, or just want to share feedback!"
         }
     ];
 

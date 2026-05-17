@@ -6,23 +6,23 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
     const infoContent = [
         {
             q: "What is End-to-End Encryption in ZenChat?",
-            a: "Active by default for everyone. ZenChat automatically secures all texts, photos, and files on your device before they even leave your screen. We use military-grade AES-GCM and RSA hybrid encryption, meaning only you and your recipient hold the keys to unlock them."
+            a: "In simple terms, E2EE means your messages are locked before they leave your device, and only your recipient can unlock them. We secure everything—text, photos, and files—using a secure key that is never shared with us, so nobody else can read them."
         },
         {
             q: "What is E2EE used for?",
-            a: "Total shielding against data compromises. It keeps your personal conversations completely invisible to snooping ISPs, cloud database hackers, and even our own ZenChat developers. Your chats remain private, no matter what happens on the web."
+            a: "It protects your conversations from any outside eyes. Because the encryption happens entirely on your phone or computer, not even internet providers, hackers, or our own database admins can see what you write or share."
         },
         {
             q: "How is it unique compared to other chat platforms?",
-            a: "Pure Zero-Knowledge architecture. While typical apps decrypt and scan messages on their servers, ZenChat keeps private keys locked inside your local device. Your online key backups are cryptographically stretched in-browser using high-iteration PBKDF2 (NIST SP 800-132), accessible only by your password or offline recovery key."
+            a: "Unlike most apps that decrypt your messages on their servers to process them, ZenChat never sees your private keys. They live solely in your browser's secure memory. We also stretch your backup keys locally using standard PBKDF2 guidelines (NIST SP 800-132), so they remain fully zero-knowledge."
         },
         {
             q: "How do I manage my offline recovery key?",
-            a: "Your ultimate recovery safety net. Open Profile Settings by clicking your username inside the sidebar header to securely view or regenerate your offline backup key. Use this setting to instantly synchronize your encrypted chats when logging in on a new device."
+            a: "You can view or regenerate your offline key by clicking your avatar in the sidebar to open Profile Settings. It acts as your ultimate safety net—keep it somewhere safe so you can decrypt and access your chat history if you ever switch devices or reset your password."
         },
         {
             q: "How do media files and documents fall under the E2EE policy?",
-            a: "Double-locked media files. ZenChat uploads media securely, but scrambles the file location links and metadata using your chat's local symmetric key before transmission. Our server never sees where your photos, videos, or documents are stored - only you can render them."
+            a: "We upload your files securely, but we encrypt the storage links and metadata locally before sending them to our servers. Because the server only sees scrambled text instead of the actual file URL, your shared media remains completely private."
         }
     ];
 
