@@ -17,8 +17,8 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
             a: "Standard messaging apps often encrypt messages in transit but decrypt them on their servers, giving administrators full access. ZenChat implements a pure zero-knowledge architecture. Your private keys never leave your local device. In addition, your cloud key backups are securely stretched using PBKDF2 cryptographic derivation with a unique salt, ensuring that they can only be unlocked with your account password or your offline recovery key."
         },
         {
-            q: "How can I check and verify the encryption?",
-            a: "You can open your browser Developer Tools (F12), go to the Network or WS (WebSockets) tab, and inspect the message payloads. You will see only randomized, high-entropy ciphertext, an initialization vector (IV), and the encrypted key bundle. There is absolutely no plain text sent to the server. Your private key remains securely cached inside your browser's local IndexedDB, entirely isolated."
+            q: "How do I activate and set up End-to-End Encryption?",
+            a: "You can activate E2EE by clicking on your avatar or username in the sidebar header to open your Profile Settings. Locate the End-to-End Encryption card, enter your account password to initialize your secure key pair, and copy your offline recovery key. If you are logging in from a new device, you can use the same card to synchronize and cache your private key."
         }
     ];
 
