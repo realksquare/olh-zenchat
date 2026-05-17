@@ -5676,3 +5676,28 @@ select {
   will-change: transform, opacity;
   transform: translateZ(0);
 }
+
+/* 5. HD Media Quality Switcher Styling */
+.hd-quality-btn {
+  padding: 8px;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.hd-quality-btn:hover {
+  color: var(--color-primary);
+  background: rgba(61, 165, 217, 0.1);
+}
+
+.hd-quality-btn.active {
+  color: #fff;
+  background: var(--color-primary);
+  box-shadow: 0 0 10px rgba(61, 165, 217, 0.4);
+}
