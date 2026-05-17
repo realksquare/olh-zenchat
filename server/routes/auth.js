@@ -338,7 +338,11 @@ router.post("/forgot-password", async (req, res) => {
         res.json({ success: true, message: "Reset link successfully sent to your email" });
     } catch (err) {
         console.error("[ForgotPassword] Error:", err);
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({ 
+            message: "Server error", 
+            error: err.message, 
+            stack: err.stack 
+        });
     }
 });
 
@@ -391,7 +395,11 @@ router.post("/reset-password/:token", async (req, res) => {
         res.json({ success: true, message: "Password successfully updated! You can now log in." });
     } catch (err) {
         console.error("[ResetPassword] Error:", err);
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({ 
+            message: "Server error", 
+            error: err.message, 
+            stack: err.stack 
+        });
     }
 });
 
