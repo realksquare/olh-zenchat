@@ -145,7 +145,7 @@ export const decryptPrivateKeyWithPassword = async (encryptedPrivateKey, passwor
             name: "RSA-OAEP",
             hash: "SHA-256"
         },
-        false,
+        true,
         ["decrypt"]
     );
 };
@@ -169,7 +169,7 @@ export const decryptPrivateKeyWithRecoveryKey = async (encryptedPrivateKeyBackup
             name: "RSA-OAEP",
             hash: "SHA-256"
         },
-        false,
+        true,
         ["decrypt"]
     );
 };
