@@ -15,6 +15,41 @@ db.version(3).stores({
     outbox: "++id, chatId, createdAt",
 });
 
+db.version(4).stores({
+    chats: "_id, updatedAt, lastMessage._id",
+    messages: "_id, chatId, createdAt, senderId",
+    settings: "key",
+    outbox: "++id, chatId, createdAt",
+    keys: "key",
+});
+
+// Local E2EE Key Storage Helpers
+export const saveLocalKey = async (key, value) => {
+    try {
+        await db.keys.put({ key, value });
+    } catch (err) {
+        console.error("[IndexedDB] Error saving local key:", err);
+    }
+};
+
+export const getLocalKey = async (key) => {
+    try {
+        const item = await db.keys.get(key);
+        return item ? item.value : null;
+    } catch (err) {
+        console.error("[IndexedDB] Error fetching local key:", err);
+        return null;
+    }
+};
+
+export const deleteLocalKey = async (key) => {
+    try {
+        await db.keys.delete(key);
+    } catch (err) {
+        console.error("[IndexedDB] Error deleting local key:", err);
+    }
+};
+
 export const persistChat = async (chat) => {
     try {
         await db.chats.put(chat);
@@ -44,6 +79,7 @@ export const clearLocalData = async () => {
     await db.messages.clear();
     if (db.settings) await db.settings.clear();
     if (db.outbox) await db.outbox.clear();
+    if (db.keys) await db.keys.clear();
 };
 
 export const enqueueOutbox = async (payload) => {
