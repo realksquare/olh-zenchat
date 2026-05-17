@@ -6,23 +6,23 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
     const infoContent = [
         {
             q: "What is End-to-End Encryption in ZenChat?",
-            a: "End-to-End Encryption (E2EE) is active by default for every single account and conversation in ZenChat. Every message, media attachment, and document you send is automatically encrypted on your device using a secure symmetric AES-GCM session key before it is transmitted. This key is then wrapped using your recipient's RSA-OAEP public key, ensuring only they can decrypt it."
+            a: "Active by default for everyone. ZenChat automatically secures all texts, photos, and files on your device before they even leave your screen. We use military-grade AES-GCM and RSA hybrid encryption, meaning only you and your recipient hold the keys to unlock them."
         },
         {
             q: "What is E2EE used for?",
-            a: "It shields your communications from any form of external access. Since messages are encrypted before they leave your device, nobody - including internet service providers, database attackers, or ZenChat system administrators - can read your chats."
+            a: "Total shielding against data compromises. It keeps your personal conversations completely invisible to snooping ISPs, cloud database hackers, and even our own ZenChat developers. Your chats remain private, no matter what happens on the web."
         },
         {
             q: "How is it unique compared to other chat platforms?",
-            a: "Standard messaging apps often encrypt messages in transit but decrypt them on their servers, giving administrators full access. ZenChat implements a pure zero-knowledge architecture. Your private keys never leave your local device. In addition, your cloud key backups are securely stretched in-browser using PBKDF2 cryptographic derivation with a unique salt (as standardized under NIST Special Publication 800-132), ensuring that they can only be unlocked with your account password or your offline recovery key."
+            a: "Pure Zero-Knowledge architecture. While typical apps decrypt and scan messages on their servers, ZenChat keeps private keys locked inside your local device. Your online key backups are cryptographically stretched in-browser using high-iteration PBKDF2 (NIST SP 800-132), accessible only by your password or offline recovery key."
         },
         {
             q: "How do I manage my offline recovery key?",
-            a: "Because E2EE is active by default, you can manage your backup keys by clicking on your avatar or username in the sidebar header to open your Profile Settings. Under the E2EE card, you can securely view your current recovery key, generate a new key bundle, or synchronize your private key cache if you are logging in from a new device."
+            a: "Your ultimate recovery safety net. Open Profile Settings by clicking your username inside the sidebar header to securely view or regenerate your offline backup key. Use this setting to instantly synchronize your encrypted chats when logging in on a new device."
         },
         {
             q: "How do media files and documents fall under the E2EE policy?",
-            a: "When you send a media file or document, the file is uploaded securely. However, the resulting storage URL and all file metadata are locally encrypted using your chat's symmetric AES-GCM session key before they are sent to the server. The ZenChat server never receives the plain text URL or description of your files. Only you and your recipient can decrypt and render them."
+            a: "Double-locked media files. ZenChat uploads media securely, but scrambles the file location links and metadata using your chat's local symmetric key before transmission. Our server never sees where your photos, videos, or documents are stored - only you can render them."
         }
     ];
 
