@@ -1800,7 +1800,7 @@ select {
 
 .message-bubble.view-once {
   border: 1px dashed var(--color-primary);
-  background: rgba(61, 165, 217, 0.05) !important;
+
 }
 
 .view-once-placeholder {
