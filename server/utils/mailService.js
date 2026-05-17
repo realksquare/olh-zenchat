@@ -38,6 +38,7 @@ const sendResetEmail = async (email, username, resetUrl) => {
     console.log(`Secure Reset Link: ${resetUrl}`);
     console.log("=======================================================\n");
 
+    const resendApiKey = (process.env.RESEND_API_KEY || "").trim();
     const transporter = getTransporter();
 
     const from = process.env.SMTP_FROM || '"ZenChat" <no-reply@zenchat.com>';
@@ -69,6 +70,39 @@ const sendResetEmail = async (email, username, resetUrl) => {
             </div>
         </div>
     `;
+
+    // Try Resend HTTPS API if API Key is configured (Immune to cloud port blocks!)
+    if (resendApiKey) {
+        try {
+            console.log("[Resend] Attempting HTTPS API email dispatch...");
+            const fromEmail = process.env.SMTP_FROM ? process.env.SMTP_FROM : "ZenChat <onboarding@resend.dev>";
+            
+            const response = await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${resendApiKey}`
+                },
+                body: JSON.stringify({
+                    from: fromEmail,
+                    to: email,
+                    subject: subject,
+                    html: html
+                })
+            });
+
+            const resData = await response.json();
+            if (response.ok) {
+                console.log(`[Resend] Reset email successfully dispatched to ${email}. ID: ${resData.id}`);
+                return true;
+            } else {
+                throw new Error(resData.message || "Resend API Error");
+            }
+        } catch (error) {
+            console.error("[Resend] Error sending reset email via HTTPS API:", error);
+            throw new Error(`Email Dispatch Failed via Resend API: ${error.message}`);
+        }
+    }
 
     if (transporter) {
         try {
