@@ -24,9 +24,10 @@ const NotificationPrompt = () => {
 
         if (isSubscribed) return;
 
-        // Show after 5s if not dismissed this session
+        // Show immediately (100ms) if PWA, otherwise 1000ms if not dismissed this session
         if (!sessionStorage.getItem("notifPromptDismissed")) {
-            const timer = setTimeout(() => setShow(true), 5000);
+            const delay = isPWA ? 100 : 1000;
+            const timer = setTimeout(() => setShow(true), delay);
             return () => clearTimeout(timer);
         }
     }, [userId, fcmTokens]);

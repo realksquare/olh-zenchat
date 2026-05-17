@@ -350,7 +350,12 @@ export const importPublicKey = async (publicKeyJWK) => {
  * Returns the hex-encrypted backup bundle.
  */
 export const encryptPrivateKeyWithRecoveryKey = async (privateKey, recoveryKey, cryptoSalt) => {
-    const privateKeyJWK = await window.crypto.subtle.exportKey("jwk", privateKey);
+    let privateKeyJWK;
+    if (privateKey && typeof privateKey.type === 'string') {
+        privateKeyJWK = await window.crypto.subtle.exportKey("jwk", privateKey);
+    } else {
+        privateKeyJWK = privateKey;
+    }
     const encoder = new TextEncoder();
     const privateKeyBytes = encoder.encode(JSON.stringify(privateKeyJWK));
 

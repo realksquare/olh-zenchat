@@ -175,7 +175,7 @@ export const getLocalE2EEKeys = async () => {
                 name: "RSA-OAEP",
                 hash: "SHA-256"
             },
-            false,
+            true,
             ["decrypt"]
         );
 
@@ -234,17 +234,32 @@ export const decryptMessageIfNeeded = async (message) => {
  */
 export const rotateUserRecoveryKey = async (user, newRecoveryKey) => {
     if (!db || !db.keys) throw new Error("Local database not initialized");
-    const keys = await getLocalE2EEKeys();
-    if (!keys || !keys.privateKey) throw new Error("Local E2EE private key not found");
 
     const cryptoSalt = user?.cryptoSalt;
     if (!cryptoSalt) throw new Error("User cryptographic salt not found");
 
-    const encryptedPrivateKeyBackup = await encryptPrivateKeyWithRecoveryKey(
-        keys.privateKey,
-        newRecoveryKey,
-        cryptoSalt
-    );
+    let encryptedPrivateKeyBackup;
+    try {
+        const keys = await getLocalE2EEKeys();
+        if (!keys || !keys.privateKey) throw new Error("Private key missing in local cache");
+        
+        encryptedPrivateKeyBackup = await encryptPrivateKeyWithRecoveryKey(
+            keys.privateKey,
+            newRecoveryKey,
+            cryptoSalt
+        );
+    } catch (err) {
+        console.warn("[E2EE Helper] Failed to encrypt with CryptoKey, trying raw JWK direct fallback...", err);
+        const privateKeyRecord = await db.keys.get("privateKey");
+        if (!privateKeyRecord || !privateKeyRecord.value) {
+            throw new Error("Local E2EE private key not found in cache");
+        }
+        encryptedPrivateKeyBackup = await encryptPrivateKeyWithRecoveryKey(
+            privateKeyRecord.value,
+            newRecoveryKey,
+            cryptoSalt
+        );
+    }
 
     await axiosInstance.put("/auth/keys-backup", {
         encryptedPrivateKeyBackup
