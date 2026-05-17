@@ -155,6 +155,16 @@ const MediaUploadPopup = ({ onClose, onFilesSelected, showToast }) => {
 
 const MediaPreview = ({ files, onRemove, onToggleQuality }) => {
     if (!files.length) return null;
+
+    const getStagedFileSizeText = (file, isHD) => {
+        const isImage = ACCEPTED_IMAGE.includes(file.type);
+        let size = file.size;
+        if (isImage && !isHD) {
+            size = Math.round(size * 0.78);
+        }
+        return formatFileSize(size);
+    };
+
     return (
         <div className="media-preview-strip">
             {files.map((item, i) => {
@@ -174,10 +184,39 @@ const MediaPreview = ({ files, onRemove, onToggleQuality }) => {
                     >
                         {isVideo ? (
                             <video src={url} className="media-preview-thumb" muted />
-                        ) : (
+                        ) : isImg ? (
                             <img src={url} alt={file.name} className="media-preview-thumb" />
+                        ) : (
+                            <div className="media-preview-thumb" style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                background: 'rgba(255, 255, 255, 0.04)',
+                                gap: '2px',
+                                padding: '4px',
+                                textAlign: 'center',
+                                overflow: 'hidden',
+                                position: 'relative'
+                            }}>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-primary)', opacity: 0.85 }}>
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                </svg>
+                                <span style={{
+                                    fontSize: '8px',
+                                    fontWeight: '800',
+                                    color: '#f1f5f9',
+                                    textTransform: 'uppercase',
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    maxWidth: '100%',
+                                    letterSpacing: '0.2px'
+                                }}>{file.name.split('.').pop() || 'FILE'}</span>
+                            </div>
                         )}
-                        <span className="media-preview-name">{formatFileSize(file.size)}</span>
+                        <span className="media-preview-name">{getStagedFileSizeText(file, isHD)}</span>
                         
                         {isMedia && isHD && (
                             <div className="media-hd-badge" style={{
@@ -194,7 +233,7 @@ const MediaPreview = ({ files, onRemove, onToggleQuality }) => {
                                 border: '1px solid rgba(61, 165, 217, 0.3)',
                                 pointerEvents: 'none',
                                 letterSpacing: '0.5px'
-                            }}>HD</div>
+                            }}>OG</div>
                         )}
                         
                         <button className="media-preview-remove" onClick={() => onRemove(i)} title="Remove">
@@ -493,7 +532,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
         setStagedFiles(prev => prev.map((item, i) => {
             if (i === index) {
                 const nextHD = !item.isHD;
-                showToast(nextHD ? "HD Quality enabled for this media" : "Standard Quality enabled for this media");
+                showToast(nextHD ? "Original quality enabled for this media" : "Standard quality enabled for this media");
                 return { ...item, isHD: nextHD };
             }
             return item;
@@ -628,7 +667,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     )}
                     {stagedFiles.some(f => getFileCategory(f.file) === "media") && (
                         <span className="view-once-hint" style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'var(--color-text-muted)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                            Double-tap media to toggle HD
+                            Double-tap media to toggle OG
                         </span>
                     )}
                 </div>
