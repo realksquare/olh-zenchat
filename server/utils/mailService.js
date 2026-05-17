@@ -75,7 +75,7 @@ const sendResetEmail = async (email, username, resetUrl) => {
     if (resendApiKey) {
         try {
             console.log("[Resend] Attempting HTTPS API email dispatch...");
-            const fromEmail = process.env.SMTP_FROM ? process.env.SMTP_FROM : "ZenChat <onboarding@resend.dev>";
+            const fromEmail = process.env.SMTP_FROM ? process.env.SMTP_FROM : "onboarding@resend.dev";
             
             const response = await fetch("https://api.resend.com/emails", {
                 method: "POST",
