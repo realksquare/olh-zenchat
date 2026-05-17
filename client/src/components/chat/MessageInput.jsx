@@ -28,7 +28,7 @@ const compressImage = (file, targetKB = 300) => new Promise((resolve) => {
     reader.onload = (e) => {
         const img = new Image();
         img.onload = () => {
-            let quality = 0.85;
+            let quality = 0.78;
             let scale = 1;
             const targetBytes = targetKB * 1024;
             if (file.size > targetBytes * 3) scale = 0.6;
@@ -187,6 +187,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const [showMediaPopup, setShowMediaPopup] = useState(false);
     const [stagedFiles, setStagedFiles] = useState([]);
     const [toast, setToast] = useState(null);
+    const [sendOriginalQuality, setSendOriginalQuality] = useState(() => localStorage.getItem("zenchat_original_quality") === "true");
     const { sendMessage, startTyping, stopTyping, editMessage } = useSocket();
 
     const showToast = (msg) => {
@@ -311,7 +312,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 });
 
                 let fileToUpload = file;
-                if (isImage) fileToUpload = await compressImage(file);
+                if (isImage && !sendOriginalQuality) fileToUpload = await compressImage(file);
 
                 const formData = new FormData();
                 formData.append("file", fileToUpload);
@@ -482,6 +483,35 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                         <circle cx="12" cy="12" r="3" />
                     </svg>
+                </button>
+
+                <button
+                    className={`hd-quality-btn ${sendOriginalQuality ? "active" : ""}`}
+                    onClick={() => {
+                        const nextVal = !sendOriginalQuality;
+                        setSendOriginalQuality(nextVal);
+                        localStorage.setItem("zenchat_original_quality", String(nextVal));
+                        showToast(nextVal ? "📸 HD Quality enabled (original media)" : "⚡ Standard Quality enabled (78% compression)");
+                    }}
+                    disabled={disabled || uploading}
+                    title={sendOriginalQuality ? "HD Upload ON (Original quality)" : "Standard quality ON (Compressed upload)"}
+                    style={{ opacity: disabled ? 0.5 : 1, position: 'relative' }}
+                >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                    <span style={{
+                        position: 'absolute',
+                        fontSize: '6.5px',
+                        fontWeight: '900',
+                        color: sendOriginalQuality ? '#ffffff' : 'var(--color-text-muted)',
+                        bottom: '9px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        letterSpacing: '0.5px'
+                    }}>HD</span>
                 </button>
 
                 <textarea
