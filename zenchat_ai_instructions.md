@@ -1,6 +1,6 @@
-# ZenChat+ AI Developer Instructions
+# ZenChat AI Developer Instructions
 
-These are the core operating principles and coding standards to be followed for all future development on ZenChat+.
+These are the core operating principles and coding standards to be followed for all future development on ZenChat.
 
 ## 1. Systematic Analysis & Execution
 - **Analyze completely:** Analyze the whole project (and check all relevant files if doubtful) before making any new change or addition.
