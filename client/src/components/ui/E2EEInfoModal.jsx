@@ -6,7 +6,7 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
     const infoContent = [
         {
             q: "What is End-to-End Encryption in ZenChat?",
-            a: "End-to-End Encryption (E2EE) is active by default for every single account and conversation in ZenChat. Every text message you send is automatically encrypted on your device using a secure symmetric AES-GCM session key before it is transmitted. This key is then wrapped using your recipient's RSA-OAEP public key, ensuring only they can decrypt it."
+            a: "End-to-End Encryption (E2EE) is active by default for every single account and conversation in ZenChat. Every message, media attachment, and document you send is automatically encrypted on your device using a secure symmetric AES-GCM session key before it is transmitted. This key is then wrapped using your recipient's RSA-OAEP public key, ensuring only they can decrypt it."
         },
         {
             q: "What is E2EE used for?",
