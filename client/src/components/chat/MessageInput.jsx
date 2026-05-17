@@ -313,8 +313,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
         return result || "...";
     };
 
-    const handleTypingStart = useCallback(() => {
-        const scramble = getScramble(content);
+    const handleTypingStart = useCallback((currentText) => {
+        const scramble = getScramble(currentText);
         if (!isTypingRef.current) {
             isTypingRef.current = true;
             startTyping(chatId, scramble);
@@ -336,8 +336,9 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     }, [chatId]);
 
     const handleChange = (e) => {
-        setContent(e.target.value);
-        if (!editingMessage) handleTypingStart();
+        const val = e.target.value;
+        setContent(val);
+        if (!editingMessage) handleTypingStart(val);
     };
 
     const filterOffensive = (text) => {
