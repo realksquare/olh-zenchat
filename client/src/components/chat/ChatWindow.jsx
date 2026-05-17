@@ -497,7 +497,7 @@ const ChatWindow = ({ onBack }) => {
                         </button>
                     </div>
                 )}
-                {isLoadingMessages && (
+                {isLoadingMessages && messages.length === 0 && (
                     <div className="messages-loading">
                         {[1, 2, 3, 4].map((i) => (
                             <div key={i} className={`message-skeleton ${i % 2 === 0 ? "mine" : ""}`}>
@@ -513,7 +513,7 @@ const ChatWindow = ({ onBack }) => {
                     </div>
                 )}
 
-                {!isLoadingMessages && messages.map((msg, idx) => {
+                {messages.map((msg, idx) => {
                     const prevMsg = messages[idx - 1];
                     const msgDate = new Date(msg.createdAt).toLocaleDateString();
                     const prevDate = prevMsg ? new Date(prevMsg.createdAt).toLocaleDateString() : null;

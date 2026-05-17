@@ -5,6 +5,7 @@ These are the core operating principles and coding standards to be followed for 
 ## 1. Systematic Analysis & Execution
 - **Analyze completely:** Analyze the whole project (and check all relevant files if doubtful) before making any new change or addition.
 - **Step-by-step:** Proceed one step at a time and double-check each step carefully.
+- **Perfectly synced codebase:** Make sure new changes or additions are synced and work together well across all relevant files.
 - **No endless loops:** Do not keep reiterating on a single step unless absolutely necessary. Move forward efficiently.
 
 ## 2. Code Quality

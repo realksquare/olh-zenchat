@@ -339,7 +339,7 @@ const Sidebar = ({ onChatSelect }) => {
                     transition: pullY === 0 ? 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)' : 'none' 
                 }}
             >
-                {isLoadingChats && (
+                {isLoadingChats && filteredChats.length === 0 && (
                     <div className="chats-loading">
                         {[1, 2, 3].map((i) => (
                             <div key={i} className="chat-card-skeleton">
