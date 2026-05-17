@@ -84,6 +84,20 @@ export const setupE2EEForUser = async (user, password) => {
             cryptoSalt
         });
 
+        // Sync local authStore user state with generated keys
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser) {
+            const updatedUser = {
+                ...currentUser,
+                publicKey,
+                encryptedPrivateKey,
+                encryptedPrivateKeyBackup,
+                cryptoSalt
+            };
+            useAuthStore.getState().updateUser(updatedUser);
+            localStorage.setItem("zenchat_user", JSON.stringify(updatedUser));
+        }
+
         // Store active keys locally
         const keyPair = await generateUserKeys(password, recoveryKey); // Re-gen or extract raw keys to store
         // To store the private key, we decrypt the encrypted bundle we just generated

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import axiosInstance from "../utils/axios";
-import { db } from "../db/zenDB";
+import { db, clearLocalData } from "../db/zenDB";
 import { setupE2EEForUser } from "../utils/e2eeHelper";
 
 const TOKEN_KEY = "zenchat_token";
@@ -91,6 +91,11 @@ export const useAuthStore = create(
         } catch (_) { }
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
+        try {
+            await clearLocalData();
+        } catch (dbErr) {
+            console.error("[AuthStore] Clear IndexedDB failed:", dbErr);
+        }
         set({ token: null, user: null, error: null });
     },
 

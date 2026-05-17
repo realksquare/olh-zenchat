@@ -560,7 +560,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     <div className="reply-info">
                         <div className="reply-to-user">
                             Replying to {(() => {
-                                if (replyingTo.senderId === user?._id || replyingTo.senderId?._id === user?._id) return "yourself";
+                                if (replyingTo.senderId === userId || replyingTo.senderId?._id === userId) return "yourself";
                                 const sender = replyingTo.senderId;
                                 if (typeof sender === 'object' && sender?.username) return sender.username;
                                 const activeChat = useChatStore.getState().activeChat;
