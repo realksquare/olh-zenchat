@@ -6,7 +6,7 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
     const infoContent = [
         {
             q: "What is End-to-End Encryption in ZenChat?",
-            a: "ZenChat uses zero-knowledge End-to-End Encryption (E2EE) to protect your conversations. When you send a message, it is encrypted on your device using a secure symmetric AES-GCM session key. This key is then wrapped using your recipient's RSA-OAEP public key. Only the recipient's private key can decrypt the message."
+            a: "End-to-End Encryption (E2EE) is active by default for every single account and conversation in ZenChat. Every text message you send is automatically encrypted on your device using a secure symmetric AES-GCM session key before it is transmitted. This key is then wrapped using your recipient's RSA-OAEP public key, ensuring only they can decrypt it."
         },
         {
             q: "What is E2EE used for?",
@@ -17,8 +17,8 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
             a: "Standard messaging apps often encrypt messages in transit but decrypt them on their servers, giving administrators full access. ZenChat implements a pure zero-knowledge architecture. Your private keys never leave your local device. In addition, your cloud key backups are securely stretched using PBKDF2 cryptographic derivation with a unique salt, ensuring that they can only be unlocked with your account password or your offline recovery key."
         },
         {
-            q: "How do I activate and set up End-to-End Encryption?",
-            a: "You can activate E2EE by clicking on your avatar or username in the sidebar header to open your Profile Settings. Locate the End-to-End Encryption card, enter your account password to initialize your secure key pair, and copy your offline recovery key. If you are logging in from a new device, you can use the same card to synchronize and cache your private key."
+            q: "How do I manage my offline recovery key?",
+            a: "Because E2EE is active by default, you can manage your backup keys by clicking on your avatar or username in the sidebar header to open your Profile Settings. Under the E2EE card, you can securely view your current recovery key, generate a new key bundle, or synchronize your private key cache if you are logging in from a new device."
         }
     ];
 
