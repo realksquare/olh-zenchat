@@ -6,7 +6,7 @@ import { requestNotificationPermission } from "../../utils/firebase";
 import axiosInstance from "../../utils/axios";
 import LoadingOverlay from "./LoadingOverlay";
 import { db } from "../../db/zenDB";
-import { generateRecoveryKey, rotateUserRecoveryKey } from "../../utils/e2eeHelper";
+import { generateRecoveryKey, rotateUserRecoveryKey, setupE2EEForUser } from "../../utils/e2eeHelper";
 
 const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const { user, updateProfile, isLoading, soundEnabled, toggleSound } = useAuthStore();
@@ -28,6 +28,9 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [showKeyText, setShowKeyText] = useState(false);
     const [recoveryKeyText, setRecoveryKeyText] = useState("");
     const [isE2EELoading, setIsE2EELoading] = useState(false);
+    const [activationPassword, setActivationPassword] = useState("");
+    const [showActivationPassword, setShowActivationPassword] = useState(false);
+    const [isConfirmingRotate, setIsConfirmingRotate] = useState(false);
 
     const fileInputRef = useRef(null);
     const importInputRef = useRef(null);
@@ -224,19 +227,50 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     };
 
     const handleRotateRecoveryKey = async () => {
-        if (window.confirm("⚠️ Warning: Generating a new recovery key will overwrite your existing key backup on the server. If you forget your password, you will need this new recovery key to decrypt your chats on a new device. Are you sure you want to proceed?")) {
-            setIsE2EELoading(true);
-            try {
-                const newKey = generateRecoveryKey();
-                await rotateUserRecoveryKey(user, newKey);
-                setRecoveryKeyText(newKey);
-                showToast("✨ Secure new Recovery Key successfully generated and cached!");
-            } catch (err) {
-                console.error("[Settings] Rotation failed:", err);
-                showToast("🌪️ Key generation failed. Make sure E2EE is active on this device.");
-            } finally {
-                setIsE2EELoading(false);
+        if (!isConfirmingRotate) {
+            setIsConfirmingRotate(true);
+            return;
+        }
+
+        setIsConfirmingRotate(false);
+        setIsE2EELoading(true);
+        try {
+            const newKey = generateRecoveryKey();
+            await rotateUserRecoveryKey(user, newKey);
+            setRecoveryKeyText(newKey);
+            showToast("✨ Secure new Recovery Key successfully generated and cached!");
+        } catch (err) {
+            console.error("[Settings] Rotation failed:", err);
+            showToast("🌪️ Key generation failed. Make sure E2EE is active on this device.");
+        } finally {
+            setIsE2EELoading(false);
+        }
+    };
+
+    const handleActivateE2EE = async () => {
+        if (!activationPassword) {
+            showToast("🌪️ Please enter your password to activate E2EE.");
+            return;
+        }
+        setIsE2EELoading(true);
+        try {
+            const recoveryKey = await setupE2EEForUser(user, activationPassword);
+            
+            if (db && db.keys) {
+                const keyData = await db.keys.get("recoveryKey");
+                setRecoveryKeyText(keyData ? keyData.value : (recoveryKey || ""));
             }
+            
+            const { checkAuth } = useAuthStore.getState();
+            await checkAuth();
+            
+            showToast("✨ End-to-End Encryption activated successfully!");
+            setActivationPassword("");
+        } catch (err) {
+            console.error("[ProfileModal] Activation failed:", err);
+            showToast("🌪️ Activation failed. Please make sure your password is correct.");
+        } finally {
+            setIsE2EELoading(false);
         }
     };
 
@@ -405,55 +439,139 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                             )}
                         </div>
 
-                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                            <div>
-                                <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem" }}>End-to-End Encryption (E2EE)</span>
-                                <span style={{ fontSize: "0.75rem", color: "#64748b", display: "block", marginTop: "2px" }}>Your personal backup recovery key provides off-grid zero-knowledge decryption.</span>
+                        {!user?.publicKey ? (
+                            <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(239, 68, 68, 0.04)", border: "1px dashed rgba(239, 68, 68, 0.2)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                                <div>
+                                    <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem", color: "#f87171", display: "flex", alignItems: "center", gap: "6px" }}>
+                                        🔒 E2EE is not activated on this device
+                                    </span>
+                                    <span style={{ fontSize: "0.72rem", color: "#94a3b8", display: "block", marginTop: "4px", lineHeight: "1.3" }}>
+                                        To secure your chat messages with zero-knowledge, end-to-end encryption, enter your account password to initialize your secure keypair.
+                                    </span>
+                                </div>
+                                
+                                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.25rem", position: "relative" }}>
+                                    <input
+                                        type={showActivationPassword ? "text" : "password"}
+                                        placeholder="Enter account password"
+                                        value={activationPassword}
+                                        onChange={(e) => setActivationPassword(e.target.value)}
+                                        style={{ flex: 1, padding: "8px 36px 8px 10px", borderRadius: "8px", background: "rgba(0, 0, 0, 0.4)", border: "1px solid rgba(255,255,255,0.15)", color: "white", fontSize: "0.78rem" }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowActivationPassword(!showActivationPassword)}
+                                        style={{
+                                            position: "absolute",
+                                            right: "95px",
+                                            top: "50%",
+                                            transform: "translateY(-50%)",
+                                            background: "none",
+                                            border: "none",
+                                            color: "#64748b",
+                                            cursor: "pointer",
+                                            padding: 0,
+                                            display: "flex",
+                                            alignItems: "center"
+                                        }}
+                                    >
+                                        {showActivationPassword ? (
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                        ) : (
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                        )}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleActivateE2EE}
+                                        style={{ background: "var(--color-primary)", color: "black", border: "none", padding: "8px 16px", borderRadius: "8px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer" }}
+                                    >
+                                        Activate
+                                    </button>
+                                </div>
+                                <span style={{ fontSize: "0.7rem", color: "#64748b", fontStyle: "italic", textAlign: "center", display: "block" }}>
+                                    (Tip: You can also log out and log back in to activate E2EE automatically)
+                                </span>
                             </div>
-                            
-                            <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.25rem" }}>
-                                <button
-                                    type="button"
-                                    onClick={handleShowRecoveryKey}
-                                    style={{ flex: 1, background: "rgba(61, 165, 217, 0.15)", border: "1px solid rgba(61, 165, 217, 0.3)", color: "var(--color-primary)", padding: "7px 12px", borderRadius: "8px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
-                                >
-                                    <span>{showKeyText ? "Hide Recovery Key" : "View Recovery Key"}</span>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleRotateRecoveryKey}
-                                    style={{ flex: 1, background: "rgba(255, 255, 255, 0.04)", border: "1px solid rgba(255, 255, 255, 0.1)", color: "#f1f5f9", padding: "7px 12px", borderRadius: "8px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer" }}
-                                >
-                                    Generate New Key
-                                </button>
-                            </div>
-
-                            {showKeyText && (
-                                <div style={{ background: "rgba(15, 23, 42, 0.6)", border: "1px solid rgba(255,255,255,0.08)", padding: "12px", borderRadius: "8px", marginTop: "0.5rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-                                    {recoveryKeyText ? (
-                                        <>
-                                            <span style={{ fontFamily: "monospace", fontSize: "1rem", fontWeight: "700", letterSpacing: "1px", color: "var(--color-primary)" }}>
-                                                {recoveryKeyText}
+                        ) : (
+                            <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                                <div>
+                                    <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem" }}>End-to-End Encryption (E2EE)</span>
+                                    <span style={{ fontSize: "0.75rem", color: "#64748b", display: "block", marginTop: "2px" }}>Your personal backup recovery key provides off-grid zero-knowledge decryption.</span>
+                                </div>
+                                
+                                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.25rem" }}>
+                                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                                        <button
+                                            type="button"
+                                            onClick={handleShowRecoveryKey}
+                                            style={{ flex: 1, background: "rgba(61, 165, 217, 0.15)", border: "1px solid rgba(61, 165, 217, 0.3)", color: "var(--color-primary)", padding: "7px 12px", borderRadius: "8px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
+                                        >
+                                            <span>{showKeyText ? "Hide Recovery Key" : "View Recovery Key"}</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleRotateRecoveryKey}
+                                            style={{
+                                                flex: 1,
+                                                background: isConfirmingRotate ? "rgba(244, 63, 94, 0.15)" : "rgba(255, 255, 255, 0.04)",
+                                                border: isConfirmingRotate ? "1px solid rgba(244, 63, 94, 0.4)" : "1px solid rgba(255, 255, 255, 0.1)",
+                                                color: isConfirmingRotate ? "#f43f5e" : "#f1f5f9",
+                                                padding: "7px 12px",
+                                                borderRadius: "8px",
+                                                fontSize: "0.8rem",
+                                                fontWeight: "700",
+                                                cursor: "pointer",
+                                                transition: "all 0.2s ease"
+                                            }}
+                                        >
+                                            {isConfirmingRotate ? "Are you sure? Click again" : "Generate New Key"}
+                                        </button>
+                                    </div>
+                                    
+                                    {isConfirmingRotate && (
+                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(244, 63, 94, 0.08)", border: "1px solid rgba(244, 63, 94, 0.15)", padding: "8px 12px", borderRadius: "8px" }}>
+                                            <span style={{ fontSize: "0.72rem", color: "#fda4af", lineHeight: "1.2", maxWidth: "70%" }}>
+                                                ⚠️ Overwrites your existing online key bundle.
                                             </span>
                                             <button
                                                 type="button"
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(recoveryKeyText);
-                                                    showToast("✨ Recovery key copied to clipboard!");
-                                                }}
-                                                style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "#94a3b8", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "600", cursor: "pointer" }}
+                                                onClick={() => setIsConfirmingRotate(false)}
+                                                style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "0.75rem", fontWeight: "600" }}
                                             >
-                                                Copy Key
+                                                Cancel
                                             </button>
-                                        </>
-                                    ) : (
-                                        <span style={{ fontSize: "0.75rem", color: "#f43f5e" }}>
-                                            ⚠️ Recovery key is not cached on this device. Generate a new one to secure your account.
-                                        </span>
+                                        </div>
                                     )}
                                 </div>
-                            )}
-                        </div>
+
+                                {showKeyText && (
+                                    <div style={{ background: "rgba(15, 23, 42, 0.6)", border: "1px solid rgba(255,255,255,0.08)", padding: "12px", borderRadius: "8px", marginTop: "0.5rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                                        {recoveryKeyText ? (
+                                            <>
+                                                <span style={{ fontFamily: "monospace", fontSize: "1rem", fontWeight: "700", letterSpacing: "1px", color: "var(--color-primary)" }}>
+                                                    {recoveryKeyText}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(recoveryKeyText);
+                                                        showToast("✨ Recovery key copied to clipboard!");
+                                                    }}
+                                                    style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "#94a3b8", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "600", cursor: "pointer" }}
+                                                >
+                                                    Copy Key
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <span style={{ fontSize: "0.75rem", color: "#f43f5e" }}>
+                                                ⚠️ Recovery key is not cached on this device. Generate a new one to secure your account.
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="actions-section" style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>

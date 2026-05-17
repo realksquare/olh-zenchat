@@ -338,13 +338,35 @@ const ChatWindow = ({ onBack }) => {
 
     if (!activeChat) {
         return (
-            <div className="chat-empty-state">
+            <div className="chat-empty-state" style={{ position: "relative" }}>
                 <svg width="40" height="40" viewBox="0 0 32 32" fill="none" aria-hidden="true">
                     <rect width="32" height="32" rx="10" fill="#1e2530" />
                     <path d="M8 10h16M8 16h10M8 22h13" stroke="#3da5d9" strokeWidth="2.2" strokeLinecap="round" />
                 </svg>
                 <p className="chat-empty-title">ZenChat</p>
                 <span className="chat-empty-hint">Select a conversation or search for a user to start chatting</span>
+                
+                {/* Zero-Knowledge E2EE Faint Watermark Background */}
+                <div style={{
+                    position: "absolute",
+                    bottom: "24px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    pointerEvents: "none",
+                    opacity: 0.12,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    userSelect: "none"
+                }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--color-primary)" }}>
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <span style={{ fontFamily: "monospace", fontSize: "0.7rem", fontWeight: "600", letterSpacing: "1px", color: "var(--color-primary)", textTransform: "lowercase" }}>
+                        #e2ee. by ZenChat
+                    </span>
+                </div>
             </div>
         );
     }
@@ -399,52 +421,30 @@ const ChatWindow = ({ onBack }) => {
                     <button
                         className={`header-action-btn ${showOnlyStarred ? 'active' : ''}`}
                         onClick={() => setShowOnlyStarred(!showOnlyStarred)}
-                        title={showOnlyStarred ? "Show all messages" : "Show only favorites"}
-                        style={{
-                            background: showOnlyStarred ? 'rgba(234, 179, 8, 0.15)' : 'transparent',
-                            color: showOnlyStarred ? '#eab308' : '#94a3b8',
-                            padding: '8px',
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.2s ease'
-                        }}
+                        title={showOnlyStarred ? "Show all messages" : "Show only starred messages"}
                     >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill={showOnlyStarred ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill={showOnlyStarred ? "#eab308" : "none"} stroke={showOnlyStarred ? "#eab308" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                         </svg>
                     </button>
+
                     <div style={{ position: 'relative' }}>
                         <button
-                            className={`header-action-btn ${activeChat?.disappearingMode && activeChat.disappearingMode !== 'off' ? 'active' : ''}`}
+                            className="header-action-btn"
                             onClick={() => setShowDisappearingMenu(!showDisappearingMenu)}
-                            title="Disappearing Messages"
-                            style={{
-                                background: activeChat?.disappearingMode && activeChat.disappearingMode !== 'off' ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-                                color: activeChat?.disappearingMode && activeChat.disappearingMode !== 'off' ? '#3b82f6' : '#94a3b8',
-                                padding: '8px',
-                                borderRadius: '8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                transition: 'all 0.2s ease'
-                            }}
+                            title="Disappearing messages mode"
                         >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 16 14"></polyline>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
                             </svg>
                         </button>
-                        
+
                         {showDisappearingMenu && (
-                            <div className="message-dropdown mobile-visible" style={{ right: 0, left: 'auto', top: 'calc(100% + 8px)', minWidth: '180px', transform: 'none' }}>
-                                <div style={{ padding: '8px 12px', fontSize: '0.75rem', color: '#64748b', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: '4px' }}>
-                                    Disappearing Messages
-                                </div>
+                            <div className="message-action-dropdown disappearing-menu" style={{ right: 0, top: '100%', marginTop: '6px', minWidth: '120px' }}>
                                 {[
                                     { value: 'off', label: 'Off' },
-                                    { value: 'instant', label: 'Current session' },
+                                    { value: 'instant', label: 'Going offline' },
                                     { value: '1h', label: '1 Hour' },
                                     { value: '8h', label: '8 Hours' },
                                     { value: '24h', label: '1 Day' },
@@ -466,7 +466,30 @@ const ChatWindow = ({ onBack }) => {
                 </div>
             </div>
 
-            <div className="chat-messages" ref={messagesContainerRef} onScroll={handleScroll}>
+            <div className="chat-messages" ref={messagesContainerRef} onScroll={handleScroll} style={{ position: "relative" }}>
+                {/* Zero-Knowledge E2EE Faint Watermark Background */}
+                <div style={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                    pointerEvents: "none",
+                    opacity: 0.015,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "8px",
+                    zIndex: 0,
+                    userSelect: "none"
+                }}>
+                    <svg width="128" height="128" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--color-primary)" }}>
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <span style={{ fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600", letterSpacing: "1.5px", color: "var(--color-primary)", textTransform: "lowercase" }}>
+                        #e2ee. by ZenChat
+                    </span>
+                </div>
                 {(hasMoreMessages[activeChat?._id] || isLoadingOlderMessages) && !isLoadingMessages && (!showOnlyStarred || messages.length > 18) && (
                     <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 4px' }}>
                         <button
