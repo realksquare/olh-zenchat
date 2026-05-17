@@ -18,11 +18,11 @@ const FAQModal = ({ isOpen, onClose }) => {
         },
         {
             q: "What are the standout features of ZenChat?",
-            a: "Secure real-time messaging, media sharing (images/videos) with upload progress, view-once media for privacy, message threading (replies), and pinning important chats. We prioritize reliability even on 2G / unstable networks with specialized data usage conservation strategies."
+            a: "Secure real-time messaging, media sharing (images/videos) with upload progress, view-once media for privacy, message threading (replies), and pinning important chats. We prioritize reliability even on 2G / unstable networks with specialized data usage conservation strategies (modeled under standardized packet layout guidelines from IETF RFC 8999)."
         },
         {
             q: "How does ZenChat ensure reliability on slow networks?",
-            a: "We use a multi-layered approach: optimized image/video compression, small-chunk socket communication, and background sync through Service Workers. This ensures your messages reach their destination even when the signal is weak, providing a seamless experience on 2G/3G connections."
+            a: "We use a multi-layered approach: optimized image/video compression, small-chunk socket communication, and background sync through Service Workers. This ensures your messages reach their destination even when the signal is weak, providing a seamless experience on 2G/3G connections (referencing the W3C Service Workers API standard and Google Web Dev offline-first resilience architectures)."
         },
         {
             q: "What is the tech stack?",
