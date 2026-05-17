@@ -1,5 +1,6 @@
 import { db } from "../db/zenDB";
 import axiosInstance from "./axios";
+import { useAuthStore } from "../stores/authStore";
 import {
     generateUserKeys,
     decryptPrivateKeyWithPassword,
@@ -183,9 +184,20 @@ export const decryptMessageIfNeeded = async (message) => {
         try {
             const keys = await getLocalE2EEKeys();
             if (keys && keys.privateKey) {
+                let encryptedKeyHex = message.encryptedSymmetricKey;
+                try {
+                    const keyMap = JSON.parse(message.encryptedSymmetricKey);
+                    const currentUserId = useAuthStore.getState().user?._id;
+                    if (keyMap && currentUserId && keyMap[currentUserId]) {
+                        encryptedKeyHex = keyMap[currentUserId];
+                    }
+                } catch (_) {
+                    // Legacy single key format fallback
+                }
+
                 const decryptedContent = await decryptMessageContent(
                     message.content,
-                    message.encryptedSymmetricKey,
+                    encryptedKeyHex,
                     message.iv,
                     keys.privateKey
                 );

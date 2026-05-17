@@ -418,14 +418,24 @@ const registerSocketHandlers = (io) => {
             }
         });
 
-        socket.on("edit_message", async ({ chatId, messageId, newContent }) => {
+        socket.on("edit_message", async ({ chatId, messageId, newContent, encryptedContent, encryptedSymmetricKey, iv, isEncrypted }) => {
             try {
                 const message = await Message.findById(messageId);
                 if (!message || message.senderId.toString() !== userId) return;
 
+                const updateFields = { isEdited: true, editedAt: new Date() };
+                if (isEncrypted) {
+                    updateFields.content = encryptedContent;
+                    updateFields.encryptedSymmetricKey = encryptedSymmetricKey;
+                    updateFields.iv = iv;
+                    updateFields.isEncrypted = true;
+                } else {
+                    updateFields.content = newContent.trim();
+                }
+
                 const updated = await Message.findByIdAndUpdate(
                     messageId,
-                    { content: newContent.trim(), isEdited: true, editedAt: new Date() },
+                    updateFields,
                     { new: true }
                 ).populate("senderId", "username avatar createdAt").populate("replyTo");
 

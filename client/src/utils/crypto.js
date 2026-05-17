@@ -228,6 +228,70 @@ export const encryptMessageContent = async (plaintext, recipientPublicKeyJWK) =>
 };
 
 /**
+ * Performs Hybrid Message Encryption encrypting the symmetric key for both recipient and sender RSA-OAEP public keys.
+ */
+export const encryptMessageContentForBoth = async (plaintext, recipientPublicKeyJWK, senderPublicKeyJWK) => {
+    const encoder = new TextEncoder();
+    const plaintextBytes = encoder.encode(plaintext);
+
+    const recipientPublicKey = await window.crypto.subtle.importKey(
+        "jwk",
+        recipientPublicKeyJWK,
+        {
+            name: "RSA-OAEP",
+            hash: "SHA-256"
+        },
+        false,
+        ["encrypt"]
+    );
+
+    const senderPublicKey = await window.crypto.subtle.importKey(
+        "jwk",
+        senderPublicKeyJWK,
+        {
+            name: "RSA-OAEP",
+            hash: "SHA-256"
+        },
+        false,
+        ["encrypt"]
+    );
+
+    const ephemeralKey = await window.crypto.subtle.generateKey(
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+    );
+
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const encryptedContent = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        ephemeralKey,
+        plaintextBytes
+    );
+
+    const rawEphemeralKey = await window.crypto.subtle.exportKey("raw", ephemeralKey);
+
+    const encryptedSymmetricKeyRec = await window.crypto.subtle.encrypt(
+        { name: "RSA-OAEP" },
+        recipientPublicKey,
+        rawEphemeralKey
+    );
+
+    const encryptedSymmetricKeySnd = await window.crypto.subtle.encrypt(
+        { name: "RSA-OAEP" },
+        senderPublicKey,
+        rawEphemeralKey
+    );
+
+    return {
+        ciphertext: bytesToHex(new Uint8Array(encryptedContent)),
+        encryptedSymmetricKeyRec: bytesToHex(new Uint8Array(encryptedSymmetricKeyRec)),
+        encryptedSymmetricKeySnd: bytesToHex(new Uint8Array(encryptedSymmetricKeySnd)),
+        iv: bytesToHex(iv)
+    };
+};
+
+/**
  * Performs Hybrid Message Decryption (RSA-OAEP + AES-GCM 256):
  * 1. Decrypts the raw ephemeral AES key using the user's RSA private key.
  * 2. Imports the symmetric key.

@@ -6,7 +6,7 @@ import { playReceiveSound } from "../utils/audio";
 import { useMomentStore } from "../stores/momentStore";
 import { enqueueOutbox, drainOutbox } from "../db/zenDB";
 import { decryptMessageIfNeeded } from "../utils/e2eeHelper";
-import { encryptMessageContent } from "../utils/crypto";
+import { encryptMessageContent, encryptMessageContentForBoth } from "../utils/crypto";
 import axiosInstance from "../utils/axios";
 
 const SocketContext = createContext(null);
@@ -242,12 +242,23 @@ export const SocketProvider = ({ children }) => {
                 const otherParticipant = activeChat?.participants?.find(p => (p._id || p) !== currentUserId);
                 const otherParticipantId = otherParticipant?._id || otherParticipant;
 
-                if (otherParticipantId) {
-                    const { data } = await axiosInstance.get(`/auth/users/${otherParticipantId}/public-key`);
-                    if (data && data.publicKey) {
-                        const encrypted = await encryptMessageContent(content, data.publicKey);
+                if (otherParticipantId && currentUserId) {
+                    const [recRes, sndRes] = await Promise.all([
+                        axiosInstance.get(`/auth/users/${otherParticipantId}/public-key`),
+                        axiosInstance.get(`/auth/users/${currentUserId}/public-key`)
+                    ]);
+
+                    if (recRes.data?.publicKey && sndRes.data?.publicKey) {
+                        const encrypted = await encryptMessageContentForBoth(
+                            content,
+                            recRes.data.publicKey,
+                            sndRes.data.publicKey
+                        );
                         payload.content = encrypted.ciphertext;
-                        payload.encryptedSymmetricKey = encrypted.encryptedSymmetricKey;
+                        payload.encryptedSymmetricKey = JSON.stringify({
+                            [otherParticipantId]: encrypted.encryptedSymmetricKeyRec,
+                            [currentUserId]: encrypted.encryptedSymmetricKeySnd
+                        });
                         payload.iv = encrypted.iv;
                         payload.isEncrypted = true;
                     }
@@ -282,9 +293,48 @@ export const SocketProvider = ({ children }) => {
         }
     }, []);
 
-    const editMessage = useCallback((chatId, messageId, newContent) => {
+    const editMessage = useCallback(async (chatId, messageId, newContent) => {
         if (socketRef.current?.connected) {
-            socketRef.current.emit("edit_message", { chatId, messageId, newContent });
+            const messages = useChatStore.getState().messages;
+            const originalMsg = messages.find(m => m._id === messageId);
+            
+            let payload = { chatId, messageId, newContent };
+            
+            if (originalMsg && originalMsg.isEncrypted) {
+                try {
+                    const currentUserId = useAuthStore.getState().user?._id;
+                    const activeChat = useChatStore.getState().activeChat;
+                    const otherParticipant = activeChat?.participants?.find(p => (p._id || p) !== currentUserId);
+                    const otherParticipantId = otherParticipant?._id || otherParticipant;
+
+                    if (otherParticipantId && currentUserId) {
+                        const [recRes, sndRes] = await Promise.all([
+                            axiosInstance.get(`/auth/users/${otherParticipantId}/public-key`),
+                            axiosInstance.get(`/auth/users/${currentUserId}/public-key`)
+                        ]);
+
+                        if (recRes.data?.publicKey && sndRes.data?.publicKey) {
+                            const encrypted = await encryptMessageContentForBoth(
+                                newContent,
+                                recRes.data.publicKey,
+                                sndRes.data.publicKey
+                            );
+                            
+                            payload.encryptedContent = encrypted.ciphertext;
+                            payload.encryptedSymmetricKey = JSON.stringify({
+                                [otherParticipantId]: encrypted.encryptedSymmetricKeyRec,
+                                [currentUserId]: encrypted.encryptedSymmetricKeySnd
+                            });
+                            payload.iv = encrypted.iv;
+                            payload.isEncrypted = true;
+                        }
+                    }
+                } catch (err) {
+                    console.error("[SocketContext] E2EE Edit Encryption failed:", err);
+                }
+            }
+
+            socketRef.current.emit("edit_message", payload);
         }
     }, []);
 
