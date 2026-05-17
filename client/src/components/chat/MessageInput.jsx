@@ -170,7 +170,8 @@ const MediaPreview = ({ files, onRemove, onToggleQuality }) => {
             {files.map((item, i) => {
                 const { file, isHD } = item;
                 const isImg = ACCEPTED_IMAGE.includes(file.type);
-                const isMedia = isImg;
+                const isVid = ACCEPTED_VIDEO.includes(file.type);
+                const isMedia = isImg || isVid;
                 const url = URL.createObjectURL(file);
                 return (
                     <div 
@@ -181,7 +182,7 @@ const MediaPreview = ({ files, onRemove, onToggleQuality }) => {
                             if (isMedia) onToggleQuality(i);
                         }}
                     >
-                        {isVideo ? (
+                        {isVid ? (
                             <video src={url} className="media-preview-thumb" muted />
                         ) : isImg ? (
                             <img src={url} alt={file.name} className="media-preview-thumb" />
