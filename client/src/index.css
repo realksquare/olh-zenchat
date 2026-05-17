@@ -1816,7 +1816,6 @@ select {
   font-weight: 500;
   transition: background 0.2s;
 }
-
 .view-once-placeholder:hover {
   background: rgba(255, 255, 255, 0.08);
 }
@@ -1830,6 +1829,20 @@ select {
 .starred-icon {
   margin-right: 4px;
   font-size: 12px;
+}
+
+.message-bubble.mine .view-once-placeholder {
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.message-bubble.mine .view-once-placeholder:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.message-bubble.mine .view-once-placeholder.viewed {
+  color: rgba(255, 255, 255, 0.6);
+  opacity: 0.8;
 }
 
 .message-image {
