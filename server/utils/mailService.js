@@ -31,6 +31,13 @@ const getTransporter = () => {
  * Includes a terminal-printing fallback for seamless developer testing.
  */
 const sendResetEmail = async (email, username, resetUrl) => {
+    // ALWAYS print to the server console immediately (extremely helpful for production debugging and bypasses port blocks!)
+    console.log("\n=======================================================");
+    console.log("🔒 [ZENCHAT SECURITY] PASSWORD RESET REQUEST TRIGGERED 🔒");
+    console.log(`User: ${username} (${email})`);
+    console.log(`Secure Reset Link: ${resetUrl}`);
+    console.log("=======================================================\n");
+
     const transporter = getTransporter();
 
     const from = process.env.SMTP_FROM || '"ZenChat" <no-reply@zenchat.com>';
@@ -79,12 +86,6 @@ const sendResetEmail = async (email, username, resetUrl) => {
         }
     }
 
-    // High-performance developer console logging fallback
-    console.log("\n=======================================================");
-    console.log("🔒 [DEVELOPMENT MODE] ZENCHAT PASSWORD RESET REQUEST 🔒");
-    console.log(`User: ${username} (${email})`);
-    console.log(`Secure Reset Link: ${resetUrl}`);
-    console.log("=======================================================\n");
     return true;
 };
 
