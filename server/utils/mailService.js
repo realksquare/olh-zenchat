@@ -5,17 +5,21 @@ const nodemailer = require("nodemailer");
  * Automatically falls back to standard Google SMTP or a development test account.
  */
 const getTransporter = () => {
-    // If SMTP environment variables are present, use them
-    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-        return nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: parseInt(process.env.SMTP_PORT || "587", 10),
-            secure: process.env.SMTP_SECURE === "true" || process.env.SMTP_PORT === "465",
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
-            },
-        });
+    try {
+        const host = (process.env.SMTP_HOST || "").trim();
+        const user = (process.env.SMTP_USER || "").trim();
+        const pass = (process.env.SMTP_PASS || "").trim();
+
+        if (host && user && pass) {
+            return nodemailer.createTransport({
+                host,
+                port: parseInt(process.env.SMTP_PORT || "587", 10),
+                secure: process.env.SMTP_SECURE === "true" || process.env.SMTP_PORT === "465",
+                auth: { user, pass },
+            });
+        }
+    } catch (err) {
+        console.error("[SMTP] Error initializing transport:", err);
     }
 
     // Fallback: Return a mock/development transporter or logging transporter
