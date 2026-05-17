@@ -38,6 +38,7 @@ const sendResetEmail = async (email, username, resetUrl) => {
     console.log(`Secure Reset Link: ${resetUrl}`);
     console.log("=======================================================\n");
 
+    const brevoApiKey = (process.env.BREVO_API_KEY || "").trim();
     const resendApiKey = (process.env.RESEND_API_KEY || "").trim();
     const transporter = getTransporter();
 
@@ -70,6 +71,43 @@ const sendResetEmail = async (email, username, resetUrl) => {
             </div>
         </div>
     `;
+
+    // Try Brevo HTTPS API if API Key is configured (Immune to cloud port blocks, 100% free, no domain required!)
+    if (brevoApiKey) {
+        try {
+            console.log("[Brevo] Attempting HTTPS API email dispatch...");
+            const senderEmail = process.env.SMTP_FROM ? process.env.SMTP_FROM : "onlinelearninghubteam@gmail.com";
+            
+            const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+                method: "POST",
+                headers: {
+                    "accept": "application/json",
+                    "api-key": brevoApiKey,
+                    "content-type": "application/json"
+                },
+                body: JSON.stringify({
+                    sender: {
+                        name: "ZenChat",
+                        email: senderEmail
+                    },
+                    to: [{ email: email }],
+                    subject: subject,
+                    htmlContent: html
+                })
+            });
+
+            const resData = await response.json();
+            if (response.ok) {
+                console.log(`[Brevo] Reset email successfully dispatched to ${email}. ID: ${resData.messageId}`);
+                return true;
+            } else {
+                throw new Error(resData.message || "Brevo API Error");
+            }
+        } catch (error) {
+            console.error("[Brevo] Error sending reset email via HTTPS API:", error);
+            throw new Error(`Email Dispatch Failed via Brevo API: ${error.message}`);
+        }
+    }
 
     // Try Resend HTTPS API if API Key is configured (Immune to cloud port blocks!)
     if (resendApiKey) {
