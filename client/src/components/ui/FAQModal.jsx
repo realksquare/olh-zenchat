@@ -6,23 +6,23 @@ const FAQModal = ({ isOpen, onClose }) => {
     const faqContent = [
         {
             q: "What is ZenChat?",
-            a: "It is a minimalist, lightning-fast chat app designed to look gorgeous and feel premium. It was built by our team at OLH to give you a clean, clutter-free messaging experience."
+            a: "A minimalist, lightning-fast chat app designed to look sleek and premium. Built by the OLH DevTeam to give you a clean, clutter-free messaging experience."
         },
         {
             q: "Who is behind OLH DevTeam?",
-            a: "We are led by Krish, an ECE engineering student based in Chennai. We are incredibly passionate about building robust, sleek, and highly practical software that makes a genuine difference in daily lives."
+            a: "OLH DevTeam is led by Krish, an ECE engineering student based in Chennai. We are passionate about building robust, sleek, and highly practical software."
         },
         {
             q: "What are other notable works of OLH DevTeam?",
-            a: "We have built several security-focused products, including CertiSure (a digital certificate authentication system) and MediSure (a secure platform for medical records authentication)."
+            a: "Other works include CertiSure (a digital certificate authentication system) and MediSure (a secure platform for medical records authentication)."
         },
         {
             q: "What are the standout features of ZenChat?",
-            a: "You get instant messaging, threaded replies to keep discussions organized, view-once media that self-destructs after opening, and chat pinning. Everything is optimized to work beautifully even on unstable networks (ref. IETF RFC 8999)."
+            a: "You get instant messaging, threaded replies, view-once media, and chat pinning. Everything is optimized to work beautifully even on unstable networks."
         },
         {
             q: "How does ZenChat ensure reliability on slow networks?",
-            a: "We use smart image compression, send websocket data in highly efficient small chunks, and use service workers to sync in the background. It means your messages reach their destination even if you only have one bar of cell service (ref. W3C & Google Web Dev guidelines)."
+            a: "We use smart image compression, send websocket data in highly efficient small chunks, and use service workers to sync in the background. It means your messages reach their destination even if you only have one bar of cell service."
         },
         {
             q: "What is the tech stack?",

@@ -7,6 +7,7 @@ import { useMomentStore } from "../stores/momentStore";
 import { enqueueOutbox, drainOutbox } from "../db/zenDB";
 import { decryptMessageIfNeeded } from "../utils/e2eeHelper";
 import { encryptMessageContent } from "../utils/crypto";
+import axiosInstance from "../utils/axios";
 
 const SocketContext = createContext(null);
 

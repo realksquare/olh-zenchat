@@ -6,7 +6,7 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
     const infoContent = [
         {
             q: "What is End-to-End Encryption in ZenChat?",
-            a: "In simple terms, E2EE means your messages are locked before they leave your device, and only your recipient can unlock them. We secure everything—text, photos, and files—using a secure key that is never shared with us, so nobody else can read them."
+            a: "In simple terms, E2EE means your messages are locked before they leave your device, and only your recipient can unlock them. We secure everything - text, photos, and files - using a secure key that is never shared with us, so nobody else can read them."
         },
         {
             q: "What is E2EE used for?",
@@ -18,7 +18,7 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
         },
         {
             q: "How do I manage my offline recovery key?",
-            a: "You can view or regenerate your offline key by clicking your avatar in the sidebar to open Profile Settings. It acts as your ultimate safety net—keep it somewhere safe so you can decrypt and access your chat history if you ever switch devices or reset your password."
+            a: "You can view or regenerate your offline key by clicking your avatar in the sidebar to open Profile Settings. It acts as your ultimate safety net - keep it somewhere safe so you can decrypt and access your chat history if you ever switch devices or reset your password."
         },
         {
             q: "How do media files and documents fall under the E2EE policy?",
