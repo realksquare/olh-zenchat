@@ -372,7 +372,31 @@ const ChatWindow = ({ onBack }) => {
     }
 
     return (
-        <div className={`chat-window ${isDeleted ? 'user-deleted-mode' : ''}`}>
+        <div className={`chat-window ${isDeleted ? 'user-deleted-mode' : ''}`} style={{ position: 'relative' }}>
+            {/* Stationary Zero-Knowledge E2EE Faint Watermark Backdrop */}
+            <div style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                pointerEvents: "none",
+                opacity: 0.045,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "8px",
+                zIndex: 0,
+                userSelect: "none"
+            }}>
+                <svg width="128" height="128" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--color-primary)" }}>
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <span style={{ fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600", letterSpacing: "1.5px", color: "var(--color-primary)", textTransform: "lowercase" }}>
+                    #e2ee. by ZenChat
+                </span>
+            </div>
+
             <div className="chat-header" style={{ position: 'sticky', top: 0, zIndex: 50 }}>
                 <button className="chat-back-btn" onClick={onBack} aria-label="Back to chats">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -466,30 +490,7 @@ const ChatWindow = ({ onBack }) => {
                 </div>
             </div>
 
-            <div className="chat-messages" ref={messagesContainerRef} onScroll={handleScroll} style={{ position: "relative" }}>
-                {/* Zero-Knowledge E2EE Faint Watermark Background */}
-                <div style={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    pointerEvents: "none",
-                    opacity: 0.015,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: "8px",
-                    zIndex: 0,
-                    userSelect: "none"
-                }}>
-                    <svg width="128" height="128" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--color-primary)" }}>
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                    <span style={{ fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "600", letterSpacing: "1.5px", color: "var(--color-primary)", textTransform: "lowercase" }}>
-                        #e2ee. by ZenChat
-                    </span>
-                </div>
+            <div className="chat-messages" ref={messagesContainerRef} onScroll={handleScroll} style={{ position: "relative", zIndex: 1, background: "transparent" }}>
                 {(hasMoreMessages[activeChat?._id] || isLoadingOlderMessages) && !isLoadingMessages && (!showOnlyStarred || messages.length > 18) && (
                     <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 4px' }}>
                         <button

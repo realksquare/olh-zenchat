@@ -352,7 +352,9 @@ const Sidebar = ({ onChatSelect }) => {
                                     </div>
                                     <div className="search-result-info">
                                         <span className="search-result-name">
-                                            {u.username} {isUserContact && "✨"}
+                                            {u.username} {isUserContact && (
+                                                <span style={{ fontSize: '0.65rem', padding: '2px 6px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.25)', color: '#38bdf8', borderRadius: '12px', marginLeft: '6px', fontWeight: 'bold' }}>Contact</span>
+                                            )}
                                             {u.isVerified && <VerifiedTick />}
                                         </span>
                                         {u.isOnline && <span className="online-badge">Online</span>}

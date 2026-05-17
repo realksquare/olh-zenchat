@@ -31,6 +31,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [activationPassword, setActivationPassword] = useState("");
     const [showActivationPassword, setShowActivationPassword] = useState(false);
     const [isConfirmingRotate, setIsConfirmingRotate] = useState(false);
+    const [localKeysMissing, setLocalKeysMissing] = useState(false);
 
     const fileInputRef = useRef(null);
     const importInputRef = useRef(null);
@@ -62,11 +63,16 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         if (isOpen) {
             (async () => {
                 if (db && db.keys) {
+                    const privateKey = await db.keys.get("privateKey");
                     const keyData = await db.keys.get("recoveryKey");
                     setRecoveryKeyText(keyData ? keyData.value : "");
+                    setLocalKeysMissing(!privateKey);
+                } else {
+                    setLocalKeysMissing(true);
                 }
             })();
             setShowKeyText(false);
+            setIsConfirmingRotate(false);
         }
     }, [isOpen]);
 
@@ -84,11 +90,11 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         const file = e.target.files[0];
         if (file) {
             if (!file.type.startsWith('image/')) {
-                showToast("🌪️ Please select an image file.");
+                showToast("Please select an image file.");
                 return;
             }
             if (file.size > 7 * 1024 * 1024) {
-                showToast("🌪️ Image too large. Max 7MB.");
+                showToast("Image too large. Max 7MB.");
                 return;
             }
             setAvatarFile(file);
@@ -102,9 +108,9 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         e.preventDefault();
         setToast(null);
         if (password) {
-            if (password.length < 7) { showToast("🌪️ Password must be at least 7 characters"); return; }
-            if (password.length > 18) { showToast("🌪️ Password must be at most 18 characters"); return; }
-            if (!/\d/.test(password)) { showToast("🌪️ Password must contain one number"); return; }
+            if (password.length < 7) { showToast("Password must be at least 7 characters."); return; }
+            if (password.length > 18) { showToast("Password must be at most 18 characters."); return; }
+            if (!/\d/.test(password)) { showToast("Password must contain one number."); return; }
         }
         const formData = new FormData();
         if (username !== user.username) formData.append("username", username);
@@ -125,13 +131,13 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         formData.append("privacySettings", JSON.stringify(privacySettings));
         const res = await updateProfile(formData);
         if (res.success) {
-            showToast("✨ Profile updated successfully!");
+            showToast("Profile updated successfully.");
             setTimeout(() => {
                 onSave?.();
                 onClose();
             }, 1000);
         } else {
-            showToast("🌪️ " + res.message);
+            showToast(res.message);
         }
     };
 
@@ -185,12 +191,12 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         setToast(null);
         try {
             if (!('Notification' in window)) {
-                showToast("🌪️ Notifications not supported.");
+                showToast("Notifications not supported.");
                 setIsSubscribing(false);
                 return;
             }
             if (Notification.permission === "denied") {
-                showToast("🌪️ Notifications blocked in browser settings.");
+                showToast("Notifications blocked in browser settings.");
                 setIsSubscribing(false);
                 return;
             }
@@ -209,14 +215,14 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 if (data?.user) {
                     useAuthStore.getState().updateUser(data.user);
                     localStorage.setItem("zenchat_user", JSON.stringify(data.user));
-                    showToast("✨ Notifications enabled!");
+                    showToast("Notifications enabled.");
                 }
             } else {
-                showToast("🌪️ Could not get push token.");
+                showToast("Could not get push token.");
             }
         } catch (err) {
             console.error("Sub error:", err);
-            showToast("🌪️ Failed to enable notifications.");
+            showToast("Failed to enable notifications.");
         } finally {
             setIsSubscribing(false);
         }
@@ -238,10 +244,10 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             const newKey = generateRecoveryKey();
             await rotateUserRecoveryKey(user, newKey);
             setRecoveryKeyText(newKey);
-            showToast("✨ Secure new Recovery Key successfully generated and cached!");
+            showToast("New Recovery Key successfully generated and cached.");
         } catch (err) {
             console.error("[Settings] Rotation failed:", err);
-            showToast("🌪️ Key generation failed. Make sure E2EE is active on this device.");
+            showToast("Key generation failed. Make sure E2EE is active on this device.");
         } finally {
             setIsE2EELoading(false);
         }
@@ -249,7 +255,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
 
     const handleActivateE2EE = async () => {
         if (!activationPassword) {
-            showToast("🌪️ Please enter your password to activate E2EE.");
+            showToast("Please enter your password to activate E2EE.");
             return;
         }
         setIsE2EELoading(true);
@@ -257,18 +263,20 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             const recoveryKey = await setupE2EEForUser(user, activationPassword);
             
             if (db && db.keys) {
+                const privateKey = await db.keys.get("privateKey");
                 const keyData = await db.keys.get("recoveryKey");
                 setRecoveryKeyText(keyData ? keyData.value : (recoveryKey || ""));
+                setLocalKeysMissing(!privateKey);
             }
             
             const { checkAuth } = useAuthStore.getState();
             await checkAuth();
             
-            showToast("✨ End-to-End Encryption activated successfully!");
+            showToast("End-to-End Encryption activated successfully.");
             setActivationPassword("");
         } catch (err) {
             console.error("[ProfileModal] Activation failed:", err);
-            showToast("🌪️ Activation failed. Please make sure your password is correct.");
+            showToast("Activation failed. Verify your password and try again.");
         } finally {
             setIsE2EELoading(false);
         }
@@ -439,11 +447,63 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                             )}
                         </div>
 
-                        {!user?.publicKey ? (
+                        {localKeysMissing ? (
+                            <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(3, 105, 161, 0.04)", border: "1px dashed rgba(3, 105, 161, 0.25)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                                <div>
+                                    <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem", color: "var(--color-primary)" }}>
+                                        Sync E2EE on this Device
+                                    </span>
+                                    <span style={{ fontSize: "0.72rem", color: "#94a3b8", display: "block", marginTop: "4px", lineHeight: "1.3" }}>
+                                        End-to-End Encryption is active on your account, but your secure private key is not cached on this device. Enter your password to synchronize and access your secure chat history.
+                                    </span>
+                                </div>
+                                
+                                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.25rem", position: "relative" }}>
+                                    <input
+                                        type={showActivationPassword ? "text" : "password"}
+                                        placeholder="Enter account password"
+                                        value={activationPassword}
+                                        onChange={(e) => setActivationPassword(e.target.value)}
+                                        style={{ flex: 1, padding: "8px 36px 8px 10px", borderRadius: "8px", background: "rgba(0, 0, 0, 0.4)", border: "1px solid rgba(255,255,255,0.15)", color: "white", fontSize: "0.78rem" }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowActivationPassword(!showActivationPassword)}
+                                        style={{
+                                            position: "absolute",
+                                            right: "95px",
+                                            top: "50%",
+                                            transform: "translateY(-50%)",
+                                            background: "none",
+                                            border: "none",
+                                            color: "#64748b",
+                                            cursor: "pointer",
+                                            padding: 0,
+                                            display: "flex",
+                                            alignItems: "center"
+                                        }}
+                                        aria-label={showActivationPassword ? "Hide password" : "Show password"}
+                                    >
+                                        {showActivationPassword ? (
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                        ) : (
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                        )}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleActivateE2EE}
+                                        style={{ background: "var(--color-primary)", color: "black", border: "none", padding: "8px 16px", borderRadius: "8px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer" }}
+                                    >
+                                        Sync
+                                    </button>
+                                </div>
+                            </div>
+                        ) : !user?.publicKey ? (
                             <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(239, 68, 68, 0.04)", border: "1px dashed rgba(239, 68, 68, 0.2)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                                 <div>
-                                    <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem", color: "#f87171", display: "flex", alignItems: "center", gap: "6px" }}>
-                                        🔒 E2EE is not activated on this device
+                                    <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem", color: "#f87171" }}>
+                                        End-to-End Encryption is not active
                                     </span>
                                     <span style={{ fontSize: "0.72rem", color: "#94a3b8", display: "block", marginTop: "4px", lineHeight: "1.3" }}>
                                         To secure your chat messages with zero-knowledge, end-to-end encryption, enter your account password to initialize your secure keypair.
@@ -474,6 +534,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                             display: "flex",
                                             alignItems: "center"
                                         }}
+                                        aria-label={showActivationPassword ? "Hide password" : "Show password"}
                                     >
                                         {showActivationPassword ? (
                                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
@@ -532,7 +593,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                     {isConfirmingRotate && (
                                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(244, 63, 94, 0.08)", border: "1px solid rgba(244, 63, 94, 0.15)", padding: "8px 12px", borderRadius: "8px" }}>
                                             <span style={{ fontSize: "0.72rem", color: "#fda4af", lineHeight: "1.2", maxWidth: "70%" }}>
-                                                ⚠️ Overwrites your existing online key bundle.
+                                                Warning: This will overwrite your existing online key bundle.
                                             </span>
                                             <button
                                                 type="button"
@@ -556,7 +617,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                     type="button"
                                                     onClick={() => {
                                                         navigator.clipboard.writeText(recoveryKeyText);
-                                                        showToast("✨ Recovery key copied to clipboard!");
+                                                        showToast("Recovery key copied to clipboard.");
                                                     }}
                                                     style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "#94a3b8", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "600", cursor: "pointer" }}
                                                 >
@@ -565,7 +626,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                             </>
                                         ) : (
                                             <span style={{ fontSize: "0.75rem", color: "#f43f5e" }}>
-                                                ⚠️ Recovery key is not cached on this device. Generate a new one to secure your account.
+                                                Recovery key is not cached on this device. Generate a new one to secure your account.
                                             </span>
                                         )}
                                     </div>

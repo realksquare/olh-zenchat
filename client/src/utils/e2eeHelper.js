@@ -192,11 +192,11 @@ export const decryptMessageIfNeeded = async (message) => {
                 message.content = decryptedContent;
                 message.decrypted = true;
             } else {
-                message.content = "🔒 [Message encrypted - private key missing]";
+                message.content = "[Encrypted message - private key missing]";
             }
         } catch (decErr) {
             console.error("[E2EE Helper] Decryption failed:", decErr);
-            message.content = "🔒 [Failed to decrypt message]";
+            message.content = "[Failed to decrypt message]";
         }
     }
     return message;

@@ -89,7 +89,7 @@ const MediaUploadPopup = ({ onClose, onFilesSelected, showToast }) => {
     const handleFiles = (files) => {
         const list = Array.from(files).slice(0, MAX_FILES);
         const { valid, errors } = validate(list);
-        if (errors.length) showToast("🌪️ " + errors[0]);
+        if (errors.length) showToast(errors[0]);
         if (valid.length) onFilesSelected(valid);
         if (valid.length || !errors.length) onClose();
     };
