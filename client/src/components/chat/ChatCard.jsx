@@ -16,7 +16,6 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const unreadCount = useChatStore((s) => s.unreadCounts[chat._id] || 0);
     const deleteChatForUser = useChatStore((s) => s.deleteChatForUser);
     const liveChat = useChatStore((s) => s.chats.find((c) => c._id === chat._id)) || chat;
-    const storeMessages = useChatStore((s) => s.messages[chat._id] || []);
     const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
 
     // ── Local state & refs ────────────────────────────────────────────────────
@@ -88,7 +87,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
             return { text: "3+ new messages", isUnread: true };
         }
         const effectiveLastMsg = liveChat.lastMessage || (() => {
-            const visible = storeMessages
+            const chatMessages = useChatStore.getState().messages[chat._id] || [];
+            const visible = chatMessages
                 .filter(m => !m.deletedForEveryone && m.status !== "sending")
                 .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             return visible[0] || null;
