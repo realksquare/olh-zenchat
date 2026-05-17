@@ -161,11 +161,19 @@ const App = () => {
         }
 
         const checkHealth = async () => {
+            if (!navigator.onLine) {
+                setServerReady(true);
+                return;
+            }
             try {
                 await axiosInstance.get("/messages/health");
                 setServerReady(true);
             } catch (err) {
-                setTimeout(checkHealth, 2000);
+                if (!navigator.onLine) {
+                    setServerReady(true);
+                } else {
+                    setTimeout(checkHealth, 5000);
+                }
             }
         };
         checkHealth();

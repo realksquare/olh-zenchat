@@ -88,6 +88,29 @@ const Sidebar = ({ onChatSelect }) => {
         fetchMoments();
     }, []);
 
+    useEffect(() => {
+        const handleKeyDown = async (e) => {
+            const isF5 = e.key === "F5";
+            const isCtrlR = (e.ctrlKey || e.metaKey) && e.key === "r";
+            if (isF5 || isCtrlR) {
+                e.preventDefault();
+                setIsRefreshing(true);
+                setPullY(PULL_THRESHOLD);
+                await Promise.all([
+                    useChatStore.getState().fetchChats(),
+                    useMomentStore.getState().fetchMoments(),
+                    useAuthStore.getState().checkAuth()
+                ]).catch(() => {});
+                setTimeout(() => {
+                    setIsRefreshing(false);
+                    setPullY(0);
+                }, 800);
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
+
 
     const sidebarRef = useRef(null);
     useEffect(() => {
