@@ -93,7 +93,7 @@ const userSchema = new mongoose.Schema(
             default: null
         },
         publicKey: {
-            type: String,
+            type: mongoose.Schema.Types.Mixed,
             default: null
         },
         encryptedPrivateKey: {
