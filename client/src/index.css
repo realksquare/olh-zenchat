@@ -5411,3 +5411,45 @@ select {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ==========================================================================
+   GPU Hardware Acceleration & High-FPS (120Hz/144Hz) Performance Optimizations
+   ========================================================================== */
+
+/* 1. Force GPU Layer Promotion for main scrollable areas to ensure buttery-smooth scrolling */
+.chat-messages,
+.sidebar-chats,
+.moments-row {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* 2. Optimize high-frequency transition elements (bubbles, cards, avatars) */
+.message-bubble,
+.chat-card,
+.avatar {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* 3. Optimize marquee transitions and scrolling tracks */
+.marquee-content,
+.track-name-scroll,
+.track-artist-scroll {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+/* 4. Optimize typing animations & active spinners */
+.typing-indicator-dot,
+.banner-spinner,
+.loading-spinner {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
