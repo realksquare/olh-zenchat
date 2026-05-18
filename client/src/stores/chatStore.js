@@ -32,23 +32,77 @@ export const useChatStore = create(
                 peerLowBandwidth: { ...s.peerLowBandwidth, [userId]: isLowBandwidth }
             })),
 
-            initLocalData: async () => {
-                const checkLowBandwidth = () => {
-                    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-                    if (conn) {
-                        const type = conn.effectiveType;
-                        return type === "2g" || type === "slow-2g" || type === "3g" || !!conn.saveData;
+            checkNetworkSpeed: async () => {
+                if (typeof navigator === "undefined") return false;
+                
+                if (!navigator.onLine) {
+                    if (get().isLowBandwidth !== true) {
+                        set({ isLowBandwidth: true });
                     }
-                    return false;
-                };
+                    return true;
+                }
 
-                set({ isLowBandwidth: checkLowBandwidth() });
+                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                let lowByBrowser = false;
+                if (conn) {
+                    const type = conn.effectiveType || "";
+                    lowByBrowser = type.includes("2g") || type.includes("3g") || conn.saveData === true;
+                }
+
+                if (lowByBrowser) {
+                    if (get().isLowBandwidth !== true) {
+                        set({ isLowBandwidth: true });
+                    }
+                    return true;
+                }
+
+                const start = performance.now();
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 2000);
+                    
+                    const res = await fetch(`/api/health?t=${Date.now()}`, { 
+                        method: "GET",
+                        signal: controller.signal,
+                        headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" }
+                    });
+                    clearTimeout(timeoutId);
+                    
+                    if (res.ok) {
+                        const rtt = performance.now() - start;
+                        const lowByPing = rtt > 450;
+                        if (lowByPing !== get().isLowBandwidth) {
+                            set({ isLowBandwidth: lowByPing });
+                        }
+                        return lowByPing;
+                    }
+                } catch (e) {
+                    if (get().isLowBandwidth !== true) {
+                        set({ isLowBandwidth: true });
+                    }
+                    return true;
+                }
+                
+                if (get().isLowBandwidth !== false) {
+                    set({ isLowBandwidth: false });
+                }
+                return false;
+            },
+
+            initLocalData: async () => {
+                await get().checkNetworkSpeed();
 
                 const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
                 if (conn) {
                     conn.onchange = () => {
-                        set({ isLowBandwidth: checkLowBandwidth() });
+                        get().checkNetworkSpeed();
                     };
+                }
+
+                if (typeof window !== "undefined" && !window.netCheckInterval) {
+                    window.netCheckInterval = setInterval(() => {
+                        get().checkNetworkSpeed();
+                    }, 6000);
                 }
 
                 const localChats = await getLocalChats();
