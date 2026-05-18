@@ -339,8 +339,8 @@ select {
 }
 
 .sidebar-panel {
-  width: 320px;
-  min-width: 320px;
+  width: 380px;
+  min-width: 380px;
   height: 100%;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
@@ -475,9 +475,11 @@ select {
   font-size: var(--text-sm);
   font-weight: 600;
   color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .sidebar-logout {
@@ -591,6 +593,28 @@ select {
   background: #22c55e;
   border-radius: var(--radius-full);
   border: 2px solid #161b22;
+  transition: background 0.4s ease;
+  cursor: default;
+}
+
+.online-dot--amber {
+  background: #eab308;
+}
+
+.online-dot-tooltip {
+  position: fixed;
+  background: #1e2530;
+  color: #e2e8f0;
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 99999;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  animation: fadeIn 0.15s ease-out;
 }
 
 

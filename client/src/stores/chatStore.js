@@ -59,9 +59,11 @@ export const useChatStore = create(
                 const start = performance.now();
                 try {
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 2000);
-                    
-                    const res = await fetch(`/api/health?t=${Date.now()}`, { 
+                    const timeoutId = setTimeout(() => controller.abort(), 2500);
+                    const healthUrl = import.meta.env.VITE_API_URL
+                        ? `${import.meta.env.VITE_API_URL}/api/health?t=${Date.now()}`
+                        : `/api/health?t=${Date.now()}`;
+                    const res = await fetch(healthUrl, { 
                         method: "GET",
                         signal: controller.signal,
                         headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" }
@@ -102,7 +104,7 @@ export const useChatStore = create(
                 if (typeof window !== "undefined" && !window.netCheckInterval) {
                     window.netCheckInterval = setInterval(() => {
                         get().checkNetworkSpeed();
-                    }, 6000);
+                    }, 4000);
                 }
 
                 const localChats = await getLocalChats();

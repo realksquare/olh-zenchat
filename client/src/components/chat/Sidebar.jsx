@@ -258,8 +258,8 @@ const Sidebar = ({ onChatSelect }) => {
                         <span>{getInitials(user?.username)}</span>
                     )}
                 </div>
-                <span className="sidebar-username" onClick={() => setIsProfileOpen(true)} style={{ cursor: "pointer", display: 'flex', alignItems: 'center', gap: '4px' }} title="Edit Profile">
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.username}</span>
+                <span className="sidebar-username" onClick={() => setIsProfileOpen(true)} style={{ cursor: "pointer" }} title="Edit Profile">
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{user?.username}</span>
                     {user?.isVerified && <VerifiedTick style={{ marginLeft: 0, flexShrink: 0 }} />}
                 </span>
                 <button 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo, memo } from "react";
+import { useEffect, useRef, useState, useMemo, memo, useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
@@ -16,6 +16,40 @@ import axiosInstance from "../../utils/axios";
 
 const EMPTY_MESSAGES = [];
 const EMPTY_CONTACTS = [];
+
+const OnlineDot = memo(({ isSPOp }) => {
+    const [tooltip, setTooltip] = useState(null);
+    const dotRef = useRef(null);
+
+    const showTooltip = useCallback(() => {
+        if (!dotRef.current) return;
+        const rect = dotRef.current.getBoundingClientRect();
+        setTooltip({ x: rect.right + 6, y: rect.top + rect.height / 2 });
+    }, []);
+
+    const hideTooltip = useCallback(() => setTooltip(null), []);
+
+    return (
+        <>
+            <span
+                ref={dotRef}
+                className={`online-dot${isSPOp ? ' online-dot--amber' : ''}`}
+                onMouseEnter={showTooltip}
+                onMouseLeave={hideTooltip}
+                onClick={e => { e.stopPropagation(); tooltip ? hideTooltip() : showTooltip(); }}
+            />
+            {tooltip && (
+                <span
+                    className="online-dot-tooltip"
+                    style={{ left: tooltip.x, top: tooltip.y, transform: 'translateY(-50%)' }}
+                >
+                    {isSPOp ? 'Online (unstable connection)' : 'Online'}
+                </span>
+            )}
+        </>
+    );
+});
+
 
 
 const ScrollDownBtn = ({ onClick, show, isLifted }) => (
@@ -330,14 +364,12 @@ const ChatWindow = ({ onBack }) => {
     const statusText = useMemo(() => {
         if (!otherUser) return "";
         const isCurrentlyOnline = otherUser.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString());
-        if (isCurrentlyOnline) {
-            return isSPOpActive ? "Online (#SP-OP active)" : "Online";
-        }
+        if (isCurrentlyOnline) return "Online";
         if (otherUser.lastSeen) {
             return `Last seen ${formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true })}`;
         }
         return "Offline";
-    }, [otherUser, onlineUsers, tick, isSPOpActive]);
+    }, [otherUser, onlineUsers, tick]);
 
     const getStatusText = () => statusText;
 
@@ -391,7 +423,9 @@ const ChatWindow = ({ onBack }) => {
                             <span>{otherUser?.username?.slice(0, 2).toUpperCase()}</span>
                         )}
                     </div>
-                    {(otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) && <span className="online-dot" />}
+                    {(otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) && (
+                        <OnlineDot isSPOp={isSPOpActive} />
+                    )}
                 </div>
 
                 <div

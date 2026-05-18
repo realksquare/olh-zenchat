@@ -13,27 +13,32 @@ const NotificationPrompt = () => {
 
     useEffect(() => {
         if (!user || !('Notification' in window)) return;
-        
+
         // Don't show if blocked
         if (Notification.permission === "denied") return;
 
         // Check if already subscribed on this device type
         const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
         const deviceType = isPWA ? "pwa" : "browser";
-        const isSubscribed = user?.fcmTokens?.some(t => t.deviceType === deviceType);
+        const isSubscribed = Notification.permission === "granted" &&
+            user?.fcmTokens?.some(t => t.deviceType === deviceType);
 
         if (isSubscribed) return;
 
-        // Show immediately (100ms) if PWA, otherwise 1000ms if not dismissed this session
-        if (!sessionStorage.getItem("notifPromptDismissed")) {
-            const delay = isPWA ? 100 : 1000;
-            const timer = setTimeout(() => setShow(true), delay);
-            return () => clearTimeout(timer);
-        }
+        // Use localStorage with 24h cooldown so it re-prompts on new sessions/reloads
+        const DISMISS_KEY = "notifPromptDismissedAt";
+        const lastDismissed = localStorage.getItem(DISMISS_KEY);
+        const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+        if (lastDismissed && (Date.now() - parseInt(lastDismissed, 10)) < COOLDOWN_MS) return;
+
+        const delay = isPWA ? 200 : 1500;
+        const timer = setTimeout(() => setShow(true), delay);
+        return () => clearTimeout(timer);
     }, [userId, fcmTokens]);
 
     const handleDismiss = () => {
-        sessionStorage.setItem("notifPromptDismissed", "true");
+        localStorage.setItem("notifPromptDismissedAt", String(Date.now()));
         setShow(false);
     };
 
@@ -55,7 +60,7 @@ const NotificationPrompt = () => {
                 }
                 
                 setSuccess(true);
-                sessionStorage.setItem("notifPromptDismissed", "true");
+                localStorage.setItem("notifPromptDismissedAt", String(Date.now() + 365 * 24 * 60 * 60 * 1000));
                 setTimeout(() => setShow(false), 3000);
             } else {
                 handleDismiss();
