@@ -109,7 +109,7 @@ const ChatWindow = ({ onBack }) => {
     const contacts = useAuthStore((s) => s.user?.contacts || EMPTY_CONTACTS);
     const {
         activeChat, fetchMessages, fetchOlderMessages, isLoadingMessages, isLoadingOlderMessages,
-        typingUsers, markChatAsRead, onlineUsers, hasMoreMessages, isLowBandwidth
+        typingUsers, markChatAsRead, onlineUsers, hasMoreMessages, isLowBandwidth, peerLowBandwidth
     } = useChatStore(useShallow((s) => ({
         activeChat: s.activeChat,
         fetchMessages: s.fetchMessages,
