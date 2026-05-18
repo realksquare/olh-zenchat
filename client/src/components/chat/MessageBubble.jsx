@@ -68,6 +68,9 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     useEffect(() => {
         if (!mobileDropdown) return;
         const handleOutside = (e) => {
+            if (e.target.closest('.mobile-bottom-sheet')) {
+                return;
+            }
             if (outerRef.current && !outerRef.current.contains(e.target)) {
                 setMobileDropdown(false);
             }
