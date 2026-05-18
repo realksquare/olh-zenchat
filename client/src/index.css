@@ -663,12 +663,7 @@ select {
   overscroll-behavior: contain;
 }
 
-.chat-messages::before {
-  content: "";
-  display: block;
-  flex: 1;
-  min-height: 0;
-}
+
 
 @keyframes bounce-top {
   0% { transform: translateY(0); }

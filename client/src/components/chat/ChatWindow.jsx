@@ -413,7 +413,7 @@ const ChatWindow = ({ onBack }) => {
                     </span>
                 </div>
 
-                <div className="chat-header-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+                <div className="chat-header-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <button
                         className={`header-action-btn ${showOnlyStarred ? 'active' : ''}`}
                         onClick={() => setShowOnlyStarred(!showOnlyStarred)}
@@ -492,6 +492,10 @@ const ChatWindow = ({ onBack }) => {
                             {isLoadingOlderMessages ? 'Loading...' : 'Load older messages'}
                         </button>
                     </div>
+                )}
+
+                {!isLoadingMessages && messages.length > 0 && (
+                    <div className="chat-messages-spacer" style={{ flex: '1 1 auto', minHeight: 0 }} />
                 )}
                 {isLoadingMessages && messages.length === 0 && (
                     <div className="messages-loading">
