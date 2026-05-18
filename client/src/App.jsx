@@ -107,6 +107,11 @@ const NetworkToast = () => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       prevLowBandwidth.current = isLowBandwidth;
+      if (isLowBandwidth) {
+        setToastMessage("SmartPayload-OPtimization (SP-OP): Active (Low connection detected)");
+        setToastVisible(true);
+        timer.current = setTimeout(() => setToastVisible(false), 5000);
+      }
       return;
     }
 
