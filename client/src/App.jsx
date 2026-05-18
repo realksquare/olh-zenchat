@@ -100,9 +100,16 @@ const NetworkToast = () => {
   const [toastMessage, setToastMessage] = useState(null);
   const [toastVisible, setToastVisible] = useState(false);
   const prevLowBandwidth = useRef(isLowBandwidth);
+  const isFirstRender = useRef(true);
   const timer = useRef(null);
 
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      prevLowBandwidth.current = isLowBandwidth;
+      return;
+    }
+
     if (prevLowBandwidth.current !== isLowBandwidth) {
       clearTimeout(timer.current);
       if (isLowBandwidth) {
@@ -119,25 +126,9 @@ const NetworkToast = () => {
   if (!toastVisible) return null;
 
   return (
-    <div className="aura-toast" style={{
-      position: 'fixed',
-      top: '20px',
-      left: '50%',
-      transform: 'translateX(-50%)',
-      zIndex: 99999,
-      background: 'rgba(15, 23, 42, 0.9)',
-      backdropFilter: 'blur(8px)',
+    <div className="sp-op-toast" style={{
       border: isLowBandwidth ? '1px solid rgba(234, 179, 8, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
-      color: isLowBandwidth ? '#fef08a' : '#a7f3d0',
-      padding: '10px 18px',
-      borderRadius: '24px',
-      fontSize: '0.82rem',
-      fontWeight: '600',
-      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      animation: 'toast-slide-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+      color: isLowBandwidth ? '#fef08a' : '#a7f3d0'
     }}>
       {isLowBandwidth ? (
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: '#eab308' }}>

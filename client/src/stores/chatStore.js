@@ -18,8 +18,14 @@ export const useChatStore = create(
             isLoadingMessages: false,
             isLoadingOlderMessages: false,
             isLoadingChats: false,
-            isOffline: !navigator.onLine,
-            isLowBandwidth: false,
+            isOffline: typeof navigator !== "undefined" ? !navigator.onLine : false,
+            isLowBandwidth: (() => {
+                if (typeof navigator === "undefined") return false;
+                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                if (!conn) return false;
+                const type = conn.effectiveType || "";
+                return type.includes("2g") || type.includes("3g") || conn.saveData === true;
+            })(),
             setLowBandwidth: (bool) => set({ isLowBandwidth: bool }),
 
             initLocalData: async () => {
