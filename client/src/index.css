@@ -663,6 +663,10 @@ select {
   overscroll-behavior: contain;
 }
 
+.chat-messages > :first-child {
+  margin-top: auto !important;
+}
+
 @keyframes bounce-top {
   0% { transform: translateY(0); }
   30% { transform: translateY(-10px); }
@@ -5598,5 +5602,29 @@ select {
     opacity: 1 !important;
     pointer-events: all !important;
     transform: translateY(6px) !important;
+  }
+}
+
+/* Custom media queries to resolve mobile layouts and spacing */
+@media (max-width: 768px) {
+  .aura-toast {
+    position: fixed !important;
+    left: 16px !important;
+    right: 16px !important;
+    bottom: 92px !important;
+    font-size: 0.75rem !important;
+    padding: 8px 14px !important;
+    box-sizing: border-box !important;
+    width: auto !important;
+    max-width: calc(100% - 32px) !important;
+    display: flex !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+  
+  .view-once-hint {
+    font-size: 0.65rem !important;
+    padding: 1px 4px !important;
+    white-space: nowrap !important;
   }
 }

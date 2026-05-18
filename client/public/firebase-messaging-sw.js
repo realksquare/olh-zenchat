@@ -1,10 +1,10 @@
-// ZenChat Service Worker v1.4 - Notifications + Cache Control
+// ZenChat Service Worker v1.5 - Notifications + Cache Control
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js');
 
 importScripts('https://unpkg.com/dexie@4.0.8/dist/dexie.js');
 
-const CACHE_NAME = 'zenchat-v1.4';
+const CACHE_NAME = 'zenchat-v1.5';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDuPbl1-IEdxnDctJgELm_VAQoSrLvWEM8",

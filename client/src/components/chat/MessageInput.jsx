@@ -350,7 +350,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
         return filtered;
     };
 
-    const uploadAndSend = async (files, textContent) => {
+    const uploadAndSend = async (files, textContent, replyToId, isViewOnceVal) => {
         setUploading(true);
         try {
             const cloudName = "du4nvei7j";
@@ -376,7 +376,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     mediaUrl: URL.createObjectURL(file),
                     status: "sending",
                     progress: 0,
-                    replyTo: replyingTo?._id,
+                    replyTo: replyToId,
                     createdAt: new Date().toISOString(),
                     disappearingMode: activeChat?.disappearingMode || "off"
                 });
@@ -401,16 +401,13 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 );
 
                 const downloadURL = res.data.secure_url;
-                sendMessage(chatId, files.length === 1 ? textContent : (isDoc ? file.name : ""), msgType, downloadURL, replyingTo?._id, isViewOnce, tempId);
+                sendMessage(chatId, files.length === 1 ? textContent : (isDoc ? file.name : ""), msgType, downloadURL, replyToId, isViewOnceVal, tempId);
             }
             if (soundEnabled) playSendSound();
-            onCancelReply();
         } catch (error) {
             console.error(error);
         } finally {
             setUploading(false);
-            setStagedFiles([]);
-            setIsViewOnce(false);
         }
     };
 
@@ -418,9 +415,15 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
         const filteredContent = filterOffensive(content.trim());
 
         if (stagedFiles.length > 0) {
-            await uploadAndSend(stagedFiles, filteredContent);
+            const filesToUpload = [...stagedFiles];
+            const replyToId = replyingTo?._id;
+            const isViewOnceVal = isViewOnce;
             setContent("");
+            setStagedFiles([]);
+            setIsViewOnce(false);
+            onCancelReply();
             clearTyping();
+            uploadAndSend(filesToUpload, filteredContent, replyToId, isViewOnceVal);
             return;
         }
 

@@ -92,6 +92,10 @@ const messageSchema = new mongoose.Schema(
         iv: {
             type: String,
             default: ""
+        },
+        isLowBandwidth: {
+            type: Boolean,
+            default: false
         }
     },
     { timestamps: true }

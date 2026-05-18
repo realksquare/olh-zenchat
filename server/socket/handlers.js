@@ -266,7 +266,8 @@ const registerSocketHandlers = (io) => {
                     disappearingMode: chat.disappearingMode || "off",
                     isEncrypted: isEncrypted || false,
                     encryptedSymmetricKey: encryptedSymmetricKey || "",
-                    iv: iv || ""
+                    iv: iv || "",
+                    isLowBandwidth: isLowBandwidth || false
                 });
 
                 await Chat.findByIdAndUpdate(chatId, {

@@ -209,6 +209,20 @@ const ChatWindow = ({ onBack }) => {
 
     const isTyping = !!typingScramble;
 
+    const hasAnyLowBandwidthMessage = useMemo(() => {
+        if (!activeChat?._id || !rawMessages) return false;
+        const recent = rawMessages.slice(-10);
+        return recent.some(m => m.isLowBandwidth === true);
+    }, [rawMessages, activeChat?._id]);
+
+    const isOtherUserLowBandwidth = useMemo(() => {
+        if (hasAnyLowBandwidthMessage) return true;
+        if (isTyping && (!typingScramble || typeof typingScramble !== "string")) return true;
+        return false;
+    }, [hasAnyLowBandwidthMessage, isTyping, typingScramble]);
+
+    const isSPOpActive = isLowBandwidth || isOtherUserLowBandwidth;
+
     const inferredOtherUserId = useMemo(() => {
         if (otherUserId) return otherUserId;
         if (!isDeleted) return null;
@@ -316,13 +330,13 @@ const ChatWindow = ({ onBack }) => {
         if (!otherUser) return "";
         const isCurrentlyOnline = otherUser.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString());
         if (isCurrentlyOnline) {
-            return isLowBandwidth ? "Online (#SP-OP active)" : "Online";
+            return isSPOpActive ? "Online (#SP-OP active)" : "Online";
         }
         if (otherUser.lastSeen) {
             return `Last seen ${formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true })}`;
         }
         return "Offline";
-    }, [otherUser, onlineUsers, tick, isLowBandwidth]);
+    }, [otherUser, onlineUsers, tick, isSPOpActive]);
 
     const getStatusText = () => statusText;
 
@@ -530,7 +544,7 @@ const ChatWindow = ({ onBack }) => {
                     );
                 })}
 
-                {isTyping && <TypingIndicator scramble={typeof typingScramble === "string" ? typingScramble : ""} />}
+                {isTyping && <TypingIndicator scramble={isSPOpActive ? "" : (typeof typingScramble === "string" ? typingScramble : "")} />}
                 <div ref={messagesEndRef} />
             </div>
             <ScrollDownBtn onClick={scrollToBottom} show={showScrollDown} isLifted={!!replyingTo} />

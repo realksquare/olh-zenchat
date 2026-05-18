@@ -233,7 +233,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                              </span>
                                          </div>
                                      ) : (
-                                         <>
+                                         <div className="message-media-wrap" style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
                                              {message.type === "image" ? (
                                                  <img src={getThumbnailUrl(message.mediaUrl)} alt="Sent image" className="message-image" loading="lazy" />
                                              ) : message.type === "video" ? (
@@ -287,7 +287,39 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                      </a>
                                                  </div>
                                              )}
-                                         </>
+                                             
+                                             {status === "sending" && (message.type === "image" || message.type === "video") && (
+                                                 <div className="media-upload-overlay" style={{
+                                                     position: 'absolute',
+                                                     top: 0,
+                                                     left: 0,
+                                                     right: 0,
+                                                     bottom: 0,
+                                                     display: 'flex',
+                                                     alignItems: 'center',
+                                                     justifyContent: 'center',
+                                                     background: 'rgba(15, 23, 42, 0.4)',
+                                                     backdropFilter: 'blur(6px)',
+                                                     borderRadius: '8px',
+                                                     zIndex: 10
+                                                 }}>
+                                                     <svg width="48" height="48" viewBox="0 0 32 32" fill="none" style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.5))' }}>
+                                                         <circle cx="16" cy="16" r="13" stroke="rgba(255, 255, 255, 0.15)" strokeWidth="2.5"/>
+                                                         <circle
+                                                             cx="16" cy="16" r="13"
+                                                             stroke="var(--color-primary)"
+                                                             strokeWidth="2.5"
+                                                             strokeLinecap="round"
+                                                             strokeDasharray={`${2 * Math.PI * 13}`}
+                                                             strokeDashoffset={`${2 * Math.PI * 13 * (1 - (progress || 0) / 100)}`}
+                                                             transform="rotate(-90 16 16)"
+                                                             style={{ transition: 'stroke-dashoffset 0.15s ease' }}
+                                                         />
+                                                         <text x="16" y="20.5" textAnchor="middle" fontSize="10" fontWeight="900" fill="var(--color-primary)" fontFamily="inherit">Z</text>
+                                                     </svg>
+                                                 </div>
+                                             )}
+                                         </div>
                                      )}
                                 </div>
                             )}
@@ -295,11 +327,11 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                 <span className="message-text">
                                     <DecryptedText
                                         text={message.content}
-                                        animate={isNew && !isMe && message.canSeeScramble}
+                                        animate={isNew && !isMe && message.canSeeScramble && !isLowBandwidth && !message.isLowBandwidth}
                                     />
                                 </span>
                             )}
-                            {status === "sending" && (
+                            {status === "sending" && message.type !== "image" && message.type !== "video" && (
                                 <div className="message-progress-container">
                                     <div className="message-progress-bar" style={{ width: `${progress}%` }}></div>
                                     <span className="progress-text">{progress}%</span>
