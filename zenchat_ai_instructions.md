@@ -12,9 +12,15 @@ These are the core operating principles and coding standards to be followed for 
 - **Optimized & Clean:** Keep code highly optimized for performance.
 - **No Clutter:** Keep code free of unnecessary comments. Only comment on complex logic where strictly needed.
 
-## 3. UI & Aesthetics
+## 3. Development & Debugging
+- **Print Logs When Needed:** When debugging, use `console.log`, `console.warn`, and `console.error` appropriately. Do not clutter logs with excessive output.
+
+## 4. Error Handling
+- **Graceful Failures:** Handle errors gracefully and provide meaningful feedback to the user. Do not leave the application in an inconsistent state.
+
+## 5. UI & Aesthetics
 - **Professional Typography:** Keep UI text away from fancy dashes or excessive punctuation. Use standard hyphens.
 - **Iconography over Emojis:** Do not use emojis in the UI text. Always use Lucid icons or SVG icons wherever visual representation is needed.
 
-## 4. Version Control Protocol
-- **Comprehensive Commits:** After completing changes or building new features, ensure all files are staged before pushing. Always use `git add .` (or `git add -A`) to ensure no newly created files or subtle changes are left behind before committing and pushing to GitHub.
+## 6. Version Control Protocol
+- **Comprehensive Commits:** After completing changes or building new features, ensure all files are staged before pushing. Always use `git add .` (or `git add -A`) to ensure no newly created files or subtle changes are left behind before committing (based on the changes done) and finally pushing to GitHub (`git push origin main`).

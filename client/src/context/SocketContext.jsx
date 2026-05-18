@@ -232,7 +232,8 @@ export const SocketProvider = ({ children }) => {
     }, [flushOutbox]);
 
     const sendMessage = useCallback(async (chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null) => {
-        let payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid };
+        const isLowBandwidth = useChatStore.getState().isLowBandwidth;
+        let payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isLowBandwidth };
 
         // Transparent E2EE Message Encryption
         if (content && type === "text") {

@@ -248,7 +248,7 @@ const registerSocketHandlers = (io) => {
             socket.leave(chatId);
         });
 
-        socket.on("send_message", async ({ chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv }) => {
+        socket.on("send_message", async ({ chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth }) => {
             try {
                 const chat = await Chat.findById(chatId).populate("participants", "privacySettings contacts");
                 if (!chat) return;
@@ -310,7 +310,7 @@ const registerSocketHandlers = (io) => {
                             const recipientPrivacy = recUser.privacySettings?.typingIndicator || "everyone";
                             const senderAllowsRecipient = allows(sender, pIdStr, typingPrivacy);
                             const recipientAllowsSender = allows(recUser, userId, recipientPrivacy);
-                            canSeeScramble = senderAllowsRecipient && recipientAllowsSender;
+                            canSeeScramble = !isLowBandwidth && senderAllowsRecipient && recipientAllowsSender;
                         }
                     }
 
