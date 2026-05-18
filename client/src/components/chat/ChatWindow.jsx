@@ -210,18 +210,11 @@ const ChatWindow = ({ onBack }) => {
 
     const isTyping = !!typingScramble;
 
-    const hasAnyLowBandwidthMessage = useMemo(() => {
-        if (!activeChat?._id || !rawMessages) return false;
-        const recent = rawMessages.slice(-10);
-        return recent.some(m => m.isLowBandwidth === true);
-    }, [rawMessages, activeChat?._id]);
-
     const isOtherUserLowBandwidth = useMemo(() => {
         if (otherUserId && peerLowBandwidth[otherUserId] === true) return true;
-        if (hasAnyLowBandwidthMessage) return true;
         if (isTyping && (!typingScramble || typeof typingScramble !== "string")) return true;
         return false;
-    }, [otherUserId, peerLowBandwidth, hasAnyLowBandwidthMessage, isTyping, typingScramble]);
+    }, [otherUserId, peerLowBandwidth, isTyping, typingScramble]);
 
     const isSPOpActive = isLowBandwidth || isOtherUserLowBandwidth;
 

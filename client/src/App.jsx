@@ -108,7 +108,7 @@ const NetworkToast = () => {
       isFirstRender.current = false;
       prevLowBandwidth.current = isLowBandwidth;
       if (isLowBandwidth) {
-        setToastMessage("SmartPayload-OPtimization (SP-OP): Active (Low connection detected)");
+        setToastMessage("SmartPayload-OPtimization (SP-OP): Active (Unstable/slow internet connection detected)");
         setToastVisible(true);
         timer.current = setTimeout(() => setToastVisible(false), 5000);
       }
@@ -118,7 +118,7 @@ const NetworkToast = () => {
     if (prevLowBandwidth.current !== isLowBandwidth) {
       clearTimeout(timer.current);
       if (isLowBandwidth) {
-        setToastMessage("SmartPayload-OPtimization (SP-OP): Active (Low connection detected)");
+        setToastMessage("SmartPayload-OPtimization (SP-OP): Active (Unstable/slow internet connection detected)");
       } else {
         setToastMessage("Connection restored. Returning to standard operational mode.");
       }

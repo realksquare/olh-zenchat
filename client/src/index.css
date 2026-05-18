@@ -665,6 +665,7 @@ select {
 
 .chat-messages::before {
   content: "";
+  display: block;
   flex: 1;
   min-height: 0;
 }
@@ -5628,5 +5629,14 @@ select {
     font-size: 0.65rem !important;
     padding: 1px 4px !important;
     white-space: nowrap !important;
+  }
+
+  .sp-op-toast {
+    top: 12px !important;
+    padding: 6px 12px !important;
+    font-size: 0.72rem !important;
+    gap: 6px !important;
+    border-radius: 16px !important;
+    max-width: 95% !important;
   }
 }
