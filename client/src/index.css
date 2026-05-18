@@ -663,8 +663,10 @@ select {
   overscroll-behavior: contain;
 }
 
-.chat-messages > :first-child {
-  margin-top: auto !important;
+.chat-messages::before {
+  content: "";
+  flex: 1;
+  min-height: 0;
 }
 
 @keyframes bounce-top {
