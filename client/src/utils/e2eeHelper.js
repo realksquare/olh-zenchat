@@ -194,6 +194,10 @@ export const getLocalE2EEKeys = async () => {
  * Safely handles fallback text states if keys are missing or fail.
  */
 export const decryptMessageIfNeeded = async (message) => {
+    if (message && message.replyTo && typeof message.replyTo === 'object') {
+        await decryptMessageIfNeeded(message.replyTo);
+    }
+
     if (message && message.isEncrypted && !message.decrypted && message.content && message.encryptedSymmetricKey && message.iv) {
         try {
             const keys = await getLocalE2EEKeys();
