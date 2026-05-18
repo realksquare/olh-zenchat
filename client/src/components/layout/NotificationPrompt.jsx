@@ -14,8 +14,8 @@ const NotificationPrompt = () => {
     useEffect(() => {
         if (!user || !('Notification' in window)) return;
         
-        // Don't show if already granted or blocked
-        if (Notification.permission !== "default") return;
+        // Don't show if blocked
+        if (Notification.permission === "denied") return;
 
         // Check if already subscribed on this device type
         const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
@@ -93,8 +93,12 @@ const NotificationPrompt = () => {
                                 width: "72px", height: "72px", borderRadius: "50%",
                                 background: "rgba(34, 197, 94, 0.15)", color: "#10b981",
                                 display: "flex", alignItems: "center", justifyContent: "center",
-                                margin: "0 auto 1.5rem", fontSize: '32px'
-                            }}>✓</div>
+                                margin: "0 auto 1.5rem"
+                            }}>
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                            </div>
                             <p style={{ color: "#94a3b8", fontSize: "0.95rem", lineHeight: 1.6 }}>
                                 Push notifications are now active! You'll stay updated even when offline.
                             </p>
@@ -105,8 +109,13 @@ const NotificationPrompt = () => {
                                 width: "80px", height: "80px", borderRadius: "24px",
                                 background: "rgba(59, 130, 246, 0.1)", color: "#3b82f6",
                                 display: "flex", alignItems: "center", justifyContent: "center",
-                                margin: "0 auto 1.5rem", fontSize: '36px'
-                            }}>🔔</div>
+                                margin: "0 auto 1.5rem"
+                            }}>
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                                    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                                </svg>
+                            </div>
 
                             <p style={{ color: "#94a3b8", fontSize: "0.95rem", marginBottom: "2rem", lineHeight: 1.6 }}>
                                 Enable push notifications to receive instant updates and messages when you're not in the app.

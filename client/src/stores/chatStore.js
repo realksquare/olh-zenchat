@@ -27,6 +27,10 @@ export const useChatStore = create(
                 return type.includes("2g") || type.includes("3g") || conn.saveData === true;
             })(),
             setLowBandwidth: (bool) => set({ isLowBandwidth: bool }),
+            peerLowBandwidth: {},
+            setPeerLowBandwidth: (userId, isLowBandwidth) => set((s) => ({
+                peerLowBandwidth: { ...s.peerLowBandwidth, [userId]: isLowBandwidth }
+            })),
 
             initLocalData: async () => {
                 const checkLowBandwidth = () => {

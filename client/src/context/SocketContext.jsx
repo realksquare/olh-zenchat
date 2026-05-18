@@ -99,6 +99,10 @@ export const SocketProvider = ({ children }) => {
             useChatStore.getState().updateParticipantStatus(userId, false, lastSeen);
         };
 
+        const handlePeerLowBandwidth = ({ userId, isLowBandwidth }) => {
+            useChatStore.getState().setPeerLowBandwidth(userId, isLowBandwidth);
+        };
+
         const handleMessageEdited = ({ message }) => {
             useChatStore.getState().updateMessage(message.chatId, message);
         };
@@ -177,6 +181,7 @@ export const SocketProvider = ({ children }) => {
         socket.on("typing_status", handleTypingStatus);
         socket.on("user_online", handleUserOnline);
         socket.on("user_offline", handleUserOffline);
+        socket.on("peer_low_bandwidth", handlePeerLowBandwidth);
         socket.on("message_edited", handleMessageEdited);
         socket.on("message_deleted", handleMessageDeleted);
         socket.on("new_chat", handleNewChat);
@@ -195,6 +200,7 @@ export const SocketProvider = ({ children }) => {
             socket.off("typing_status", handleTypingStatus);
             socket.off("user_online", handleUserOnline);
             socket.off("user_offline", handleUserOffline);
+            socket.off("peer_low_bandwidth", handlePeerLowBandwidth);
             socket.off("message_edited", handleMessageEdited);
             socket.off("message_deleted", handleMessageDeleted);
             socket.off("new_chat", handleNewChat);
@@ -210,7 +216,14 @@ export const SocketProvider = ({ children }) => {
     }, [token, userId]);
 
     const joinChat = useCallback((chatId) => {
-        socketRef.current?.emit("join_chat", { chatId });
+        const isLowBandwidth = useChatStore.getState().isLowBandwidth;
+        socketRef.current?.emit("join_chat", { chatId, isLowBandwidth });
+    }, []);
+
+    const updateLowBandwidth = useCallback((chatId, isLowBandwidth) => {
+        if (socketRef.current?.connected) {
+            socketRef.current.emit("update_low_bandwidth", { chatId, isLowBandwidth });
+        }
     }, []);
 
     const leaveChat = useCallback((chatId) => {
@@ -355,8 +368,9 @@ export const SocketProvider = ({ children }) => {
         markAsRead,
         editMessage,
         deleteMessage,
+        updateLowBandwidth,
         isOnline: navigator.onLine
-    }), [joinChat, leaveChat, sendMessage, startTyping, stopTyping, markAsRead, editMessage, deleteMessage]);
+    }), [joinChat, leaveChat, sendMessage, startTyping, stopTyping, markAsRead, editMessage, deleteMessage, updateLowBandwidth]);
 
     return (
         <SocketContext.Provider value={socketValue}>

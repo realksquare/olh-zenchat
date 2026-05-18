@@ -240,8 +240,15 @@ const registerSocketHandlers = (io) => {
             })();
         }
 
-        socket.on("join_chat", ({ chatId }) => {
+        socket.on("join_chat", ({ chatId, isLowBandwidth }) => {
             socket.join(chatId);
+            if (isLowBandwidth !== undefined) {
+                socket.to(chatId).emit("peer_low_bandwidth", { userId, isLowBandwidth });
+            }
+        });
+
+        socket.on("update_low_bandwidth", ({ chatId, isLowBandwidth }) => {
+            socket.to(chatId).emit("peer_low_bandwidth", { userId, isLowBandwidth });
         });
 
         socket.on("leave_chat", ({ chatId }) => {

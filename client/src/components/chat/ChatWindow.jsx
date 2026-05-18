@@ -120,7 +120,8 @@ const ChatWindow = ({ onBack }) => {
         markChatAsRead: s.markChatAsRead,
         onlineUsers: s.onlineUsers,
         hasMoreMessages: s.hasMoreMessages,
-        isLowBandwidth: s.isLowBandwidth
+        isLowBandwidth: s.isLowBandwidth,
+        peerLowBandwidth: s.peerLowBandwidth
     })));
 
     const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
@@ -140,7 +141,7 @@ const ChatWindow = ({ onBack }) => {
         return visible.filter(m => m.starredBy?.includes(user?._id));
     }, [rawMessages, showOnlyStarred, user?._id]);
 
-    const { joinChat, leaveChat, markAsRead, deleteMessage } = useSocket();
+    const { joinChat, leaveChat, markAsRead, deleteMessage, updateLowBandwidth } = useSocket();
     const messagesEndRef = useRef(null);
     const isLoadingOlderRef = useRef(false);
 
@@ -216,10 +217,11 @@ const ChatWindow = ({ onBack }) => {
     }, [rawMessages, activeChat?._id]);
 
     const isOtherUserLowBandwidth = useMemo(() => {
+        if (otherUserId && peerLowBandwidth[otherUserId] === true) return true;
         if (hasAnyLowBandwidthMessage) return true;
         if (isTyping && (!typingScramble || typeof typingScramble !== "string")) return true;
         return false;
-    }, [hasAnyLowBandwidthMessage, isTyping, typingScramble]);
+    }, [otherUserId, peerLowBandwidth, hasAnyLowBandwidthMessage, isTyping, typingScramble]);
 
     const isSPOpActive = isLowBandwidth || isOtherUserLowBandwidth;
 
@@ -282,6 +284,12 @@ const ChatWindow = ({ onBack }) => {
         setReplyingTo(null);
         setDeletingMessage(null);
     }, [activeChat?._id]);
+
+    useEffect(() => {
+        if (activeChat?._id && updateLowBandwidth) {
+            updateLowBandwidth(activeChat._id, isLowBandwidth);
+        }
+    }, [activeChat?._id, isLowBandwidth, updateLowBandwidth]);
 
     useEffect(() => {
         if (!showScrollDown && !isLoadingOlderRef.current) {
