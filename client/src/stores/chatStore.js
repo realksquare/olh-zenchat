@@ -20,6 +20,7 @@ export const useChatStore = create(
             isLoadingChats: false,
             isOffline: !navigator.onLine,
             isLowBandwidth: false,
+            setLowBandwidth: (bool) => set({ isLowBandwidth: bool }),
 
             initLocalData: async () => {
                 const checkLowBandwidth = () => {

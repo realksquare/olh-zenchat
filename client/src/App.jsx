@@ -95,6 +95,66 @@ const NetworkBanner = () => {
   );
 };
 
+const NetworkToast = () => {
+  const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
+  const [toastMessage, setToastMessage] = useState(null);
+  const [toastVisible, setToastVisible] = useState(false);
+  const prevLowBandwidth = useRef(isLowBandwidth);
+  const timer = useRef(null);
+
+  useEffect(() => {
+    if (prevLowBandwidth.current !== isLowBandwidth) {
+      clearTimeout(timer.current);
+      if (isLowBandwidth) {
+        setToastMessage("SmartPayload-OPtimization (SP-OP): Active (Low connection detected)");
+      } else {
+        setToastMessage("Connection restored. Returning to standard operational mode.");
+      }
+      setToastVisible(true);
+      timer.current = setTimeout(() => setToastVisible(false), 5000);
+      prevLowBandwidth.current = isLowBandwidth;
+    }
+  }, [isLowBandwidth]);
+
+  if (!toastVisible) return null;
+
+  return (
+    <div className="aura-toast" style={{
+      position: 'fixed',
+      top: '20px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 99999,
+      background: 'rgba(15, 23, 42, 0.9)',
+      backdropFilter: 'blur(8px)',
+      border: isLowBandwidth ? '1px solid rgba(234, 179, 8, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
+      color: isLowBandwidth ? '#fef08a' : '#a7f3d0',
+      padding: '10px 18px',
+      borderRadius: '24px',
+      fontSize: '0.82rem',
+      fontWeight: '600',
+      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      animation: 'toast-slide-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+    }}>
+      {isLowBandwidth ? (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: '#eab308' }}>
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      ) : (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: '#10b981' }}>
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      )}
+      <span>{toastMessage}</span>
+    </div>
+  );
+};
+
 const App = () => {
   const token = useAuthStore((s) => s.token);
   const userId = useAuthStore((s) => s.user?._id);
@@ -194,6 +254,7 @@ const App = () => {
     <>
       <SplashScreen isReady={serverReady} />
       <NetworkBanner />
+      <NetworkToast />
       <InstallPWA />
       <NotificationPrompt />
       <RecoveryKeyModal />

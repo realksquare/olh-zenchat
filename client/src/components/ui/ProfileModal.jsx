@@ -11,6 +11,7 @@ import { generateRecoveryKey, rotateUserRecoveryKey, setupE2EEForUser } from "..
 const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const { user, updateProfile, isLoading, soundEnabled, toggleSound } = useAuthStore();
     const { chats } = useChatStore();
+    const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
 
     const [username, setUsername] = useState(user?.username || "");
     const [fullName, setFullName] = useState(user?.fullName || "");
@@ -430,6 +431,31 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                     </div>
 
                     <div className="profile-settings-row" style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <div>
+                                <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600", fontSize: "0.85rem" }}>
+                                    <span>SmartPayload-OPtimization (#SP-OP)</span>
+                                    <span style={{
+                                        fontSize: '0.65rem',
+                                        padding: '2px 6px',
+                                        borderRadius: '4px',
+                                        background: isLowBandwidth ? 'rgba(234, 179, 8, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                                        color: isLowBandwidth ? '#eab308' : '#10b981',
+                                        fontWeight: '800',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.5px'
+                                    }}>
+                                        {isLowBandwidth ? "Active" : "Standard"}
+                                    </span>
+                                </span>
+                                <span style={{ fontSize: "0.75rem", color: "#64748b", display: "block", marginTop: "4px", lineHeight: "1.3" }}>
+                                    {isLowBandwidth 
+                                        ? "Currently active to prevent network congestion by delaying media auto-downloads and throttling typing sockets." 
+                                        : "Safeguards bandwidth automatically on 2G/3G connections and slow round-trip response states."
+                                    }
+                                </span>
+                            </div>
+                        </div>
                         <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                             <div>
                                 <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem" }}>Message Sounds</span>

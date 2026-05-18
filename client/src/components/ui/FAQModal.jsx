@@ -30,8 +30,8 @@ const FAQModal = ({ isOpen, onClose }) => {
             a: "You get instant messaging, threaded replies, view-once media, and chat pinning. Everything is optimized to work beautifully even on unstable networks."
         },
         {
-            q: "How does ZenChat ensure reliability on slow networks?",
-            a: "We use smart image compression, send websocket data in highly efficient small chunks, and use service workers to sync in the background. It means your messages reach their destination even if you only have one bar of cell service."
+            q: "What is SmartPayload-OPtimization (#SP-OP)?",
+            a: "SP-OP is our proprietary technique that automatically safeguards performance under unstable network conditions. If 2G, 3G, or browser Data Saver mode is detected, SP-OP dynamically halts auto-download of media assets (rendering interactive preview cards instead) and throttles typing indicators down from high-frequency key-by-key socket streams to a single packet frame. This guarantees critical text messages deliver instantaneously without connection clogging."
         },
         {
             q: "What is the tech stack?",
