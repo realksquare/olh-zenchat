@@ -31,9 +31,11 @@ const NetworkBanner = () => {
   const { socket } = useSocket();
   const [status, setStatus] = useState("online");
   const [visible, setVisible] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
   const hideTimer = useRef(null);
 
   const showBanner = (s) => {
+    setDismissed(false);
     setStatus(s);
     setVisible(true);
     clearTimeout(hideTimer.current);
@@ -62,7 +64,7 @@ const NetworkBanner = () => {
     if (socket) {
       socket.on("disconnect", handleStatusChange);
       socket.on("connect", handleStatusChange);
-      handleStatusChange(); // Initial check
+      handleStatusChange();
     }
 
     return () => {
@@ -76,21 +78,28 @@ const NetworkBanner = () => {
     };
   }, [socket]);
 
-  if (!visible || status === "online") return null;
+  if (!visible || status === "online" || dismissed) return null;
 
   return (
-    <div className="network-banner" data-status={status}>
+    <div className="network-banner" data-status={status} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
       {status === "offline" ? (
         <>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
-          No connection
+          <span style={{ flex: 1 }}>No connection</span>
         </>
       ) : (
         <>
           <span className="banner-spinner" />
-          Reconnecting
+          <span style={{ flex: 1 }}>Reconnecting</span>
         </>
       )}
+      <button
+        onClick={() => setDismissed(true)}
+        className="sp-op-toast-close"
+        aria-label="Dismiss"
+      >
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
   );
 };
@@ -99,54 +108,64 @@ const NetworkToast = () => {
   const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
   const [toastMessage, setToastMessage] = useState(null);
   const [toastVisible, setToastVisible] = useState(false);
-  const prevLowBandwidth = useRef(isLowBandwidth);
-  const isFirstRender = useRef(true);
+  const [toastIsLow, setToastIsLow] = useState(false);
+  const prevLowBandwidth = useRef(null);
   const timer = useRef(null);
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    // Skip identical state (no change)
+    if (prevLowBandwidth.current === isLowBandwidth) return;
+    // On very first evaluation, only show if low (not on initial false→false)
+    if (prevLowBandwidth.current === null) {
       prevLowBandwidth.current = isLowBandwidth;
       if (isLowBandwidth) {
-        setToastMessage("SmartPayload-OPtimization (SP-OP): Active (Unstable/slow internet connection detected)");
+        setToastMessage("SP-OP active - Unstable/slow internet connection detected.");
+        setToastIsLow(true);
         setToastVisible(true);
-        timer.current = setTimeout(() => setToastVisible(false), 5000);
+        timer.current = setTimeout(() => setToastVisible(false), 6000);
       }
       return;
     }
 
-    if (prevLowBandwidth.current !== isLowBandwidth) {
-      clearTimeout(timer.current);
-      if (isLowBandwidth) {
-        setToastMessage("SmartPayload-OPtimization (SP-OP): Active (Unstable/slow internet connection detected)");
-      } else {
-        setToastMessage("Connection restored. Returning to standard operational mode.");
-      }
-      setToastVisible(true);
-      timer.current = setTimeout(() => setToastVisible(false), 5000);
-      prevLowBandwidth.current = isLowBandwidth;
+    clearTimeout(timer.current);
+    if (isLowBandwidth) {
+      setToastMessage("SP-OP active - Unstable/slow internet connection detected.");
+      setToastIsLow(true);
+    } else {
+      setToastMessage("Connection restored. Standard mode resumed.");
+      setToastIsLow(false);
     }
+    setToastVisible(true);
+    timer.current = setTimeout(() => setToastVisible(false), 6000);
+    prevLowBandwidth.current = isLowBandwidth;
   }, [isLowBandwidth]);
 
   if (!toastVisible) return null;
 
   return (
     <div className="sp-op-toast" style={{
-      border: isLowBandwidth ? '1px solid rgba(234, 179, 8, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
-      color: isLowBandwidth ? '#fef08a' : '#a7f3d0'
+      border: toastIsLow ? '1px solid rgba(234, 179, 8, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
+      color: toastIsLow ? '#fef08a' : '#a7f3d0'
     }}>
-      {isLowBandwidth ? (
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: '#eab308' }}>
+      {toastIsLow ? (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: '#eab308', flexShrink: 0 }}>
           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
           <line x1="12" y1="9" x2="12" y2="13"/>
           <line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
       ) : (
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: '#10b981' }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: '#10b981', flexShrink: 0 }}>
           <polyline points="20 6 9 17 4 12"/>
         </svg>
       )}
-      <span>{toastMessage}</span>
+      <span className="sp-op-toast-text">{toastMessage}</span>
+      <button
+        className="sp-op-toast-close"
+        onClick={() => setToastVisible(false)}
+        aria-label="Dismiss"
+      >
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
   );
 };

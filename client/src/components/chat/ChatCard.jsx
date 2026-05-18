@@ -13,6 +13,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const toggleContact = useAuthStore((s) => s.toggleContact);
     const typingUsers = useChatStore((s) => s.typingUsers);
     const onlineUsers = useChatStore((s) => s.onlineUsers);
+    const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
+    const peerLowBandwidth = useChatStore((s) => s.peerLowBandwidth);
     const unreadCount = useChatStore((s) => s.unreadCounts[chat._id] || 0);
     const deleteChatForUser = useChatStore((s) => s.deleteChatForUser);
     const liveChat = useChatStore((s) => s.chats.find((c) => c._id === chat._id)) || chat;
@@ -48,6 +50,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const isTyping = !!(chatTyping && otherUserId && chatTyping[otherUserId]);
     const typingScramble = isTyping ? chatTyping[otherUserId] : null;
     const isOnline = otherUser?.isOnline || (otherUserId && onlineUsers.has(otherUserId.toString()));
+    const isSPOp = isOnline && (isLowBandwidth || peerLowBandwidth[otherUserId] === true);
     const hasMoments = !!(otherUserId && hasActiveMoment(otherUserId.toString()));
     const isContact = !!(user?.contacts?.some(c => {
         const uid = c.userId?._id?.toString() || c.userId?.toString();
@@ -178,7 +181,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                             : <span>{isDeleted ? "?" : otherUser?.username?.slice(0, 2).toUpperCase()}</span>
                         }
                     </div>
-                    {isOnline && <span className="online-dot" />}
+                    {isOnline && <span className={`online-dot${isSPOp ? ' online-dot--amber' : ''}`} />}
                 </div>
 
                 {/* Info */}

@@ -43,22 +43,22 @@ const NotificationPrompt = () => {
     };
 
     const handleEnable = async () => {
+        setIsLoading(true);
         try {
             const token = await requestNotificationPermission();
             if (token) {
-                setIsLoading(true);
                 const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-                const { data } = await axiosInstance.put("/auth/me", { 
+                const { data } = await axiosInstance.put("/auth/me", {
                     fcmToken: token,
                     deviceType: isPWA ? "pwa" : "browser",
                     notificationsEnabled: true
                 });
-                
+
                 if (data?.user) {
                     useAuthStore.getState().updateUser(data.user);
                     localStorage.setItem("zenchat_user", JSON.stringify(data.user));
                 }
-                
+
                 setSuccess(true);
                 localStorage.setItem("notifPromptDismissedAt", String(Date.now() + 365 * 24 * 60 * 60 * 1000));
                 setTimeout(() => setShow(false), 3000);
@@ -76,11 +76,11 @@ const NotificationPrompt = () => {
     if (!show) return null;
 
     return (
-        <div className="modal-overlay moments-aura-overlay" onClick={handleDismiss} style={{ zIndex: 9999 }}>
+        <div className="modal-overlay moments-aura-overlay" onClick={isLoading ? undefined : handleDismiss} style={{ zIndex: 20001 }}>
             <div
                 className="moments-aura-content notif-prompt-popup"
                 onClick={(e) => e.stopPropagation()}
-                style={{ maxWidth: "400px", width: "95%", padding: 0, overflow: 'hidden' }}
+                style={{ maxWidth: "400px", width: "95%", padding: 0, overflow: 'hidden', position: 'relative' }}
             >
                 <div className="moments-aura-header">
                     <h2 className="moments-aura-title">{success ? "Notifications" : "Stay Connected"}</h2>
@@ -152,15 +152,21 @@ const NotificationPrompt = () => {
                                 </button>
                             </div>
 
+                            {/* Loading overlay inside card */}
                             {isLoading && (
                                 <div style={{
-                                    width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)',
-                                    marginTop: '2rem', borderRadius: '4px', overflow: 'hidden'
+                                    position: 'absolute', inset: 0, borderRadius: '20px',
+                                    background: 'rgba(10,14,20,0.85)', backdropFilter: 'blur(4px)',
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                    justifyContent: 'center', gap: '16px', zIndex: 1
                                 }}>
                                     <div style={{
-                                        height: '100%', background: '#3b82f6', width: '0%',
-                                        animation: 'progressAnim 3s linear forwards'
-                                    }}></div>
+                                        width: 44, height: 44, borderRadius: '50%',
+                                        border: '3px solid rgba(59,130,246,0.15)',
+                                        borderTopColor: '#3b82f6',
+                                        animation: 'spin 0.9s linear infinite'
+                                    }} />
+                                    <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: 600 }}>Subscribing…</span>
                                 </div>
                             )}
                         </>
@@ -168,9 +174,8 @@ const NotificationPrompt = () => {
                 </div>
             </div>
             <style>{`
-                @keyframes progressAnim {
-                    from { width: 0%; }
-                    to { width: 100%; }
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
                 }
             `}</style>
         </div>

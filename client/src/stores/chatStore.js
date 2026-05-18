@@ -34,28 +34,24 @@ export const useChatStore = create(
 
             checkNetworkSpeed: async () => {
                 if (typeof navigator === "undefined") return false;
-                
+
                 if (!navigator.onLine) {
-                    if (get().isLowBandwidth !== true) {
-                        set({ isLowBandwidth: true });
-                    }
+                    if (get().isLowBandwidth !== true) set({ isLowBandwidth: true });
                     return true;
                 }
 
+                // Browser Network API — only trust definitive slow types (2g / saveData)
                 const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-                let lowByBrowser = false;
                 if (conn) {
                     const type = conn.effectiveType || "";
-                    lowByBrowser = type.includes("2g") || type.includes("3g") || conn.saveData === true;
-                }
-
-                if (lowByBrowser) {
-                    if (get().isLowBandwidth !== true) {
-                        set({ isLowBandwidth: true });
+                    const definitelySlow = type === "2g" || conn.saveData === true;
+                    if (definitelySlow) {
+                        if (get().isLowBandwidth !== true) set({ isLowBandwidth: true });
+                        return true;
                     }
-                    return true;
                 }
 
+                // Latency probe — abort after 2.5 s
                 const start = performance.now();
                 try {
                     const controller = new AbortController();
@@ -63,32 +59,48 @@ export const useChatStore = create(
                     const healthUrl = import.meta.env.VITE_API_URL
                         ? `${import.meta.env.VITE_API_URL}/api/health?t=${Date.now()}`
                         : `/api/health?t=${Date.now()}`;
-                    const res = await fetch(healthUrl, { 
+                    const res = await fetch(healthUrl, {
                         method: "GET",
                         signal: controller.signal,
-                        headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" }
+                        cache: "no-store",
                     });
                     clearTimeout(timeoutId);
-                    
+
                     if (res.ok) {
                         const rtt = performance.now() - start;
-                        const lowByPing = rtt > 450;
-                        if (lowByPing !== get().isLowBandwidth) {
-                            set({ isLowBandwidth: lowByPing });
+                        // RTT threshold: 800 ms on a 5G/WiFi connection is very slow
+                        const isSlowPing = rtt > 800;
+
+                        // Hysteresis: increment/decrement a counter, toggle state only at ±2
+                        const prev = get()._spOpConsecutive ?? 0;
+                        let next;
+                        if (isSlowPing) {
+                            next = Math.min(prev + 1, 3);
+                        } else {
+                            next = Math.max(prev - 1, -3);
                         }
-                        return lowByPing;
+                        set({ _spOpConsecutive: next });
+
+                        // Activate SP-OP after 2 consecutive slow pings, deactivate after 2 consecutive fast
+                        if (next >= 2 && get().isLowBandwidth !== true) {
+                            set({ isLowBandwidth: true });
+                        } else if (next <= -2 && get().isLowBandwidth !== false) {
+                            set({ isLowBandwidth: false });
+                        }
+                        return get().isLowBandwidth;
                     }
+                    // Non-OK response (e.g. 404 on dev) — treat as inconclusive, keep current state
+                    return get().isLowBandwidth;
                 } catch (e) {
-                    if (get().isLowBandwidth !== true) {
-                        set({ isLowBandwidth: true });
+                    // Aborted = actual timeout = genuinely slow
+                    if (e.name === "AbortError") {
+                        const prev = get()._spOpConsecutive ?? 0;
+                        const next = Math.min(prev + 1, 3);
+                        set({ _spOpConsecutive: next });
+                        if (next >= 2 && get().isLowBandwidth !== true) set({ isLowBandwidth: true });
                     }
-                    return true;
+                    return get().isLowBandwidth;
                 }
-                
-                if (get().isLowBandwidth !== false) {
-                    set({ isLowBandwidth: false });
-                }
-                return false;
             },
 
             initLocalData: async () => {
@@ -96,15 +108,13 @@ export const useChatStore = create(
 
                 const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
                 if (conn) {
-                    conn.onchange = () => {
-                        get().checkNetworkSpeed();
-                    };
+                    conn.onchange = () => get().checkNetworkSpeed();
                 }
 
                 if (typeof window !== "undefined" && !window.netCheckInterval) {
                     window.netCheckInterval = setInterval(() => {
                         get().checkNetworkSpeed();
-                    }, 4000);
+                    }, 3000);
                 }
 
                 const localChats = await getLocalChats();
