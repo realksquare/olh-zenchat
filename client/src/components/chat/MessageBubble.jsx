@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, memo, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import DecryptedText from "./DecryptedText";
@@ -373,7 +374,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
 
                 </div>
 
-                {(!isMobile || mobileDropdown) && (
+                {!isMobile && (
                     <div className={`message-dropdown ${mobileDropdown ? "mobile-visible" : ""} ${!isMe ? "theirs-dropdown" : ""}`}>
                         <button
                             className="message-dropdown-item"
@@ -422,6 +423,169 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                     </div>
                 )}
             </div>
+
+            {isMobile && mobileDropdown && createPortal(
+                <div 
+                    className="mobile-bottom-sheet-overlay" 
+                    onClick={() => setMobileDropdown(false)}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(9, 13, 20, 0.7)',
+                        backdropFilter: 'blur(8px)',
+                        zIndex: 999999,
+                        display: 'flex',
+                        alignItems: 'flex-end',
+                        justifyContent: 'center',
+                        animation: 'fadeIn 0.2s ease-out'
+                    }}
+                >
+                    <div 
+                        className="mobile-bottom-sheet"
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            width: '100%',
+                            maxWidth: '500px',
+                            background: '#161b22',
+                            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                            borderTopLeftRadius: '24px',
+                            borderTopRightRadius: '24px',
+                            padding: '16px 20px 32px',
+                            boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.5)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px',
+                            animation: 'slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
+                            boxSizing: 'border-box'
+                        }}
+                    >
+                        <div style={{ width: '36px', height: '4px', background: 'rgba(255, 255, 255, 0.16)', borderRadius: '2px', margin: '0 auto 12px' }} />
+                        <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#8b949e', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '0 8px 4px' }}>
+                            Message Options
+                        </div>
+
+                        <button
+                            className="bottom-sheet-item"
+                            onClick={() => { setMobileDropdown(false); toggleStarMessage(message._id, message.chatId); }}
+                            style={{
+                                width: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '12px',
+                                padding: '14px 16px',
+                                background: 'transparent',
+                                border: 'none',
+                                borderRadius: '12px',
+                                color: '#c9d1d9',
+                                fontSize: '0.92rem',
+                                fontWeight: 500,
+                                textAlign: 'left',
+                                cursor: 'pointer',
+                                transition: 'background 0.15s ease'
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill={message.starredBy?.includes(user?._id) ? "#eab308" : "none"} stroke={message.starredBy?.includes(user?._id) ? "#eab308" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                            </svg>
+                            <span>{message.starredBy?.includes(user?._id) ? "Unfavorite Message" : "Favorite Message"}</span>
+                        </button>
+
+                        {canReply && (
+                            <button
+                                className="bottom-sheet-item"
+                                onClick={() => { setMobileDropdown(false); onEdit({ action: "reply", ...message }); }}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    padding: '14px 16px',
+                                    background: 'transparent',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    color: '#c9d1d9',
+                                    fontSize: '0.92rem',
+                                    fontWeight: 500,
+                                    textAlign: 'left',
+                                    cursor: 'pointer',
+                                    transition: 'background 0.15s ease'
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                                </svg>
+                                <span>Reply</span>
+                            </button>
+                        )}
+
+                        {isMe && canDelete && (
+                            <>
+                                {isWithinEditWindow && (
+                                    <button
+                                        className="bottom-sheet-item"
+                                        onClick={() => { setMobileDropdown(false); onEdit(message); }}
+                                        style={{
+                                            width: '100%',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            padding: '14px 16px',
+                                            background: 'transparent',
+                                            border: 'none',
+                                            borderRadius: '12px',
+                                            color: '#c9d1d9',
+                                            fontSize: '0.92rem',
+                                            fontWeight: 500,
+                                            textAlign: 'left',
+                                            cursor: 'pointer',
+                                            transition: 'background 0.15s ease'
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                    >
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                        </svg>
+                                        <span>Edit Message</span>
+                                    </button>
+                                )}
+                                <button
+                                    className="bottom-sheet-item delete"
+                                    onClick={() => { setMobileDropdown(false); onDelete(message); }}
+                                    style={{
+                                        width: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
+                                        padding: '14px 16px',
+                                        background: 'transparent',
+                                        border: 'none',
+                                        borderRadius: '12px',
+                                        color: '#f85149',
+                                        fontSize: '0.92rem',
+                                        fontWeight: 600,
+                                        textAlign: 'left',
+                                        cursor: 'pointer',
+                                        transition: 'background 0.15s ease'
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,81,73,0.08)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                >
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
+                                    </svg>
+                                    <span>Delete Message</span>
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 };
