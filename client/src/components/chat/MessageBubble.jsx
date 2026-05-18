@@ -17,6 +17,9 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const [mobileDropdown, setMobileDropdown] = useState(false);
     const user = useAuthStore((s) => s.user);
     const { toggleStarMessage, markViewOnceAsViewed } = useChatStore.getState();
+    const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
+    const [manualLoad, setManualLoad] = useState(false);
+    const shouldDelayLoad = isLowBandwidth && !isMe && !manualLoad;
     const status = message?.status ?? "sent";
     const progress = message?.progress ?? 0;
     const outerRef = useRef(null);
@@ -187,60 +190,105 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                 </div>
                             )}
                             {(message.type === "image" || message.type === "video" || message.type === "file") && message.mediaUrl && !isViewOnce && (
-                                <div className="message-media-wrap" onClick={() => onMediaClick && onMediaClick(message.mediaUrl, message.type)} onDoubleClick={(e) => e.stopPropagation()} style={{ cursor: 'pointer' }}>
-                                    {message.type === "image" ? (
-                                        <img src={getThumbnailUrl(message.mediaUrl)} alt="Sent image" className="message-image" loading="lazy" />
-                                    ) : message.type === "video" ? (
-                                        <video src={message.mediaUrl} className="message-video" style={{ maxWidth: '100%', borderRadius: '8px' }} />
-                                    ) : (
-                                        <div className="file-attachment-card" style={{
-                                            background: 'rgba(255,255,255,0.05)',
-                                            border: '1px solid rgba(255,255,255,0.08)',
-                                            borderRadius: '12px',
-                                            padding: '12px 16px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '12px',
-                                            minWidth: '180px'
-                                        }}>
-                                            <div className="file-icon" style={{
-                                                background: 'rgba(59, 130, 246, 0.15)',
-                                                color: '#3b82f6',
-                                                width: '36px',
-                                                height: '36px',
-                                                borderRadius: '10px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }}>
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
-                                                </svg>
-                                            </div>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                    {message.content || "Document"}
-                                                </div>
-                                                <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-                                                    Attachment
-                                                </div>
-                                            </div>
-                                            <a
-                                                href={message.mediaUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                download
-                                                onClick={(e) => e.stopPropagation()}
-                                                style={{ color: '#94a3b8', padding: '4px', borderRadius: '6px', transition: 'all 0.2s' }}
-                                                onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-                                                onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
-                                            >
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-                                                </svg>
-                                            </a>
-                                        </div>
-                                    )}
+                                <div 
+                                    className="message-media-wrap" 
+                                    onClick={() => {
+                                        if (shouldDelayLoad) {
+                                            setManualLoad(true);
+                                        } else if (onMediaClick) {
+                                            onMediaClick(message.mediaUrl, message.type);
+                                        }
+                                    }} 
+                                    onDoubleClick={(e) => e.stopPropagation()} 
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                     {shouldDelayLoad ? (
+                                         <div 
+                                             className="media-bandwidth-placeholder" 
+                                             style={{
+                                                 display: 'flex',
+                                                 flexDirection: 'column',
+                                                 alignItems: 'center',
+                                                 justifyContent: 'center',
+                                                 background: 'rgba(15, 23, 42, 0.6)',
+                                                 backdropFilter: 'blur(8px)',
+                                                 borderRadius: '8px',
+                                                 width: '240px',
+                                                 height: '160px',
+                                                 border: '1px dashed rgba(255,255,255,0.15)',
+                                                 gap: '8px',
+                                                 padding: '16px'
+                                             }}
+                                         >
+                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-primary)', opacity: 0.8 }}>
+                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                                 <polyline points="7 10 12 15 17 10" />
+                                                 <line x1="12" y1="15" x2="12" y2="3" />
+                                             </svg>
+                                             <span style={{ fontSize: '12px', fontWeight: '500', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.2px' }}>
+                                                 Tap to load {message.type}
+                                             </span>
+                                             <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>
+                                                 Low Bandwidth Mode
+                                             </span>
+                                         </div>
+                                     ) : (
+                                         <>
+                                             {message.type === "image" ? (
+                                                 <img src={getThumbnailUrl(message.mediaUrl)} alt="Sent image" className="message-image" loading="lazy" />
+                                             ) : message.type === "video" ? (
+                                                 <video src={message.mediaUrl} className="message-video" style={{ maxWidth: '100%', borderRadius: '8px' }} />
+                                             ) : (
+                                                 <div className="file-attachment-card" style={{
+                                                     background: 'rgba(255,255,255,0.05)',
+                                                     border: '1px solid rgba(255,255,255,0.08)',
+                                                     borderRadius: '12px',
+                                                     padding: '12px 16px',
+                                                     display: 'flex',
+                                                     alignItems: 'center',
+                                                     gap: '12px',
+                                                     minWidth: '180px'
+                                                 }}>
+                                                     <div className="file-icon" style={{
+                                                         background: 'rgba(59, 130, 246, 0.15)',
+                                                         color: '#3b82f6',
+                                                         width: '36px',
+                                                         height: '36px',
+                                                         borderRadius: '10px',
+                                                         display: 'flex',
+                                                         alignItems: 'center',
+                                                         justifyContent: 'center'
+                                                     }}>
+                                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+                                                         </svg>
+                                                     </div>
+                                                     <div style={{ flex: 1, minWidth: 0 }}>
+                                                         <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                             {message.content || "Document"}
+                                                         </div>
+                                                         <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
+                                                             Attachment
+                                                         </div>
+                                                     </div>
+                                                     <a
+                                                         href={message.mediaUrl}
+                                                         target="_blank"
+                                                         rel="noopener noreferrer"
+                                                         download
+                                                         onClick={(e) => e.stopPropagation()}
+                                                         style={{ color: '#94a3b8', padding: '4px', borderRadius: '6px', transition: 'all 0.2s' }}
+                                                         onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                                                         onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
+                                                     >
+                                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                                                         </svg>
+                                                     </a>
+                                                 </div>
+                                             )}
+                                         </>
+                                     )}
                                 </div>
                             )}
                             {message.content && (

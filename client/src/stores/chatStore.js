@@ -19,8 +19,27 @@ export const useChatStore = create(
             isLoadingOlderMessages: false,
             isLoadingChats: false,
             isOffline: !navigator.onLine,
+            isLowBandwidth: false,
 
             initLocalData: async () => {
+                const checkLowBandwidth = () => {
+                    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                    if (conn) {
+                        const type = conn.effectiveType;
+                        return type === "2g" || type === "slow-2g" || type === "3g" || !!conn.saveData;
+                    }
+                    return false;
+                };
+
+                set({ isLowBandwidth: checkLowBandwidth() });
+
+                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+                if (conn) {
+                    conn.onchange = () => {
+                        set({ isLowBandwidth: checkLowBandwidth() });
+                    };
+                }
+
                 const localChats = await getLocalChats();
                 if (localChats.length > 0) {
                     const initialUnread = {};

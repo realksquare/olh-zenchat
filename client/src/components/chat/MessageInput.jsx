@@ -314,11 +314,12 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     };
 
     const handleTypingStart = useCallback((currentText) => {
-        const scramble = getScramble(currentText);
+        const isLowBandwidth = useChatStore.getState().isLowBandwidth;
+        const scramble = isLowBandwidth ? "" : getScramble(currentText);
         if (!isTypingRef.current) {
             isTypingRef.current = true;
             startTyping(chatId, scramble);
-        } else {
+        } else if (!isLowBandwidth) {
             startTyping(chatId, scramble);
         }
         clearTimeout(typingTimeoutRef.current);
