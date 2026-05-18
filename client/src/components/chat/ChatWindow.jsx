@@ -109,7 +109,7 @@ const ChatWindow = ({ onBack }) => {
     const contacts = useAuthStore((s) => s.user?.contacts || EMPTY_CONTACTS);
     const {
         activeChat, fetchMessages, fetchOlderMessages, isLoadingMessages, isLoadingOlderMessages,
-        typingUsers, markChatAsRead, onlineUsers, hasMoreMessages
+        typingUsers, markChatAsRead, onlineUsers, hasMoreMessages, isLowBandwidth
     } = useChatStore(useShallow((s) => ({
         activeChat: s.activeChat,
         fetchMessages: s.fetchMessages,
@@ -119,7 +119,8 @@ const ChatWindow = ({ onBack }) => {
         typingUsers: s.typingUsers,
         markChatAsRead: s.markChatAsRead,
         onlineUsers: s.onlineUsers,
-        hasMoreMessages: s.hasMoreMessages
+        hasMoreMessages: s.hasMoreMessages,
+        isLowBandwidth: s.isLowBandwidth
     })));
 
     const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
@@ -314,12 +315,14 @@ const ChatWindow = ({ onBack }) => {
     const statusText = useMemo(() => {
         if (!otherUser) return "";
         const isCurrentlyOnline = otherUser.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString());
-        if (isCurrentlyOnline) return "Online";
+        if (isCurrentlyOnline) {
+            return isLowBandwidth ? "Online (#SP-OP active)" : "Online";
+        }
         if (otherUser.lastSeen) {
             return `Last seen ${formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true })}`;
         }
         return "Offline";
-    }, [otherUser, onlineUsers, tick]);
+    }, [otherUser, onlineUsers, tick, isLowBandwidth]);
 
     const getStatusText = () => statusText;
 

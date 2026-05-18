@@ -1,10 +1,11 @@
 import { memo } from "react";
 
 const TypingIndicator = ({ scramble }) => {
+    const showScramble = scramble && typeof scramble === "string";
     return (
         <div className="message-row theirs typing-slide-up">
             <div className="avatar-spacer" />
-            {scramble ? (
+            {showScramble ? (
                 <div className="typing-scramble-bubble">
                     <span className="scramble-noise">
                         {scramble}

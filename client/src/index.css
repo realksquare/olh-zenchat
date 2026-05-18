@@ -5555,3 +5555,48 @@ select {
     opacity: 1;
   }
 }
+
+/* ── E2EE Dropdown Alignment for Theirs Messages (Left Aligned) ── */
+.message-dropdown.theirs-dropdown {
+  right: auto;
+  left: calc(100% + 8px);
+}
+
+/* ── Mobile Sizing and Options Menu Alignment (max-width: 768px) ── */
+@media (max-width: 768px) {
+  .message-bubble {
+    padding: 7px 11px !important;
+    font-size: 0.88rem !important;
+  }
+  
+  .message-row {
+    max-width: 75% !important;
+  }
+  
+  .message-dropdown {
+    right: 0 !important;
+    left: auto !important;
+    top: 100% !important;
+    transform: translateY(6px) !important;
+    opacity: 0;
+    pointer-events: none;
+    background: #1e2530;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    min-width: 130px;
+    z-index: 2000;
+  }
+  
+  .message-dropdown.theirs-dropdown {
+    left: 0 !important;
+    right: auto !important;
+    top: 100% !important;
+    transform: translateY(6px) !important;
+  }
+  
+  .message-dropdown.mobile-visible {
+    opacity: 1 !important;
+    pointer-events: all !important;
+    transform: translateY(6px) !important;
+  }
+}
