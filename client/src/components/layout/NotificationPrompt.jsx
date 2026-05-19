@@ -7,6 +7,7 @@ const NotificationPrompt = () => {
     const [show, setShow] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [dismissed, setDismissed] = useState(false);
     const user = useAuthStore((s) => s.user);
     const userId = user?._id;
     const fcmTokens = user?.fcmTokens;
@@ -28,17 +29,16 @@ const NotificationPrompt = () => {
 
         if (isSubscribed) return;
 
-        // Use sessionStorage so it re-prompts on each reload/new session/login
-        const isDismissedThisSession = sessionStorage.getItem("notifPromptDismissedThisSession") === "true";
-        if (isDismissedThisSession) return;
+        // Use local component state so it re-prompts on each reload/new session/login
+        if (dismissed) return;
 
         const delay = isPWA ? 200 : 1500;
         const timer = setTimeout(() => setShow(true), delay);
         return () => clearTimeout(timer);
-    }, [userId, fcmTokens]);
+    }, [userId, fcmTokens, dismissed]);
 
     const handleDismiss = () => {
-        sessionStorage.setItem("notifPromptDismissedThisSession", "true");
+        setDismissed(true);
         setShow(false);
     };
 

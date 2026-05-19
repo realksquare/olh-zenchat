@@ -7,6 +7,7 @@ import { useAuthStore } from "../../stores/authStore";
 
 const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = false, isSPOp = false, isContact = false, onViewMoments, iBlocked = false, theyBlocked = false }) => {
     const [blockError, setBlockError] = useState(null);
+    const [showConfirmBlock, setShowConfirmBlock] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
@@ -55,8 +56,6 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
     // Pass currentUserId so grey aura is shown when all moments are viewed
     const haloColor = getHaloColor(userId, currentUser?._id);
     const userMomentsCount = moments.filter(m => (m.userId?._id || m.userId)?.toString() === userId).length;
-
-    const [showConfirmBlock, setShowConfirmBlock] = useState(false);
 
     const handleBlockToggle = async () => {
         setBlockError(null);

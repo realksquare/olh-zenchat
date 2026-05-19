@@ -40,6 +40,8 @@ const LoginPage = () => {
         clearError
     } = useAuthStore();
 
+    const setIsLoading = (bool) => useAuthStore.setState({ isLoading: bool });
+
     const [activeTab, setActiveTab] = useState("email");
     const [form, setForm] = useState({ email: "", password: "", phoneNumber: "" });
     const [countryCode, setCountryCode] = useState("+1");

@@ -53,33 +53,56 @@ const InstallPWA = () => {
 
         checkNudge();
 
-        if (!shouldShowPrompt()) return;
-
         const handler = (e) => {
             e.preventDefault();
             setDeferredPrompt(e);
-            setTimeout(() => {
-                if (shouldShowPrompt()) {
+            window.deferredPrompt = e;
+            window.dispatchEvent(new CustomEvent("pwa-prompt-available", { detail: e }));
+            
+            if (shouldShowPrompt()) {
+                setTimeout(() => {
                     setShowModal(true);
-                }
-            }, 1500);
+                }, 1500);
+            }
         };
 
         window.addEventListener("beforeinstallprompt", handler);
         return () => window.removeEventListener("beforeinstallprompt", handler);
     }, []);
 
+    useEffect(() => {
+        const handleOpenInstall = () => {
+            setShowModal(true);
+            setTimeout(() => {
+                handleInstall();
+            }, 100);
+        };
+        const handleOpenNudge = () => {
+            setShowNudgeModal(true);
+        };
+
+        window.addEventListener("open-pwa-install-modal", handleOpenInstall);
+        window.addEventListener("open-pwa-nudge-modal", handleOpenNudge);
+
+        return () => {
+            window.removeEventListener("open-pwa-install-modal", handleOpenInstall);
+            window.removeEventListener("open-pwa-nudge-modal", handleOpenNudge);
+        };
+    }, [deferredPrompt]);
+
     const handleInstall = async () => {
-        if (!deferredPrompt) return;
+        const promptToUse = deferredPrompt || window.deferredPrompt;
+        if (!promptToUse) return;
         setIsLoading(true);
 
         try {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
+            promptToUse.prompt();
+            const { outcome } = await promptToUse.userChoice;
 
             if (outcome === 'accepted') {
                 setIsSuccess(true);
                 localStorage.setItem(PWA_DISMISS_KEY, Date.now().toString());
+                localStorage.setItem("zenchat_pwa_installed", "true");
                 setTimeout(() => setShowModal(false), 3000);
             } else {
                 handleDismiss();
@@ -90,6 +113,7 @@ const InstallPWA = () => {
         } finally {
             setIsLoading(false);
             setDeferredPrompt(null);
+            window.deferredPrompt = null;
         }
     };
 
