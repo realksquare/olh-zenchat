@@ -30,21 +30,27 @@ This document outlines the technical architecture and step-by-step implementatio
 ---
 
 ## 2. Zen Mode (Focus Mode)
-**Concept:** A highly immersive, distraction-free environment that fades out history and focuses only on the current thought.
+**Concept:** A highly immersive, distraction-free environment that fades out history and focuses only on the current thought, accompanied by a liquid circular background transition originating from the toggle button.
 
 ### Technical Plan
 **State Management (`chatStore.js`)**
-- Add a boolean state: `isZenMode: false`.
-- Add toggle functions.
+- Add `isZenMode: false` state.
+- Add `toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode }))` action.
 
-**Client-Side (React UI)**
-- Add a minimalist "Zen" toggle icon in the chat header.
-- **`ChatWindow.jsx` Changes:**
-  - When `isZenMode` is true, apply a CSS class `zen-active` to the main container.
-  - Instead of rendering the full `messages` array, filter it to **only render the last 1 or 2 messages**.
-  - Hide the sidebar (if on desktop) and fade out the chat header to a subtle opacity (restored on hover).
-- **CSS Animations:**
-  - Use smooth `opacity` and `transform` transitions so the older messages beautifully blur and fade away into the background, rather than abruptly snapping out of existence.
+**Client-Side (React UI & Liquid Circular Reveal)**
+- **Header Button:** Add a lotus or eye icon button in the header actions.
+- **Circular Reveal Mechanism:**
+  1. Capture click coordinates `(clientX, clientY)` on toggle.
+  2. Render a dynamic circular reveal overlay element (`.zen-reveal-circle`) starting at `left: x`, `top: y` with `width: 0`, `height: 0`, `border-radius: 50%`.
+  3. Animate the circle to scale up (`transform: translate(-50%, -50%) scale(R)`) where `R` is calculated using the container diagonal.
+  4. Use a smooth transition (`transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)`) to simulate a liquid filling the space.
+- **`ChatWindow.jsx` Layout Changes:**
+  - When active, apply `.zen-active` to the chat window.
+  - Filter visible messages to render **only the last 1 or 2 messages**.
+  - Hide the sidebar and fade out the chat header (auto-restoring opacity on hover).
+- **CSS Transitions:**
+  - Apply CSS filters (`blur()`) and opacity transitions to old messages to fade them out smoothly.
+  - Add a slow, pulsing breathing-halo glow to the background.
 
 ---
 
