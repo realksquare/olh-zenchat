@@ -56,6 +56,8 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
     const haloColor = getHaloColor(userId, currentUser?._id);
     const userMomentsCount = moments.filter(m => (m.userId?._id || m.userId)?.toString() === userId).length;
 
+    const [showConfirmBlock, setShowConfirmBlock] = useState(false);
+
     const handleBlockToggle = async () => {
         setBlockError(null);
         if (iBlocked) {
@@ -64,12 +66,16 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                 setBlockError(res.message);
             }
         } else {
-            if (confirm("Are you sure you want to block this user?")) {
-                const res = await blockUser(userId);
-                if (!res.success) {
-                    setBlockError(res.message);
-                }
-            }
+            setShowConfirmBlock(true);
+        }
+    };
+
+    const handleConfirmBlock = async () => {
+        setShowConfirmBlock(false);
+        setBlockError(null);
+        const res = await blockUser(userId);
+        if (!res.success) {
+            setBlockError(res.message);
         }
     };
 
@@ -130,7 +136,6 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                             <button 
                                 className={`btn ${iBlocked ? 'btn-primary' : 'btn-danger'} btn-full`}
                                 onClick={handleBlockToggle}
-                                style={!iBlocked ? { backgroundColor: '#dc2626', color: '#fff' } : {}}
                             >
                                 {iBlocked ? 'Unblock User' : 'Block User'}
                             </button>
@@ -143,6 +148,31 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                     </div>
                 </div>
             </div>
+            {showConfirmBlock && createPortal(
+                <div className="modal-overlay moments-aura-overlay" onClick={() => setShowConfirmBlock(false)} style={{ zIndex: 20000 }}>
+                    <div className="moments-aura-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "320px", padding: "32px", textAlign: "center" }}>
+                        <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px", color: "#ef4444" }}>
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                            </svg>
+                        </div>
+                        <h3 style={{ color: "#fff", fontSize: "1.25rem", fontWeight: "800", marginBottom: "12px" }}>Block @{username}?</h3>
+                        <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.9rem", marginBottom: "24px", lineHeight: "1.5" }}>
+                            Blocked users will no longer be able to message you, see your online status, or view your moments.
+                        </p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            <button className="btn btn-danger btn-full" onClick={handleConfirmBlock} style={{ background: "#ef4444", color: "#fff", border: "none" }}>
+                                Block User
+                            </button>
+                            <button className="btn btn-outline btn-full" onClick={() => setShowConfirmBlock(false)}>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>,
         document.body
     );

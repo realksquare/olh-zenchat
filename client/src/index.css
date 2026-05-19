@@ -1836,6 +1836,35 @@ select {
 
 /* -- New Features --------------------------------------- */
 
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  transition: all var(--transition-interactive);
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+
 .message-bubble.view-once {
   border: 1px dashed var(--color-primary);
 
