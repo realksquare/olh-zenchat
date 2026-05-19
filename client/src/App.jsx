@@ -28,7 +28,9 @@ const GuestRoute = ({ children }) => {
 };
 
 const NetworkBanner = () => {
-  const { socket, isConnected } = useSocket();
+  const socketContext = useSocket();
+  const socket = socketContext?.socket;
+  const isConnected = socketContext?.isConnected || false;
   const [status, setStatus] = useState("online");
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -188,7 +190,8 @@ const App = () => {
   const token = useAuthStore((s) => s.token);
   const userId = useAuthStore((s) => s.user?._id);
   const checkAuth = useAuthStore((s) => s.checkAuth);
-  const { socket } = useSocket();
+  const socketContext = useSocket();
+  const socket = socketContext?.socket;
   const [serverReady, setServerReady] = useState(false);
 
   useEffect(() => {
@@ -253,18 +256,30 @@ const App = () => {
         }
 
         const checkHealth = async () => {
+            const timer = setTimeout(() => {
+                setServerReady(true);
+            }, 2500);
+
             if (!navigator.onLine) {
+                clearTimeout(timer);
                 setServerReady(true);
                 return;
             }
             try {
                 await axiosInstance.get("/messages/health");
+                clearTimeout(timer);
                 setServerReady(true);
             } catch (err) {
                 if (!navigator.onLine) {
+                    clearTimeout(timer);
                     setServerReady(true);
                 } else {
-                    setTimeout(checkHealth, 5000);
+                    // Retry health check but don't block the screen
+                    setTimeout(async () => {
+                        try {
+                            await axiosInstance.get("/messages/health");
+                        } catch (_) {}
+                    }, 5000);
                 }
             }
         };

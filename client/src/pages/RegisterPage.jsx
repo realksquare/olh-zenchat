@@ -10,6 +10,19 @@ const validatePassword = (pw) => {
     return null;
 };
 
+const countryCodes = [
+    { code: "+1", label: "US/CA (+1)" },
+    { code: "+91", label: "IN (+91)" },
+    { code: "+44", label: "UK (+44)" },
+    { code: "+61", label: "AU (+61)" },
+    { code: "+81", label: "JP (+81)" },
+    { code: "+49", label: "DE (+49)" },
+    { code: "+33", label: "FR (+33)" },
+    { code: "+86", label: "CN (+86)" },
+    { code: "+7", label: "RU (+7)" },
+    { code: "+55", label: "BR (+55)" }
+];
+
 const RegisterPage = () => {
     const navigate = useNavigate();
     const { 
@@ -25,6 +38,8 @@ const RegisterPage = () => {
     // Tab state: 'email' or 'phone'
     const [activeTab, setActiveTab] = useState("email");
     const [form, setForm] = useState({ username: "", email: "", password: "", phoneNumber: "" });
+    const [countryCode, setCountryCode] = useState("+1");
+    const [phoneBody, setPhoneBody] = useState("");
     const [pwError, setPwError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
@@ -95,13 +110,14 @@ const RegisterPage = () => {
 
     const handlePhoneSubmit = async (e) => {
         e.preventDefault();
-        if (!form.username.trim() || !form.phoneNumber.trim()) return;
+        const fullPhone = countryCode + phoneBody.trim();
+        if (!form.username.trim() || !phoneBody.trim()) return;
         
-        const result = await registerPhone(form.username, form.phoneNumber);
+        const result = await registerPhone(form.username, fullPhone);
         if (result.success) {
             setTempUserId(result.userId);
             setOtpSent(true);
-            setSuccessMessage(`Verification code sent to ${form.phoneNumber}`);
+            setSuccessMessage(`Verification code sent to ${fullPhone}`);
         }
     };
 
@@ -380,26 +396,48 @@ const RegisterPage = () => {
 
                         <div className="field">
                             <label htmlFor="phoneNumber">Phone Number</label>
-                            <input
-                                id="phoneNumber"
-                                name="phoneNumber"
-                                type="tel"
-                                autoComplete="tel"
-                                required
-                                placeholder="+1 234 567 8900"
-                                value={form.phoneNumber}
-                                onChange={handleChange}
-                                style={{
-                                    fontSize: "1.05rem",
-                                    letterSpacing: "0.5px"
-                                }}
-                            />
-                            <span className="field-hint" style={{ color: "#64748b" }}>
-                                Enter phone number with country code (e.g. +1, +91)
-                            </span>
+                            <div style={{ display: "flex", gap: "8px" }}>
+                                <select
+                                    value={countryCode}
+                                    onChange={(e) => setCountryCode(e.target.value)}
+                                    style={{
+                                        width: "110px",
+                                        background: "rgba(30, 41, 59, 0.6)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                        borderRadius: "8px",
+                                        color: "#fff",
+                                        padding: "10px",
+                                        fontSize: "0.95rem",
+                                        outline: "none"
+                                    }}
+                                >
+                                    {countryCodes.map(c => (
+                                        <option key={c.code} value={c.code} style={{ background: "#1e293b", color: "#fff" }}>
+                                            {c.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <input
+                                    id="phoneNumber"
+                                    name="phoneNumber"
+                                    type="tel"
+                                    required
+                                    placeholder="234 567 8900"
+                                    value={phoneBody}
+                                    onChange={(e) => {
+                                        clearError();
+                                        setPhoneBody(e.target.value.replace(/\D/g, ""));
+                                    }}
+                                    style={{
+                                        flex: 1,
+                                        fontSize: "1.05rem",
+                                        letterSpacing: "0.5px"
+                                    }}
+                                />
+                            </div>
                         </div>
 
-                        <button type="submit" className="btn-primary" disabled={isLoading || !form.username.trim() || !form.phoneNumber.trim()}>
+                        <button type="submit" className="btn-primary" disabled={isLoading || !form.username.trim() || !phoneBody.trim()}>
                             {isLoading ? "Sending OTP..." : "Request Verification Code"}
                         </button>
                     </form>

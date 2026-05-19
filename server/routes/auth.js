@@ -490,6 +490,90 @@ router.post("/logout", authMiddleware, async (req, res) => {
     }
 });
 
+// Request 2FA Setup OTP
+router.post("/2fa/setup/request", authMiddleware, async (req, res) => {
+    try {
+        const { phoneNumber, mfaPreference } = req.body;
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const cleanPhone = phoneNumber ? phoneNumber.trim() : "";
+        if (mfaPreference === "phone" && !cleanPhone) {
+            return res.status(400).json({ message: "Phone number is required for SMS OTP" });
+        }
+
+        // Generate 6-digit OTP code
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const expires = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+        user.verificationSession = {
+            otpCode,
+            otpExpires: expires
+        };
+        await user.save();
+
+        if (mfaPreference === "email") {
+            const emailTarget = user.email;
+            await send2faEmail(emailTarget, user.username, otpCode);
+            res.json({ message: `Verification code sent to email ${emailTarget}` });
+        } else {
+            // Phone SMS setup dispatch log
+            console.log(`[SMS OTP DISPATCH] to ${cleanPhone}: Your ZenChat 2FA Setup Code is ${otpCode}`);
+            res.json({ message: `Verification code sent to phone ${cleanPhone}` });
+        }
+    } catch (err) {
+        console.error("2FA request setup error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// Verify and enable 2FA
+router.post("/2fa/setup/verify", authMiddleware, async (req, res) => {
+    try {
+        const { otpCode, phoneNumber, mfaPreference } = req.body;
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const session = user.verificationSession;
+        if (!session || !session.otpCode || session.otpCode !== otpCode) {
+            return res.status(400).json({ message: "Invalid verification code" });
+        }
+
+        if (new Date() > new Date(session.otpExpires)) {
+            return res.status(400).json({ message: "Verification code has expired" });
+        }
+
+        // Code is valid! Enable 2FA and save settings
+        user.is2faEnabled = true;
+        if (phoneNumber) {
+            const cleanPhone = phoneNumber.trim();
+            if (cleanPhone && cleanPhone !== user.phoneNumber) {
+                const existing = await User.findOne({ phoneNumber: cleanPhone });
+                if (existing) {
+                    return res.status(409).json({ message: "Phone number already taken" });
+                }
+            }
+            user.phoneNumber = cleanPhone || undefined;
+        }
+        if (mfaPreference) {
+            user.mfaPreference = mfaPreference;
+        }
+
+        user.verificationSession = undefined;
+        await user.save();
+
+        const populated = await User.findById(user._id).populate("blockedUsers.userId", "username avatar");
+        res.json({ message: "2FA successfully enabled!", user: populated.toPrivateJSON() });
+    } catch (err) {
+        console.error("2FA verify setup error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 router.put(
     "/me",
     authMiddleware,
@@ -747,39 +831,107 @@ router.post("/unblock/:targetId", authMiddleware, async (req, res) => {
 
 router.post("/forgot-password", async (req, res) => {
     try {
-        const { email } = req.body;
-        if (!email) {
-            return res.status(400).json({ message: "Email is required" });
+        const { identifier, method } = req.body;
+        if (!identifier) {
+            return res.status(400).json({ message: "Email or Phone Number is required" });
         }
 
-        const user = await User.findOne({ email: email.toLowerCase().trim() });
+        const input = identifier.trim();
+        let user = null;
+        if (input.includes("@")) {
+            user = await User.findOne({ email: input.toLowerCase() });
+        } else {
+            user = await User.findOne({ phoneNumber: input });
+        }
+
         if (!user) {
-            return res.status(404).json({ message: "User with this email does not exist" });
+            return res.status(404).json({ message: "No account found with this identifier" });
         }
 
-        // Generate secure random token
+        // If the user has 2FA enabled, and they did not specify a choice yet, return the choices!
+        if (user.is2faEnabled && !method) {
+            return res.json({
+                mfaRequired: true,
+                hasEmail: !!user.email,
+                hasPhone: !!user.phoneNumber,
+                userId: user._id
+            });
+        }
+
+        // Determine method:
+        // If they chose email, or if they don't have 2FA and registered with email primarily
+        const chosenMethod = method || (user.email ? "email" : "phone");
+
+        // Generate reset token
         const token = crypto.randomBytes(20).toString("hex");
-
-        // Save to DB (expires in 1 hour)
         user.resetPasswordToken = token;
-        user.resetPasswordExpires = Date.now() + 3600000;
-        await user.save();
+        user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
 
-        // Construct reset URL
-        const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
-        const resetUrl = `${clientUrl}/reset-password/${token}`;
+        if (chosenMethod === "email") {
+            if (!user.email) {
+                return res.status(400).json({ message: "No email address registered for this account" });
+            }
+            await user.save();
+            const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+            const resetUrl = `${clientUrl}/reset-password/${token}`;
+            await sendResetEmail(user.email, user.username, resetUrl);
+            return res.json({ success: true, method: "email", message: "Password reset link successfully sent to your email" });
+        } else {
+            if (!user.phoneNumber) {
+                return res.status(400).json({ message: "No phone number registered for this account" });
+            }
+            // Phone reset code: 6-digit OTP stored as resetPasswordToken
+            const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+            user.resetPasswordToken = otpCode;
+            user.resetPasswordExpires = Date.now() + 5 * 60 * 1000; // 5 minutes
+            await user.save();
 
-        // Dispatch email
-        await sendResetEmail(user.email, user.username, resetUrl);
-
-        res.json({ success: true, message: "Reset link successfully sent to your email" });
+            console.log(`[SMS RESET OTP] to ${user.phoneNumber}: ZenChat password reset code is ${otpCode}`);
+            return res.json({ success: true, method: "phone", message: `Password reset code sent to phone number ${user.phoneNumber}` });
+        }
     } catch (err) {
         console.error("[ForgotPassword] Error:", err);
-        res.status(500).json({ 
-            message: "Server error", 
-            error: err.message, 
-            stack: err.stack 
-        });
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.post("/forgot-password/verify-code", async (req, res) => {
+    try {
+        const { identifier, code } = req.body;
+        if (!identifier || !code) {
+            return res.status(400).json({ message: "Identifier and verification code are required" });
+        }
+
+        const input = identifier.trim();
+        let user = null;
+        if (input.includes("@")) {
+            user = await User.findOne({ email: input.toLowerCase() });
+        } else {
+            user = await User.findOne({ phoneNumber: input });
+        }
+
+        if (!user) {
+            return res.status(404).json({ message: "No account found with this identifier" });
+        }
+
+        if (!user.resetPasswordToken || user.resetPasswordToken !== code) {
+            return res.status(400).json({ message: "Invalid verification code" });
+        }
+
+        if (new Date() > new Date(user.resetPasswordExpires)) {
+            return res.status(400).json({ message: "Verification code has expired" });
+        }
+
+        // Code is correct! Generate a new token for the reset page URL and return it
+        const nextToken = crypto.randomBytes(20).toString("hex");
+        user.resetPasswordToken = nextToken;
+        user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+        await user.save();
+
+        res.json({ success: true, token: nextToken });
+    } catch (err) {
+        console.error("[VerifyResetCode] Error:", err);
+        res.status(500).json({ message: "Server error" });
     }
 });
 

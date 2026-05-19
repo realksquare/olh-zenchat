@@ -8,6 +8,28 @@ import LoadingOverlay from "./LoadingOverlay";
 import { db } from "../../db/zenDB";
 import { generateRecoveryKey, rotateUserRecoveryKey, setupE2EEForUser } from "../../utils/e2eeHelper";
 
+const countryCodes = [
+    { code: "+1", label: "US/CA (+1)" },
+    { code: "+91", label: "IN (+91)" },
+    { code: "+44", label: "UK (+44)" },
+    { code: "+61", label: "AU (+61)" },
+    { code: "+81", label: "JP (+81)" },
+    { code: "+49", label: "DE (+49)" },
+    { code: "+33", label: "FR (+33)" },
+    { code: "+86", label: "CN (+86)" },
+    { code: "+7", label: "RU (+7)" },
+    { code: "+55", label: "BR (+55)" }
+];
+
+const parsePhone = (phone) => {
+    if (!phone) return { code: "+1", body: "" };
+    const matchingCode = countryCodes.find(c => phone.startsWith(c.code));
+    if (matchingCode) {
+        return { code: matchingCode.code, body: phone.substring(matchingCode.code.length) };
+    }
+    return { code: "+1", body: phone };
+};
+
 const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const { user, updateProfile, isLoading, soundEnabled, toggleSound, unblockUser } = useAuthStore();
     const { chats } = useChatStore();
@@ -34,9 +56,14 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [isConfirmingRotate, setIsConfirmingRotate] = useState(false);
     const [localKeysMissing, setLocalKeysMissing] = useState(false);
     const [profileBlockError, setProfileBlockError] = useState(null);
+    const initialPhone = parsePhone(user?.phoneNumber);
+    const [countryCode, setCountryCode] = useState(initialPhone.code);
+    const [phoneBody, setPhoneBody] = useState(initialPhone.body);
     const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
     const [is2faEnabled, setIs2faEnabled] = useState(user?.is2faEnabled || false);
     const [mfaPreference, setMfaPreference] = useState(user?.mfaPreference || "phone");
+    const [otpCode, setOtpCode] = useState("");
+    const [otpSent, setOtpSent] = useState(false);
 
     const fileInputRef = useRef(null);
     const importInputRef = useRef(null);
@@ -65,6 +92,12 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setPhoneNumber(user.phoneNumber || "");
             setIs2faEnabled(user.is2faEnabled || false);
             setMfaPreference(user.mfaPreference || "phone");
+            
+            const parsed = parsePhone(user.phoneNumber);
+            setCountryCode(parsed.code);
+            setPhoneBody(parsed.body);
+            setOtpSent(false);
+            setOtpCode("");
         }
     }, [isOpen, user?._id]);
 
@@ -168,6 +201,73 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             }, 1000);
         } else {
             showToast(res.message);
+        }
+    };
+
+    const handleSendVerificationCode = async () => {
+        if (mfaPreference === "phone" && !phoneBody.trim()) {
+            showToast("Please enter a valid phone number.");
+            return;
+        }
+        setIsE2EELoading(true);
+        try {
+            const fullPhone = mfaPreference === "phone" ? (countryCode + phoneBody.trim()) : "";
+            const { data } = await axiosInstance.post("/auth/2fa/setup/request", {
+                phoneNumber: fullPhone,
+                mfaPreference
+            });
+            setOtpSent(true);
+            showToast(data.message || "Verification code sent successfully.");
+        } catch (err) {
+            showToast(err.response?.data?.message || "Failed to send verification code.");
+        } finally {
+            setIsE2EELoading(false);
+        }
+    };
+
+    const handleVerifyAndEnable2fa = async (e) => {
+        e.preventDefault();
+        if (!otpCode.trim()) return;
+        setIsE2EELoading(true);
+        try {
+            const fullPhone = mfaPreference === "phone" ? (countryCode + phoneBody.trim()) : "";
+            const { data } = await axiosInstance.post("/auth/2fa/setup/verify", {
+                otpCode: otpCode.trim(),
+                phoneNumber: fullPhone,
+                mfaPreference
+            });
+            if (data.user) {
+                useAuthStore.getState().updateUser(data.user);
+                localStorage.setItem("zenchat_user", JSON.stringify(data.user));
+            }
+            setIs2faEnabled(true);
+            setOtpSent(false);
+            setOtpCode("");
+            showToast("2FA verified and enabled successfully!");
+        } catch (err) {
+            showToast(err.response?.data?.message || "Verification failed. Please check the code.");
+        } finally {
+            setIsE2EELoading(false);
+        }
+    };
+
+    const handleDisable2fa = async () => {
+        setIsE2EELoading(true);
+        try {
+            const { data } = await axiosInstance.put("/auth/me", {
+                is2faEnabled: false
+            });
+            if (data.user) {
+                useAuthStore.getState().updateUser(data.user);
+                localStorage.setItem("zenchat_user", JSON.stringify(data.user));
+            }
+            setIs2faEnabled(false);
+            setOtpSent(false);
+            showToast("2FA disabled.");
+        } catch (err) {
+            showToast(err.response?.data?.message || "Failed to disable 2FA.");
+        } finally {
+            setIsE2EELoading(false);
         }
     };
 
@@ -477,69 +577,152 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                             </div>
                         </div>
                         <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                <div>
-                                    <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem" }}>Two-Factor Authentication (2FA)</span>
-                                    <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Secure your account using SMS/Email OTP</span>
-                                </div>
-                                <button
-                                    type="button"
-                                    className={`toggle-btn ${is2faEnabled ? "toggle-on" : ""}`}
-                                    onClick={() => {
-                                        if (!is2faEnabled && !phoneNumber.trim()) {
-                                            showToast("Please register a phone number before enabling 2FA.");
-                                            return;
-                                        }
-                                        setIs2faEnabled(!is2faEnabled);
-                                    }}
-                                    aria-label="Toggle 2FA"
-                                >
-                                    <span className="toggle-thumb" />
-                                </button>
+                            <div>
+                                <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem" }}>Two-Factor Authentication (2FA)</span>
+                                <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Secure your account using SMS/Email OTP</span>
                             </div>
 
-                            <div style={{ display: "flex", flexDirection: "column", gap: "8px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "10px" }}>
-                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                    <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>Phone Number (Required for 2FA)</label>
-                                    <input
-                                        type="tel"
-                                        placeholder="+1 234 567 8900"
-                                        value={phoneNumber}
-                                        onChange={(e) => setPhoneNumber(e.target.value)}
-                                        style={{
-                                            background: "rgba(0, 0, 0, 0.3)",
-                                            border: "1px solid rgba(255,255,255,0.1)",
-                                            borderRadius: "8px",
-                                            padding: "8px 12px",
-                                            fontSize: "0.8rem",
-                                            color: "#fff",
-                                            width: "100%"
-                                        }}
-                                    />
+                            {is2faEnabled ? (
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(16, 185, 129, 0.06)", border: "1px solid rgba(16, 185, 129, 0.15)", padding: "10px 14px", borderRadius: "8px", marginTop: "4px" }}>
+                                    <div>
+                                        <div style={{ color: "#10b981", fontSize: "0.8rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "6px" }}>
+                                            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981" }} />
+                                            2FA is Active
+                                        </div>
+                                        <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "2px" }}>
+                                            Preference: {mfaPreference === "phone" ? `Phone SMS (${user?.phoneNumber || ""})` : `Email (${user?.email || ""})`}
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleDisable2fa}
+                                        style={{ background: "rgba(239, 68, 68, 0.15)", border: "1px solid rgba(239, 68, 68, 0.3)", color: "#ef4444", padding: "6px 12px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "600", cursor: "pointer" }}
+                                    >
+                                        Disable 2FA
+                                    </button>
                                 </div>
-
-                                {is2faEnabled && (
+                            ) : (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "10px" }}>
                                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                        <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>2FA Code Target</label>
+                                        <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>Select 2FA Method</label>
                                         <select
                                             value={mfaPreference}
-                                            onChange={(e) => setMfaPreference(e.target.value)}
+                                            onChange={(e) => {
+                                                setMfaPreference(e.target.value);
+                                                setOtpSent(false);
+                                            }}
                                             style={{
                                                 background: "rgba(0, 0, 0, 0.3)",
                                                 border: "1px solid rgba(255,255,255,0.1)",
                                                 borderRadius: "8px",
                                                 padding: "8px",
                                                 fontSize: "0.8rem",
-                                                color: "#fff",
-                                                backgroundPosition: "right 8px center"
+                                                color: "#fff"
                                             }}
                                         >
-                                            <option value="phone">Phone SMS OTP (Primary Email Signups)</option>
-                                            <option value="email">Email Code (Primary Phone Signups)</option>
+                                            <option value="phone">Phone SMS OTP (Enter phone number below)</option>
+                                            <option value="email">Email Verification Code (Sends to your email)</option>
                                         </select>
                                     </div>
-                                )}
-                            </div>
+
+                                    {mfaPreference === "phone" && (
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                            <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>Phone Number</label>
+                                            <div style={{ display: "flex", gap: "8px" }}>
+                                                <select
+                                                    value={countryCode}
+                                                    onChange={(e) => setCountryCode(e.target.value)}
+                                                    style={{
+                                                        width: "95px",
+                                                        background: "rgba(0, 0, 0, 0.3)",
+                                                        border: "1px solid rgba(255,255,255,0.1)",
+                                                        borderRadius: "8px",
+                                                        padding: "8px",
+                                                        fontSize: "0.8rem",
+                                                        color: "#fff"
+                                                    }}
+                                                >
+                                                    {countryCodes.map(c => (
+                                                        <option key={c.code} value={c.code} style={{ background: "#1e293b", color: "#fff" }}>
+                                                            {c.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <input
+                                                    type="tel"
+                                                    placeholder="234 567 8900"
+                                                    value={phoneBody}
+                                                    onChange={(e) => {
+                                                        setPhoneBody(e.target.value.replace(/\D/g, ""));
+                                                        setOtpSent(false);
+                                                    }}
+                                                    style={{
+                                                        flex: 1,
+                                                        background: "rgba(0, 0, 0, 0.3)",
+                                                        border: "1px solid rgba(255,255,255,0.1)",
+                                                        borderRadius: "8px",
+                                                        padding: "8px 12px",
+                                                        fontSize: "0.8rem",
+                                                        color: "#fff"
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {!otpSent ? (
+                                        <button
+                                            type="button"
+                                            onClick={handleSendVerificationCode}
+                                            style={{ background: "rgba(61, 165, 217, 0.15)", border: "1px solid rgba(61, 165, 217, 0.3)", color: "var(--color-primary)", padding: "8px 16px", borderRadius: "8px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer", width: "100%", marginTop: "4px" }}
+                                        >
+                                            Send Verification Code
+                                        </button>
+                                    ) : (
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "8px", background: "rgba(255,255,255,0.02)", padding: "10px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                            <label style={{ fontSize: "0.75rem", color: "var(--color-primary)", fontWeight: "600" }}>Enter 6-Digit Code Manually</label>
+                                            <div style={{ display: "flex", gap: "8px" }}>
+                                                <input
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
+                                                    maxLength={6}
+                                                    placeholder="0 0 0 0 0 0"
+                                                    value={otpCode}
+                                                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                                                    style={{
+                                                        flex: 1,
+                                                        background: "rgba(0, 0, 0, 0.3)",
+                                                        border: "1px solid rgba(255,255,255,0.15)",
+                                                        borderRadius: "8px",
+                                                        padding: "8px 12px",
+                                                        fontSize: "0.85rem",
+                                                        color: "#fff",
+                                                        letterSpacing: "4px",
+                                                        textAlign: "center",
+                                                        fontFamily: "monospace"
+                                                    }}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleVerifyAndEnable2fa}
+                                                    disabled={otpCode.length < 6}
+                                                    style={{ background: "var(--color-primary)", color: "black", border: "none", padding: "8px 14px", borderRadius: "8px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer" }}
+                                                >
+                                                    Verify
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setOtpSent(false)}
+                                                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", padding: "8px 10px", borderRadius: "8px", fontSize: "0.75rem", cursor: "pointer" }}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -804,12 +987,66 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                         )}
                     </div>
 
-                    <div className="actions-section" style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>
-                        <button type="button" className="btn btn-outline" onClick={handleExport} style={{ flex: 1, fontSize: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                            <span>Export</span>
+                    <div className="actions-section" style={{ marginTop: "0.75rem", display: "flex", gap: "0.75rem" }}>
+                        <button
+                            type="button"
+                            onClick={handleExport}
+                            style={{
+                                flex: 1,
+                                background: "rgba(255, 255, 255, 0.05)",
+                                border: "1px solid rgba(255, 255, 255, 0.1)",
+                                color: "#f1f5f9",
+                                padding: "10px 16px",
+                                borderRadius: "8px",
+                                fontSize: "0.82rem",
+                                fontWeight: "600",
+                                cursor: "pointer",
+                                transition: "all 0.2s ease",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "6px"
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                                e.currentTarget.style.borderColor = "var(--color-primary)";
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
+                            }}
+                        >
+                            <span>Export Chat History</span>
                         </button>
-                        <button type="button" className="btn btn-outline" onClick={() => importInputRef.current?.click()} style={{ flex: 1, fontSize: "0.8rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                            <span>Import</span>
+                        <button
+                            type="button"
+                            onClick={() => importInputRef.current?.click()}
+                            style={{
+                                flex: 1,
+                                background: "rgba(255, 255, 255, 0.05)",
+                                border: "1px solid rgba(255, 255, 255, 0.1)",
+                                color: "#f1f5f9",
+                                padding: "10px 16px",
+                                borderRadius: "8px",
+                                fontSize: "0.82rem",
+                                fontWeight: "600",
+                                cursor: "pointer",
+                                transition: "all 0.2s ease",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "6px"
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                                e.currentTarget.style.borderColor = "var(--color-primary)";
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
+                            }}
+                        >
+                            <span>Import Archive</span>
                         </button>
                         <input ref={importInputRef} type="file" accept=".json,application/json" style={{ display: "none" }} onChange={handleImport} />
                     </div>
