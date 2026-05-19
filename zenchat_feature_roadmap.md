@@ -51,6 +51,14 @@ This document outlines the technical architecture and step-by-step implementatio
 - **CSS Transitions:**
   - Apply CSS filters (`blur()`) and opacity transitions to old messages to fade them out smoothly.
   - Add a slow, pulsing breathing-halo glow to the background.
+- **Cinematic First-Time Intro Sequence:**
+  1. Store an intro flag `localStorage.getItem("zen_intro_shown")`.
+  2. If the user toggles Zen Mode and the flag is absent:
+     - Render a gorgeous, full-screen overlay `.zen-intro-overlay` with a rich dark absolute backdrop and radial gradient halos.
+     - Play a 10-second cinematic reveal animation using CSS clip-paths, text masks, and lightweight particles (HTML5 canvas/CSS keyframes).
+     - Text layers (e.g., *"Quiet the noise."*, *"Embrace the thought."*) will slide out of blur masks sequentially, styled like a movie title motion poster.
+     - Add a tiny, minimalist outline button at the top-right (`.btn-skip-intro`) labeled `"Skip Intro"` to allow bypassing the sequence instantly.
+     - Auto-dismiss and transition into active Zen Mode after 10 seconds, setting `zen_intro_shown` to `"true"`.
 
 ---
 
