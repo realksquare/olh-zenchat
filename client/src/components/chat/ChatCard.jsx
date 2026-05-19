@@ -191,16 +191,25 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                             className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`}
                             style={{ display: "flex", alignItems: "center", gap: "4px", overflow: "hidden", flex: 1, minWidth: 0 }}
                         >
-                            <div className="marquee-container" ref={nameContainerRef} style={{ flexShrink: 1, minWidth: 0, width: "auto" }}>
+                            <div className="marquee-container" ref={nameContainerRef}>
                                 <span
                                     ref={nameContentRef}
                                     className={`marquee-content ${marqueeDist < 0 ? "marquee-active" : ""}`}
-                                    style={marqueeDist < 0 ? { "--marquee-dist": `${marqueeDist}px` } : {}}
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: "4px",
+                                        ...(marqueeDist < 0 ? { "--marquee-dist": `${marqueeDist}px` } : {})
+                                    }}
                                 >
-                                    {displayName}
+                                    <span>{displayName}</span>
+                                    {otherUser?.isVerified && (
+                                        <span style={{ flexShrink: 0, display: "flex" }}>
+                                            <VerifiedTick />
+                                        </span>
+                                    )}
                                 </span>
                             </div>
-                            {otherUser?.isVerified && <span style={{ flexShrink: 0, display: "flex" }}><VerifiedTick /></span>}
                         </div>
                         <span className="chat-card-time">
                             {liveChat.updatedAt ? formatDistanceToNow(new Date(liveChat.updatedAt), { addSuffix: false }) : ""}
