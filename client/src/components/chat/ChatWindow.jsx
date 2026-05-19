@@ -574,8 +574,8 @@ const ChatWindow = ({ onBack }) => {
                                 otherUser={otherUser}
                                 onEdit={handleMessageAction}
                                 onDelete={setDeletingMessage}
-                                canDelete={!isDeleted}
-                                canReply={!isDeleted}
+                                canDelete={!isDeleted && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked}
+                                canReply={!isDeleted && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked}
                                 onMediaClick={(url, type) => {
                                     if (type === "file") {
                                         setSelectedDoc({ url, fileName: msg.content || "document" });
@@ -648,9 +648,11 @@ const ChatWindow = ({ onBack }) => {
                             <button className="delete-modal-btn self" onClick={() => handleDeleteConfirm("self")}>
                                 Delete for me
                             </button>
-                            <button className="delete-modal-btn everyone" onClick={() => handleDeleteConfirm("everyone")}>
-                                Delete for everyone
-                            </button>
+                            {!isDeleted && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked && (
+                                <button className="delete-modal-btn everyone" onClick={() => handleDeleteConfirm("everyone")}>
+                                    Delete for everyone
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

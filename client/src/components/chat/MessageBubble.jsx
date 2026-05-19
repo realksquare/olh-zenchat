@@ -137,7 +137,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         <div
             id={`msg-${message._id}`}
             className={`message-row ${isMe ? "mine" : "theirs"} ${isNew ? "message-slide-up" : ""}`}
-            onDoubleClick={() => !message.deletedForEveryone && onEdit({ action: "reply", ...message })}
+            onDoubleClick={() => !message.deletedForEveryone && canReply && onEdit({ action: "reply", ...message })}
             style={!isShown ? { visibility: 'hidden', height: 0, overflow: 'hidden' } : {}}
         >
             {!isMe && showAvatar && (
