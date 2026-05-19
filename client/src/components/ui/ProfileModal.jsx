@@ -621,16 +621,25 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                     }
                                 </span>
                             </div>
-                            <label className="toggle-switch">
-                                <input
-                                    type="checkbox"
-                                    checked={isLowBandwidth}
-                                    onChange={(e) => {
-                                        useChatStore.getState().setLowBandwidth(e.target.checked);
-                                    }}
-                                />
-                                <span className="slider round"></span>
-                            </label>
+                            <div style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                fontSize: "0.72rem",
+                                padding: "4px 8px",
+                                borderRadius: "6px",
+                                background: "rgba(255,255,255,0.02)",
+                                border: "1px solid rgba(255,255,255,0.05)",
+                                color: "#94a3b8",
+                                fontWeight: "600",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.5px"
+                            }}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "#38bdf8" }}>
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                                </svg>
+                                Auto-Managed
+                            </div>
                         </div>
                         <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "12px" }}>
                             <div>
