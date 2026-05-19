@@ -61,7 +61,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [phoneBody, setPhoneBody] = useState(initialPhone.body);
     const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
     const [is2faEnabled, setIs2faEnabled] = useState(user?.is2faEnabled || false);
-    const [mfaPreference, setMfaPreference] = useState(user?.mfaPreference || "phone");
+    const [mfaPreference, setMfaPreference] = useState(user?.email ? "phone" : "email");
     const [otpCode, setOtpCode] = useState("");
     const [otpSent, setOtpSent] = useState(false);
 
@@ -91,7 +91,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setProfileBlockError(null);
             setPhoneNumber(user.phoneNumber || "");
             setIs2faEnabled(user.is2faEnabled || false);
-            setMfaPreference(user.mfaPreference || "phone");
+            setMfaPreference(user.email ? "phone" : "email");
             
             const parsed = parsePhone(user.phoneNumber);
             setCountryCode(parsed.code);
@@ -599,13 +599,13 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                         fontSize: '0.65rem',
                                         padding: '2px 6px',
                                         borderRadius: '4px',
-                                        background: isLowBandwidth ? 'rgba(234, 179, 8, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                                        color: isLowBandwidth ? '#eab308' : '#10b981',
+                                        background: isLowBandwidth ? 'rgba(234, 179, 8, 0.15)' : 'rgba(255, 255, 255, 0.1)',
+                                        color: isLowBandwidth ? '#eab308' : '#94a3b8',
                                         fontWeight: '800',
                                         textTransform: 'uppercase',
                                         letterSpacing: '0.5px'
                                     }}>
-                                        {isLowBandwidth ? "Active" : "Standard"}
+                                        {isLowBandwidth ? "Active" : "OFF"}
                                     </span>
                                 </span>
                                 <span style={{ fontSize: "0.75rem", color: "#64748b", display: "block", marginTop: "4px", lineHeight: "1.3" }}>
@@ -615,6 +615,16 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                     }
                                 </span>
                             </div>
+                            <label className="toggle-switch">
+                                <input
+                                    type="checkbox"
+                                    checked={isLowBandwidth}
+                                    onChange={(e) => {
+                                        useChatStore.getState().setLowBandwidth(e.target.checked);
+                                    }}
+                                />
+                                <span className="slider round"></span>
+                            </label>
                         </div>
                         <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "12px" }}>
                             <div>
@@ -645,24 +655,31 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "10px" }}>
                                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                                         <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>Select 2FA Method</label>
-                                        <select
-                                            value={mfaPreference}
-                                            onChange={(e) => {
-                                                setMfaPreference(e.target.value);
-                                                setOtpSent(false);
-                                            }}
-                                            style={{
-                                                background: "rgba(0, 0, 0, 0.3)",
-                                                border: "1px solid rgba(255,255,255,0.1)",
+                                        {user?.email ? (
+                                            <div style={{
+                                                background: "rgba(255, 255, 255, 0.04)",
+                                                border: "1px solid rgba(255, 255, 255, 0.08)",
                                                 borderRadius: "8px",
-                                                padding: "8px",
+                                                padding: "10px",
                                                 fontSize: "0.8rem",
-                                                color: "#fff"
-                                            }}
-                                        >
-                                            <option value="phone">Phone SMS OTP (Enter phone number below)</option>
-                                            <option value="email">Email Verification Code (Sends to your email)</option>
-                                        </select>
+                                                color: "#fff",
+                                                fontWeight: "500"
+                                            }}>
+                                                Phone SMS OTP (Enter phone number below)
+                                            </div>
+                                        ) : (
+                                            <div style={{
+                                                background: "rgba(255, 255, 255, 0.04)",
+                                                border: "1px solid rgba(255, 255, 255, 0.08)",
+                                                borderRadius: "8px",
+                                                padding: "10px",
+                                                fontSize: "0.8rem",
+                                                color: "#fff",
+                                                fontWeight: "500"
+                                            }}>
+                                                Email Verification Code (Sends to your email)
+                                            </div>
+                                        )}
                                     </div>
 
                                     {mfaPreference === "phone" && (
@@ -714,49 +731,65 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                         <button
                                             type="button"
                                             onClick={handleSendVerificationCode}
-                                            style={{ background: "rgba(61, 165, 217, 0.15)", border: "1px solid rgba(61, 165, 217, 0.3)", color: "var(--color-primary)", padding: "8px 16px", borderRadius: "8px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer", width: "100%", marginTop: "4px" }}
+                                            disabled={mfaPreference === "phone" && !phoneBody.trim()}
+                                            style={{ 
+                                                background: (mfaPreference === "phone" && !phoneBody.trim()) ? "rgba(255, 255, 255, 0.05)" : "rgba(61, 165, 217, 0.15)", 
+                                                border: (mfaPreference === "phone" && !phoneBody.trim()) ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(61, 165, 217, 0.3)", 
+                                                color: (mfaPreference === "phone" && !phoneBody.trim()) ? "#64748b" : "var(--color-primary)", 
+                                                padding: "8px 16px", 
+                                                borderRadius: "8px", 
+                                                fontSize: "0.8rem", 
+                                                fontWeight: "600", 
+                                                cursor: (mfaPreference === "phone" && !phoneBody.trim()) ? "not-allowed" : "pointer", 
+                                                width: "100%", 
+                                                marginTop: "4px" 
+                                            }}
                                         >
                                             Send Verification Code
                                         </button>
                                     ) : (
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "8px", background: "rgba(255,255,255,0.02)", padding: "10px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", background: "rgba(255,255,255,0.02)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
                                             <label style={{ fontSize: "0.75rem", color: "var(--color-primary)", fontWeight: "600" }}>Enter 6-Digit Code Manually</label>
-                                            <div style={{ display: "flex", gap: "8px" }}>
-                                                <input
-                                                    type="text"
-                                                    inputMode="numeric"
-                                                    pattern="[0-9]*"
-                                                    maxLength={6}
-                                                    placeholder="0 0 0 0 0 0"
-                                                    value={otpCode}
-                                                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                                                    style={{
-                                                        flex: 1,
-                                                        background: "rgba(0, 0, 0, 0.3)",
-                                                        border: "1px solid rgba(255,255,255,0.15)",
-                                                        borderRadius: "8px",
-                                                        padding: "8px 12px",
-                                                        fontSize: "0.85rem",
-                                                        color: "#fff",
-                                                        letterSpacing: "4px",
-                                                        textAlign: "center",
-                                                        fontFamily: "monospace"
-                                                    }}
-                                                />
+                                            <input
+                                                type="text"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
+                                                maxLength={6}
+                                                placeholder="0 0 0 0 0 0"
+                                                value={otpCode}
+                                                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                                                style={{
+                                                    width: "100%",
+                                                    background: "rgba(0, 0, 0, 0.3)",
+                                                    border: "1px solid rgba(255,255,255,0.15)",
+                                                    borderRadius: "8px",
+                                                    padding: "10px 12px",
+                                                    fontSize: "1.1rem",
+                                                    color: "#fff",
+                                                    letterSpacing: "8px",
+                                                    textAlign: "center",
+                                                    fontFamily: "monospace",
+                                                    boxSizing: "border-box"
+                                                }}
+                                            />
+                                            <div style={{ display: "flex", gap: "8px", width: "100%" }}>
                                                 <button
                                                     type="button"
-                                                    onClick={handleVerifyAndEnable2fa}
-                                                    disabled={otpCode.length < 6}
-                                                    style={{ background: "var(--color-primary)", color: "black", border: "none", padding: "8px 14px", borderRadius: "8px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer" }}
+                                                    onClick={() => {
+                                                        setOtpSent(false);
+                                                        setOtpCode("");
+                                                    }}
+                                                    style={{ flex: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", padding: "8px 10px", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer", height: "36px", display: "flex", alignItems: "center", justifyContent: "center" }}
                                                 >
-                                                    Verify
+                                                    Cancel
                                                 </button>
                                                 <button
                                                     type="button"
-                                                    onClick={() => setOtpSent(false)}
-                                                    style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", padding: "8px 10px", borderRadius: "8px", fontSize: "0.75rem", cursor: "pointer" }}
+                                                    onClick={handleVerifyAndEnable2fa}
+                                                    disabled={otpCode.length < 6 || isE2EELoading}
+                                                    style={{ flex: 1, background: "var(--color-primary)", color: "black", border: "none", padding: "8px 14px", borderRadius: "8px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", opacity: (otpCode.length < 6 || isE2EELoading) ? 0.5 : 1 }}
                                                 >
-                                                    Cancel
+                                                    Verify
                                                 </button>
                                             </div>
                                         </div>

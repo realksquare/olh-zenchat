@@ -234,9 +234,22 @@ const App = () => {
         };
 
         const updatePresence = () => {
+            const isActive = document.visibilityState === "visible" && document.hasFocus();
             if (socket && socket.connected) {
-                const isActive = document.visibilityState === "visible" && document.hasFocus();
                 socket.emit("set_active_status", { isActive });
+            }
+            
+            if (userId && token) {
+                const apiBase = axiosInstance.defaults.baseURL || "";
+                fetch(`${apiBase}/auth/presence`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ isActive }),
+                    keepalive: true
+                }).catch(() => {});
             }
         };
 

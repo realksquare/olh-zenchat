@@ -45,6 +45,98 @@ const cleanupInstantMessages = async (uid, io) => {
     }
 };
 
+const broadcastUserStatus = async (uid, isOnline, lastSeen = null, io) => {
+    try {
+        const user = await User.findById(uid).select("privacySettings contacts blockedUsers");
+        if (!user) return;
+
+        const privacy = user.privacySettings?.onlineStatus || "everyone";
+
+        for (const [targetId, targetData] of onlineUsers.entries()) {
+            if (targetId === uid) continue;
+
+            const targetUser = await User.findById(targetId).select("blockedUsers");
+            const theyBlockedUs = targetUser?.blockedUsers?.some(u => u.userId.toString() === uid.toString());
+            const weBlockedThem = user?.blockedUsers?.some(u => u.userId.toString() === targetId.toString());
+            if (theyBlockedUs || weBlockedThem) {
+                continue;
+            }
+
+            let canSee = false;
+            if (privacy === "everyone") {
+                canSee = true;
+            } else if (privacy === "nobody") {
+                canSee = false;
+            } else {
+                const isContact = user.contacts?.some(c =>
+                    c.userId.toString() === targetId &&
+                    (privacy === "contacts" || c.tag === privacy)
+                );
+                if (isContact) canSee = true;
+            }
+
+            if (canSee) {
+                targetData.sockets.forEach((sData, sId) => {
+                    if (isOnline) {
+                        io.to(sId).emit("user_online", { userId: uid });
+                    } else {
+                        io.to(sId).emit("user_offline", { userId: uid, lastSeen });
+                    }
+                });
+            }
+        }
+    } catch (err) {
+        console.error("Error broadcasting status:", err);
+    }
+};
+
+const setUserActivePresence = async (io, userId, isActive) => {
+    if (!userId) return;
+
+    if (!onlineUsers.has(userId)) {
+        if (!isActive) {
+            const now = new Date();
+            await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
+            await broadcastUserStatus(userId, false, now, io);
+            await cleanupInstantMessages(userId, io);
+        } else {
+            await User.findByIdAndUpdate(userId, { isOnline: true });
+            await broadcastUserStatus(userId, true, null, io);
+        }
+        return;
+    }
+
+    const userData = onlineUsers.get(userId);
+    if (userData && userData.sockets) {
+        userData.sockets.forEach((sData) => {
+            sData.isActive = isActive;
+        });
+    }
+
+    const isAnyActive = userData && userData.sockets 
+        ? Array.from(userData.sockets.values()).some(s => s.isActive)
+        : false;
+
+    if (!isAnyActive || !isActive) {
+        if (!disconnectTimeouts.has(userId + "_inactive")) {
+            const timeout = setTimeout(async () => {
+                const now = new Date();
+                await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
+                await broadcastUserStatus(userId, false, now, io);
+                await cleanupInstantMessages(userId, io);
+            }, 2000);
+            disconnectTimeouts.set(userId + "_inactive", timeout);
+        }
+    } else {
+        if (disconnectTimeouts.has(userId + "_inactive")) {
+            clearTimeout(disconnectTimeouts.get(userId + "_inactive"));
+            disconnectTimeouts.delete(userId + "_inactive");
+        }
+        await User.findByIdAndUpdate(userId, { isOnline: true });
+        await broadcastUserStatus(userId, true, null, io);
+    }
+};
+
 const registerSocketHandlers = (io) => {
     io.on("connection", (socket) => {
         const { userId, deviceType } = socket.handshake.auth;
@@ -63,82 +155,13 @@ const registerSocketHandlers = (io) => {
             userData.sockets.set(socket.id, { deviceType: deviceType || "browser", isActive: true });
             userData.hasPWA = Array.from(userData.sockets.values()).some(s => s.deviceType === "pwa");
 
-            const broadcastUserStatus = async (uid, isOnline, lastSeen = null) => {
-                try {
-                    const user = await User.findById(uid).select("privacySettings contacts blockedUsers");
-                    if (!user) return;
-
-                    const privacy = user.privacySettings?.onlineStatus || "everyone";
-
-                    for (const [targetId, targetData] of onlineUsers.entries()) {
-                        if (targetId === uid) continue;
-
-                        // Check blocking
-                        const targetUser = await User.findById(targetId).select("blockedUsers");
-                        const theyBlockedUs = targetUser?.blockedUsers?.some(u => u.userId.toString() === uid.toString());
-                        const weBlockedThem = user?.blockedUsers?.some(u => u.userId.toString() === targetId.toString());
-                        if (theyBlockedUs || weBlockedThem) {
-                            continue;
-                        }
-
-                        let canSee = false;
-                        if (privacy === "everyone") {
-                            canSee = true;
-                        } else if (privacy === "nobody") {
-                            canSee = false;
-                        } else {
-                            const isContact = user.contacts?.some(c =>
-                                c.userId.toString() === targetId &&
-                                (privacy === "contacts" || c.tag === privacy)
-                            );
-                            if (isContact) canSee = true;
-                        }
-
-                        if (canSee) {
-                            targetData.sockets.forEach((sData, sId) => {
-                                if (isOnline) {
-                                    io.to(sId).emit("user_online", { userId: uid });
-                                } else {
-                                    io.to(sId).emit("user_offline", { userId: uid, lastSeen });
-                                }
-                            });
-                        }
-                    }
-                } catch (err) {
-                    console.error("Error broadcasting status:", err);
-                }
-            };
-
             if (userData.sockets.size === 1) {
                 User.findByIdAndUpdate(userId, { isOnline: true }).exec();
-                broadcastUserStatus(userId, true);
+                broadcastUserStatus(userId, true, null, io);
             }
 
             socket.on("set_active_status", ({ isActive }) => {
-                if (userData && userData.sockets.has(socket.id)) {
-                    userData.sockets.get(socket.id).isActive = isActive;
-
-                    const isAnyActive = Array.from(userData.sockets.values()).some(s => s.isActive);
-
-                    if (!isAnyActive) {
-                        if (!disconnectTimeouts.has(userId + "_inactive")) {
-                            const timeout = setTimeout(async () => {
-                                const now = new Date();
-                                await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
-                                broadcastUserStatus(userId, false, now);
-                                await cleanupInstantMessages(userId, io);
-                            }, 2000);
-                            disconnectTimeouts.set(userId + "_inactive", timeout);
-                        }
-                    } else {
-                        if (disconnectTimeouts.has(userId + "_inactive")) {
-                            clearTimeout(disconnectTimeouts.get(userId + "_inactive"));
-                            disconnectTimeouts.delete(userId + "_inactive");
-                        }
-                        User.findByIdAndUpdate(userId, { isOnline: true }).exec();
-                        broadcastUserStatus(userId, true);
-                    }
-                }
+                setUserActivePresence(io, userId, isActive);
             });
 
             socket.on("zen_mode_status", ({ isZenMode }) => {
@@ -676,4 +699,6 @@ const registerSocketHandlers = (io) => {
     });
 };
 
+registerSocketHandlers.registerSocketHandlers = registerSocketHandlers;
+registerSocketHandlers.setUserActivePresence = setUserActivePresence;
 module.exports = registerSocketHandlers;

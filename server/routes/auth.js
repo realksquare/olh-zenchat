@@ -1139,4 +1139,23 @@ router.put("/keys-backup", authMiddleware, async (req, res) => {
     }
 });
 
+// @route   POST /api/auth/presence
+// @desc    Update active user presence (survives tab suspension/minimization)
+// @access  Private
+router.post("/presence", authMiddleware, async (req, res) => {
+    try {
+        const { isActive } = req.body;
+        const io = req.app.get("io");
+        const { setUserActivePresence } = require("../socket/handlers");
+        
+        if (io) {
+            await setUserActivePresence(io, req.user._id.toString(), isActive);
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error("[Presence] Error updating presence:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+});
+
 module.exports = router;
