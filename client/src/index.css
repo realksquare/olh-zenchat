@@ -1390,6 +1390,7 @@ select {
 .wave-bar {
   display: block;
   width: 3px;
+  height: 4px;
   border-radius: var(--radius-full);
   background: var(--color-primary);
   animation: wave 1s ease-in-out infinite;
