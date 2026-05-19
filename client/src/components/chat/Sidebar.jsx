@@ -23,7 +23,8 @@ const Sidebar = ({ onChatSelect }) => {
     const { hasActiveMoment, getHaloColor } = useMomentStore.getState();
     const { 
         chats, activeChat, setActiveChat, 
-        addChat, isLoadingChats, togglePinChat, onlineUsers, isOffline
+        addChat, isLoadingChats, togglePinChat, onlineUsers, isOffline,
+        isBareMinimum
     } = useChatStore(useShallow((s) => ({
         chats: s.chats,
         activeChat: s.activeChat,
