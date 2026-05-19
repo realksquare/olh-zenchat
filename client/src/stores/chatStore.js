@@ -19,6 +19,7 @@ export const useChatStore = create(
             isLoadingOlderMessages: false,
             isLoadingChats: false,
             isOffline: typeof navigator !== "undefined" ? !navigator.onLine : false,
+            setOffline: (bool) => set({ isOffline: bool }),
             isLowBandwidth: false,
             setLowBandwidth: (bool) => set({ isLowBandwidth: bool }),
             peerLowBandwidth: {},

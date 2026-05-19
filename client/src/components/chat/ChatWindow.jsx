@@ -143,7 +143,7 @@ const ChatWindow = ({ onBack }) => {
     const contacts = useAuthStore((s) => s.user?.contacts || EMPTY_CONTACTS);
     const {
         activeChat, fetchMessages, fetchOlderMessages, isLoadingMessages, isLoadingOlderMessages,
-        typingUsers, markChatAsRead, onlineUsers, hasMoreMessages, isLowBandwidth, peerLowBandwidth
+        typingUsers, markChatAsRead, onlineUsers, hasMoreMessages, isLowBandwidth, peerLowBandwidth, isOffline
     } = useChatStore(useShallow((s) => ({
         activeChat: s.activeChat,
         fetchMessages: s.fetchMessages,
@@ -155,7 +155,8 @@ const ChatWindow = ({ onBack }) => {
         onlineUsers: s.onlineUsers,
         hasMoreMessages: s.hasMoreMessages,
         isLowBandwidth: s.isLowBandwidth,
-        peerLowBandwidth: s.peerLowBandwidth
+        peerLowBandwidth: s.peerLowBandwidth,
+        isOffline: s.isOffline
     })));
 
     const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
@@ -363,13 +364,14 @@ const ChatWindow = ({ onBack }) => {
 
     const statusText = useMemo(() => {
         if (!otherUser) return "";
+        if (isOffline) return "Offline";
         const isCurrentlyOnline = otherUser.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString());
         if (isCurrentlyOnline) return "Online";
         if (otherUser.lastSeen) {
             return `Last seen ${formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true })}`;
         }
         return "Offline";
-    }, [otherUser, onlineUsers, tick]);
+    }, [otherUser, onlineUsers, tick, isOffline]);
 
     const getStatusText = () => statusText;
 
@@ -423,7 +425,7 @@ const ChatWindow = ({ onBack }) => {
                             <span>{otherUser?.username?.slice(0, 2).toUpperCase()}</span>
                         )}
                     </div>
-                    {(otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) && (
+                    {!isOffline && (otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) && (
                         <OnlineDot isSPOp={isOtherUserLowBandwidth} />
                     )}
                 </div>
@@ -442,7 +444,7 @@ const ChatWindow = ({ onBack }) => {
                         </span>
                         {otherUser?.isVerified && <span style={{ flexShrink: 0, display: 'flex' }}><VerifiedTick /></span>}
                     </span>
-                    <span className={`chat-header-status ${(otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) ? "status-online" : ""}`}>
+                    <span className={`chat-header-status ${(!isOffline && (otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString()))) ? "status-online" : ""}`}>
                         {getStatusText()}
                     </span>
                 </div>
@@ -648,7 +650,7 @@ const ChatWindow = ({ onBack }) => {
                 isOpen={showUserCard}
                 onClose={() => setShowUserCard(false)}
                 user={otherUser}
-                isOnline={otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())}
+                isOnline={!isOffline && (otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString()))}
                 isSPOp={isOtherUserLowBandwidth}
                 hasMoments={hasMoments}
                 isContact={isContact}

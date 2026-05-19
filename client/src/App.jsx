@@ -48,7 +48,9 @@ const NetworkBanner = () => {
 
   useEffect(() => {
     const handleStatusChange = () => {
-      if (!navigator.onLine) {
+      const offline = !navigator.onLine;
+      useChatStore.getState().setOffline(offline);
+      if (offline) {
         showBanner("offline");
       } else if (socket && !socket.connected) {
         showBanner("reconnecting");
@@ -64,8 +66,9 @@ const NetworkBanner = () => {
     if (socket) {
       socket.on("disconnect", handleStatusChange);
       socket.on("connect", handleStatusChange);
-      handleStatusChange();
     }
+    
+    handleStatusChange();
 
     return () => {
       window.removeEventListener("offline", handleStatusChange);

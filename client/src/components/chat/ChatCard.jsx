@@ -15,6 +15,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const onlineUsers = useChatStore((s) => s.onlineUsers);
     const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
     const peerLowBandwidth = useChatStore((s) => s.peerLowBandwidth);
+    const isOffline = useChatStore((s) => s.isOffline);
     const unreadCount = useChatStore((s) => s.unreadCounts[chat._id] || 0);
     const deleteChatForUser = useChatStore((s) => s.deleteChatForUser);
     const liveChat = useChatStore((s) => s.chats.find((c) => c._id === chat._id)) || chat;
@@ -49,7 +50,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const chatTyping = typingUsers[liveChat._id];
     const isTyping = !!(chatTyping && otherUserId && chatTyping[otherUserId]);
     const typingScramble = isTyping ? chatTyping[otherUserId] : null;
-    const isOnline = otherUser?.isOnline || (otherUserId && onlineUsers.has(otherUserId.toString()));
+    const isOnline = !isOffline && (otherUser?.isOnline || (otherUserId && onlineUsers.has(otherUserId.toString())));
     const isSPOp = isOnline && peerLowBandwidth[otherUserId] === true;
     const hasMoments = !!(otherUserId && hasActiveMoment(otherUserId.toString()));
     const isContact = !!(user?.contacts?.some(c => {

@@ -22,7 +22,7 @@ const Sidebar = ({ onChatSelect }) => {
     const { hasActiveMoment, getHaloColor } = useMomentStore.getState();
     const { 
         chats, activeChat, setActiveChat, 
-        addChat, isLoadingChats, togglePinChat, onlineUsers 
+        addChat, isLoadingChats, togglePinChat, onlineUsers, isOffline
     } = useChatStore(useShallow((s) => ({
         chats: s.chats,
         activeChat: s.activeChat,
@@ -30,7 +30,8 @@ const Sidebar = ({ onChatSelect }) => {
         addChat: s.addChat,
         isLoadingChats: s.isLoadingChats,
         togglePinChat: s.togglePinChat,
-        onlineUsers: s.onlineUsers
+        onlineUsers: s.onlineUsers,
+        isOffline: s.isOffline
     })));
     const [search, setSearch] = useState("");
     const [searchResults, setSearchResults] = useState([]);
@@ -346,6 +347,7 @@ const Sidebar = ({ onChatSelect }) => {
                     >
                         Contacts
                         {(() => {
+                            if (isOffline) return null;
                             const onlineContactsCount = user?.contacts?.filter(c => {
                                 const uid = c.userId?._id?.toString() || c.userId?.toString();
                                 return onlineUsers.has(uid);
@@ -385,7 +387,7 @@ const Sidebar = ({ onChatSelect }) => {
                                             )}
                                             {u.isVerified && <VerifiedTick />}
                                         </span>
-                                        {u.isOnline && <span className="online-badge">Online</span>}
+                                        {!isOffline && u.isOnline && <span className="online-badge">Online</span>}
                                     </div>
                                 </button>
                             );
