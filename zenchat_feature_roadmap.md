@@ -38,7 +38,7 @@ This document outlines the technical architecture and step-by-step implementatio
 - Add `toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode }))` action.
 
 **Client-Side (React UI & Liquid Circular Reveal)**
-- **Header Button:** Add a lotus or eye icon button in the header actions.
+- **Header Button:** Add the premium circular "Z" icon button (matching the visual style of the custom "Z" refresh/upload loader with its circular borders and bold central "Z" typography) in the header actions to toggle `#ZenMode`.
 - **Circular Reveal Mechanism:**
   1. Capture click coordinates `(clientX, clientY)` on toggle.
   2. Render a dynamic circular reveal overlay element (`.zen-reveal-circle`) starting at `left: x`, `top: y` with `width: 0`, `height: 0`, `border-radius: 50%`.
