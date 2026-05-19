@@ -599,20 +599,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                     <div className="profile-settings-row" style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                         <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                             <div>
-                                <span style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: "600", fontSize: "0.85rem" }}>
-                                    <span>SmartPayload-OPtimization (#SP-OP)</span>
-                                    <span style={{
-                                        fontSize: '0.65rem',
-                                        padding: '2px 6px',
-                                        borderRadius: '4px',
-                                        background: isLowBandwidth ? 'rgba(234, 179, 8, 0.15)' : 'rgba(255, 255, 255, 0.1)',
-                                        color: isLowBandwidth ? '#eab308' : '#94a3b8',
-                                        fontWeight: '800',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.5px'
-                                    }}>
-                                        {isLowBandwidth ? "Active" : "OFF"}
-                                    </span>
+                                <span style={{ fontWeight: "600", fontSize: "0.85rem", display: "block" }}>
+                                    SmartPayload-OPtimization (#SP-OP)
                                 </span>
                                 <span style={{ fontSize: "0.75rem", color: "#64748b", display: "block", marginTop: "4px", lineHeight: "1.3" }}>
                                     {isLowBandwidth 
@@ -621,25 +609,19 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                     }
                                 </span>
                             </div>
-                            <div style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "6px",
-                                fontSize: "0.72rem",
-                                padding: "4px 8px",
-                                borderRadius: "6px",
-                                background: "rgba(255,255,255,0.02)",
-                                border: "1px solid rgba(255,255,255,0.05)",
-                                color: "#94a3b8",
-                                fontWeight: "600",
-                                textTransform: "uppercase",
-                                letterSpacing: "0.5px"
+                            <span style={{
+                                fontSize: '0.7rem',
+                                padding: '4px 10px',
+                                borderRadius: '6px',
+                                background: isLowBandwidth ? 'rgba(234, 179, 8, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                                color: isLowBandwidth ? '#eab308' : '#64748b',
+                                border: isLowBandwidth ? '1px solid rgba(234, 179, 8, 0.2)' : '1px solid rgba(255, 255, 255, 0.08)',
+                                fontWeight: '800',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
                             }}>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "#38bdf8" }}>
-                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                                </svg>
-                                Auto-Managed
-                            </div>
+                                {isLowBandwidth ? "Active" : "Off"}
+                            </span>
                         </div>
                         <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "12px" }}>
                             <div>
