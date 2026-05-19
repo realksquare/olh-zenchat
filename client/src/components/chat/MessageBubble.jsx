@@ -16,6 +16,8 @@ const MODE_LABELS_BUBBLE = {
 
 const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick, canDelete = true, canReply = true }) => {
     const [mobileDropdown, setMobileDropdown] = useState(false);
+    const [isMediaLoaded, setIsMediaLoaded] = useState(false);
+    const imgRef = useRef(null);
     const user = useAuthStore((s) => s.user);
     const { toggleStarMessage, markViewOnceAsViewed } = useChatStore.getState();
     const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
@@ -24,6 +26,17 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const status = message?.status ?? "sent";
     const progress = message?.progress ?? 0;
     const outerRef = useRef(null);
+
+    const isViewOnce = message.isViewOnce;
+    const isMediaMsg = (message.type === "image" || message.type === "video") && message.mediaUrl;
+    const needsLoading = isMediaMsg && !isViewOnce && !shouldDelayLoad && status !== "sending";
+    const isShown = !needsLoading || isMediaLoaded;
+
+    useEffect(() => {
+        if (needsLoading && imgRef.current && imgRef.current.complete) {
+            setIsMediaLoaded(true);
+        }
+    }, [needsLoading, message.mediaUrl]);
 
     const repliedToMessage = useMemo(() => {
         if (!message.replyTo) return null;
@@ -116,7 +129,6 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
 
     if (isDeletedForMe) return null;
 
-    const isViewOnce = message.isViewOnce;
     const isViewedByMe = message.viewedBy?.includes(user?._id);
     const isViewedByAnyone = message.viewedBy?.length > 0;
     const isMobile = window.innerWidth <= 768;
@@ -126,6 +138,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
             id={`msg-${message._id}`}
             className={`message-row ${isMe ? "mine" : "theirs"} ${isNew ? "message-slide-up" : ""}`}
             onDoubleClick={() => !message.deletedForEveryone && onEdit({ action: "reply", ...message })}
+            style={!isShown ? { visibility: 'hidden', height: 0, overflow: 'hidden' } : {}}
         >
             {!isMe && showAvatar && (
                 <div className="avatar avatar-sm">
@@ -240,9 +253,21 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                      ) : (
                                          <div className="message-media-wrap" style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
                                              {message.type === "image" ? (
-                                                 <img src={getThumbnailUrl(message.mediaUrl)} alt="Sent image" className="message-image" loading="lazy" />
+                                                 <img 
+                                                      ref={imgRef}
+                                                      src={getThumbnailUrl(message.mediaUrl)} 
+                                                      alt="Sent image" 
+                                                      className="message-image" 
+                                                      loading="lazy" 
+                                                      onLoad={() => setIsMediaLoaded(true)}
+                                                  />
                                              ) : message.type === "video" ? (
-                                                 <video src={message.mediaUrl} className="message-video" style={{ maxWidth: '100%', borderRadius: '8px' }} />
+                                                 <video 
+                                                      src={message.mediaUrl} 
+                                                      className="message-video" 
+                                                      style={{ maxWidth: '100%', borderRadius: '8px' }} 
+                                                      onLoadedData={() => setIsMediaLoaded(true)}
+                                                  />
                                              ) : (
                                                  <div className="file-attachment-card" style={{
                                                      background: 'rgba(255,255,255,0.05)',
