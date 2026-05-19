@@ -281,10 +281,36 @@ const ZenParticleCanvas = memo(({ phase, noiseElements }) => {
             if (currentPhase === "disclaimer") {
                 ctx.save();
                 ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
-                ctx.font = "16px system-ui, -apple-system, sans-serif";
+                ctx.font = "15px system-ui, -apple-system, sans-serif";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
-                ctx.fillText("For the immersive experience, turn your device volume up.", canvas.width / 2, canvas.height / 2);
+
+                const text = "For the immersive experience, turn your device volume up.";
+                const words = text.split(" ");
+                let line = "";
+                const lines = [];
+                const maxWidth = Math.min(canvas.width - 48, 380); // padding on sides in mobile
+
+                for (let n = 0; n < words.length; n++) {
+                    let testLine = line + words[n] + " ";
+                    let metrics = ctx.measureText(testLine);
+                    let testWidth = metrics.width;
+                    if (testWidth > maxWidth && n > 0) {
+                        lines.push(line.trim());
+                        line = words[n] + " ";
+                    } else {
+                        line = testLine;
+                    }
+                }
+                lines.push(line.trim());
+
+                // Draw lines centered
+                const lineHeight = 22;
+                const startY = canvas.height / 2 - ((lines.length - 1) * lineHeight) / 2;
+                lines.forEach((lineText, lIdx) => {
+                    ctx.fillText(lineText, canvas.width / 2, startY + lIdx * lineHeight);
+                });
+
                 ctx.restore();
             } else if (currentPhase === "noise" || currentPhase === "implosion") {
                 const isImploding = currentPhase === "implosion";
@@ -353,14 +379,90 @@ const ZenParticleCanvas = memo(({ phase, noiseElements }) => {
                     });
                 }
 
-                if (currentPhase === "noise") {
+                // Radiant glowing gravitational singularity core in the center of the screen
+                if (isImploding) {
                     ctx.save();
-                    ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+                    const pulse = Math.sin(now * 0.008) * 4 + 8; // radius pulsates between 4px and 12px
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+
+                    // Large glowing gradient aura around the core
+                    const auraGrad = ctx.createRadialGradient(
+                        centerX, centerY, 0,
+                        centerX, centerY, pulse * 4
+                    );
+                    auraGrad.addColorStop(0, "rgba(255, 255, 255, 1.0)");
+                    auraGrad.addColorStop(0.25, "rgba(61, 165, 217, 0.95)");
+                    auraGrad.addColorStop(0.6, "rgba(61, 165, 217, 0.4)");
+                    auraGrad.addColorStop(1, "rgba(61, 165, 217, 0)");
+
+                    ctx.fillStyle = auraGrad;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, pulse * 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Bright hot focus point inside
+                    ctx.fillStyle = "#ffffff";
+                    ctx.shadowBlur = 20;
+                    ctx.shadowColor = "#3da5d9";
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, 3.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // Shake / Stop-Motion Jitter typography for "THE NOISE IS LOUD." text
+                const textOpacity = currentPhase === "noise" 
+                    ? 0.9 
+                    : Math.max(0, 0.9 * (1 - implosionElapsed / 1000)); // Fades out completely in 1 second during implosion
+
+                if (textOpacity > 0) {
+                    ctx.save();
                     ctx.font = "bold 28px Georgia, serif";
-                    ctx.textAlign = "center";
+                    ctx.textAlign = "left";
                     ctx.textBaseline = "middle";
-                    const driftY = Math.sin(now * 0.002) * 4;
-                    ctx.fillText("THE NOISE IS LOUD.", canvas.width / 2, canvas.height / 2 + driftY);
+
+                    const textStr = "THE NOISE IS LOUD.";
+                    const charArray = textStr.split("");
+                    
+                    // Pre-measure total width to center the shaky stop-motion text
+                    let totalWidth = 0;
+                    const charWidths = charArray.map(c => {
+                        const w = ctx.measureText(c).width;
+                        totalWidth += w;
+                        return w;
+                    });
+
+                    let startX = canvas.width / 2 - totalWidth / 2;
+                    const centerY = canvas.height / 2;
+                    
+                    // Stop-motion frame jitter step (updates 10 times a second)
+                    const jitterSeed = Math.floor(now / 100);
+
+                    charArray.forEach((char, charIdx) => {
+                        ctx.save();
+                        // Deterministic pseudorandom noise per character based on index & stop-motion seed
+                        const seedX = Math.sin(charIdx * 17.3 + jitterSeed * 4.9) * 43758.5453;
+                        const seedY = Math.cos(charIdx * 9.2 + jitterSeed * 7.4) * 12345.6789;
+                        const seedR = Math.sin(charIdx * 23.5 + jitterSeed * 11.2) * 98765.4321;
+                        
+                        const jitterX = (seedX - Math.floor(seedX)) * 3.5 - 1.75; // [-1.75px, 1.75px]
+                        const jitterY = (seedY - Math.floor(seedY)) * 3.5 - 1.75; // [-1.75px, 1.75px]
+                        const jitterAngle = ((seedR - Math.floor(seedR)) * 6.5 - 3.25) * Math.PI / 180; // [-3.25deg, 3.25deg]
+
+                        const charW = charWidths[charIdx];
+                        const charCX = startX + charW / 2;
+
+                        ctx.translate(charCX + jitterX, centerY + jitterY);
+                        ctx.rotate(jitterAngle);
+                        
+                        ctx.fillStyle = `rgba(255, 255, 255, ${textOpacity})`;
+                        ctx.fillText(char, -charW / 2, 0);
+
+                        ctx.restore();
+                        startX += charW;
+                    });
+
                     ctx.restore();
                 }
             } else if (currentPhase === "bloom") {
@@ -390,7 +492,8 @@ const ZenParticleCanvas = memo(({ phase, noiseElements }) => {
 
                 ctx.save();
                 ctx.fillStyle = `rgba(61, 165, 217, ${opacity})`;
-                ctx.font = "italic 36px Georgia, serif";
+                ctx.font = "300 36px 'Outfit', 'Inter', 'Segoe UI', sans-serif";
+                ctx.letterSpacing = "8px"; // Spaced out futuristic font!
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillText("#ZenMode.", canvas.width / 2, canvas.height / 2);
@@ -577,6 +680,24 @@ const ChatWindow = ({ onBack }) => {
         const y = e.clientY || window.innerHeight / 2;
         const wasZen = isZenMode;
         if (!wasZen) {
+            // Unlock and prime Web Audio API context directly inside the user gesture bounds!
+            try {
+                const audioCtx = getAudioContext();
+                if (audioCtx) {
+                    if (audioCtx.state === "suspended") {
+                        audioCtx.resume();
+                    }
+                    // Generate and play a silent 1-millisecond buffer immediately.
+                    // This activates hardware DAC/speaker outputs on iOS/Android devices.
+                    const buffer = audioCtx.createBuffer(1, 1, 22050);
+                    const source = audioCtx.createBufferSource();
+                    source.buffer = buffer;
+                    source.connect(audioCtx.destination);
+                    source.start(0);
+                }
+            } catch (err) {
+                console.warn("Failed to unlock audio context in user gesture:", err);
+            }
             runCinematicSequence(x, y);
         } else {
             triggerCircularReveal(x, y, false);
@@ -598,6 +719,9 @@ const ChatWindow = ({ onBack }) => {
         return () => {
             clearCinematicTimers();
             stopZenIntroAudio();
+            if (useChatStore.getState().isZenMode) {
+                useChatStore.getState().toggleZenMode();
+            }
         };
     }, [clearCinematicTimers]);
 
@@ -728,6 +852,9 @@ const ChatWindow = ({ onBack }) => {
         setEditingMessage(null);
         setReplyingTo(null);
         setDeletingMessage(null);
+        if (useChatStore.getState().isZenMode) {
+            useChatStore.getState().toggleZenMode();
+        }
     }, [activeChat?._id]);
 
     useEffect(() => {

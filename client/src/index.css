@@ -5874,21 +5874,7 @@ select {
 
 /* Implosion / Gravity-well Phase collapse */
 .zen-cinematic-overlay.phase-implosion {
-  animation: implosionCollapse 2.5s cubic-bezier(0.7, 0, 0.3, 1) forwards;
-}
-
-@keyframes implosionCollapse {
-  0% {
-    filter: scale(1) blur(0px);
-  }
-  90% {
-    filter: scale(0.01) blur(10px);
-    background: #000;
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
+  background: #000;
 }
 
 /* Bloom / Lotus Reveal Phase */
@@ -5979,18 +5965,19 @@ select {
 }
 
 .message-row.zen-fade-1 {
-  filter: blur(1.2px);
-  opacity: 0.65;
+  filter: blur(2px);
+  opacity: 0.6;
 }
 
 .message-row.zen-fade-2 {
-  filter: blur(2.5px);
-  opacity: 0.35;
+  filter: blur(5px);
+  opacity: 0.25;
 }
 
 .message-row.zen-fade-3 {
-  filter: blur(4.5px);
-  opacity: 0.06;
+  filter: blur(10px);
+  opacity: 0.02;
+  pointer-events: none;
 }
 
 /* Scroll mask gradient to blend old messages to dark/transparent at top */
