@@ -12,6 +12,17 @@ export const compressPacket = (msg) => {
     if (msg.encryptedSymmetricKey !== undefined) compressed.k = msg.encryptedSymmetricKey;
     if (msg.iv !== undefined) compressed.j = msg.iv;
     if (msg.isLowBandwidth !== undefined) compressed.l = msg.isLowBandwidth;
+    if (msg.status !== undefined) compressed.p = msg.status;
+
+    if (msg.senderId) {
+        compressed.s = typeof msg.senderId === 'object' ? {
+            _id: msg.senderId._id || msg.senderId,
+            username: msg.senderId.username,
+            avatar: msg.senderId.avatar
+        } : msg.senderId;
+    }
+    if (msg.createdAt) compressed.d = msg.createdAt;
+    if (msg._id) compressed.id = msg._id;
     compressed.m = true;
     return compressed;
 };
@@ -20,6 +31,7 @@ export const decompressPacket = (msg) => {
     if (!msg) return msg;
     if (msg.m || msg.c !== undefined || msg.t !== undefined) {
         return {
+            _id: msg.id,
             chatId: msg.c,
             content: msg.t,
             type: msg.y || "text",
@@ -31,6 +43,9 @@ export const decompressPacket = (msg) => {
             encryptedSymmetricKey: msg.k,
             iv: msg.j || msg.iv,
             isLowBandwidth: msg.l,
+            status: msg.p,
+            senderId: msg.s,
+            createdAt: msg.d,
             isCrisisMode: true
         };
     }

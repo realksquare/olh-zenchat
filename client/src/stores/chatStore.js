@@ -28,7 +28,12 @@ export const useChatStore = create(
                 peerLowBandwidth: { ...s.peerLowBandwidth, [userId]: isLowBandwidth }
             })),
             isBareMinimum: false,
-            setBareMinimum: (bool) => set({ isBareMinimum: bool }),
+            setBareMinimum: (bool) => {
+                set({ isBareMinimum: bool });
+                if (bool) {
+                    set({ isLowBandwidth: false, _spOpConsecutive: 0 });
+                }
+            },
             isZenMode: false,
             toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode })),
             setUserZenStatus: (userId, isZenMode) => set((state) => ({
@@ -36,6 +41,10 @@ export const useChatStore = create(
             })),
 
             checkNetworkSpeed: async () => {
+                if (get().isBareMinimum) {
+                    if (get().isLowBandwidth !== false) set({ isLowBandwidth: false, _spOpConsecutive: 0 });
+                    return false;
+                }
                 if (typeof navigator === "undefined") return false;
 
                 if (!navigator.onLine) {

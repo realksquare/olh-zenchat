@@ -12,6 +12,7 @@ const compressPacket = (msg) => {
     if (msg.encryptedSymmetricKey !== undefined) compressed.k = msg.encryptedSymmetricKey;
     if (msg.iv !== undefined) compressed.j = msg.iv;
     if (msg.isLowBandwidth !== undefined) compressed.l = msg.isLowBandwidth;
+    if (msg.status !== undefined) compressed.p = msg.status;
     
     // Include minimal sender & replyTo fields if populated
     if (msg.senderId) {
@@ -43,6 +44,7 @@ const decompressPacket = (msg) => {
             encryptedSymmetricKey: msg.k,
             iv: msg.j || msg.iv,
             isLowBandwidth: msg.l,
+            status: msg.p,
             senderId: msg.s,
             createdAt: msg.d,
             isCrisisMode: true

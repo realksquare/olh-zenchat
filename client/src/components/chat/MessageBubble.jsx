@@ -269,7 +269,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                      Tap to load {message.type}
                                                  </span>
                                                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>
-                                                     #SP-OP mode active
+                                                     {isBareMinimum ? "#BareMinimum. mode active" : "#SP-OP mode active"}
                                                  </span>
                                              </div>
                                          </div>

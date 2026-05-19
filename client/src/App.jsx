@@ -119,6 +119,7 @@ const NetworkBanner = () => {
 
 const NetworkToast = () => {
   const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
+  const isBareMinimum = useChatStore((s) => s.isBareMinimum);
   const [toastMessage, setToastMessage] = useState(null);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastIsLow, setToastIsLow] = useState(false);
@@ -126,6 +127,11 @@ const NetworkToast = () => {
   const timer = useRef(null);
 
   useEffect(() => {
+    if (isBareMinimum) {
+      prevLowBandwidth.current = false;
+      setToastVisible(false);
+      return;
+    }
     // Skip identical state (no change)
     if (prevLowBandwidth.current === isLowBandwidth) return;
     // On very first evaluation, only show if low (not on initial false→false)
@@ -151,7 +157,7 @@ const NetworkToast = () => {
     setToastVisible(true);
     timer.current = setTimeout(() => setToastVisible(false), 3000);
     prevLowBandwidth.current = isLowBandwidth;
-  }, [isLowBandwidth]);
+  }, [isLowBandwidth, isBareMinimum]);
 
   if (!toastVisible) return null;
 
