@@ -55,9 +55,13 @@ This document outlines the technical architecture and step-by-step implementatio
   1. Store an intro flag `localStorage.getItem("zen_intro_shown")`.
   2. If the user toggles Zen Mode and the flag is absent:
      - Render a gorgeous, full-screen overlay `.zen-intro-overlay` with a rich dark absolute backdrop and radial gradient halos.
-     - Play a 10-second cinematic reveal animation using CSS clip-paths, text masks, and lightweight particles (HTML5 canvas/CSS keyframes).
-     - Text layers (e.g., *"Quiet the noise."*, *"Embrace the thought."*) will slide out of blur masks sequentially, styled like a movie title motion poster.
-     - Add a tiny, minimalist outline button at the top-right (`.btn-skip-intro`) labeled `"Skip Intro"` to allow bypassing the sequence instantly.
+     - **10-Second Cinematic Timeline Choreography:**
+       - **0s - 1s (The Awakening):** The absolute overlay fades in (`opacity: 1`). Warm, soft radial gradient halos grow in the background. A canvas initialized behind the text starts rendering tiny dust motes/light embers drifting slowly upwards.
+       - **1s - 4.5s (The Void - Phase 1):** The first message *"Quiet the noise."* emerges at the center. It uses clean, wide-spaced caps typography (`font-weight: 300; letter-spacing: 0.35em`). It smoothly slides up out of a CSS `clip-path` mask boundary, transitioning from `filter: blur(12px); opacity: 0` to `filter: blur(0); opacity: 0.9` using a smooth ease-out curve.
+       - **4.5s - 7.5s (The Mind - Phase 2):** The first message fades out and blurs away. The second message *"Embrace the thought."* is revealed in an elegant, italicized serif font (e.g. `'Playfair Display'`). Behind this text, a soft glowing organic blob/breathing halo slowly pulses.
+       - **7.5s - 9.0s (The Union - Phase 3):** The second message fades out. A minimalist glowing Zen lotus logo emerges alongside the text *"ZEN MODE ACTIVE"*.
+       - **9.0s - 10.0s (The Release):** The complete intro overlay smoothly scales up slightly and drops to `opacity: 0` using a `cubic-bezier(0.16, 1, 0.3, 1)` transition, seamlessly blending into the distraction-free chat window layout.
+     - Add a tiny, minimalist outline button at the top-right (`.btn-skip-intro`) styled with high transparency (`background: transparent; border: 1px solid rgba(255,255,255,0.2)`) to allow bypassing the sequence instantly.
      - Auto-dismiss and transition into active Zen Mode after 10 seconds, setting `zen_intro_shown` to `"true"`.
      - **Procedural Ambient BGM & Sync:** 
        - Since audio/music assets are heavy and consume data, we will dynamically synthesize a deep, soothing **ambient singing-bowl drone** completely offline using the **Web Audio API** in `utils/audio.js` that is perfectly synced with the visual reveal.
