@@ -259,7 +259,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
 
     const showToast = (msg) => {
         setToast(msg);
-        setTimeout(() => setToast(null), 5000);
+        setTimeout(() => setToast(null), 3000);
     };
     const addMessage = useChatStore((s) => s.addMessage);
     const updateMessage = useChatStore((s) => s.updateMessage);

@@ -50,9 +50,12 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const chatTyping = typingUsers[liveChat._id];
     const isTyping = !!(chatTyping && otherUserId && chatTyping[otherUserId]);
     const typingScramble = isTyping ? chatTyping[otherUserId] : null;
-    const isOnline = !isOffline && (otherUser?.isOnline || (otherUserId && onlineUsers.has(otherUserId.toString())));
+    const iBlocked = liveChat.blockStatus?.iBlocked;
+    const theyBlocked = liveChat.blockStatus?.theyBlocked;
+    const isBlocked = iBlocked || theyBlocked;
+    const isOnline = !isBlocked && !isOffline && (otherUser?.isOnline || (otherUserId && onlineUsers.has(otherUserId.toString())));
     const isSPOp = isOnline && peerLowBandwidth[otherUserId] === true;
-    const hasMoments = !!(otherUserId && hasActiveMoment(otherUserId.toString()));
+    const hasMoments = !isBlocked && !!(otherUserId && hasActiveMoment(otherUserId.toString()));
     const isContact = !!(user?.contacts?.some(c => {
         const uid = c.userId?._id?.toString() || c.userId?.toString();
         return uid === otherUserId;
@@ -80,6 +83,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const displayUnreadCount = unreadCount > 0 ? unreadCount : (isLastMessageUnread ? 1 : 0);
 
     const getPreview = () => {
+        if (iBlocked) return { text: "You blocked this user", isUnread: false };
+        if (theyBlocked) return { text: "This user blocked you", isUnread: false };
         if (isTyping) {
             return { text: typeof typingScramble === "string" ? typingScramble : "typing...", isUnread: true };
         }
@@ -169,7 +174,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                 onMouseLeave={() => setShowMenu(false)}
                 role="button"
                 tabIndex={0}
-                style={{ position: "relative" }}
+                style={{ position: "relative", opacity: isBlocked ? 0.65 : 1 }}
             >
                 {/* Avatar */}
                 <div className="chat-card-avatar-wrap">
@@ -204,6 +209,14 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                                     }}
                                 >
                                     <span>{displayName}</span>
+                                    {isBlocked && (
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', color: '#ef4444', marginLeft: '4px' }} title={iBlocked ? 'You blocked this user' : 'This user blocked you'}>
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                            </svg>
+                                        </span>
+                                    )}
                                     {otherUser?.isVerified && (
                                         <span style={{ flexShrink: 0, display: "flex" }}>
                                             <VerifiedTick />

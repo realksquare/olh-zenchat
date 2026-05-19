@@ -20,7 +20,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
     const showToast = (message) => {
         setToast(message);
-        setTimeout(() => setToast(null), 5000);
+        setTimeout(() => setToast(null), 3000);
     };
 
     useEffect(() => {

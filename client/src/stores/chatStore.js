@@ -163,6 +163,23 @@ export const useChatStore = create(
                 }
             },
 
+            fetchActiveChat: async (chatId) => {
+                try {
+                    const { data } = await axiosInstance.get(`/chats/${chatId}`);
+                    if (data.chat) {
+                        if (data.chat.lastMessage) {
+                            await decryptMessageIfNeeded(data.chat.lastMessage);
+                        }
+                        set((state) => ({
+                            chats: state.chats.map(c => c._id === chatId ? { ...c, ...data.chat } : c),
+                            activeChat: state.activeChat?._id === chatId ? { ...state.activeChat, ...data.chat } : state.activeChat
+                        }));
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch active chat:", err);
+                }
+            },
+
             setActiveChat: (chat) => {
                 set((state) => ({
                     activeChat: chat ? { ...chat } : null,

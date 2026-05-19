@@ -28,7 +28,7 @@ const GuestRoute = ({ children }) => {
 };
 
 const NetworkBanner = () => {
-  const { socket } = useSocket();
+  const { socket, isConnected } = useSocket();
   const [status, setStatus] = useState("online");
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -52,7 +52,7 @@ const NetworkBanner = () => {
       useChatStore.getState().setOffline(offline);
       if (offline) {
         showBanner("offline");
-      } else if (socket && !socket.connected) {
+      } else if (!isConnected) {
         showBanner("reconnecting");
       } else {
         showBanner("online");
@@ -79,12 +79,12 @@ const NetworkBanner = () => {
       }
       clearTimeout(hideTimer.current);
     };
-  }, [socket]);
+  }, [socket, isConnected]);
 
   if (!visible || status === "online" || dismissed) return null;
 
   return (
-    <div className="network-banner" data-status={status} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+    <div className="network-banner" data-status={status} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
       {status === "offline" ? (
         <>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
@@ -97,7 +97,10 @@ const NetworkBanner = () => {
         </>
       )}
       <button
-        onClick={() => setDismissed(true)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setDismissed(true);
+        }}
         className="sp-op-toast-close"
         aria-label="Dismiss"
       >
@@ -125,7 +128,7 @@ const NetworkToast = () => {
         setToastMessage("SP-OP active - Unstable/slow internet connection detected.");
         setToastIsLow(true);
         setToastVisible(true);
-        timer.current = setTimeout(() => setToastVisible(false), 6000);
+        timer.current = setTimeout(() => setToastVisible(false), 3000);
       }
       return;
     }
@@ -139,7 +142,7 @@ const NetworkToast = () => {
       setToastIsLow(false);
     }
     setToastVisible(true);
-    timer.current = setTimeout(() => setToastVisible(false), 6000);
+    timer.current = setTimeout(() => setToastVisible(false), 3000);
     prevLowBandwidth.current = isLowBandwidth;
   }, [isLowBandwidth]);
 

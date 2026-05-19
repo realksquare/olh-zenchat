@@ -4,7 +4,7 @@ These are the core operating principles and coding standards to be followed for 
 
 ## 1. Systematic Analysis & Execution
 - **Analyze completely:** Analyze the whole project (and check all relevant files if doubtful) before making any new change or addition.
-- **Step-by-step:** Proceed one step at a time and double-check each step carefully.
+- **Step-by-step:** Proceed one step at a time and double-check each step carefully. If code for a file is very large while viewing/editing, split the focus to chunks, make changes on them, ensure they are working fine before moving to the next chunk. Although working by chunks, complete the work on whole file without missing anything, then move to next one.
 - **Perfectly synced codebase:** Make sure new changes or additions are synced and work together well across all relevant files.
 - **No endless loops:** Do not keep reiterating on a single step unless absolutely necessary. Move forward efficiently.
 

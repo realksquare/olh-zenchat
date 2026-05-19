@@ -149,9 +149,10 @@ router.post(
             }
 
             await User.findByIdAndUpdate(user._id, { isOnline: true });
+            const populatedUser = await User.findById(user._id).populate("blockedUsers.userId", "username avatar");
             const token = generateToken(user);
 
-            res.json({ token, user: user.toPrivateJSON() });
+            res.json({ token, user: populatedUser.toPrivateJSON() });
         } catch (err) {
             res.status(500).json({ message: "Server error" });
         }
@@ -160,7 +161,7 @@ router.post(
 
 router.get("/me", authMiddleware, async (req, res) => {
     try {
-        const user = await User.findById(req.user._id);
+        const user = await User.findById(req.user._id).populate("blockedUsers.userId", "username avatar");
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -267,7 +268,8 @@ router.put(
             }
 
             await user.save();
-            res.json({ user: user.toPrivateJSON() });
+            const populatedUser = await User.findById(user._id).populate("blockedUsers.userId", "username avatar");
+            res.json({ user: populatedUser.toPrivateJSON() });
         } catch (err) {
             console.error("[Auth] Update error:", err);
             res.status(500).json({ message: "Server error" });
@@ -285,11 +287,13 @@ router.post("/contacts/:targetId", authMiddleware, async (req, res) => {
         }
         const already = me.contacts.find(c => c.userId?.toString() === targetId);
         if (already) {
-            return res.json({ user: me.toPublicJSON() });
+            const populatedMe = await User.findById(me._id).populate("blockedUsers.userId", "username avatar");
+            return res.json({ user: populatedMe.toPrivateJSON() });
         }
         me.contacts.push({ userId: targetId, tag: "general" });
         await me.save();
-        res.json({ user: me.toPrivateJSON() });
+        const populatedMe = await User.findById(me._id).populate("blockedUsers.userId", "username avatar");
+        res.json({ user: populatedMe.toPrivateJSON() });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }
@@ -302,8 +306,111 @@ router.delete("/contacts/:targetId", authMiddleware, async (req, res) => {
         if (!me) return res.status(404).json({ message: "User not found" });
         me.contacts = me.contacts.filter(c => c.userId?.toString() !== targetId);
         await me.save();
-        res.json({ user: me.toPrivateJSON() });
+        const populatedMe = await User.findById(me._id).populate("blockedUsers.userId", "username avatar");
+        res.json({ user: populatedMe.toPrivateJSON() });
     } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// @route   POST /api/auth/block/:targetId
+// @desc    Block a user
+// @access  Private
+router.post("/block/:targetId", authMiddleware, async (req, res) => {
+    try {
+        const { targetId } = req.params;
+        const me = await User.findById(req.user._id);
+        if (!me) return res.status(404).json({ message: "User not found" });
+        if (targetId === req.user._id.toString()) {
+            return res.status(400).json({ message: "Cannot block yourself" });
+        }
+
+        const targetUser = await User.findById(targetId);
+        if (!targetUser) return res.status(404).json({ message: "User to block not found" });
+
+        // Cooldown check for unblocking (if previously unblocked)
+        const unblockedEntry = me.unblockedUsers.find(u => u.userId.toString() === targetId);
+        if (unblockedEntry) {
+            const diffMs = Date.now() - new Date(unblockedEntry.unblockedAt).getTime();
+            const diffHours = diffMs / (1000 * 60 * 60);
+            if (diffHours < 7) {
+                const remainingHours = Math.ceil(7 - diffHours);
+                return res.status(400).json({ 
+                    message: `Cannot block this user yet. Cooldown active. Please wait ${remainingHours} more hour(s).` 
+                });
+            }
+        }
+
+        // Add to blockedUsers if not already there
+        const alreadyBlocked = me.blockedUsers.some(u => u.userId.toString() === targetId);
+        if (!alreadyBlocked) {
+            me.blockedUsers.push({ userId: targetId, blockedAt: new Date() });
+        }
+
+        // Clean up from unblockedUsers
+        me.unblockedUsers = me.unblockedUsers.filter(u => u.userId.toString() !== targetId);
+
+        await me.save();
+
+        // Emit block event via Socket.IO
+        const io = req.app.get("io");
+        if (io) {
+            io.to(me._id.toString()).emit("user_blocked", { blockerId: me._id.toString(), blockedId: targetId });
+            io.to(targetId).emit("user_blocked", { blockerId: me._id.toString(), blockedId: targetId });
+        }
+
+        const populatedMe = await User.findById(me._id).populate("blockedUsers.userId", "username avatar");
+        res.json({ user: populatedMe.toPrivateJSON() });
+    } catch (err) {
+        console.error("Block user error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// @route   POST /api/auth/unblock/:targetId
+// @desc    Unblock a user
+// @access  Private
+router.post("/unblock/:targetId", authMiddleware, async (req, res) => {
+    try {
+        const { targetId } = req.params;
+        const me = await User.findById(req.user._id);
+        if (!me) return res.status(404).json({ message: "User not found" });
+
+        const blockedEntry = me.blockedUsers.find(u => u.userId.toString() === targetId);
+        if (!blockedEntry) {
+            return res.status(400).json({ message: "User is not blocked" });
+        }
+
+        // Cooldown check for blocking
+        const diffMs = Date.now() - new Date(blockedEntry.blockedAt).getTime();
+        const diffHours = diffMs / (1000 * 60 * 60);
+        if (diffHours < 7) {
+            const remainingHours = Math.ceil(7 - diffHours);
+            return res.status(400).json({ 
+                message: `Cannot unblock this user yet. Cooldown active. Please wait ${remainingHours} more hour(s).` 
+            });
+        }
+
+        // Remove from blockedUsers
+        me.blockedUsers = me.blockedUsers.filter(u => u.userId.toString() !== targetId);
+
+        // Add/update unblockedUsers entry
+        me.unblockedUsers = me.unblockedUsers.filter(u => u.userId.toString() !== targetId);
+        me.unblockedUsers.push({ userId: targetId, unblockedAt: new Date() });
+
+        await me.save();
+
+        // Emit unblock event via Socket.IO
+        const io = req.app.get("io");
+        if (io) {
+            io.to(me._id.toString()).emit("user_unblocked", { blockerId: me._id.toString(), blockedId: targetId });
+            io.to(targetId).emit("user_unblocked", { blockerId: me._id.toString(), blockedId: targetId });
+        }
+
+        const populatedMe = await User.findById(me._id).populate("blockedUsers.userId", "username avatar");
+        res.json({ user: populatedMe.toPrivateJSON() });
+    } catch (err) {
+        console.error("Unblock user error:", err);
         res.status(500).json({ message: "Server error" });
     }
 });

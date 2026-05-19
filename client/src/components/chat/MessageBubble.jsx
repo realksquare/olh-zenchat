@@ -228,27 +228,49 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                  flexDirection: 'column',
                                                  alignItems: 'center',
                                                  justifyContent: 'center',
-                                                 background: 'rgba(15, 23, 42, 0.6)',
+                                                 background: 'rgba(15, 23, 42, 0.65)',
                                                  backdropFilter: 'blur(8px)',
                                                  borderRadius: '8px',
                                                  width: '240px',
                                                  height: '160px',
                                                  border: '1px dashed rgba(255,255,255,0.15)',
                                                  gap: '8px',
-                                                 padding: '16px'
+                                                 padding: '16px',
+                                                 position: 'relative',
+                                                 overflow: 'hidden'
                                              }}
                                          >
-                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-primary)', opacity: 0.8 }}>
-                                                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                                 <polyline points="7 10 12 15 17 10" />
-                                                 <line x1="12" y1="15" x2="12" y2="3" />
-                                             </svg>
-                                             <span style={{ fontSize: '12px', fontWeight: '500', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.2px' }}>
-                                                 Tap to load {message.type}
-                                             </span>
-                                             <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>
-                                                 Low Bandwidth Mode
-                                             </span>
+                                             {message.mediaUrl && (
+                                                 <img 
+                                                     src={message.mediaUrl.includes("cloudinary.com") 
+                                                         ? message.mediaUrl.replace("/upload/", "/upload/c_fill,w_120,h_80,q_10,f_auto,e_blur:200/") 
+                                                         : message.mediaUrl}
+                                                     alt="" 
+                                                     style={{
+                                                         position: 'absolute',
+                                                         inset: 0,
+                                                         width: '100%',
+                                                         height: '100%',
+                                                         objectFit: 'cover',
+                                                         opacity: 0.35,
+                                                         filter: 'blur(4px)',
+                                                         pointerEvents: 'none'
+                                                     }} 
+                                                 />
+                                             )}
+                                             <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-primary)', opacity: 0.8 }}>
+                                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                                     <polyline points="7 10 12 15 17 10" />
+                                                     <line x1="12" y1="15" x2="12" y2="3" />
+                                                 </svg>
+                                                 <span style={{ fontSize: '12px', fontWeight: '500', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.2px' }}>
+                                                     Tap to load {message.type}
+                                                 </span>
+                                                 <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>
+                                                     #SP-OP mode active
+                                                 </span>
+                                             </div>
                                          </div>
                                      ) : (
                                          <div className="message-media-wrap" style={{ position: 'relative', display: 'inline-block', width: '100%' }}>

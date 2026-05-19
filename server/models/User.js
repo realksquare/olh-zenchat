@@ -111,7 +111,19 @@ const userSchema = new mongoose.Schema(
         cryptoIv: {
             type: String,
             default: null
-        }
+        },
+        blockedUsers: [
+            {
+                userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+                blockedAt: { type: Date, default: Date.now }
+            }
+        ],
+        unblockedUsers: [
+            {
+                userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+                unblockedAt: { type: Date, default: Date.now }
+            }
+        ]
     },
     { timestamps: true }
 );
@@ -159,6 +171,8 @@ userSchema.methods.toPrivateJSON = function () {
         isVerified: this.isVerified,
         isSuspended: this.isSuspended,
         contacts: this.contacts,
+        blockedUsers: this.blockedUsers,
+        unblockedUsers: this.unblockedUsers,
         fcmTokens: this.fcmTokens,
         publicKey: this.publicKey,
         encryptedPrivateKey: this.encryptedPrivateKey,

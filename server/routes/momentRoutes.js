@@ -21,8 +21,16 @@ router.post("/", protect, async (req, res) => {
         console.log(`[moments] New moment shared by ${req.user.username} (${req.user._id}). Type: ${type}`);
 
         const io = req.app.get("io");
-        const user = await User.findById(req.user._id).select("contacts username fullName avatar");
-        const contactIds = user.contacts.map(c => c.userId.toString());
+        const user = await User.findById(req.user._id).select("contacts username fullName avatar blockedUsers");
+        
+        const usersWhoBlockedMe = await User.find({ "blockedUsers.userId": req.user._id }).select("_id");
+        const blockedMeIds = usersWhoBlockedMe.map(u => u._id.toString());
+        const myBlockedIds = user.blockedUsers?.map(u => u.userId.toString()) || [];
+        const excludeUserIds = [...blockedMeIds, ...myBlockedIds];
+
+        const contactIds = user.contacts
+            .map(c => c.userId.toString())
+            .filter(cid => !excludeUserIds.includes(cid));
 
         // Emit to the user themselves
         io.to(req.user._id.toString()).emit("new_moment", populated);
@@ -64,7 +72,15 @@ router.get("/", protect, async (req, res) => {
         const user = await User.findById(req.user._id);
         if (!user) return res.status(404).json({ message: "User not found" });
 
-        const contactIds = user.contacts.map(c => c.userId);
+        const usersWhoBlockedMe = await User.find({ "blockedUsers.userId": req.user._id }).select("_id");
+        const blockedMeIds = usersWhoBlockedMe.map(u => u._id.toString());
+        const myBlockedIds = user.blockedUsers?.map(u => u.userId.toString()) || [];
+        const excludeUserIds = [...blockedMeIds, ...myBlockedIds];
+
+        const contactIds = user.contacts
+            .map(c => c.userId.toString())
+            .filter(cid => !excludeUserIds.includes(cid));
+
         console.log(`[moments] ${user.username} fetching. Contacts found: ${contactIds.length}`);
 
         const moments = await Moment.find({

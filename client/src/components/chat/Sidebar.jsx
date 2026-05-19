@@ -387,7 +387,7 @@ const Sidebar = ({ onChatSelect }) => {
                                             )}
                                             {u.isVerified && <VerifiedTick />}
                                         </span>
-                                        {!isOffline && u.isOnline && <span className="online-badge">Online</span>}
+                                        {!isOffline && u.isOnline && !user?.blockedUsers?.some(b => (b.userId?._id || b.userId)?.toString() === u._id?.toString()) && <span className="online-badge">Online</span>}
                                     </div>
                                 </button>
                             );

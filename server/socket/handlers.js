@@ -65,13 +65,21 @@ const registerSocketHandlers = (io) => {
 
             const broadcastUserStatus = async (uid, isOnline, lastSeen = null) => {
                 try {
-                    const user = await User.findById(uid).select("privacySettings contacts");
+                    const user = await User.findById(uid).select("privacySettings contacts blockedUsers");
                     if (!user) return;
 
                     const privacy = user.privacySettings?.onlineStatus || "everyone";
 
                     for (const [targetId, targetData] of onlineUsers.entries()) {
                         if (targetId === uid) continue;
+
+                        // Check blocking
+                        const targetUser = await User.findById(targetId).select("blockedUsers");
+                        const theyBlockedUs = targetUser?.blockedUsers?.some(u => u.userId.toString() === uid.toString());
+                        const weBlockedThem = user?.blockedUsers?.some(u => u.userId.toString() === targetId.toString());
+                        if (theyBlockedUs || weBlockedThem) {
+                            continue;
+                        }
 
                         let canSee = false;
                         if (privacy === "everyone") {
@@ -211,8 +219,16 @@ const registerSocketHandlers = (io) => {
                     for (const [otherId, otherData] of onlineUsers.entries()) {
                         if (otherId === userId) continue;
 
-                        const otherUser = await User.findById(otherId).select("privacySettings contacts");
+                        const otherUser = await User.findById(otherId).select("privacySettings contacts blockedUsers");
                         if (!otherUser) continue;
+
+                        // Check blocking
+                        const me = await User.findById(userId).select("blockedUsers");
+                        const theyBlockedMe = otherUser?.blockedUsers?.some(u => u.userId.toString() === userId.toString());
+                        const iBlockedThem = me?.blockedUsers?.some(u => u.userId.toString() === otherId.toString());
+                        if (theyBlockedMe || iBlockedThem) {
+                            continue;
+                        }
 
                         const privacy = otherUser.privacySettings?.onlineStatus || "everyone";
                         let canSee = false;

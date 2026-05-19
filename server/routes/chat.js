@@ -58,10 +58,29 @@ router.get("/", async (req, res) => {
                 }).sort({ createdAt: -1 }).populate("senderId", "username");
                 lm = realLast;
             }
+            let blockStatus = null;
+            if (!chat.isGroup) {
+                const otherParticipant = chat.participants.find(p => p._id.toString() !== req.user._id.toString());
+                const otherParticipantId = otherParticipant?._id || otherParticipant;
+                if (otherParticipantId) {
+                    const me = await User.findById(req.user._id);
+                    const other = await User.findById(otherParticipantId);
+                    
+                    const iBlockedThem = me?.blockedUsers?.some(u => u.userId.toString() === otherParticipantId.toString());
+                    const theyBlockedMe = other?.blockedUsers?.some(u => u.userId.toString() === req.user._id.toString());
+                    
+                    blockStatus = {
+                        iBlocked: !!iBlockedThem,
+                        theyBlocked: !!theyBlockedMe
+                    };
+                }
+            }
+
             return {
                 ...chat.toObject(),
                 lastMessage: lm,
                 unreadCount: unreadMap[chat._id.toString()] || 0,
+                blockStatus
             };
         }));
 
@@ -115,12 +134,33 @@ router.post("/", async (req, res) => {
                 populate: { path: "senderId", select: "username" },
             });
 
-        const io = req.app.get("io");
-        if (io) {
-            io.to(userId).emit("new_chat", { chat: populated });
+        let blockStatus = null;
+        if (!populated.isGroup) {
+            const otherParticipant = populated.participants.find(p => p._id.toString() !== req.user._id.toString());
+            const otherParticipantId = otherParticipant?._id || otherParticipant;
+            if (otherParticipantId) {
+                const me = await User.findById(req.user._id);
+                const other = await User.findById(otherParticipantId);
+                
+                const iBlockedThem = me?.blockedUsers?.some(u => u.userId.toString() === otherParticipantId.toString());
+                const theyBlockedMe = other?.blockedUsers?.some(u => u.userId.toString() === req.user._id.toString());
+                
+                blockStatus = {
+                    iBlocked: !!iBlockedThem,
+                    theyBlocked: !!theyBlockedMe
+                };
+            }
         }
 
-        res.status(201).json({ chat: populated });
+        const populatedObj = populated.toObject();
+        populatedObj.blockStatus = blockStatus;
+
+        const io = req.app.get("io");
+        if (io) {
+            io.to(userId).emit("new_chat", { chat: populatedObj });
+        }
+
+        res.status(201).json({ chat: populatedObj });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }
@@ -163,7 +203,30 @@ router.get("/:chatId", async (req, res) => {
             return res.status(404).json({ message: "Chat not found" });
         }
 
-        res.json({ chat });
+        let blockStatus = null;
+        if (!chat.isGroup) {
+            const otherParticipant = chat.participants.find(p => p._id.toString() !== req.user._id.toString());
+            const otherParticipantId = otherParticipant?._id || otherParticipant;
+            if (otherParticipantId) {
+                const me = await User.findById(req.user._id);
+                const other = await User.findById(otherParticipantId);
+                
+                const iBlockedThem = me?.blockedUsers?.some(u => u.userId.toString() === otherParticipantId.toString());
+                const theyBlockedMe = other?.blockedUsers?.some(u => u.userId.toString() === req.user._id.toString());
+                
+                blockStatus = {
+                    iBlocked: !!iBlockedThem,
+                    theyBlocked: !!theyBlockedMe
+                };
+            }
+        }
+
+        res.json({ 
+            chat: {
+                ...chat.toObject(),
+                blockStatus
+            }
+        });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }

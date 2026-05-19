@@ -15,7 +15,7 @@ const AdminPanel = ({ onClose }) => {
 
     const showToast = (msg) => {
         setToast(msg);
-        setTimeout(() => setToast(null), 5000);
+        setTimeout(() => setToast(null), 3000);
     };
 
     const fetchAdminData = async () => {

@@ -11,6 +11,7 @@ import { VerifiedTick } from "../ui/Icons";
 import UserCardModal from "../ui/UserCardModal";
 import { useMomentStore } from "../../stores/momentStore";
 import MediaViewerModal from "../ui/MediaViewerModal";
+import DocViewerModal from "../ui/DocViewerModal";
 import MomentViewer from "./MomentViewer";
 import axiosInstance from "../../utils/axios";
 
@@ -186,6 +187,7 @@ const ChatWindow = ({ onBack }) => {
     const [showScrollDown, setShowScrollDown] = useState(false);
     const [showUserCard, setShowUserCard] = useState(false);
     const [selectedMedia, setSelectedMedia] = useState(null);
+    const [selectedDoc, setSelectedDoc] = useState(null);
     const [activeViewerMoments, setActiveViewerMoments] = useState(null);
     const [showDisappearingMenu, setShowDisappearingMenu] = useState(false);
     const messagesContainerRef = useRef(null);
@@ -364,14 +366,14 @@ const ChatWindow = ({ onBack }) => {
 
     const statusText = useMemo(() => {
         if (!otherUser) return "";
-        if (isOffline) return "Offline";
+        if (isOffline || activeChat?.blockStatus?.iBlocked || activeChat?.blockStatus?.theyBlocked) return "Offline";
         const isCurrentlyOnline = otherUser.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString());
         if (isCurrentlyOnline) return "Online";
         if (otherUser.lastSeen) {
             return `Last seen ${formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true })}`;
         }
         return "Offline";
-    }, [otherUser, onlineUsers, tick, isOffline]);
+    }, [otherUser, onlineUsers, tick, isOffline, activeChat?.blockStatus?.iBlocked, activeChat?.blockStatus?.theyBlocked]);
 
     const getStatusText = () => statusText;
 
@@ -412,12 +414,10 @@ const ChatWindow = ({ onBack }) => {
 
                 <div
                     className="chat-header-avatar-wrap"
-                    onClick={() => setShowUserCard(true)}
-                    style={{ cursor: 'pointer' }}
                 >
                     <div
-                        className={`avatar avatar-md ${hasMoments ? 'moments-halo-thin' : ''}`}
-                        style={hasMoments ? { '--halo-color': useMomentStore.getState().getHaloColor(otherUser?._id, user?._id) } : {}}
+                        className={`avatar avatar-md ${hasMoments && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked ? 'moments-halo-thin' : ''}`}
+                        style={hasMoments && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked ? { '--halo-color': useMomentStore.getState().getHaloColor(otherUser?._id, user?._id) } : {}}
                     >
                         {otherUser?.avatar ? (
                             <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
@@ -425,7 +425,7 @@ const ChatWindow = ({ onBack }) => {
                             <span>{otherUser?.username?.slice(0, 2).toUpperCase()}</span>
                         )}
                     </div>
-                    {!isOffline && (otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) && (
+                    {!isOffline && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked && (otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) && (
                         <OnlineDot isSPOp={isOtherUserLowBandwidth} />
                     )}
                 </div>
@@ -444,7 +444,7 @@ const ChatWindow = ({ onBack }) => {
                         </span>
                         {otherUser?.isVerified && <span style={{ flexShrink: 0, display: 'flex' }}><VerifiedTick /></span>}
                     </span>
-                    <span className={`chat-header-status ${(!isOffline && (otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString()))) ? "status-online" : ""}`}>
+                    <span className={`chat-header-status ${(!isOffline && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked && (otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString()))) ? "status-online" : ""}`}>
                         {getStatusText()}
                     </span>
                 </div>
@@ -577,10 +577,14 @@ const ChatWindow = ({ onBack }) => {
                                 canDelete={!isDeleted}
                                 canReply={!isDeleted}
                                 onMediaClick={(url, type) => {
-                                    const senderName = (msg.senderId?._id === user?._id || msg.senderId === user?._id)
-                                        ? "me"
-                                        : (msg.senderId?.username || otherUser?.username || "user");
-                                    setSelectedMedia({ url, type, username: senderName });
+                                    if (type === "file") {
+                                        setSelectedDoc({ url, fileName: msg.content || "document" });
+                                    } else {
+                                        const senderName = (msg.senderId?._id === user?._id || msg.senderId === user?._id)
+                                            ? "me"
+                                            : (msg.senderId?.username || otherUser?.username || "user");
+                                        setSelectedMedia({ url, type, username: senderName });
+                                    }
                                 }}
                             />
                         </div>
@@ -622,8 +626,14 @@ const ChatWindow = ({ onBack }) => {
                 replyingTo={replyingTo}
                 onCancelEdit={() => setEditingMessage(null)}
                 onCancelReply={() => setReplyingTo(null)}
-                disabled={isDeleted || showOnlyStarred}
-                disabledPlaceholder={isDeleted ? "Account deleted..." : "Sending disabled in Fav mode..."}
+                disabled={isDeleted || showOnlyStarred || activeChat?.blockStatus?.iBlocked || activeChat?.blockStatus?.theyBlocked}
+                disabledPlaceholder={
+                    isDeleted ? "Account deleted..." :
+                    showOnlyStarred ? "Sending disabled in Fav mode..." :
+                    activeChat?.blockStatus?.iBlocked ? "You have blocked this user" :
+                    activeChat?.blockStatus?.theyBlocked ? "You have been blocked by this user" :
+                    "Sending disabled..."
+                }
             />
 
             {deletingMessage && (
@@ -650,10 +660,12 @@ const ChatWindow = ({ onBack }) => {
                 isOpen={showUserCard}
                 onClose={() => setShowUserCard(false)}
                 user={otherUser}
-                isOnline={!isOffline && (otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString()))}
+                isOnline={!isOffline && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked && (otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString()))}
                 isSPOp={isOtherUserLowBandwidth}
                 hasMoments={hasMoments}
                 isContact={isContact}
+                iBlocked={activeChat?.blockStatus?.iBlocked}
+                theyBlocked={activeChat?.blockStatus?.theyBlocked}
                 onViewMoments={() => {
                     const moments = useMomentStore.getState().moments.filter(m => (m.userId?._id || m.userId)?.toString() === otherUser?._id?.toString());
                     setActiveViewerMoments(moments);
@@ -673,6 +685,14 @@ const ChatWindow = ({ onBack }) => {
                     type={selectedMedia.type}
                     username={selectedMedia.username}
                     onClose={() => setSelectedMedia(null)}
+                />
+            )}
+
+            {selectedDoc && (
+                <DocViewerModal
+                    url={selectedDoc.url}
+                    fileName={selectedDoc.fileName}
+                    onClose={() => setSelectedDoc(null)}
                 />
             )}
         </div>

@@ -9,7 +9,7 @@ import { db } from "../../db/zenDB";
 import { generateRecoveryKey, rotateUserRecoveryKey, setupE2EEForUser } from "../../utils/e2eeHelper";
 
 const ProfileModal = ({ isOpen, onClose, onSave }) => {
-    const { user, updateProfile, isLoading, soundEnabled, toggleSound } = useAuthStore();
+    const { user, updateProfile, isLoading, soundEnabled, toggleSound, unblockUser } = useAuthStore();
     const { chats } = useChatStore();
     const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
 
@@ -33,13 +33,14 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [showActivationPassword, setShowActivationPassword] = useState(false);
     const [isConfirmingRotate, setIsConfirmingRotate] = useState(false);
     const [localKeysMissing, setLocalKeysMissing] = useState(false);
+    const [profileBlockError, setProfileBlockError] = useState(null);
 
     const fileInputRef = useRef(null);
     const importInputRef = useRef(null);
 
     const showToast = (message) => {
         setToast(message);
-        setTimeout(() => setToast(null), 5000);
+        setTimeout(() => setToast(null), 3000);
     };
 
     useEffect(() => {
@@ -57,6 +58,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setToast(null);
             setIsSubscribing(false);
             setImageError(false);
+            setProfileBlockError(null);
         }
     }, [isOpen, user?._id]);
 
@@ -95,6 +97,14 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     }, [avatarPreview]);
 
     if (!isOpen) return null;
+
+    const handleUnblockFromProfile = async (targetId) => {
+        setProfileBlockError(null);
+        const res = await unblockUser(targetId);
+        if (!res.success) {
+            setProfileBlockError(res.message);
+        }
+    };
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -479,6 +489,48 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 <button type="button" className="profile-subscribe-btn" onClick={handleSubscribe} style={{ width: "100%", background: "#3b82f6", color: "white", border: "none", padding: "9px", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "600", cursor: "pointer" }}>
                                     Enable Push Notifications
                                 </button>
+                            )}
+                        </div>
+
+                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px" }}>
+                            <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem", marginBottom: "0.5rem" }}>Blocked Users</span>
+                            {(!user?.blockedUsers || user.blockedUsers.length === 0) ? (
+                                <span style={{ fontSize: "0.75rem", color: "#64748b" }}>No blocked users.</span>
+                            ) : (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "0.5rem" }}>
+                                    {user.blockedUsers.map((blockedEntry) => {
+                                        const targetUser = blockedEntry.userId;
+                                        if (!targetUser) return null;
+                                        const targetId = targetUser._id || targetUser;
+                                        const initials = targetUser.username?.slice(0, 2).toUpperCase() || "?";
+                                        return (
+                                            <div key={targetId} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(0,0,0,0.2)", padding: "8px 12px", borderRadius: "8px" }}>
+                                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                    <div className="avatar avatar-sm" style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#334155", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: "600" }}>
+                                                        {targetUser.avatar ? (
+                                                            <img src={targetUser.avatar} alt={targetUser.username} style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                                                        ) : (
+                                                            <span>{initials}</span>
+                                                        )}
+                                                    </div>
+                                                    <span style={{ fontSize: "0.8rem", fontWeight: "500" }}>@{targetUser.username}</span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleUnblockFromProfile(targetId)}
+                                                    style={{ background: "rgba(61, 165, 217, 0.15)", border: "none", color: "var(--color-primary)", padding: "4px 8px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "600", cursor: "pointer" }}
+                                                >
+                                                    Unblock
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                            {profileBlockError && (
+                                <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '6px' }}>
+                                    {profileBlockError}
+                                </p>
                             )}
                         </div>
 

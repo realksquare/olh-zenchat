@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useCallback, useMemo } from "react";
+import { createContext, useContext, useEffect, useRef, useCallback, useMemo, useState } from "react";
 import { io } from "socket.io-client";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
@@ -13,6 +13,7 @@ const SocketContext = createContext(null);
 
 export const SocketProvider = ({ children }) => {
     const socketRef = useRef(null);
+    const [isConnected, setIsConnected] = useState(false);
     const userId = useAuthStore((state) => state.user?._id);
     const token = useAuthStore((state) => state.token);
 
@@ -148,12 +149,43 @@ export const SocketProvider = ({ children }) => {
             }
         };
 
+        const handleUserBlocked = ({ blockerId, blockedId }) => {
+            const me = useAuthStore.getState().user;
+            if (me && (me._id === blockerId || me._id === blockedId)) {
+                useChatStore.getState().fetchChats();
+                const activeChat = useChatStore.getState().activeChat;
+                if (activeChat && !activeChat.isGroup) {
+                    const peer = activeChat.participants.find(p => p._id.toString() !== me._id.toString());
+                    const peerId = peer?._id || peer;
+                    if (peerId?.toString() === blockerId || peerId?.toString() === blockedId) {
+                        useChatStore.getState().fetchActiveChat(activeChat._id);
+                    }
+                }
+            }
+        };
+
+        const handleUserUnblocked = ({ blockerId, blockedId }) => {
+            const me = useAuthStore.getState().user;
+            if (me && (me._id === blockerId || me._id === blockedId)) {
+                useChatStore.getState().fetchChats();
+                const activeChat = useChatStore.getState().activeChat;
+                if (activeChat && !activeChat.isGroup) {
+                    const peer = activeChat.participants.find(p => p._id.toString() !== me._id.toString());
+                    const peerId = peer?._id || peer;
+                    if (peerId?.toString() === blockerId || peerId?.toString() === blockedId) {
+                        useChatStore.getState().fetchActiveChat(activeChat._id);
+                    }
+                }
+            }
+        };
+
         const handleForceLogout = () => {
             useAuthStore.getState().logout();
             window.location.href = "/login";
         };
 
         socket.on("connect", async () => {
+            setIsConnected(true);
             const activeChat = useChatStore.getState().activeChat;
             if (activeChat?._id) {
                 socket.emit("join_chat", { chatId: activeChat._id });
@@ -164,6 +196,10 @@ export const SocketProvider = ({ children }) => {
             queued.forEach(({ id: _id, createdAt: _ts, ...payload }) => {
                 socket.emit("send_message", payload);
             });
+        });
+
+        socket.on("disconnect", () => {
+            setIsConnected(false);
         });
 
         socket.on("online_users", ({ userIds }) => {
@@ -190,10 +226,13 @@ export const SocketProvider = ({ children }) => {
         socket.on("instant_messages_deleted", handleInstantMessagesDeleted);
         socket.on("new_moment", handleNewMoment);
         socket.on("moment_deleted", handleMomentDeleted);
+        socket.on("user_blocked", handleUserBlocked);
+        socket.on("user_unblocked", handleUserUnblocked);
         socket.on("force_logout", handleForceLogout);
 
         return () => {
             socket.off("connect");
+            socket.off("disconnect");
             socket.off("receive_message", handleReceiveMessage);
             socket.off("message_delivered", handleMessageDelivered);
             socket.off("messages_read", handleMessagesRead);
@@ -209,6 +248,8 @@ export const SocketProvider = ({ children }) => {
             socket.off("instant_messages_deleted", handleInstantMessagesDeleted);
             socket.off("new_moment", handleNewMoment);
             socket.off("moment_deleted", handleMomentDeleted);
+            socket.off("user_blocked", handleUserBlocked);
+            socket.off("user_unblocked", handleUserUnblocked);
             socket.off("force_logout", handleForceLogout);
             socket.disconnect();
             socketRef.current = null;
@@ -310,7 +351,8 @@ export const SocketProvider = ({ children }) => {
     const editMessage = useCallback(async (chatId, messageId, newContent) => {
         if (socketRef.current?.connected) {
             const messages = useChatStore.getState().messages;
-            const originalMsg = messages.find(m => m._id === messageId);
+            const chatMessages = messages[chatId] || [];
+            const originalMsg = chatMessages.find(m => m._id === messageId);
             
             let payload = { chatId, messageId, newContent };
             
@@ -360,6 +402,7 @@ export const SocketProvider = ({ children }) => {
 
     const socketValue = useMemo(() => ({
         socket: socketRef.current,
+        isConnected,
         joinChat,
         leaveChat,
         sendMessage,
@@ -370,7 +413,7 @@ export const SocketProvider = ({ children }) => {
         deleteMessage,
         updateLowBandwidth,
         isOnline: navigator.onLine
-    }), [joinChat, leaveChat, sendMessage, startTyping, stopTyping, markAsRead, editMessage, deleteMessage, updateLowBandwidth]);
+    }), [isConnected, joinChat, leaveChat, sendMessage, startTyping, stopTyping, markAsRead, editMessage, deleteMessage, updateLowBandwidth]);
 
     return (
         <SocketContext.Provider value={socketValue}>

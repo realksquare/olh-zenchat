@@ -171,6 +171,20 @@ router.post("/:chatId", async (req, res) => {
             return res.status(404).json({ message: "Chat not found" });
         }
 
+        const User = require("../models/User");
+        if (!chat.isGroup) {
+            const otherParticipantId = chat.participants.find(p => p.toString() !== req.user._id.toString());
+            if (otherParticipantId) {
+                const me = await User.findById(req.user._id);
+                const other = await User.findById(otherParticipantId);
+                const iBlockedThem = me?.blockedUsers?.some(u => u.userId.toString() === otherParticipantId.toString());
+                const theyBlockedMe = other?.blockedUsers?.some(u => u.userId.toString() === req.user._id.toString());
+                if (iBlockedThem || theyBlockedMe) {
+                    return res.status(403).json({ message: "Cannot send message. Block active." });
+                }
+            }
+        }
+
         const { content, type, mediaUrl, replyTo, isViewOnce } = req.body;
 
         if (!content && !mediaUrl) {

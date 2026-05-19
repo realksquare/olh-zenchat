@@ -1,25 +1,32 @@
-import { memo, useMemo, useEffect } from "react";
+import { memo, useMemo, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { format } from "date-fns";
 import { VerifiedTick } from "./Icons";
 import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
 
-const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = false, isSPOp = false, isContact = false, onViewMoments }) => {
+const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = false, isSPOp = false, isContact = false, onViewMoments, iBlocked = false, theyBlocked = false }) => {
+    const [blockError, setBlockError] = useState(null);
+
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = "hidden";
+            setBlockError(null);
             return () => {
                 document.body.style.overflow = "";
             };
         }
     }, [isOpen]);
+
     const getHaloColor = useMomentStore((s) => s.getHaloColor);
     const moments = useMomentStore((s) => s.moments);
-    const { user: currentUser } = useAuthStore();
+    const { user: currentUser, blockUser, unblockUser } = useAuthStore();
 
     // Safety exit
     if (!isOpen || !user) return null;
+
+    // Force offline if blocked relationship exists
+    const effectiveIsOnline = isOnline && !iBlocked && !theyBlocked;
 
     // Extremely defensive metadata extraction
     const username = typeof user.username === 'string' ? user.username : 'User';
@@ -49,6 +56,23 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
     const haloColor = getHaloColor(userId, currentUser?._id);
     const userMomentsCount = moments.filter(m => (m.userId?._id || m.userId)?.toString() === userId).length;
 
+    const handleBlockToggle = async () => {
+        setBlockError(null);
+        if (iBlocked) {
+            const res = await unblockUser(userId);
+            if (!res.success) {
+                setBlockError(res.message);
+            }
+        } else {
+            if (confirm("Are you sure you want to block this user?")) {
+                const res = await blockUser(userId);
+                if (!res.success) {
+                    setBlockError(res.message);
+                }
+            }
+        }
+    };
+
     return createPortal(
         <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000 }}>
             <div className="modal-content user-card-modal" onClick={(e) => e.stopPropagation()}>
@@ -60,15 +84,15 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
 
                 <div className="user-card-header">
                     <div
-                        className={`avatar avatar-xl ${hasMoments ? 'moments-halo-thin' : ''}`}
-                        style={hasMoments ? { '--halo-color': haloColor } : {}}
+                        className={`avatar avatar-xl ${hasMoments && !iBlocked && !theyBlocked ? 'moments-halo-thin' : ''}`}
+                        style={hasMoments && !iBlocked && !theyBlocked ? { '--halo-color': haloColor } : {}}
                     >
                         {user.avatar ? (
                             <img src={user.avatar} alt={username} />
                         ) : (
                             <span>{initials}</span>
                         )}
-                        {isOnline && <span className={`online-dot-large${isSPOp ? ' online-dot-large--amber' : ''}`} />}
+                        {effectiveIsOnline && <span className={`online-dot-large${isSPOp ? ' online-dot-large--amber' : ''}`} />}
                     </div>
                 </div>
 
@@ -90,17 +114,31 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                         </div>
                         <div className="stat-item">
                             <span className="stat-label">Status</span>
-                            <span className="stat-value" style={{ color: isOnline ? 'var(--color-primary)' : 'inherit' }}>
-                                {isOnline ? "Active Now" : "Offline"}
+                            <span className="stat-value" style={{ color: effectiveIsOnline ? 'var(--color-primary)' : 'inherit' }}>
+                                {effectiveIsOnline ? "Active Now" : "Offline"}
                             </span>
                         </div>
                     </div>
 
-                    <div className="user-card-actions">
-                        {hasMoments && userMomentsCount > 0 && (
+                    <div className="user-card-actions" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+                        {hasMoments && userMomentsCount > 0 && !iBlocked && !theyBlocked && (
                             <button className="btn btn-primary btn-full moments-btn" onClick={onViewMoments}>
                                 View {userMomentsCount} {userMomentsCount === 1 ? '#moment.' : '#moments.'}
                             </button>
+                        )}
+                        {userId !== currentUser?._id && (
+                            <button 
+                                className={`btn ${iBlocked ? 'btn-primary' : 'btn-danger'} btn-full`}
+                                onClick={handleBlockToggle}
+                                style={!iBlocked ? { backgroundColor: '#dc2626', color: '#fff' } : {}}
+                            >
+                                {iBlocked ? 'Unblock User' : 'Block User'}
+                            </button>
+                        )}
+                        {blockError && (
+                            <p style={{ color: '#ef4444', fontSize: '0.8rem', textAlign: 'center', marginTop: '4px' }}>
+                                {blockError}
+                            </p>
                         )}
                     </div>
                 </div>
