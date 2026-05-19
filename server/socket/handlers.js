@@ -288,7 +288,7 @@ const registerSocketHandlers = (io) => {
                     console.error("Error in connection async block:", err);
                 }
             })();
-        }
+
 
         socket.on("join_chat", ({ chatId, isLowBandwidth, isBareMinimum }) => {
             socket.join(chatId);
@@ -715,7 +715,8 @@ const registerSocketHandlers = (io) => {
                 socket.emit("message_error", { error: "Failed to update read status" });
             }
         });
-    });
+    }
+});
 };
 
 registerSocketHandlers.registerSocketHandlers = registerSocketHandlers;
