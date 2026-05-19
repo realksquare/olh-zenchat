@@ -339,8 +339,8 @@ select {
 }
 
 .sidebar-panel {
-  width: 380px;
-  min-width: 380px;
+  width: 410px;
+  min-width: 410px;
   height: 100%;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
