@@ -1,6 +1,6 @@
 let sharedCtx = null;
 
-function getAudioContext() {
+export function getAudioContext() {
     if (!sharedCtx || sharedCtx.state === "closed") {
         sharedCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
@@ -72,6 +72,11 @@ export const primeAudioContext = () => {
 
 let currentIntroNodes = [];
 let masterGainNode = null;
+let recordingDestination = null;
+
+export const setRecordingDestination = (dest) => {
+    recordingDestination = dest;
+};
 
 export const startZenIntroAudio = () => {
     stopZenIntroAudio();
@@ -82,6 +87,13 @@ export const startZenIntroAudio = () => {
         masterGainNode = ctx.createGain();
         masterGainNode.gain.setValueAtTime(0, ctx.currentTime);
         masterGainNode.connect(ctx.destination);
+        if (recordingDestination) {
+            try {
+                masterGainNode.connect(recordingDestination);
+            } catch (err) {
+                console.warn("Failed to connect masterGainNode to recordingDestination:", err);
+            }
+        }
 
         const oscSaw1 = ctx.createOscillator();
         const oscSaw2 = ctx.createOscillator();

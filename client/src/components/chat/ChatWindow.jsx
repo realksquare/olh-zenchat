@@ -14,7 +14,7 @@ import MediaViewerModal from "../ui/MediaViewerModal";
 import DocViewerModal from "../ui/DocViewerModal";
 import MomentViewer from "./MomentViewer";
 import axiosInstance from "../../utils/axios";
-import { startZenIntroAudio, stopZenIntroAudio } from "../../utils/audio";
+import { startZenIntroAudio, stopZenIntroAudio, setRecordingDestination, getAudioContext } from "../../utils/audio";
 
 const EMPTY_MESSAGES = [];
 const EMPTY_CONTACTS = [];
@@ -140,19 +140,42 @@ const DELETED_PHRASES = [
     "Wish we could turn back time, to the good old days..."
 ];
 
-const ZenParticleCanvas = memo(() => {
+const ZenParticleCanvas = memo(({ phase, noiseElements }) => {
     const canvasRef = useRef(null);
+    const phaseRef = useRef(phase);
+    const mediaRecorderRef = useRef(null);
+    const chunksRef = useRef([]);
+    const startTimeRef = useRef(null);
+    const implosionStartRef = useRef(null);
+    const bloomStartRef = useRef(null);
+    const modeNameStartRef = useRef(null);
+
+    useEffect(() => {
+        phaseRef.current = phase;
+        if (phase === "noise") {
+            startTimeRef.current = Date.now();
+        } else if (phase === "implosion") {
+            implosionStartRef.current = Date.now();
+        } else if (phase === "bloom") {
+            bloomStartRef.current = Date.now();
+        } else if (phase === "mode-name") {
+            modeNameStartRef.current = Date.now();
+        }
+    }, [phase]);
+
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext("2d");
         let animationFrameId;
+
         const resizeCanvas = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         };
         resizeCanvas();
         window.addEventListener("resize", resizeCanvas);
+
         const particles = [];
         for (let i = 0; i < 40; i++) {
             particles.push({
@@ -165,8 +188,80 @@ const ZenParticleCanvas = memo(() => {
                 oscVal: Math.random() * Math.PI
             });
         }
+
+        let recorder = null;
+        let audioDest = null;
+
+        const startRecording = () => {
+            try {
+                const audioCtx = getAudioContext();
+                if (!audioCtx) return;
+                
+                audioDest = audioCtx.createMediaStreamDestination();
+                setRecordingDestination(audioDest);
+
+                const canvasStream = canvas.captureStream(60);
+                const audioTrack = audioDest.stream.getAudioTracks()[0];
+                if (audioTrack) {
+                    canvasStream.addTrack(audioTrack);
+                }
+
+                chunksRef.current = [];
+                recorder = new MediaRecorder(canvasStream, { mimeType: 'video/webm;codecs=vp9,opus' });
+                recorder.ondataavailable = (e) => {
+                    if (e.data && e.data.size > 0) {
+                        chunksRef.current.push(e.data);
+                    }
+                };
+
+                recorder.onstop = () => {
+                    if (chunksRef.current.length === 0) return;
+                    const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "zen_cinematic.webm";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    
+                    setRecordingDestination(null);
+                };
+
+                mediaRecorderRef.current = recorder;
+                recorder.start();
+                console.log("Zen Mode Cinematic Video Recording Started (Option A).");
+            } catch (err) {
+                console.warn("Failed to initialize MediaRecorder:", err);
+            }
+        };
+
+        const stopRecording = () => {
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+                try {
+                    mediaRecorderRef.current.stop();
+                    console.log("Zen Mode Cinematic Video Recording Completed and Saved.");
+                } catch (err) {
+                    console.error("Failed to stop MediaRecorder:", err);
+                }
+                mediaRecorderRef.current = null;
+            }
+        };
+
         const animate = () => {
+            const currentPhase = phaseRef.current;
+            const now = Date.now();
+
+            if (currentPhase === "noise" && !mediaRecorderRef.current) {
+                startRecording();
+            }
+            if (currentPhase === "integration" && mediaRecorderRef.current) {
+                stopRecording();
+            }
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+
             particles.forEach(p => {
                 p.y += p.speedY;
                 p.oscVal += p.oscSpeed;
@@ -182,14 +277,123 @@ const ZenParticleCanvas = memo(() => {
                 ctx.shadowColor = "rgba(255, 255, 255, 0.4)";
                 ctx.fill();
             });
+
+            if (currentPhase === "disclaimer") {
+                ctx.save();
+                ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+                ctx.font = "16px system-ui, -apple-system, sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("For the immersive experience, turn your device volume up.", canvas.width / 2, canvas.height / 2);
+                ctx.restore();
+            } else if (currentPhase === "noise" || currentPhase === "implosion") {
+                const isImploding = currentPhase === "implosion";
+                const implosionElapsed = implosionStartRef.current ? now - implosionStartRef.current : 0;
+                const implosionProgress = isImploding ? Math.min(1, implosionElapsed / 2200) : 0;
+
+                if (noiseElements && noiseElements.length > 0) {
+                    noiseElements.forEach((el) => {
+                        ctx.save();
+                        let cx = (el.x / 100) * canvas.width;
+                        let cy = (el.y / 100) * canvas.height;
+                        let scale = el.scale;
+                        let opacity = 0.45;
+
+                        if (isImploding) {
+                            const targetX = canvas.width / 2;
+                            const targetY = canvas.height / 2;
+                            cx = cx + (targetX - cx) * implosionProgress;
+                            cy = cy + (targetY - cy) * implosionProgress;
+                            scale = scale * (1 - implosionProgress);
+                            opacity = 0.45 * (1 - implosionProgress);
+                        }
+
+                        ctx.translate(cx, cy);
+                        ctx.rotate((el.rot * Math.PI) / 180);
+                        ctx.scale(scale, scale);
+
+                        const textWidth = ctx.measureText(el.text).width + 36;
+                        const w = textWidth;
+                        const h = 32;
+
+                        ctx.fillStyle = el.isMine ? "rgba(61, 165, 217, 0.12)" : "rgba(255, 255, 255, 0.05)";
+                        ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
+                        ctx.lineWidth = 1;
+
+                        ctx.beginPath();
+                        ctx.roundRect(-w / 2, -h / 2, w, h, 8);
+                        ctx.fill();
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.arc(-w / 2 + 12, 0, 6, 0, Math.PI * 2);
+                        ctx.fillStyle = el.isMine ? "#3da5d9" : "rgba(255,255,255,0.2)";
+                        ctx.fill();
+
+                        ctx.fillStyle = `rgba(255, 255, 255, ${opacity * 1.5})`;
+                        ctx.font = "11px system-ui, -apple-system, sans-serif";
+                        ctx.textAlign = "left";
+                        ctx.textBaseline = "middle";
+                        ctx.fillText(el.text, -w / 2 + 24, 0);
+
+                        ctx.restore();
+                    });
+                }
+
+                if (currentPhase === "noise") {
+                    ctx.save();
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+                    ctx.font = "bold 28px Georgia, serif";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    const driftY = Math.sin(now * 0.002) * 4;
+                    ctx.fillText("THE NOISE IS LOUD.", canvas.width / 2, canvas.height / 2 + driftY);
+                    ctx.restore();
+                }
+            } else if (currentPhase === "bloom") {
+                const bloomElapsed = bloomStartRef.current ? now - bloomStartRef.current : 0;
+                ctx.save();
+                ctx.font = "italic 28px Georgia, serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+
+                const w1Opacity = Math.min(1, Math.max(0, (bloomElapsed - 400) / 1000));
+                ctx.fillStyle = `rgba(255, 255, 255, ${w1Opacity * 0.9})`;
+                ctx.fillText("Quiet", canvas.width / 2, canvas.height / 2 - 40);
+
+                const w2Opacity = Math.min(1, Math.max(0, (bloomElapsed - 900) / 1000));
+                ctx.fillStyle = `rgba(255, 255, 255, ${w2Opacity * 0.9})`;
+                ctx.fillText("the", canvas.width / 2, canvas.height / 2);
+
+                const w3Opacity = Math.min(1, Math.max(0, (bloomElapsed - 1400) / 1000));
+                ctx.fillStyle = `rgba(255, 255, 255, ${w3Opacity * 0.9})`;
+                ctx.fillText("mind.", canvas.width / 2, canvas.height / 2 + 40);
+                ctx.restore();
+            } else if (currentPhase === "mode-name") {
+                const modeNameElapsed = modeNameStartRef.current ? now - modeNameStartRef.current : 0;
+                const progress = modeNameElapsed / 1000;
+                const opacity = progress <= 0.5 ? progress * 2 : 2 - progress * 2;
+
+                ctx.save();
+                ctx.fillStyle = `rgba(61, 165, 217, ${Math.max(0, Math.min(1, opacity))})`;
+                ctx.font = "italic 36px Georgia, serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("#ZenMode.", canvas.width / 2, canvas.height / 2);
+                ctx.restore();
+            }
+
             animationFrameId = requestAnimationFrame(animate);
         };
         animate();
+
         return () => {
             window.removeEventListener("resize", resizeCanvas);
             cancelAnimationFrame(animationFrameId);
+            stopRecording();
         };
-    }, []);
+    }, [noiseElements]);
+
     return (
         <canvas
             ref={canvasRef}
@@ -247,11 +451,8 @@ const ChatWindow = ({ onBack }) => {
         if (showOnlyStarred) {
             result = visible.filter(m => m.starredBy?.includes(user?._id));
         }
-        if (isZenMode) {
-            return result.slice(-2);
-        }
         return result;
-    }, [rawMessages, showOnlyStarred, user?._id, isZenMode]);
+    }, [rawMessages, showOnlyStarred, user?._id]);
 
     const { joinChat, leaveChat, markAsRead, deleteMessage, updateLowBandwidth } = useSocket();
     const messagesEndRef = useRef(null);
@@ -272,6 +473,27 @@ const ChatWindow = ({ onBack }) => {
     const [cinematicPhase, setCinematicPhase] = useState(null);
     const cinematicTimers = useRef([]);
 
+    const noiseElements = useMemo(() => {
+        const bubbles = [
+            "What time is the meeting?", "Send me the files", "URGENT!!", "Status update?",
+            "omg did you see this?", "hahaha", "missed call", "Server is down!",
+            "Ping", "Are you there?", "Wait...", "Hello?"
+        ];
+        return Array.from({ length: 15 }).map((_, i) => {
+            const isMine = i % 2 === 0;
+            return {
+                id: i,
+                text: bubbles[i % bubbles.length],
+                isMine,
+                x: 15 + Math.random() * 70,
+                y: 15 + Math.random() * 70,
+                scale: 0.65 + Math.random() * 0.4,
+                delay: Math.random() * 0.4,
+                rot: -12 + Math.random() * 24
+            };
+        });
+    }, []);
+
     const clearCinematicTimers = useCallback(() => {
         cinematicTimers.current.forEach(t => clearTimeout(t));
         cinematicTimers.current = [];
@@ -283,13 +505,13 @@ const ChatWindow = ({ onBack }) => {
             if (useChatStore.getState().isZenMode !== nextZenState) {
                 toggleZenMode();
             }
-        }, 150);
+        }, 400);
         setTimeout(() => {
             setRevealCircle(prev => prev ? { ...prev, fading: true } : null);
-        }, 700);
+        }, 1800);
         setTimeout(() => {
             setRevealCircle(null);
-        }, 1500);
+        }, 3600);
     }, [toggleZenMode]);
 
     const runCinematicSequence = useCallback((clientX, clientY) => {
@@ -318,16 +540,20 @@ const ChatWindow = ({ onBack }) => {
         }, 8000);
         
         const t6 = setTimeout(() => {
-            setCinematicPhase("integration");
+            setCinematicPhase("mode-name");
         }, 11500);
         
         const t7 = setTimeout(() => {
+            setCinematicPhase("integration");
+        }, 12500);
+        
+        const t8 = setTimeout(() => {
             setCinematicPhase(null);
             localStorage.setItem("zen_intro_shown", "true");
             triggerCircularReveal(clientX, clientY, true);
-        }, 13000);
+        }, 14000);
         
-        cinematicTimers.current = [t1, t2, t3, t4, t5, t6, t7];
+        cinematicTimers.current = [t1, t2, t3, t4, t5, t6, t7, t8];
     }, [clearCinematicTimers, triggerCircularReveal]);
 
     const handleZenToggle = useCallback((e) => {
@@ -335,11 +561,10 @@ const ChatWindow = ({ onBack }) => {
         const x = e.clientX || window.innerWidth / 2;
         const y = e.clientY || window.innerHeight / 2;
         const wasZen = isZenMode;
-        const introShown = localStorage.getItem("zen_intro_shown") === "true";
-        if (!introShown && !wasZen) {
+        if (!wasZen) {
             runCinematicSequence(x, y);
         } else {
-            triggerCircularReveal(x, y, !wasZen);
+            triggerCircularReveal(x, y, false);
         }
     }, [isZenMode, runCinematicSequence, triggerCircularReveal]);
 
@@ -732,12 +957,19 @@ const ChatWindow = ({ onBack }) => {
                         <span>{showOnlyStarred ? 'No messages marked as "Fav"' : 'No messages yet - say Hi!'}</span>
                     </div>
                 )}
-
                 {messages.map((msg, idx) => {
                     const prevMsg = messages[idx - 1];
                     const msgDate = new Date(msg.createdAt).toLocaleDateString();
                     const prevDate = prevMsg ? new Date(prevMsg.createdAt).toLocaleDateString() : null;
                     const showDateDivider = msgDate !== prevDate;
+
+                    const indexFromEnd = messages.length - 1 - idx;
+                    let zenFadeClass = "";
+                    if (isZenMode) {
+                        if (indexFromEnd === 2) zenFadeClass = "zen-fade-1";
+                        else if (indexFromEnd === 3) zenFadeClass = "zen-fade-2";
+                        else if (indexFromEnd >= 4) zenFadeClass = "zen-fade-3";
+                    }
 
                     return (
                         <div key={`wrap-${msg._id}`} style={{ display: 'contents' }}>
@@ -748,27 +980,29 @@ const ChatWindow = ({ onBack }) => {
                                     </span>
                                 </div>
                             )}
-                            <MessageBubble
-                                key={msg._id}
-                                message={msg}
-                                isMe={msg.senderId?._id === user?._id || msg.senderId === user?._id}
-                                showAvatar={idx === 0 || messages[idx - 1]?.senderId?._id !== msg.senderId?._id || showDateDivider}
-                                otherUser={otherUser}
-                                onEdit={handleMessageAction}
-                                onDelete={setDeletingMessage}
-                                canDelete={!isDeleted && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked}
-                                canReply={!isDeleted && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked}
-                                onMediaClick={(url, type) => {
-                                    if (type === "file") {
-                                        setSelectedDoc({ url, fileName: msg.content || "document" });
-                                    } else {
-                                        const senderName = (msg.senderId?._id === user?._id || msg.senderId === user?._id)
-                                            ? "me"
-                                            : (msg.senderId?.username || otherUser?.username || "user");
-                                        setSelectedMedia({ url, type, username: senderName });
-                                    }
-                                }}
-                            />
+                            <div className={`message-bubble-zen-wrapper ${zenFadeClass}`}>
+                                <MessageBubble
+                                    key={msg._id}
+                                    message={msg}
+                                    isMe={msg.senderId?._id === user?._id || msg.senderId === user?._id}
+                                    showAvatar={idx === 0 || messages[idx - 1]?.senderId?._id !== msg.senderId?._id || showDateDivider}
+                                    otherUser={otherUser}
+                                    onEdit={handleMessageAction}
+                                    onDelete={setDeletingMessage}
+                                    canDelete={!isDeleted && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked}
+                                    canReply={!isDeleted && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked}
+                                    onMediaClick={(url, type) => {
+                                        if (type === "file") {
+                                            setSelectedDoc({ url, fileName: msg.content || "document" });
+                                        } else {
+                                            const senderName = (msg.senderId?._id === user?._id || msg.senderId === user?._id)
+                                                ? "me"
+                                                : (msg.senderId?.username || otherUser?.username || "user");
+                                            setSelectedMedia({ url, type, username: senderName });
+                                        }
+                                    }}
+                                />
+                            </div>
                         </div>
                     );
                 })}
@@ -886,8 +1120,44 @@ const ChatWindow = ({ onBack }) => {
                         Skip
                     </button>
                     
-                    {cinematicPhase !== "fade-black" && cinematicPhase !== "disclaimer" && cinematicPhase !== "fade-disclaimer" && (
-                        <ZenParticleCanvas />
+                    {cinematicPhase && (
+                        <ZenParticleCanvas phase={cinematicPhase} noiseElements={noiseElements} />
+                    )}
+
+                    {(cinematicPhase === "noise" || cinematicPhase === "implosion") && (
+                        <div className="zen-noise-bg-elements" style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 1 }}>
+                            {noiseElements.map((el) => (
+                                <div
+                                    key={el.id}
+                                    className={`zen-ghost-card ${el.isMine ? "mine" : "theirs"} ${cinematicPhase === "implosion" ? "sucked-in" : ""}`}
+                                    style={{
+                                        position: "absolute",
+                                        left: `${el.x}%`,
+                                        top: `${el.y}%`,
+                                        transform: cinematicPhase === "implosion" 
+                                            ? "translate(-50%, -50%) scale(0)" 
+                                            : `translate(-50%, -50%) rotate(${el.rot}deg) scale(${el.scale})`,
+                                        opacity: cinematicPhase === "implosion" ? 0 : 0.45,
+                                        transition: "all 2.2s cubic-bezier(0.76, 0, 0.24, 1)",
+                                        transitionDelay: cinematicPhase === "implosion" ? "0s" : `${el.delay}s`,
+                                        background: el.isMine ? "rgba(61, 165, 217, 0.12)" : "rgba(255, 255, 255, 0.05)",
+                                        border: "1px solid rgba(255, 255, 255, 0.06)",
+                                        borderRadius: "12px",
+                                        padding: "8px 14px",
+                                        fontSize: "0.75rem",
+                                        color: "rgba(255, 255, 255, 0.6)",
+                                        whiteSpace: "nowrap",
+                                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "8px"
+                                    }}
+                                >
+                                    <div style={{ width: "16px", height: "16px", borderRadius: "50%", background: el.isMine ? "var(--color-primary)" : "rgba(255,255,255,0.2)", opacity: 0.5 }} />
+                                    <div>{el.text}</div>
+                                </div>
+                            ))}
+                        </div>
                     )}
 
                     {cinematicPhase === "disclaimer" && (
@@ -897,21 +1167,22 @@ const ChatWindow = ({ onBack }) => {
                     )}
                     
                     {cinematicPhase === "noise" && (
-                        <div className="zen-noise-title">
+                        <div className="zen-noise-title" style={{ zIndex: 2 }}>
                             THE NOISE IS LOUD.
                         </div>
                     )}
                     
                     {cinematicPhase === "bloom" && (
-                        <div className="zen-bloom-text-container">
+                        <div className="zen-bloom-text-container" style={{ zIndex: 2 }}>
                             <span className="zen-bloom-word">Quiet</span>
                             <span className="zen-bloom-word">the</span>
                             <span className="zen-bloom-word">mind.</span>
-                            
-                            <svg className="zen-lotus-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                <path d="M12 2C11.5 6 9 8.5 6 9c3 .5 5.5 3 6 7 .5-4 3-6.5 6-7-3-.5-5.5-3-6-7z" />
-                                <path d="M12 9c-1.5 2-3.5 3-6 3.5 2.5.5 4.5 2 6 3.5 1.5-1.5 3.5-3 6-3.5-2.5-.5-4.5-2-6-3.5z" />
-                            </svg>
+                        </div>
+                    )}
+
+                    {cinematicPhase === "mode-name" && (
+                        <div className="zen-mode-name-text" style={{ zIndex: 2 }}>
+                            #ZenMode.
                         </div>
                     )}
                 </div>
