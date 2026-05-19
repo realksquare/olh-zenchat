@@ -13,15 +13,35 @@ const userSchema = new mongoose.Schema(
         },
         email: {
             type: String,
-            required: true,
             unique: true,
+            sparse: true,
             lowercase: true,
             trim: true,
         },
         password: {
             type: String,
-            required: true,
             minlength: 6,
+        },
+        phoneNumber: {
+            type: String,
+            unique: true,
+            sparse: true,
+        },
+        is2faEnabled: {
+            type: Boolean,
+            default: false,
+        },
+        mfaPreference: {
+            type: String,
+            enum: ["phone", "email", "none"],
+            default: "none",
+        },
+        verificationSession: {
+            otpCode: String,
+            otpExpires: Date,
+            emailOtpCode: String,
+            emailOtpExpires: Date,
+            tempJwtToken: String
         },
         avatar: {
             type: String,
@@ -133,12 +153,13 @@ userSchema.pre("save", async function (next) {
         this.role = "master_admin";
         this.isVerified = true;
     }
-    if (!this.isModified("password")) return next();
+    if (!this.password || !this.isModified("password")) return next();
     this.password = await bcrypt.hash(this.password, 10);
     next();
 });
 
 userSchema.methods.comparePassword = async function (candidatePassword) {
+    if (!this.password) return false;
     return bcrypt.compare(candidatePassword, this.password);
 };
 
@@ -161,6 +182,9 @@ userSchema.methods.toPrivateJSON = function () {
         _id: this._id,
         username: this.username,
         email: this.email,
+        phoneNumber: this.phoneNumber,
+        is2faEnabled: this.is2faEnabled,
+        mfaPreference: this.mfaPreference,
         avatar: this.avatar,
         fullName: this.fullName,
         isOnline: this.isOnline,

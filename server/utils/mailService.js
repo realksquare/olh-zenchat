@@ -161,6 +161,65 @@ const sendResetEmail = async (email, username, resetUrl) => {
     return true;
 };
 
+const send2faEmail = async (email, username, code) => {
+    console.log("\n=======================================================");
+    console.log("🔒 [ZENCHAT SECURITY] 2FA VERIFICATION CODE TRIGGERED 🔒");
+    console.log(`User: ${username || 'User'} (${email})`);
+    console.log(`Verification Code: ${code}`);
+    console.log("=======================================================\n");
+
+    const brevoApiKey = (process.env.BREVO_API_KEY || "").trim();
+    const subject = "Your ZenChat 2FA Verification Code";
+    const html = `
+        <div style="background-color: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px 20px; text-align: center; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+            <div style="margin-bottom: 24px;">
+                <h1 style="color: #38bdf8; font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">ZenChat</h1>
+                <p style="color: #94a3b8; font-size: 14px; margin-top: 4px;">Premium Secure Messaging</p>
+            </div>
+            <div style="background-color: #1e293b; padding: 32px; border-radius: 12px; text-align: left; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+                <h2 style="color: #f1f5f9; font-size: 20px; font-weight: 600; margin-top: 0; margin-bottom: 16px;">Hello ${username || 'User'},</h2>
+                <p style="color: #cbd5e1; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+                    Please enter the following 6-digit code to complete your secure authentication session:
+                </p>
+                <div style="text-align: center; margin-bottom: 24px; font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #38bdf8; padding: 16px; background-color: #0f172a; border-radius: 8px;">
+                    ${code}
+                </div>
+                <p style="color: #94a3b8; font-size: 13px; line-height: 1.5; margin-bottom: 0;">
+                    This code is valid for 5 minutes. If you did not request this, please change your credentials immediately.
+                </p>
+            </div>
+            <div style="margin-top: 24px; color: #64748b; font-size: 12px;">
+                &copy; ${new Date().getFullYear()} ZenChat. All rights reserved.
+            </div>
+        </div>
+    `;
+
+    if (brevoApiKey) {
+        try {
+            const senderEmail = process.env.SMTP_FROM ? process.env.SMTP_FROM : "onlinelearninghubteam@gmail.com";
+            await fetch("https://api.brevo.com/v3/smtp/email", {
+                method: "POST",
+                headers: {
+                    "accept": "application/json",
+                    "api-key": brevoApiKey,
+                    "content-type": "application/json"
+                },
+                body: JSON.stringify({
+                    sender: { name: "ZenChat", email: senderEmail },
+                    to: [{ email: email }],
+                    subject: subject,
+                    htmlContent: html
+                })
+            });
+            console.log(`[Brevo] 2FA email successfully dispatched to ${email}`);
+        } catch (error) {
+            console.error("[Brevo] Error dispatching 2FA email:", error);
+        }
+    }
+    return true;
+};
+
 module.exports = {
     sendResetEmail,
+    send2faEmail,
 };

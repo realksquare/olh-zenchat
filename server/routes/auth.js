@@ -5,7 +5,7 @@ const User = require("../models/User");
 const authMiddleware = require("../middleware/auth");
 const { upload, cloudinary } = require("../utils/cloudinary");
 const crypto = require("crypto");
-const { sendResetEmail } = require("../utils/mailService");
+const { sendResetEmail, send2faEmail } = require("../utils/mailService");
 
 const router = express.Router();
 
@@ -16,6 +16,288 @@ const generateToken = (user) => {
         { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 };
+
+const maskEmail = (email) => {
+    if (!email) return "";
+    const [name, domain] = email.split("@");
+    return `${name[0]}***@${domain}`;
+};
+
+const maskPhone = (phone) => {
+    if (!phone) return "";
+    return `${phone.substring(0, 3)}******${phone.substring(phone.length - 2)}`;
+};
+
+// 1. Phone-First Registration
+router.post("/register/phone", async (req, res) => {
+    try {
+        const { username, phoneNumber } = req.body;
+        if (!username || !phoneNumber) {
+            return res.status(400).json({ message: "Username and Phone Number are required" });
+        }
+
+        const existingUser = await User.findOne({
+            $or: [{ username }, { phoneNumber }],
+        });
+
+        if (existingUser) {
+            return res.status(409).json({ message: "Username or phone number already taken" });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        console.log("\n=======================================================");
+        console.log(`💬 [SMS GATEWAY MOCK] OTP sent to ${phoneNumber}`);
+        console.log(`Message: Your ZenChat verification code is ${otp}.`);
+        console.log(`@zenchat.app #${otp}`);
+        console.log("=======================================================\n");
+
+        // Create temporary unverified user
+        const user = await User.create({
+            username,
+            phoneNumber,
+            isVerified: false,
+            verificationSession: {
+                otpCode: otp,
+                otpExpires: new Date(Date.now() + 5 * 60 * 1000)
+            }
+        });
+
+        res.status(201).json({ message: "OTP sent successfully to your device", userId: user._id });
+    } catch (err) {
+        console.error("Phone register error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// 2. Phone-First Login
+router.post("/login/phone", async (req, res) => {
+    try {
+        const { phoneNumber } = req.body;
+        if (!phoneNumber) {
+            return res.status(400).json({ message: "Phone number is required" });
+        }
+
+        const user = await User.findOne({ phoneNumber });
+        if (!user) {
+            return res.status(404).json({ message: "No account registered with this phone number" });
+        }
+
+        if (user.isSuspended) {
+            return res.status(403).json({ message: "Account Suspended", isSuspended: true });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        console.log("\n=======================================================");
+        console.log(`💬 [SMS GATEWAY MOCK] OTP sent to ${phoneNumber}`);
+        console.log(`Message: Your ZenChat verification code is ${otp}.`);
+        console.log(`@zenchat.app #${otp}`);
+        console.log("=======================================================\n");
+
+        user.verificationSession = {
+            otpCode: otp,
+            otpExpires: new Date(Date.now() + 5 * 60 * 1000)
+        };
+        await user.save();
+
+        res.json({ message: "OTP sent successfully", userId: user._id });
+    } catch (err) {
+        console.error("Phone login error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// 3. Verify OTP (For both Sign-Up and Phone Login first factor)
+router.post("/verify-otp", async (req, res) => {
+    try {
+        const { userId, otpCode } = req.body;
+        if (!userId || !otpCode) {
+            return res.status(400).json({ message: "User ID and OTP are required" });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const session = user.verificationSession;
+        if (!session || !session.otpCode || session.otpCode !== otpCode) {
+            return res.status(400).json({ message: "Invalid verification code" });
+        }
+
+        if (new Date() > new Date(session.otpExpires)) {
+            return res.status(400).json({ message: "Verification code has expired" });
+        }
+
+        // OTP is correct! Clear primary OTP session
+        user.verificationSession = undefined;
+        user.isVerified = true;
+        await user.save();
+
+        // Check if 2FA is active
+        if (user.is2faEnabled) {
+            // Trigger Secondary Factor: Send Email OTP via Brevo
+            const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            await send2faEmail(user.email, user.username, emailOtp);
+
+            user.verificationSession = {
+                emailOtpCode: emailOtp,
+                emailOtpExpires: new Date(Date.now() + 5 * 60 * 1000)
+            };
+            await user.save();
+
+            return res.json({
+                mfaRequired: true,
+                mfaType: "email",
+                emailMasked: maskEmail(user.email),
+                userId: user._id
+            });
+        }
+
+        // Login complete
+        await User.findByIdAndUpdate(user._id, { isOnline: true });
+        const populatedUser = await User.findById(user._id).populate("blockedUsers.userId", "username avatar");
+        const token = generateToken(user);
+
+        res.json({ token, user: populatedUser.toPrivateJSON() });
+    } catch (err) {
+        console.error("Verify OTP error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// 4. Verify 2FA OTP (For secondary factor)
+router.post("/verify-2fa-otp", async (req, res) => {
+    try {
+        const { userId, otpCode } = req.body;
+        if (!userId || !otpCode) {
+            return res.status(400).json({ message: "User ID and code are required" });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const session = user.verificationSession;
+        if (!session) {
+            return res.status(400).json({ message: "No active verification session" });
+        }
+
+        // Validate either secondary Email OTP or Phone OTP
+        const isValidEmailOtp = session.emailOtpCode && session.emailOtpCode === otpCode && new Date() <= new Date(session.emailOtpExpires);
+        const isValidPhoneOtp = session.otpCode && session.otpCode === otpCode && new Date() <= new Date(session.otpExpires);
+
+        if (!isValidEmailOtp && !isValidPhoneOtp) {
+            return res.status(400).json({ message: "Invalid or expired verification code" });
+        }
+
+        // Clear session
+        user.verificationSession = undefined;
+        await user.save();
+
+        // Login complete
+        await User.findByIdAndUpdate(user._id, { isOnline: true });
+        const populatedUser = await User.findById(user._id).populate("blockedUsers.userId", "username avatar");
+        const token = generateToken(user);
+
+        res.json({ token, user: populatedUser.toPrivateJSON() });
+    } catch (err) {
+        console.error("Verify 2FA OTP error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// 5. Generate Cryptographic E2EE Bypass Challenge
+router.post("/challenge", async (req, res) => {
+    try {
+        const { userId } = req.body;
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (!user.publicKey) {
+            return res.status(400).json({ message: "No E2EE public key is registered for this user" });
+        }
+
+        const challenge = crypto.randomBytes(32).toString("hex");
+
+        // Save challenge inside verification session
+        user.verificationSession = {
+            otpCode: challenge, // Store the challenge text in otpCode for simplicity
+            otpExpires: new Date(Date.now() + 5 * 60 * 1000)
+        };
+        await user.save();
+
+        // Cryptographically encrypt challenge using user's registered RSA-OAEP public JWK key
+        const publicKeyObject = crypto.createPublicKey({
+            key: user.publicKey,
+            format: "jwk"
+        });
+
+        const encryptedBuffer = crypto.publicEncrypt(
+            {
+                key: publicKeyObject,
+                padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+                oaepHash: "sha256"
+            },
+            Buffer.from(challenge)
+        );
+
+        res.json({
+            encryptedChallenge: encryptedBuffer.toString("hex"),
+            cryptoSalt: user.cryptoSalt,
+            encryptedPrivateKeyBackup: user.encryptedPrivateKeyBackup
+        });
+    } catch (err) {
+        console.error("Challenge generation error:", err);
+        res.status(500).json({ message: "Server error: E2EE verification setup failed" });
+    }
+});
+
+// 6. Verify Decrypted Challenge (Bypasses 2FA via E2EE Key ownership proof)
+router.post("/verify-challenge", async (req, res) => {
+    try {
+        const { userId, decryptedChallenge } = req.body;
+        if (!userId || !decryptedChallenge) {
+            return res.status(400).json({ message: "User ID and decrypted challenge are required" });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const session = user.verificationSession;
+        if (!session || !session.otpCode || session.otpCode !== decryptedChallenge) {
+            return res.status(400).json({ message: "Cryptographic bypass verification failed: challenge mismatch" });
+        }
+
+        if (new Date() > new Date(session.otpExpires)) {
+            return res.status(400).json({ message: "Bypass challenge session has expired" });
+        }
+
+        // Clear session
+        user.verificationSession = undefined;
+        await user.save();
+
+        // Complete E2EE verification & login
+        await User.findByIdAndUpdate(user._id, { isOnline: true });
+        const populatedUser = await User.findById(user._id).populate("blockedUsers.userId", "username avatar");
+        const token = generateToken(user);
+
+        res.json({ token, user: populatedUser.toPrivateJSON() });
+    } catch (err) {
+        console.error("Challenge verification error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
 
 router.post(
     "/register",
@@ -148,12 +430,37 @@ router.post(
                 });
             }
 
+            // Check if 2FA is active
+            if (user.is2faEnabled) {
+                const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                
+                console.log("\n=======================================================");
+                console.log(`💬 [SMS GATEWAY MOCK] 2FA OTP sent to ${user.phoneNumber}`);
+                console.log(`Message: Your ZenChat verification code is ${otp}.`);
+                console.log(`@zenchat.app #${otp}`);
+                console.log("=======================================================\n");
+
+                user.verificationSession = {
+                    otpCode: otp,
+                    otpExpires: new Date(Date.now() + 5 * 60 * 1000)
+                };
+                await user.save();
+
+                return res.json({
+                    mfaRequired: true,
+                    mfaType: "phone",
+                    phoneMasked: maskPhone(user.phoneNumber),
+                    userId: user._id
+                });
+            }
+
             await User.findByIdAndUpdate(user._id, { isOnline: true });
             const populatedUser = await User.findById(user._id).populate("blockedUsers.userId", "username avatar");
             const token = generateToken(user);
 
             res.json({ token, user: populatedUser.toPrivateJSON() });
         } catch (err) {
+            console.error("Login error:", err);
             res.status(500).json({ message: "Server error" });
         }
     }
@@ -258,6 +565,29 @@ router.put(
 
             if (req.body.fullName !== undefined) {
                 user.fullName = req.body.fullName;
+            }
+
+            if (req.body.phoneNumber !== undefined) {
+                const newPhone = req.body.phoneNumber ? req.body.phoneNumber.trim() : "";
+                if (newPhone && newPhone !== user.phoneNumber) {
+                    const existing = await User.findOne({ phoneNumber: newPhone });
+                    if (existing) {
+                        return res.status(409).json({ message: "Phone number already registered to another account" });
+                    }
+                }
+                user.phoneNumber = newPhone || undefined;
+            }
+
+            if (req.body.is2faEnabled !== undefined) {
+                const enabled = req.body.is2faEnabled === 'true' || req.body.is2faEnabled === true;
+                if (enabled && !user.phoneNumber && !req.body.phoneNumber) {
+                    return res.status(400).json({ message: "A phone number is required to enable 2FA" });
+                }
+                user.is2faEnabled = enabled;
+            }
+
+            if (req.body.mfaPreference !== undefined) {
+                user.mfaPreference = req.body.mfaPreference;
             }
 
             if (req.body.privacySettings) {

@@ -34,6 +34,9 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [isConfirmingRotate, setIsConfirmingRotate] = useState(false);
     const [localKeysMissing, setLocalKeysMissing] = useState(false);
     const [profileBlockError, setProfileBlockError] = useState(null);
+    const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
+    const [is2faEnabled, setIs2faEnabled] = useState(user?.is2faEnabled || false);
+    const [mfaPreference, setMfaPreference] = useState(user?.mfaPreference || "phone");
 
     const fileInputRef = useRef(null);
     const importInputRef = useRef(null);
@@ -59,6 +62,9 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setIsSubscribing(false);
             setImageError(false);
             setProfileBlockError(null);
+            setPhoneNumber(user.phoneNumber || "");
+            setIs2faEnabled(user.is2faEnabled || false);
+            setMfaPreference(user.mfaPreference || "phone");
         }
     }, [isOpen, user?._id]);
 
@@ -142,6 +148,10 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         } else if (!avatarPreview) {
             formData.append("clearAvatar", "true");
         }
+        if (phoneNumber !== (user.phoneNumber || "")) formData.append("phoneNumber", phoneNumber);
+        formData.append("is2faEnabled", is2faEnabled ? "true" : "false");
+        formData.append("mfaPreference", mfaPreference);
+
         const privacySettings = { 
             onlineStatus: onlineVisibility, 
             fullName: nameVisibility,
@@ -466,6 +476,72 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 </span>
                             </div>
                         </div>
+                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                <div>
+                                    <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem" }}>Two-Factor Authentication (2FA)</span>
+                                    <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Secure your account using SMS/Email OTP</span>
+                                </div>
+                                <button
+                                    type="button"
+                                    className={`toggle-btn ${is2faEnabled ? "toggle-on" : ""}`}
+                                    onClick={() => {
+                                        if (!is2faEnabled && !phoneNumber.trim()) {
+                                            showToast("Please register a phone number before enabling 2FA.");
+                                            return;
+                                        }
+                                        setIs2faEnabled(!is2faEnabled);
+                                    }}
+                                    aria-label="Toggle 2FA"
+                                >
+                                    <span className="toggle-thumb" />
+                                </button>
+                            </div>
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "10px" }}>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                    <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>Phone Number (Required for 2FA)</label>
+                                    <input
+                                        type="tel"
+                                        placeholder="+1 234 567 8900"
+                                        value={phoneNumber}
+                                        onChange={(e) => setPhoneNumber(e.target.value)}
+                                        style={{
+                                            background: "rgba(0, 0, 0, 0.3)",
+                                            border: "1px solid rgba(255,255,255,0.1)",
+                                            borderRadius: "8px",
+                                            padding: "8px 12px",
+                                            fontSize: "0.8rem",
+                                            color: "#fff",
+                                            width: "100%"
+                                        }}
+                                    />
+                                </div>
+
+                                {is2faEnabled && (
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                        <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>2FA Code Target</label>
+                                        <select
+                                            value={mfaPreference}
+                                            onChange={(e) => setMfaPreference(e.target.value)}
+                                            style={{
+                                                background: "rgba(0, 0, 0, 0.3)",
+                                                border: "1px solid rgba(255,255,255,0.1)",
+                                                borderRadius: "8px",
+                                                padding: "8px",
+                                                fontSize: "0.8rem",
+                                                color: "#fff",
+                                                backgroundPosition: "right 8px center"
+                                            }}
+                                        >
+                                            <option value="phone">Phone SMS OTP (Primary Email Signups)</option>
+                                            <option value="email">Email Code (Primary Phone Signups)</option>
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                             <div>
                                 <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem" }}>Message Sounds</span>

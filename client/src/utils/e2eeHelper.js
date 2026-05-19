@@ -36,6 +36,15 @@ export const setupE2EEForUser = async (user, password) => {
         return null;
     }
 
+    if (!password) {
+        const cachedRecoveryKey = await db.keys.get("recoveryKey");
+        if (cachedRecoveryKey && cachedRecoveryKey.value) {
+            password = cachedRecoveryKey.value;
+        } else {
+            password = generateRecoveryKey();
+        }
+    }
+
     try {
         // Check if we already have the active keys cached in our local IndexedDB
         const cachedPrivateKey = await db.keys.get("privateKey");
