@@ -29,7 +29,7 @@ This document outlines the technical architecture and step-by-step implementatio
 
 ---
 
-## 2. Zen Mode (Focus Mode)
+## 2. #ZenMode. (Focus Mode) [COMPLETED]
 **Concept:** A highly immersive, distraction-free environment that fades out history and focuses only on the current thought, accompanied by a liquid circular background transition originating from the toggle button.
 
 ### Technical Plan
@@ -38,7 +38,7 @@ This document outlines the technical architecture and step-by-step implementatio
 - Add `toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode }))` action.
 
 **Client-Side (React UI & Liquid Circular Reveal)**
-- **Header Button:** Add the premium circular "Z" icon button (matching the visual style of the custom "Z" refresh/upload loader with its circular borders and bold central "Z" typography) in the header actions to toggle `#ZenMode`.
+- **Header Button:** Add the premium circular "Z" icon button (matching the visual style of the custom "Z" refresh/upload loader with its circular borders and bold central "Z" typography) in the header actions to toggle `#ZenMode.`. Add tool tip to be shown on hover or click: `toggle to activate/deactivate #ZenMode. for this chat.`
 - **Circular Reveal Mechanism:**
   1. Capture click coordinates `(clientX, clientY)` on toggle.
   2. Render a dynamic circular reveal overlay element (`.zen-reveal-circle`) starting at `left: x`, `top: y` with `width: 0`, `height: 0`, `border-radius: 50%`.

@@ -33,6 +33,7 @@ const NetworkBanner = () => {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const hideTimer = useRef(null);
+  const reconnectTimer = useRef(null);
 
   const showBanner = (s) => {
     setDismissed(false);
@@ -50,10 +51,16 @@ const NetworkBanner = () => {
     const handleStatusChange = () => {
       const offline = !navigator.onLine;
       useChatStore.getState().setOffline(offline);
+      
+      clearTimeout(reconnectTimer.current);
+
       if (offline) {
         showBanner("offline");
       } else if (!isConnected) {
-        showBanner("reconnecting");
+        // 1.5-second grace period to ignore transient handshake states on mount/reconnect
+        reconnectTimer.current = setTimeout(() => {
+          showBanner("reconnecting");
+        }, 1500);
       } else {
         showBanner("online");
         hideBanner();
@@ -78,6 +85,7 @@ const NetworkBanner = () => {
         socket.off("connect", handleStatusChange);
       }
       clearTimeout(hideTimer.current);
+      clearTimeout(reconnectTimer.current);
     };
   }, [socket, isConnected]);
 

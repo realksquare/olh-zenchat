@@ -69,3 +69,145 @@ export const playReceiveSound = () => {
 export const primeAudioContext = () => {
     try { getAudioContext(); } catch (e) {}
 };
+
+let currentIntroNodes = [];
+let masterGainNode = null;
+
+export const startZenIntroAudio = () => {
+    stopZenIntroAudio();
+    try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        masterGainNode = ctx.createGain();
+        masterGainNode.gain.setValueAtTime(0, ctx.currentTime);
+        masterGainNode.connect(ctx.destination);
+
+        const oscSaw1 = ctx.createOscillator();
+        const oscSaw2 = ctx.createOscillator();
+        const sawGain = ctx.createGain();
+        const sawFilter = ctx.createBiquadFilter();
+
+        oscSaw1.type = "sawtooth";
+        oscSaw1.frequency.setValueAtTime(180, ctx.currentTime);
+        oscSaw2.type = "sawtooth";
+        oscSaw2.frequency.setValueAtTime(183, ctx.currentTime);
+
+        sawFilter.type = "lowpass";
+        sawFilter.frequency.setValueAtTime(200, ctx.currentTime);
+
+        sawGain.gain.setValueAtTime(0.03, ctx.currentTime);
+
+        oscSaw1.connect(sawFilter);
+        oscSaw2.connect(sawFilter);
+        sawFilter.connect(sawGain);
+        sawGain.connect(masterGainNode);
+
+        oscSaw1.start(ctx.currentTime);
+        oscSaw2.start(ctx.currentTime);
+        oscSaw1.stop(ctx.currentTime + 2.5);
+        oscSaw2.stop(ctx.currentTime + 2.5);
+
+        masterGainNode.gain.linearRampToValueAtTime(1, ctx.currentTime + 0.5);
+
+        const oscT1 = ctx.createOscillator();
+        const oscT2 = ctx.createOscillator();
+        const oscT3 = ctx.createOscillator();
+        const triadGain = ctx.createGain();
+        const triadFilter = ctx.createBiquadFilter();
+
+        oscT1.type = "sine";
+        oscT1.frequency.setValueAtTime(110, ctx.currentTime + 2.5);
+        oscT2.type = "sine";
+        oscT2.frequency.setValueAtTime(165, ctx.currentTime + 2.5);
+        oscT3.type = "sine";
+        oscT3.frequency.setValueAtTime(220, ctx.currentTime + 2.5);
+
+        triadFilter.type = "lowpass";
+        triadFilter.frequency.setValueAtTime(250, ctx.currentTime + 2.5);
+
+        triadGain.gain.setValueAtTime(0.06, ctx.currentTime + 2.5);
+
+        oscT1.connect(triadFilter);
+        oscT2.connect(triadFilter);
+        oscT3.connect(triadFilter);
+        triadFilter.connect(triadGain);
+        triadGain.connect(masterGainNode);
+
+        oscT1.start(ctx.currentTime + 2.5);
+        oscT2.start(ctx.currentTime + 2.5);
+        oscT3.start(ctx.currentTime + 2.5);
+
+        triadFilter.frequency.setValueAtTime(250, ctx.currentTime + 2.5);
+        triadFilter.frequency.exponentialRampToValueAtTime(30, ctx.currentTime + 4.8);
+        triadGain.gain.setValueAtTime(0.06, ctx.currentTime + 2.5);
+        triadGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 4.8);
+
+        oscT1.stop(ctx.currentTime + 5.0);
+        oscT2.stop(ctx.currentTime + 5.0);
+        oscT3.stop(ctx.currentTime + 5.0);
+
+        const oscBloom1 = ctx.createOscillator();
+        const oscBloom2 = ctx.createOscillator();
+        const bloomGain = ctx.createGain();
+        const bloomFilter = ctx.createBiquadFilter();
+
+        oscBloom1.type = "sine";
+        oscBloom1.frequency.setValueAtTime(330, ctx.currentTime + 5.0);
+        oscBloom2.type = "sine";
+        oscBloom2.frequency.setValueAtTime(440, ctx.currentTime + 5.0);
+
+        bloomFilter.type = "lowpass";
+        bloomFilter.frequency.setValueAtTime(150, ctx.currentTime + 5.0);
+        bloomFilter.frequency.linearRampToValueAtTime(350, ctx.currentTime + 7.5);
+        bloomFilter.frequency.linearRampToValueAtTime(150, ctx.currentTime + 10.0);
+
+        bloomGain.gain.setValueAtTime(0, ctx.currentTime + 5.0);
+        bloomGain.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 6.0);
+        bloomGain.gain.setValueAtTime(0.05, ctx.currentTime + 8.5);
+        bloomGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 10.0);
+
+        oscBloom1.connect(bloomFilter);
+        oscBloom2.connect(bloomFilter);
+        bloomFilter.connect(bloomGain);
+        bloomGain.connect(masterGainNode);
+
+        oscBloom1.start(ctx.currentTime + 5.0);
+        oscBloom2.start(ctx.currentTime + 5.0);
+        oscBloom1.stop(ctx.currentTime + 10.0);
+        oscBloom2.stop(ctx.currentTime + 10.0);
+
+        currentIntroNodes = [
+            oscSaw1, oscSaw2, sawGain, sawFilter,
+            oscT1, oscT2, oscT3, triadGain, triadFilter,
+            oscBloom1, oscBloom2, bloomGain, bloomFilter
+        ];
+    } catch (e) {
+        console.error("Failed to play Zen intro audio:", e);
+    }
+};
+
+export const stopZenIntroAudio = () => {
+    try {
+        const ctx = getAudioContext();
+        if (masterGainNode && ctx) {
+            masterGainNode.gain.cancelScheduledValues(ctx.currentTime);
+            masterGainNode.gain.setValueAtTime(masterGainNode.gain.value, ctx.currentTime);
+            masterGainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.5);
+        }
+        const nodes = [...currentIntroNodes];
+        currentIntroNodes = [];
+        setTimeout(() => {
+            nodes.forEach(node => {
+                try { node.stop(); } catch (_) {}
+                try { node.disconnect(); } catch (_) {}
+            });
+            if (masterGainNode) {
+                try { masterGainNode.disconnect(); } catch (_) {}
+                masterGainNode = null;
+            }
+        }, 1600);
+    } catch (e) {
+        console.error("Failed to stop Zen intro audio:", e);
+    }
+};

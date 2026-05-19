@@ -10,6 +10,7 @@ const HomePage = () => {
     const token = useAuthStore((s) => s.token);
     const activeChat = useChatStore((s) => s.activeChat);
     const { joinChat, leaveChat } = useSocket();
+    const isZenMode = useChatStore((s) => s.isZenMode);
     const [showChat, setShowChat] = useState(false);
 
     useEffect(() => {
@@ -42,7 +43,7 @@ const HomePage = () => {
     };
 
     return (
-        <div className="home-layout">
+        <div className={`home-layout ${isZenMode ? "zen-mode-layout" : ""}`}>
             {!token && <GuestOverlay />}
 
             <div className={`sidebar-panel ${showChat ? "sidebar-hidden" : ""}`}>

@@ -5734,3 +5734,237 @@ select {
     max-width: 95% !important;
   }
 }
+
+/* ──────────────────────────────────────────────────────────
+   #ZenMode. (Focus Mode) Premium Aesthetics & Animations
+   ────────────────────────────────────────────────────────── */
+
+/* Liquid circular reveal */
+.zen-reveal-circle {
+  position: fixed;
+  z-index: 999999;
+  border-radius: 50%;
+  width: calc(var(--reveal-radius) * 2);
+  height: calc(var(--reveal-radius) * 2);
+  background: radial-gradient(circle, #0e1217 60%, #080a0f 100%);
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0);
+  animation: zenReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes zenReveal {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.zen-reveal-circle.fade-out {
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+/* Zen Active Workspace Styling */
+.chat-window.zen-active {
+  background: radial-gradient(circle at center, #090c0f 40%, #050608 100%) !important;
+  transition: background 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Distraction-free chat header fade-out */
+.chat-window.zen-active .chat-header {
+  opacity: 0.05;
+  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02) !important;
+}
+
+.chat-window.zen-active .chat-header:hover {
+  opacity: 1;
+}
+
+/* Custom circular Z toggle button active glowing state */
+.header-action-btn.zen-toggle-btn.active {
+  color: var(--color-primary) !important;
+  text-shadow: 0 0 8px rgba(61, 165, 217, 0.6);
+}
+
+/* Cinematic Intro Sequence Overlay */
+.zen-cinematic-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Skip Button */
+.zen-skip-btn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.zen-skip-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Disclaimer text */
+.zen-disclaimer-text {
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-align: center;
+  max-width: 80%;
+  color: rgba(255, 255, 255, 0.95);
+  animation: elegantFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Noise & Glitch phase */
+.zen-noise-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-family: 'Courier New', Courier, monospace;
+  animation: glitchNoise 0.3s steps(2) infinite;
+  text-shadow: 2px 0 0 #ff00ff, -2px 0 0 #00ffff;
+}
+
+@keyframes glitchNoise {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-3px, 2px);
+  }
+  40% {
+    transform: translate(2px, -2px);
+  }
+  60% {
+    transform: translate(-1px, -2px);
+  }
+  80% {
+    transform: translate(3px, 1px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+/* Implosion / Gravity-well Phase */
+.zen-cinematic-overlay.phase-implosion {
+  animation: implosionCollapse 2.5s cubic-bezier(0.7, 0, 0.3, 1) forwards;
+}
+
+@keyframes implosionCollapse {
+  0% {
+    filter: scale(1) blur(0px);
+  }
+  90% {
+    filter: scale(0.01) blur(10px);
+    background: #000;
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Bloom / Lotus Reveal Phase */
+.zen-bloom-text-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  z-index: 2;
+}
+
+.zen-bloom-word {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2.4rem;
+  font-weight: 300;
+  font-style: italic;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.9);
+  opacity: 0;
+  transform: translateY(12px);
+  animation: wordRise 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.zen-bloom-word:nth-child(1) {
+  animation-delay: 0.4s;
+}
+.zen-bloom-word:nth-child(2) {
+  animation-delay: 0.9s;
+}
+.zen-bloom-word:nth-child(3) {
+  animation-delay: 1.4s;
+}
+
+.zen-lotus-logo {
+  width: 44px;
+  height: 44px;
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: 15px;
+  opacity: 0;
+  animation: lotusBloom 3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: 2s;
+}
+
+@keyframes wordRise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes lotusBloom {
+  0% {
+    transform: scale(0.6) rotate(-15deg);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Integration fadeout */
+.zen-cinematic-overlay.phase-integration {
+  opacity: 0;
+  transition: opacity 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+@keyframes elegantFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

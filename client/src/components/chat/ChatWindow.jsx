@@ -14,6 +14,7 @@ import MediaViewerModal from "../ui/MediaViewerModal";
 import DocViewerModal from "../ui/DocViewerModal";
 import MomentViewer from "./MomentViewer";
 import axiosInstance from "../../utils/axios";
+import { startZenIntroAudio, stopZenIntroAudio } from "../../utils/audio";
 
 const EMPTY_MESSAGES = [];
 const EMPTY_CONTACTS = [];
@@ -139,12 +140,79 @@ const DELETED_PHRASES = [
     "Wish we could turn back time, to the good old days..."
 ];
 
+const ZenParticleCanvas = memo(() => {
+    const canvasRef = useRef(null);
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        let animationFrameId;
+        const resizeCanvas = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
+        const particles = [];
+        for (let i = 0; i < 40; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height + canvas.height,
+                size: Math.random() * 2 + 0.5,
+                speedY: -(Math.random() * 0.8 + 0.2),
+                opacity: Math.random() * 0.5 + 0.1,
+                oscSpeed: Math.random() * 0.02,
+                oscVal: Math.random() * Math.PI
+            });
+        }
+        const animate = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.y += p.speedY;
+                p.oscVal += p.oscSpeed;
+                p.x += Math.sin(p.oscVal) * 0.3;
+                if (p.y < -10) {
+                    p.y = canvas.height + 10;
+                    p.x = Math.random() * canvas.width;
+                }
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+                ctx.shadowBlur = p.size * 2;
+                ctx.shadowColor = "rgba(255, 255, 255, 0.4)";
+                ctx.fill();
+            });
+            animationFrameId = requestAnimationFrame(animate);
+        };
+        animate();
+        return () => {
+            window.removeEventListener("resize", resizeCanvas);
+            cancelAnimationFrame(animationFrameId);
+        };
+    }, []);
+    return (
+        <canvas
+            ref={canvasRef}
+            style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                pointerEvents: "none",
+                zIndex: 1
+            }}
+        />
+    );
+});
+
 const ChatWindow = ({ onBack }) => {
     const user = useAuthStore((s) => s.user);
     const contacts = useAuthStore((s) => s.user?.contacts || EMPTY_CONTACTS);
     const {
         activeChat, fetchMessages, fetchOlderMessages, isLoadingMessages, isLoadingOlderMessages,
-        typingUsers, markChatAsRead, onlineUsers, hasMoreMessages, isLowBandwidth, peerLowBandwidth, isOffline
+        typingUsers, markChatAsRead, onlineUsers, hasMoreMessages, isLowBandwidth, peerLowBandwidth, isOffline,
+        isZenMode, toggleZenMode
     } = useChatStore(useShallow((s) => ({
         activeChat: s.activeChat,
         fetchMessages: s.fetchMessages,
@@ -157,7 +225,9 @@ const ChatWindow = ({ onBack }) => {
         hasMoreMessages: s.hasMoreMessages,
         isLowBandwidth: s.isLowBandwidth,
         peerLowBandwidth: s.peerLowBandwidth,
-        isOffline: s.isOffline
+        isOffline: s.isOffline,
+        isZenMode: s.isZenMode,
+        toggleZenMode: s.toggleZenMode
     })));
 
     const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
@@ -173,9 +243,15 @@ const ChatWindow = ({ onBack }) => {
         const visible = sorted.filter(m =>
             !m.deletedFor?.some(id => id?.toString() === currentUserId?.toString())
         );
-        if (!showOnlyStarred) return visible;
-        return visible.filter(m => m.starredBy?.includes(user?._id));
-    }, [rawMessages, showOnlyStarred, user?._id]);
+        let result = visible;
+        if (showOnlyStarred) {
+            result = visible.filter(m => m.starredBy?.includes(user?._id));
+        }
+        if (isZenMode) {
+            return result.slice(-2);
+        }
+        return result;
+    }, [rawMessages, showOnlyStarred, user?._id, isZenMode]);
 
     const { joinChat, leaveChat, markAsRead, deleteMessage, updateLowBandwidth } = useSocket();
     const messagesEndRef = useRef(null);
@@ -191,6 +267,99 @@ const ChatWindow = ({ onBack }) => {
     const [activeViewerMoments, setActiveViewerMoments] = useState(null);
     const [showDisappearingMenu, setShowDisappearingMenu] = useState(false);
     const messagesContainerRef = useRef(null);
+
+    const [revealCircle, setRevealCircle] = useState(null);
+    const [cinematicPhase, setCinematicPhase] = useState(null);
+    const cinematicTimers = useRef([]);
+
+    const clearCinematicTimers = useCallback(() => {
+        cinematicTimers.current.forEach(t => clearTimeout(t));
+        cinematicTimers.current = [];
+    }, []);
+
+    const triggerCircularReveal = useCallback((x, y, nextZenState) => {
+        setRevealCircle({ x, y, fading: false });
+        setTimeout(() => {
+            if (useChatStore.getState().isZenMode !== nextZenState) {
+                toggleZenMode();
+            }
+        }, 150);
+        setTimeout(() => {
+            setRevealCircle(prev => prev ? { ...prev, fading: true } : null);
+        }, 700);
+        setTimeout(() => {
+            setRevealCircle(null);
+        }, 1500);
+    }, [toggleZenMode]);
+
+    const runCinematicSequence = useCallback((clientX, clientY) => {
+        clearCinematicTimers();
+        setCinematicPhase("fade-black");
+        
+        const t1 = setTimeout(() => {
+            setCinematicPhase("disclaimer");
+        }, 500);
+        
+        const t2 = setTimeout(() => {
+            setCinematicPhase("fade-disclaimer");
+        }, 2500);
+        
+        const t3 = setTimeout(() => {
+            setCinematicPhase("noise");
+            startZenIntroAudio();
+        }, 3000);
+        
+        const t4 = setTimeout(() => {
+            setCinematicPhase("implosion");
+        }, 5500);
+        
+        const t5 = setTimeout(() => {
+            setCinematicPhase("bloom");
+        }, 8000);
+        
+        const t6 = setTimeout(() => {
+            setCinematicPhase("integration");
+        }, 11500);
+        
+        const t7 = setTimeout(() => {
+            setCinematicPhase(null);
+            localStorage.setItem("zen_intro_shown", "true");
+            triggerCircularReveal(clientX, clientY, true);
+        }, 13000);
+        
+        cinematicTimers.current = [t1, t2, t3, t4, t5, t6, t7];
+    }, [clearCinematicTimers, triggerCircularReveal]);
+
+    const handleZenToggle = useCallback((e) => {
+        e.stopPropagation();
+        const x = e.clientX || window.innerWidth / 2;
+        const y = e.clientY || window.innerHeight / 2;
+        const wasZen = isZenMode;
+        const introShown = localStorage.getItem("zen_intro_shown") === "true";
+        if (!introShown && !wasZen) {
+            runCinematicSequence(x, y);
+        } else {
+            triggerCircularReveal(x, y, !wasZen);
+        }
+    }, [isZenMode, runCinematicSequence, triggerCircularReveal]);
+
+    const handleSkipIntro = useCallback((e) => {
+        if (e) e.stopPropagation();
+        clearCinematicTimers();
+        stopZenIntroAudio();
+        setCinematicPhase(null);
+        localStorage.setItem("zen_intro_shown", "true");
+        if (!isZenMode) {
+            toggleZenMode();
+        }
+    }, [isZenMode, toggleZenMode, clearCinematicTimers]);
+
+    useEffect(() => {
+        return () => {
+            clearCinematicTimers();
+            stopZenIntroAudio();
+        };
+    }, [clearCinematicTimers]);
 
     const handleToggleDisappearing = async (mode) => {
         try {
@@ -404,7 +573,7 @@ const ChatWindow = ({ onBack }) => {
     }
 
     return (
-        <div className={`chat-window ${isDeleted ? 'user-deleted-mode' : ''}`} style={{ position: 'relative' }}>
+        <div className={`chat-window ${isDeleted ? 'user-deleted-mode' : ''} ${isZenMode ? 'zen-active' : ''}`} style={{ position: 'relative' }}>
             <div className="chat-header" style={{ position: 'sticky', top: 0, zIndex: 50 }}>
                 <button className="chat-back-btn" onClick={onBack} aria-label="Back to chats">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -488,6 +657,19 @@ const ChatWindow = ({ onBack }) => {
                     </div>
 
                     <button
+                        className={`header-action-btn zen-toggle-btn ${isZenMode ? 'active' : ''}`}
+                        onClick={handleZenToggle}
+                        title="toggle to activate/deactivate #ZenMode. for this chat."
+                        style={{ flexShrink: 0 }}
+                    >
+                        <svg width="22" height="22" viewBox="0 0 32 32" fill="none" style={{ display: 'block' }}>
+                            <circle cx="16" cy="16" r="13" stroke="currentColor" strokeWidth="2.2" fill="none" opacity="0.4"/>
+                            <circle cx="16" cy="16" r="13" stroke="var(--color-primary)" strokeWidth="2.2" fill="none" strokeDasharray={`${2 * Math.PI * 13}`} strokeDashoffset={isZenMode ? 0 : `${2 * Math.PI * 13}`} transform="rotate(-90 16 16)" style={{ transition: 'stroke-dashoffset 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }} />
+                            <text x="16" y="20.5" textAnchor="middle" fontSize="10.5" fontWeight="900" fill={isZenMode ? "var(--color-primary)" : "currentColor"} fontFamily="inherit">Z</text>
+                        </svg>
+                    </button>
+
+                    <button
                         className={`header-action-btn ${showOnlyStarred ? 'active' : ''}`}
                         onClick={() => setShowOnlyStarred(!showOnlyStarred)}
                         title={showOnlyStarred ? "Show all messages" : "Show only starred messages"}
@@ -501,7 +683,7 @@ const ChatWindow = ({ onBack }) => {
             </div>
 
             <div className="chat-messages" ref={messagesContainerRef} onScroll={handleScroll} style={{ position: "relative", zIndex: 1, background: "transparent" }}>
-                {(hasMoreMessages[activeChat?._id] || isLoadingOlderMessages) && !isLoadingMessages && (!showOnlyStarred || messages.length > 18) && (
+                {!isZenMode && (hasMoreMessages[activeChat?._id] || isLoadingOlderMessages) && !isLoadingMessages && (!showOnlyStarred || messages.length > 18) && (
                     <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 4px' }}>
                         <button
                             className="load-more-btn"
@@ -695,6 +877,54 @@ const ChatWindow = ({ onBack }) => {
                     url={selectedDoc.url}
                     fileName={selectedDoc.fileName}
                     onClose={() => setSelectedDoc(null)}
+                />
+            )}
+
+            {cinematicPhase && (
+                <div className={`zen-cinematic-overlay phase-${cinematicPhase}`}>
+                    <button className="zen-skip-btn" onClick={handleSkipIntro}>
+                        Skip
+                    </button>
+                    
+                    {cinematicPhase !== "fade-black" && cinematicPhase !== "disclaimer" && cinematicPhase !== "fade-disclaimer" && (
+                        <ZenParticleCanvas />
+                    )}
+
+                    {cinematicPhase === "disclaimer" && (
+                        <div className="zen-disclaimer-text">
+                            For the immersive experience, turn your device volume up.
+                        </div>
+                    )}
+                    
+                    {cinematicPhase === "noise" && (
+                        <div className="zen-noise-title">
+                            THE NOISE IS LOUD.
+                        </div>
+                    )}
+                    
+                    {cinematicPhase === "bloom" && (
+                        <div className="zen-bloom-text-container">
+                            <span className="zen-bloom-word">Quiet</span>
+                            <span className="zen-bloom-word">the</span>
+                            <span className="zen-bloom-word">mind.</span>
+                            
+                            <svg className="zen-lotus-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                <path d="M12 2C11.5 6 9 8.5 6 9c3 .5 5.5 3 6 7 .5-4 3-6.5 6-7-3-.5-5.5-3-6-7z" />
+                                <path d="M12 9c-1.5 2-3.5 3-6 3.5 2.5.5 4.5 2 6 3.5 1.5-1.5 3.5-3 6-3.5-2.5-.5-4.5-2-6-3.5z" />
+                            </svg>
+                        </div>
+                    )}
+                </div>
+            )}
+            
+            {revealCircle && (
+                <div
+                    className={`zen-reveal-circle ${revealCircle.fading ? 'fade-out' : ''}`}
+                    style={{
+                        left: revealCircle.x,
+                        top: revealCircle.y,
+                        '--reveal-radius': `${Math.max(window.innerWidth, window.innerHeight) * 1.5}px`
+                    }}
                 />
             )}
         </div>
