@@ -181,7 +181,7 @@ const App = () => {
     if (token && userId) {
       const registerFCM = async () => {
         try {
-          if (Notification.permission !== "granted") return;
+          if (typeof window.Notification === 'undefined' || window.Notification.permission !== "granted") return;
           const fcmToken = await requestNotificationPermission();
           if (fcmToken) {
             const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;

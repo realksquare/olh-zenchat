@@ -5,7 +5,7 @@ import { VerifiedTick } from "./Icons";
 import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
 
-const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = false, isContact = false, onViewMoments }) => {
+const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = false, isSPOp = false, isContact = false, onViewMoments }) => {
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = "hidden";
@@ -68,7 +68,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                         ) : (
                             <span>{initials}</span>
                         )}
-                        {isOnline && <span className="online-dot-large" />}
+                        {isOnline && <span className={`online-dot-large${isSPOp ? ' online-dot-large--amber' : ''}`} />}
                     </div>
                 </div>
 

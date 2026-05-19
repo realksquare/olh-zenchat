@@ -3325,6 +3325,11 @@ select {
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
 }
 
+.online-dot-large--amber {
+  background: #eab308;
+  box-shadow: 0 0 10px rgba(234, 179, 8, 0.5);
+}
+
 .moments-btn {
   background: linear-gradient(135deg, var(--color-primary), #1d4ed8);
   border: none;

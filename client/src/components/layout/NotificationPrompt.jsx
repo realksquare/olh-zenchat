@@ -12,15 +12,18 @@ const NotificationPrompt = () => {
     const fcmTokens = user?.fcmTokens;
 
     useEffect(() => {
-        if (!user || !('Notification' in window)) return;
+        if (!user) return;
+        
+        // Safety check for Notification API
+        if (typeof window.Notification === 'undefined') return;
 
         // Don't show if blocked
-        if (Notification.permission === "denied") return;
+        if (window.Notification.permission === "denied") return;
 
         // Check if already subscribed on this device type
         const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
         const deviceType = isPWA ? "pwa" : "browser";
-        const isSubscribed = Notification.permission === "granted" &&
+        const isSubscribed = window.Notification.permission === "granted" &&
             user?.fcmTokens?.some(t => t.deviceType === deviceType);
 
         if (isSubscribed) return;
@@ -28,7 +31,7 @@ const NotificationPrompt = () => {
         // Use localStorage with 24h cooldown so it re-prompts on new sessions/reloads
         const DISMISS_KEY = "notifPromptDismissedAt";
         const lastDismissed = localStorage.getItem(DISMISS_KEY);
-        const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
+        const COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours (reduced from 24h for better experience)
 
         if (lastDismissed && (Date.now() - parseInt(lastDismissed, 10)) < COOLDOWN_MS) return;
 

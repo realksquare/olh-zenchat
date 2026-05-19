@@ -205,7 +205,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 setIsSubscribing(false);
                 return;
             }
-            if (Notification.permission === "denied") {
+            if (typeof window.Notification !== 'undefined' && window.Notification.permission === "denied") {
                 showToast("Notifications blocked in browser settings.");
                 setIsSubscribing(false);
                 return;
@@ -295,7 +295,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const getInitials = (name) => name ? name.slice(0, 2).toUpperCase() : "??";
     const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
     const currentDeviceType = isPWA ? "pwa" : "browser";
-    const isSubscribedInBrowser = Notification.permission === "granted" && 
+    const isSubscribedInBrowser = typeof window.Notification !== 'undefined' && window.Notification.permission === "granted" && 
                                    user?.fcmTokens?.some(t => t.deviceType === currentDeviceType);
 
     return createPortal(

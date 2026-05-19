@@ -424,7 +424,7 @@ const ChatWindow = ({ onBack }) => {
                         )}
                     </div>
                     {(otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) && (
-                        <OnlineDot isSPOp={isSPOpActive} />
+                        <OnlineDot isSPOp={isOtherUserLowBandwidth} />
                     )}
                 </div>
 
@@ -649,6 +649,7 @@ const ChatWindow = ({ onBack }) => {
                 onClose={() => setShowUserCard(false)}
                 user={otherUser}
                 isOnline={otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())}
+                isSPOp={isOtherUserLowBandwidth}
                 hasMoments={hasMoments}
                 isContact={isContact}
                 onViewMoments={() => {

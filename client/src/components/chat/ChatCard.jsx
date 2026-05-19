@@ -50,7 +50,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const isTyping = !!(chatTyping && otherUserId && chatTyping[otherUserId]);
     const typingScramble = isTyping ? chatTyping[otherUserId] : null;
     const isOnline = otherUser?.isOnline || (otherUserId && onlineUsers.has(otherUserId.toString()));
-    const isSPOp = isOnline && (isLowBandwidth || peerLowBandwidth[otherUserId] === true);
+    const isSPOp = isOnline && peerLowBandwidth[otherUserId] === true;
     const hasMoments = !!(otherUserId && hasActiveMoment(otherUserId.toString()));
     const isContact = !!(user?.contacts?.some(c => {
         const uid = c.userId?._id?.toString() || c.userId?.toString();

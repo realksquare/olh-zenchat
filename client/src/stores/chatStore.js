@@ -844,7 +844,9 @@ export const useChatStore = create(
                 const { 
                     activeChat, onlineUsers, typingUsers, 
                     isLoadingChats, isLoadingMessages, isLoadingOlderMessages,
-                    hasMoreMessages, messages, unreadCounts, ...rest 
+                    hasMoreMessages, messages, unreadCounts, 
+                    isLowBandwidth, peerLowBandwidth, isOffline, _spOpConsecutive,
+                    ...rest 
                 } = state;
                 return rest;
             },
