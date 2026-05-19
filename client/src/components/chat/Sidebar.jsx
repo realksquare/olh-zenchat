@@ -45,6 +45,7 @@ const Sidebar = ({ onChatSelect }) => {
     const [isMomentCreatorOpen, setIsMomentCreatorOpen] = useState(false);
     const [activeViewerMoments, setActiveViewerMoments] = useState(null);
     const [activeTab, setActiveTab] = useState("recents");
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const { fetchChats } = useChatStore();
     const { fetchMoments } = useMomentStore();
     
@@ -288,7 +289,7 @@ const Sidebar = ({ onChatSelect }) => {
                         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
                 </button>
-                <button className="sidebar-logout" onClick={logout} aria-label="Sign out" title="Sign out">
+                <button className="sidebar-logout" onClick={() => setShowLogoutConfirm(true)} aria-label="Sign out" title="Sign out">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                         <polyline points="16 17 21 12 16 7" />
@@ -513,6 +514,34 @@ const Sidebar = ({ onChatSelect }) => {
                 onClose={() => setIsInviteOpen(false)} 
                 username={user?.username} 
             />
+
+            {showLogoutConfirm && (
+                <div className="modal-backdrop" style={{ display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100 }}>
+                    <div className="modal-card" style={{ maxWidth: "380px", border: "1px solid rgba(255, 255, 255, 0.08)", background: "rgba(15, 23, 42, 0.9)", backdropFilter: "blur(20px)", padding: "24px", borderRadius: "16px", textAlign: "center" }}>
+                        <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#f8fafc", marginBottom: "12px" }}>Confirm Sign Out</h3>
+                        <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "24px", lineHeight: "1.5" }}>Are you sure you want to log out of ZenChat? You will need your credentials to sign back in.</p>
+                        <div style={{ display: "flex", gap: "12px" }}>
+                            <button
+                                className="btn"
+                                onClick={() => setShowLogoutConfirm(false)}
+                                style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#cbd5e1", cursor: "pointer" }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="btn"
+                                onClick={() => {
+                                    setShowLogoutConfirm(false);
+                                    logout();
+                                }}
+                                style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "#ef4444", border: "none", color: "#fff", cursor: "pointer", fontWeight: "600" }}
+                            >
+                                Log Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

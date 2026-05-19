@@ -6,6 +6,7 @@ const authMiddleware = require("../middleware/auth");
 const { upload, cloudinary } = require("../utils/cloudinary");
 const crypto = require("crypto");
 const { sendResetEmail, send2faEmail } = require("../utils/mailService");
+const { verifyFirebaseIdToken } = require("../utils/firebase");
 
 const router = express.Router();
 
@@ -111,9 +112,9 @@ router.post("/login/phone", async (req, res) => {
 // 3. Verify OTP (For both Sign-Up and Phone Login first factor)
 router.post("/verify-otp", async (req, res) => {
     try {
-        const { userId, otpCode } = req.body;
-        if (!userId || !otpCode) {
-            return res.status(400).json({ message: "User ID and OTP are required" });
+        const { userId, otpCode, firebaseToken } = req.body;
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is required" });
         }
 
         const user = await User.findById(userId);
@@ -121,13 +122,30 @@ router.post("/verify-otp", async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        const session = user.verificationSession;
-        if (!session || !session.otpCode || session.otpCode !== otpCode) {
-            return res.status(400).json({ message: "Invalid verification code" });
+        let isVerified = false;
+
+        if (firebaseToken) {
+            try {
+                const decoded = await verifyFirebaseIdToken(firebaseToken);
+                if (decoded && decoded.phone_number) {
+                    isVerified = true;
+                }
+            } catch (fbErr) {
+                console.warn("Firebase ID Token verification failed, falling back to mock OTP check:", fbErr.message);
+            }
         }
 
-        if (new Date() > new Date(session.otpExpires)) {
-            return res.status(400).json({ message: "Verification code has expired" });
+        if (!isVerified) {
+            if (!otpCode) {
+                return res.status(400).json({ message: "Verification code is required" });
+            }
+            const session = user.verificationSession;
+            if (!session || !session.otpCode || session.otpCode !== otpCode) {
+                return res.status(400).json({ message: "Invalid verification code" });
+            }
+            if (new Date() > new Date(session.otpExpires)) {
+                return res.status(400).json({ message: "Verification code has expired" });
+            }
         }
 
         // OTP is correct! Clear primary OTP session
@@ -170,9 +188,9 @@ router.post("/verify-otp", async (req, res) => {
 // 4. Verify 2FA OTP (For secondary factor)
 router.post("/verify-2fa-otp", async (req, res) => {
     try {
-        const { userId, otpCode } = req.body;
-        if (!userId || !otpCode) {
-            return res.status(400).json({ message: "User ID and code are required" });
+        const { userId, otpCode, firebaseToken } = req.body;
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is required" });
         }
 
         const user = await User.findById(userId);
@@ -185,12 +203,30 @@ router.post("/verify-2fa-otp", async (req, res) => {
             return res.status(400).json({ message: "No active verification session" });
         }
 
-        // Validate either secondary Email OTP or Phone OTP
-        const isValidEmailOtp = session.emailOtpCode && session.emailOtpCode === otpCode && new Date() <= new Date(session.emailOtpExpires);
-        const isValidPhoneOtp = session.otpCode && session.otpCode === otpCode && new Date() <= new Date(session.otpExpires);
+        let isVerified = false;
 
-        if (!isValidEmailOtp && !isValidPhoneOtp) {
-            return res.status(400).json({ message: "Invalid or expired verification code" });
+        if (firebaseToken) {
+            try {
+                const decoded = await verifyFirebaseIdToken(firebaseToken);
+                if (decoded && decoded.phone_number) {
+                    isVerified = true;
+                }
+            } catch (fbErr) {
+                console.warn("Firebase ID Token 2FA verification failed:", fbErr.message);
+            }
+        }
+
+        if (!isVerified) {
+            if (!otpCode) {
+                return res.status(400).json({ message: "Verification code is required" });
+            }
+            // Validate either secondary Email OTP or Phone OTP
+            const isValidEmailOtp = session.emailOtpCode && session.emailOtpCode === otpCode && new Date() <= new Date(session.emailOtpExpires);
+            const isValidPhoneOtp = session.otpCode && session.otpCode === otpCode && new Date() <= new Date(session.otpExpires);
+
+            if (!isValidEmailOtp && !isValidPhoneOtp) {
+                return res.status(400).json({ message: "Invalid or expired verification code" });
+            }
         }
 
         // Clear session
@@ -532,19 +568,36 @@ router.post("/2fa/setup/request", authMiddleware, async (req, res) => {
 // Verify and enable 2FA
 router.post("/2fa/setup/verify", authMiddleware, async (req, res) => {
     try {
-        const { otpCode, phoneNumber, mfaPreference } = req.body;
+        const { otpCode, phoneNumber, mfaPreference, firebaseToken } = req.body;
         const user = await User.findById(req.user._id);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        const session = user.verificationSession;
-        if (!session || !session.otpCode || session.otpCode !== otpCode) {
-            return res.status(400).json({ message: "Invalid verification code" });
+        let isVerified = false;
+
+        if (firebaseToken) {
+            try {
+                const decoded = await verifyFirebaseIdToken(firebaseToken);
+                if (decoded && decoded.phone_number) {
+                    isVerified = true;
+                }
+            } catch (fbErr) {
+                console.warn("Firebase ID Token setup verification failed, falling back to mock OTP check:", fbErr.message);
+            }
         }
 
-        if (new Date() > new Date(session.otpExpires)) {
-            return res.status(400).json({ message: "Verification code has expired" });
+        if (!isVerified) {
+            if (!otpCode) {
+                return res.status(400).json({ message: "Verification code is required" });
+            }
+            const session = user.verificationSession;
+            if (!session || !session.otpCode || session.otpCode !== otpCode) {
+                return res.status(400).json({ message: "Invalid verification code" });
+            }
+            if (new Date() > new Date(session.otpExpires)) {
+                return res.status(400).json({ message: "Verification code has expired" });
+            }
         }
 
         // Code is valid! Enable 2FA and save settings
@@ -897,9 +950,9 @@ router.post("/forgot-password", async (req, res) => {
 
 router.post("/forgot-password/verify-code", async (req, res) => {
     try {
-        const { identifier, code } = req.body;
-        if (!identifier || !code) {
-            return res.status(400).json({ message: "Identifier and verification code are required" });
+        const { identifier, code, firebaseToken } = req.body;
+        if (!identifier) {
+            return res.status(400).json({ message: "Identifier is required" });
         }
 
         const input = identifier.trim();
@@ -914,12 +967,29 @@ router.post("/forgot-password/verify-code", async (req, res) => {
             return res.status(404).json({ message: "No account found with this identifier" });
         }
 
-        if (!user.resetPasswordToken || user.resetPasswordToken !== code) {
-            return res.status(400).json({ message: "Invalid verification code" });
+        let isVerified = false;
+
+        if (firebaseToken) {
+            try {
+                const decoded = await verifyFirebaseIdToken(firebaseToken);
+                if (decoded && decoded.phone_number) {
+                    isVerified = true;
+                }
+            } catch (fbErr) {
+                console.warn("Firebase ID Token reset verification failed:", fbErr.message);
+            }
         }
 
-        if (new Date() > new Date(user.resetPasswordExpires)) {
-            return res.status(400).json({ message: "Verification code has expired" });
+        if (!isVerified) {
+            if (!code) {
+                return res.status(400).json({ message: "Verification code is required" });
+            }
+            if (!user.resetPasswordToken || user.resetPasswordToken !== code) {
+                return res.status(400).json({ message: "Invalid verification code" });
+            }
+            if (new Date() > new Date(user.resetPasswordExpires)) {
+                return res.status(400).json({ message: "Verification code has expired" });
+            }
         }
 
         // Code is correct! Generate a new token for the reset page URL and return it

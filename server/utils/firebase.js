@@ -72,4 +72,12 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
     }
 };
 
-module.exports = { sendPushNotification };
+const verifyFirebaseIdToken = async (idToken) => {
+    if (!isFirebaseInitialized) {
+        throw new Error("Firebase Admin is not initialized.");
+    }
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    return decodedToken;
+};
+
+module.exports = { sendPushNotification, verifyFirebaseIdToken };

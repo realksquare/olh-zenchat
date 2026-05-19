@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage, deleteToken } from "firebase/messaging";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDuPbl1-IEdxnDctJgELm_VAQoSrLvWEM8",
@@ -13,16 +14,18 @@ const firebaseConfig = {
 
 let app;
 let messaging;
+let auth;
 
 try {
     app = initializeApp(firebaseConfig);
     messaging = getMessaging(app);
+    auth = getAuth(app);
 } catch (err) {
     console.error("Firebase initialization error", err);
 }
 
 export const storage = getStorage(app);
-export { ref, uploadBytesResumable, getDownloadURL };
+export { ref, uploadBytesResumable, getDownloadURL, auth };
 
 export const requestNotificationPermission = async () => {
     try {

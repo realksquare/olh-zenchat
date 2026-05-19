@@ -28,12 +28,9 @@ const NotificationPrompt = () => {
 
         if (isSubscribed) return;
 
-        // Use localStorage with 24h cooldown so it re-prompts on new sessions/reloads
-        const DISMISS_KEY = "notifPromptDismissedAt";
-        const lastDismissed = localStorage.getItem(DISMISS_KEY);
-        const COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours (reduced from 24h for better experience)
-
-        if (lastDismissed && (Date.now() - parseInt(lastDismissed, 10)) < COOLDOWN_MS) return;
+        // Use sessionStorage so it re-prompts on each reload/new session/login
+        const isDismissedThisSession = sessionStorage.getItem("notifPromptDismissedThisSession") === "true";
+        if (isDismissedThisSession) return;
 
         const delay = isPWA ? 200 : 1500;
         const timer = setTimeout(() => setShow(true), delay);
@@ -41,7 +38,7 @@ const NotificationPrompt = () => {
     }, [userId, fcmTokens]);
 
     const handleDismiss = () => {
-        localStorage.setItem("notifPromptDismissedAt", String(Date.now()));
+        sessionStorage.setItem("notifPromptDismissedThisSession", "true");
         setShow(false);
     };
 

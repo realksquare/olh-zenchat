@@ -24,23 +24,22 @@ const countryCodes = [
 
 const LoginPage = () => {
     const navigate = useNavigate();
-    const { 
-        login, 
-        loginPhone, 
-        verifyOtp, 
-        verify2faOtp, 
+    const {
+        login,
+        loginPhone,
+        verifyOtp,
+        verify2faOtp,
         triggerChallenge,
         resetMfaState,
-        mfaRequired, 
-        mfaType, 
-        mfaUserId, 
-        mfaMaskedValue, 
-        isLoading, 
-        error, 
-        clearError 
+        mfaRequired,
+        mfaType,
+        mfaUserId,
+        mfaMaskedValue,
+        isLoading,
+        error,
+        clearError
     } = useAuthStore();
 
-    // Tab state: 'email' or 'phone'
     const [activeTab, setActiveTab] = useState("email");
     const [form, setForm] = useState({ email: "", password: "", phoneNumber: "" });
     const [countryCode, setCountryCode] = useState("+1");
@@ -48,7 +47,6 @@ const LoginPage = () => {
     const [pwError, setPwError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
-    // OTP / 2FA verification states
     const [otpSent, setOtpSent] = useState(false);
     const [tempUserId, setTempUserId] = useState("");
     const [otpCode, setOtpCode] = useState("");
@@ -59,27 +57,23 @@ const LoginPage = () => {
     const otpInputRef = useRef(null);
     const recoveryInputRef = useRef(null);
 
-    // Reset MFA state when page is loaded/changed
     useEffect(() => {
         resetMfaState();
         clearError();
     }, [resetMfaState, clearError]);
 
-    // Focus OTP input when OTP screen is shown
     useEffect(() => {
         if ((otpSent || mfaRequired) && otpInputRef.current) {
             otpInputRef.current.focus();
         }
     }, [otpSent, mfaRequired]);
 
-    // Focus Recovery key input when bypass screen is shown
     useEffect(() => {
         if (showRecoveryBypass && recoveryInputRef.current) {
             recoveryInputRef.current.focus();
         }
     }, [showRecoveryBypass]);
 
-    // WebOTP auto-fill integration for seamless mobile access
     useEffect(() => {
         if ('OTPCredential' in window && (otpSent || mfaRequired)) {
             const ac = new AbortController();
@@ -89,7 +83,6 @@ const LoginPage = () => {
             }).then(otp => {
                 if (otp && otp.code) {
                     setOtpCode(otp.code);
-                    // Automatic submission
                     handleVerifyOtpDirect(otp.code);
                 }
             }).catch(err => {
@@ -109,7 +102,7 @@ const LoginPage = () => {
         e.preventDefault();
         const err = validatePassword(form.password);
         if (err) { setPwError(err); return; }
-        
+
         const result = await login(form.email, form.password);
         if (result.success) {
             if (!result.mfaRequired) {
@@ -124,13 +117,36 @@ const LoginPage = () => {
         e.preventDefault();
         const fullPhone = countryCode + phoneBody.trim();
         if (!phoneBody.trim()) return;
-        
+
+        setIsLoading(true);
         const result = await loginPhone(fullPhone);
         if (result.success) {
             setTempUserId(result.userId);
-            setOtpSent(true);
-            setSuccessMessage(`OTP sent to ${fullPhone}`);
+
+            try {
+                const { auth: clientAuth } = await import("../utils/firebase");
+                const { RecaptchaVerifier, signInWithPhoneNumber } = await import("firebase/auth");
+
+                let verifier = window.recaptchaVerifier;
+                if (!verifier) {
+                    verifier = new RecaptchaVerifier(clientAuth, 'recaptcha-container', {
+                        size: 'invisible'
+                    });
+                    window.recaptchaVerifier = verifier;
+                }
+
+                const confirmation = await signInWithPhoneNumber(clientAuth, fullPhone, verifier);
+                window.confirmationResult = confirmation;
+                setSuccessMessage(`Verification code sent to ${fullPhone}`);
+                setOtpSent(true);
+            } catch (fbErr) {
+                console.warn("Firebase Phone Auth failed, using mock fallback:", fbErr.message);
+                window.confirmationResult = null;
+                setSuccessMessage(`OTP sent to ${fullPhone}`);
+                setOtpSent(true);
+            }
         }
+        setIsLoading(false);
     };
 
     const handleVerifyOtp = async (e) => {
@@ -140,16 +156,27 @@ const LoginPage = () => {
 
     const handleVerifyOtpDirect = async (codeToVerify) => {
         if (!codeToVerify || codeToVerify.length < 6) return;
-        
+
+        setIsLoading(true);
         if (mfaRequired) {
-            // Secondary factor 2FA verification
             const result = await verify2faOtp(mfaUserId, codeToVerify);
             if (result.success) {
                 navigate("/");
             }
         } else {
-            // Primary factor Phone OTP verification
-            const result = await verifyOtp(tempUserId, codeToVerify);
+            let firebaseToken = null;
+            if (window.confirmationResult) {
+                try {
+                    const result = await window.confirmationResult.confirm(codeToVerify);
+                    firebaseToken = await result.user.getIdToken();
+                } catch (fbErr) {
+                    setError("Invalid or expired verification code");
+                    setIsLoading(false);
+                    return;
+                }
+            }
+
+            const result = await verifyOtp(tempUserId, codeToVerify, firebaseToken);
             if (result.success) {
                 if (!result.mfaRequired) {
                     navigate("/");
@@ -159,12 +186,13 @@ const LoginPage = () => {
                 }
             }
         }
+        setIsLoading(false);
     };
 
     const handleRecoveryBypassSubmit = async (e) => {
         e.preventDefault();
         if (!recoveryKey.trim()) return;
-        
+
         const targetUserId = mfaRequired ? mfaUserId : tempUserId;
         const result = await triggerChallenge(targetUserId, recoveryKey.trim());
         if (result.success) {
@@ -180,7 +208,6 @@ const LoginPage = () => {
         setSuccessMessage("");
     };
 
-    // OTP Verification View
     if (otpSent || mfaRequired) {
         const maskedDest = mfaRequired ? mfaMaskedValue : form.phoneNumber;
         const currentMfaType = mfaRequired ? mfaType : "SMS";
@@ -301,7 +328,7 @@ const LoginPage = () => {
                         </>
                     ) : (
                         <>
-                            <h1 className="auth-title" style={{ fontSize: "1.5rem", textAlign: "center" }}>Cryptographic Bypass</h1>
+                            <h1 className="auth-title" style={{ fontSize: "1.5rem", textAlign: "center" }}>Offline Recovery Key</h1>
                             <p className="auth-subtitle" style={{ textAlign: "center", marginBottom: "20px" }}>
                                 Enter your 16-character E2EE offline recovery key to mathematically prove ownership and bypass 2FA.
                             </p>
@@ -399,7 +426,7 @@ const LoginPage = () => {
                             transition: "all 0.2s"
                         }}
                     >
-                        Email Path
+                        via Email
                     </button>
                     <button
                         type="button"
@@ -416,7 +443,7 @@ const LoginPage = () => {
                             transition: "all 0.2s"
                         }}
                     >
-                        Phone OTP Path
+                        via Phone OTP
                     </button>
                 </div>
 
@@ -426,7 +453,7 @@ const LoginPage = () => {
                             <>
                                 <strong>Account Suspended</strong>
                                 <p style={{ fontSize: '0.85rem', marginTop: '4px' }}>
-                                    Your account has been suspended for violating terms.
+                                    Your account has been suspended.
                                     Contact admin for further details.
                                 </p>
                             </>
@@ -554,8 +581,9 @@ const LoginPage = () => {
 
                 <p className="auth-switch">
                     Don't have an account?{" "}
-                    <Link to="/register">Create one</Link>
+                    <Link to="/register">Create one!</Link>
                 </p>
+                <div id="recaptcha-container"></div>
             </div>
         </div>
     );

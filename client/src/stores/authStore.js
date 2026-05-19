@@ -125,10 +125,10 @@ export const useAuthStore = create(
         }
     },
 
-    verifyOtp: async (userId, otpCode) => {
+    verifyOtp: async (userId, otpCode, firebaseToken) => {
         set({ isLoading: true, error: null });
         try {
-            const { data } = await axiosInstance.post("/auth/verify-otp", { userId, otpCode });
+            const { data } = await axiosInstance.post("/auth/verify-otp", { userId, otpCode, firebaseToken });
             
             if (data.mfaRequired) {
                 set({
@@ -172,11 +172,10 @@ export const useAuthStore = create(
         }
     },
 
-    verify2faOtp: async (userId, otpCode) => {
+    verify2faOtp: async (userId, otpCode, firebaseToken) => {
         set({ isLoading: true, error: null });
         try {
-            const { data } = await axiosInstance.post("/auth/verify-2fa-otp", { userId, otpCode });
-            
+            const { data } = await axiosInstance.post("/auth/verify-2fa-otp", { userId, otpCode, firebaseToken });
             localStorage.setItem(TOKEN_KEY, data.token);
             localStorage.setItem(USER_KEY, JSON.stringify(data.user));
             if (db?.settings) {

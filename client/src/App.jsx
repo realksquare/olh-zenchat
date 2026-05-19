@@ -60,11 +60,6 @@ const NetworkBanner = () => {
 
       if (offline) {
         showBanner("offline");
-      } else if (!isLiveConnected) {
-        // 1.5-second grace period to ignore transient handshake states on mount/reconnect
-        reconnectTimer.current = setTimeout(() => {
-          showBanner("reconnecting");
-        }, 1500);
       } else {
         showBanner("online");
         hideBanner();
@@ -238,21 +233,35 @@ const App = () => {
             }
         };
 
-        const handleVisibilityChange = () => {
+        const updatePresence = () => {
             if (socket && socket.connected) {
-                socket.emit("set_active_status", { isActive: document.visibilityState === "visible" });
+                const isActive = document.visibilityState === "visible" && document.hasFocus();
+                socket.emit("set_active_status", { isActive });
             }
+        };
+
+        const handleVisibilityChange = () => {
+            updatePresence();
             if (document.visibilityState === "visible") {
                 clearNotifications();
             }
         };
 
+        const handleFocus = () => {
+            updatePresence();
+            clearNotifications();
+        };
+
+        const handleBlur = () => {
+            updatePresence();
+        };
+
         document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("focus", handleFocus);
+        window.addEventListener("blur", handleBlur);
         
         // Initial state
-        if (socket && socket.connected) {
-            socket.emit("set_active_status", { isActive: document.visibilityState === "visible" });
-        }
+        updatePresence();
         if (document.visibilityState === "visible") {
             clearNotifications();
         }
@@ -293,6 +302,8 @@ const App = () => {
 
         return () => {
             document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("focus", handleFocus);
+            window.removeEventListener("blur", handleBlur);
         };
     }, [token, userId]);
 

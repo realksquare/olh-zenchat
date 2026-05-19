@@ -25,17 +25,16 @@ const countryCodes = [
 
 const RegisterPage = () => {
     const navigate = useNavigate();
-    const { 
-        register, 
-        registerPhone, 
-        verifyOtp, 
-        resetMfaState, 
-        isLoading, 
-        error, 
-        clearError 
+    const {
+        register,
+        registerPhone,
+        verifyOtp,
+        resetMfaState,
+        isLoading,
+        error,
+        clearError
     } = useAuthStore();
 
-    // Tab state: 'email' or 'phone'
     const [activeTab, setActiveTab] = useState("email");
     const [form, setForm] = useState({ username: "", email: "", password: "", phoneNumber: "" });
     const [countryCode, setCountryCode] = useState("+1");
@@ -43,7 +42,6 @@ const RegisterPage = () => {
     const [pwError, setPwError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
-    // OTP states
     const [otpSent, setOtpSent] = useState(false);
     const [tempUserId, setTempUserId] = useState("");
     const [otpCode, setOtpCode] = useState("");
@@ -55,20 +53,18 @@ const RegisterPage = () => {
         const searchParams = new URLSearchParams(window.location.search);
         const refParam = searchParams.get("ref");
         if (refParam) {
-            axiosInstance.post(`/auth/referral/click/${refParam}`).catch(() => {});
+            axiosInstance.post(`/auth/referral/click/${refParam}`).catch(() => { });
         }
         resetMfaState();
         clearError();
     }, [resetMfaState, clearError]);
 
-    // Focus OTP input when OTP screen is shown
     useEffect(() => {
         if (otpSent && otpInputRef.current) {
             otpInputRef.current.focus();
         }
     }, [otpSent]);
 
-    // WebOTP auto-fill integration for seamless mobile access
     useEffect(() => {
         if ('OTPCredential' in window && otpSent) {
             const ac = new AbortController();
@@ -97,10 +93,10 @@ const RegisterPage = () => {
         e.preventDefault();
         const err = validatePassword(form.password);
         if (err) { setPwError(err); return; }
-        
+
         const searchParams = new URLSearchParams(window.location.search);
         const refParam = searchParams.get("ref");
-        
+
         const result = await register(form.username, form.email, form.password, refParam);
         if (result.success) {
             sessionStorage.setItem("showFAQOnLoad", "1");
@@ -112,13 +108,36 @@ const RegisterPage = () => {
         e.preventDefault();
         const fullPhone = countryCode + phoneBody.trim();
         if (!form.username.trim() || !phoneBody.trim()) return;
-        
+
+        setIsLoading(true);
         const result = await registerPhone(form.username, fullPhone);
         if (result.success) {
             setTempUserId(result.userId);
-            setOtpSent(true);
-            setSuccessMessage(`Verification code sent to ${fullPhone}`);
+
+            try {
+                const { auth: clientAuth } = await import("../utils/firebase");
+                const { RecaptchaVerifier, signInWithPhoneNumber } = await import("firebase/auth");
+
+                let verifier = window.recaptchaVerifier;
+                if (!verifier) {
+                    verifier = new RecaptchaVerifier(clientAuth, 'recaptcha-container', {
+                        size: 'invisible'
+                    });
+                    window.recaptchaVerifier = verifier;
+                }
+
+                const confirmation = await signInWithPhoneNumber(clientAuth, fullPhone, verifier);
+                window.confirmationResult = confirmation;
+                setSuccessMessage(`Verification code sent to ${fullPhone}`);
+                setOtpSent(true);
+            } catch (fbErr) {
+                console.warn("Firebase Phone Auth failed, using mock fallback:", fbErr.message);
+                window.confirmationResult = null;
+                setSuccessMessage(`OTP sent to ${fullPhone}`);
+                setOtpSent(true);
+            }
         }
+        setIsLoading(false);
     };
 
     const handleVerifyOtp = async (e) => {
@@ -128,12 +147,26 @@ const RegisterPage = () => {
 
     const handleVerifyOtpDirect = async (codeToVerify) => {
         if (!codeToVerify || codeToVerify.length < 6) return;
-        
-        const result = await verifyOtp(tempUserId, codeToVerify);
+
+        setIsLoading(true);
+        let firebaseToken = null;
+        if (window.confirmationResult) {
+            try {
+                const result = await window.confirmationResult.confirm(codeToVerify);
+                firebaseToken = await result.user.getIdToken();
+            } catch (fbErr) {
+                setError("Invalid or expired verification code");
+                setIsLoading(false);
+                return;
+            }
+        }
+
+        const result = await verifyOtp(tempUserId, codeToVerify, firebaseToken);
         if (result.success) {
             sessionStorage.setItem("showFAQOnLoad", "1");
             navigate("/");
         }
+        setIsLoading(false);
     };
 
     const pwHint = validatePassword(form.password);
@@ -236,9 +269,8 @@ const RegisterPage = () => {
                 </div>
 
                 <h1 className="auth-title">Create account</h1>
-                <p className="auth-subtitle">Join the OLH community</p>
+                <p className="auth-subtitle">Experience fast, safe, no-nonsense, and forever free messaging!</p>
 
-                {/* Premium Tab Bar with HSL tailored design */}
                 <div style={{
                     display: "flex",
                     background: "rgba(30, 41, 59, 0.5)",
@@ -262,7 +294,7 @@ const RegisterPage = () => {
                             transition: "all 0.2s"
                         }}
                     >
-                        Email Signup
+                        via Email
                     </button>
                     <button
                         type="button"
@@ -279,7 +311,7 @@ const RegisterPage = () => {
                             transition: "all 0.2s"
                         }}
                     >
-                        Phone OTP Signup
+                        via Phone OTP
                     </button>
                 </div>
 
@@ -292,14 +324,14 @@ const RegisterPage = () => {
                 {activeTab === "email" ? (
                     <form onSubmit={handleEmailSubmit} className="auth-form">
                         <div className="field">
-                            <label htmlFor="username">Username</label>
+                            <label htmlFor="username">Choose a username</label>
                             <input
                                 id="username"
                                 name="username"
                                 type="text"
                                 autoComplete="username"
                                 required
-                                placeholder="yourname"
+                                placeholder="Choose a unique username - 3-20 characters"
                                 minLength={3}
                                 maxLength={20}
                                 value={form.username}
@@ -315,7 +347,7 @@ const RegisterPage = () => {
                                 type="email"
                                 autoComplete="email"
                                 required
-                                placeholder="you@example.com"
+                                placeholder="Email Address"
                                 value={form.email}
                                 onChange={handleChange}
                             />
@@ -364,7 +396,7 @@ const RegisterPage = () => {
                             </div>
                             {form.password && (
                                 <span className={`field-hint ${pwHint ? "field-hint-error" : "field-hint-ok"}`}>
-                                    {pwHint || "Password looks good"}
+                                    {pwHint || "Password fits criteria."}
                                 </span>
                             )}
                             {pwError && !form.password && (
@@ -447,6 +479,7 @@ const RegisterPage = () => {
                     Already have an account?{" "}
                     <Link to="/login">Sign in</Link>
                 </p>
+                <div id="recaptcha-container"></div>
             </div>
         </div>
     );

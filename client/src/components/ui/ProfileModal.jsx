@@ -210,16 +210,42 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             return;
         }
         setIsE2EELoading(true);
+        const fullPhone = mfaPreference === "phone" ? (countryCode + phoneBody.trim()) : "";
         try {
-            const fullPhone = mfaPreference === "phone" ? (countryCode + phoneBody.trim()) : "";
             const { data } = await axiosInstance.post("/auth/2fa/setup/request", {
                 phoneNumber: fullPhone,
                 mfaPreference
             });
-            setOtpSent(true);
-            showToast(data.message || "Verification code sent successfully.");
+
+            if (mfaPreference === "phone") {
+                try {
+                    const { auth: clientAuth } = await import("../../utils/firebase");
+                    const { RecaptchaVerifier, signInWithPhoneNumber } = await import("firebase/auth");
+                    
+                    let verifier = window.recaptchaVerifier;
+                    if (!verifier) {
+                        verifier = new RecaptchaVerifier(clientAuth, 'recaptcha-container', {
+                            size: 'invisible'
+                        });
+                        window.recaptchaVerifier = verifier;
+                    }
+
+                    const confirmation = await signInWithPhoneNumber(clientAuth, fullPhone, verifier);
+                    window.confirmationResult = confirmation;
+                    showToast(`Verification code sent to ${fullPhone}`);
+                    setOtpSent(true);
+                } catch (fbErr) {
+                    console.warn("Firebase 2FA Auth dispatch failed, falling back to mock gateway:", fbErr.message);
+                    window.confirmationResult = null;
+                    showToast(data.message || "Verification code sent (mock mode).");
+                    setOtpSent(true);
+                }
+            } else {
+                showToast(data.message || "Verification code sent to your email.");
+                setOtpSent(true);
+            }
         } catch (err) {
-            showToast(err.response?.data?.message || "Failed to send verification code.");
+            showToast(err.response?.data?.message || "Failed to initiate verification.");
         } finally {
             setIsE2EELoading(false);
         }
@@ -231,10 +257,24 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         setIsE2EELoading(true);
         try {
             const fullPhone = mfaPreference === "phone" ? (countryCode + phoneBody.trim()) : "";
+            
+            let firebaseToken = null;
+            if (mfaPreference === "phone" && window.confirmationResult) {
+                try {
+                    const result = await window.confirmationResult.confirm(otpCode.trim());
+                    firebaseToken = await result.user.getIdToken();
+                } catch (fbErr) {
+                    showToast("Invalid verification code");
+                    setIsE2EELoading(false);
+                    return;
+                }
+            }
+
             const { data } = await axiosInstance.post("/auth/2fa/setup/verify", {
                 otpCode: otpCode.trim(),
                 phoneNumber: fullPhone,
-                mfaPreference
+                mfaPreference,
+                firebaseToken
             });
             if (data.user) {
                 useAuthStore.getState().updateUser(data.user);
@@ -1049,6 +1089,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                             <span>Import Archive</span>
                         </button>
                         <input ref={importInputRef} type="file" accept=".json,application/json" style={{ display: "none" }} onChange={handleImport} />
+                        <div id="recaptcha-container"></div>
                     </div>
 
                     <button type="submit" className="btn btn-primary" disabled={isLoading} style={{ width: "100%", marginTop: "1rem", padding: "12px" }}>
