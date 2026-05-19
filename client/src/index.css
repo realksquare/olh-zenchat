@@ -5974,21 +5974,21 @@ select {
 }
 
 /* Message bubble progressive blur wrapper styles */
-.message-bubble-zen-wrapper {
+.message-row {
   transition: filter 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.message-bubble-zen-wrapper.zen-fade-1 {
+.message-row.zen-fade-1 {
   filter: blur(1.2px);
   opacity: 0.65;
 }
 
-.message-bubble-zen-wrapper.zen-fade-2 {
+.message-row.zen-fade-2 {
   filter: blur(2.5px);
   opacity: 0.35;
 }
 
-.message-bubble-zen-wrapper.zen-fade-3 {
+.message-row.zen-fade-3 {
   filter: blur(4.5px);
   opacity: 0.06;
 }

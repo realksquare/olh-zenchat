@@ -141,6 +141,13 @@ const registerSocketHandlers = (io) => {
                 }
             });
 
+            socket.on("zen_mode_status", ({ isZenMode }) => {
+                if (userData) {
+                    userData.isZenMode = isZenMode;
+                }
+                io.emit("user_zen_status", { userId, isZenMode });
+            });
+
             socket.on("disconnect", () => {
                 if (userData && userData.sockets.has(socket.id)) {
                     userData.sockets.delete(socket.id);
@@ -247,6 +254,9 @@ const registerSocketHandlers = (io) => {
 
                         if (canSee) {
                             socket.emit("user_online", { userId: otherId });
+                            if (otherData?.isZenMode) {
+                                socket.emit("user_zen_status", { userId: otherId, isZenMode: true });
+                            }
                         }
                     }
 

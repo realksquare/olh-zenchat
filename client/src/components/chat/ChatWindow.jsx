@@ -289,7 +289,6 @@ const ZenParticleCanvas = memo(({ phase, noiseElements }) => {
             } else if (currentPhase === "noise" || currentPhase === "implosion") {
                 const isImploding = currentPhase === "implosion";
                 const implosionElapsed = implosionStartRef.current ? now - implosionStartRef.current : 0;
-                const implosionProgress = isImploding ? Math.min(1, implosionElapsed / 2200) : 0;
 
                 if (noiseElements && noiseElements.length > 0) {
                     noiseElements.forEach((el) => {
@@ -302,10 +301,24 @@ const ZenParticleCanvas = memo(({ phase, noiseElements }) => {
                         if (isImploding) {
                             const targetX = canvas.width / 2;
                             const targetY = canvas.height / 2;
-                            cx = cx + (targetX - cx) * implosionProgress;
-                            cy = cy + (targetY - cy) * implosionProgress;
-                            scale = scale * (1 - implosionProgress);
-                            opacity = 0.45 * (1 - implosionProgress);
+                            
+                            // Stagger the suck-in start based on each card's unique random delay!
+                            const cardProgress = Math.min(1, Math.max(0, (implosionElapsed - el.delay * 1000) / 1600));
+                            
+                            // High-end dramatic cubic ease-in formula: accelerates near the gravity well center!
+                            const easeProgress = Math.pow(cardProgress, 3.5);
+                            
+                            // Random rotational spiral orbital whirlpool path!
+                            const angleOffset = (1 - easeProgress) * el.rot * 0.15;
+                            const dx = cx - targetX;
+                            const dy = cy - targetY;
+                            const currentDist = Math.sqrt(dx * dx + dy * dy) * (1 - easeProgress);
+                            const currentAngle = Math.atan2(dy, dx) + angleOffset;
+                            
+                            cx = targetX + Math.cos(currentAngle) * currentDist;
+                            cy = targetY + Math.sin(currentAngle) * currentDist;
+                            scale = scale * (1 - easeProgress);
+                            opacity = 0.45 * (1 - easeProgress);
                         }
 
                         ctx.translate(cx, cy);
@@ -371,11 +384,12 @@ const ZenParticleCanvas = memo(({ phase, noiseElements }) => {
                 ctx.restore();
             } else if (currentPhase === "mode-name") {
                 const modeNameElapsed = modeNameStartRef.current ? now - modeNameStartRef.current : 0;
-                const progress = modeNameElapsed / 1000;
-                const opacity = progress <= 0.5 ? progress * 2 : 2 - progress * 2;
+                // Beautiful sine curve over the entire 2500ms duration for perfect fade in and out!
+                const progress = Math.min(1, Math.max(0, modeNameElapsed / 2500));
+                const opacity = Math.sin(progress * Math.PI);
 
                 ctx.save();
-                ctx.fillStyle = `rgba(61, 165, 217, ${Math.max(0, Math.min(1, opacity))})`;
+                ctx.fillStyle = `rgba(61, 165, 217, ${opacity})`;
                 ctx.font = "italic 36px Georgia, serif";
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
@@ -416,7 +430,7 @@ const ChatWindow = ({ onBack }) => {
     const {
         activeChat, fetchMessages, fetchOlderMessages, isLoadingMessages, isLoadingOlderMessages,
         typingUsers, markChatAsRead, onlineUsers, hasMoreMessages, isLowBandwidth, peerLowBandwidth, isOffline,
-        isZenMode, toggleZenMode
+        isZenMode, toggleZenMode, zenUsers
     } = useChatStore(useShallow((s) => ({
         activeChat: s.activeChat,
         fetchMessages: s.fetchMessages,
@@ -431,7 +445,8 @@ const ChatWindow = ({ onBack }) => {
         peerLowBandwidth: s.peerLowBandwidth,
         isOffline: s.isOffline,
         isZenMode: s.isZenMode,
-        toggleZenMode: s.toggleZenMode
+        toggleZenMode: s.toggleZenMode,
+        zenUsers: s.zenUsers
     })));
 
     const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
@@ -454,7 +469,7 @@ const ChatWindow = ({ onBack }) => {
         return result;
     }, [rawMessages, showOnlyStarred, user?._id]);
 
-    const { joinChat, leaveChat, markAsRead, deleteMessage, updateLowBandwidth } = useSocket();
+    const { joinChat, leaveChat, markAsRead, deleteMessage, updateLowBandwidth, socket } = useSocket();
     const messagesEndRef = useRef(null);
     const isLoadingOlderRef = useRef(false);
 
@@ -585,6 +600,12 @@ const ChatWindow = ({ onBack }) => {
             stopZenIntroAudio();
         };
     }, [clearCinematicTimers]);
+
+    useEffect(() => {
+        if (socket?.connected) {
+            socket.emit("zen_mode_status", { isZenMode });
+        }
+    }, [isZenMode, socket, socket?.connected]);
 
     const handleToggleDisappearing = async (mode) => {
         try {
@@ -762,12 +783,15 @@ const ChatWindow = ({ onBack }) => {
         if (!otherUser) return "";
         if (isOffline || activeChat?.blockStatus?.iBlocked || activeChat?.blockStatus?.theyBlocked) return "Offline";
         const isCurrentlyOnline = otherUser.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString());
-        if (isCurrentlyOnline) return "Online";
+        const isOtherInZen = zenUsers[otherUser._id] || zenUsers[otherUser._id?.toString()];
+        if (isCurrentlyOnline) {
+            return isOtherInZen ? "Online (in #ZenMode.)" : "Online";
+        }
         if (otherUser.lastSeen) {
             return `Last seen ${formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true })}`;
         }
         return "Offline";
-    }, [otherUser, onlineUsers, tick, isOffline, activeChat?.blockStatus?.iBlocked, activeChat?.blockStatus?.theyBlocked]);
+    }, [otherUser, onlineUsers, tick, isOffline, activeChat?.blockStatus?.iBlocked, activeChat?.blockStatus?.theyBlocked, zenUsers]);
 
     const getStatusText = () => statusText;
 
@@ -858,7 +882,7 @@ const ChatWindow = ({ onBack }) => {
                         </button>
 
                         {showDisappearingMenu && (
-                            <div className="message-action-dropdown disappearing-menu" style={{ right: 0, top: '100%', marginTop: '6px', minWidth: '120px' }}>
+                            <div className="message-action-dropdown disappearing-menu" style={{ position: 'absolute', right: 0, top: '100%', marginTop: '6px', minWidth: '135px', background: '#161b22', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', flexDirection: 'column', padding: '4px' }}>
                                 {[
                                     { value: 'off', label: 'Off' },
                                     { value: 'instant', label: 'Going offline' },
@@ -980,29 +1004,28 @@ const ChatWindow = ({ onBack }) => {
                                     </span>
                                 </div>
                             )}
-                            <div className={`message-bubble-zen-wrapper ${zenFadeClass}`}>
-                                <MessageBubble
-                                    key={msg._id}
-                                    message={msg}
-                                    isMe={msg.senderId?._id === user?._id || msg.senderId === user?._id}
-                                    showAvatar={idx === 0 || messages[idx - 1]?.senderId?._id !== msg.senderId?._id || showDateDivider}
-                                    otherUser={otherUser}
-                                    onEdit={handleMessageAction}
-                                    onDelete={setDeletingMessage}
-                                    canDelete={!isDeleted && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked}
-                                    canReply={!isDeleted && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked}
-                                    onMediaClick={(url, type) => {
-                                        if (type === "file") {
-                                            setSelectedDoc({ url, fileName: msg.content || "document" });
-                                        } else {
-                                            const senderName = (msg.senderId?._id === user?._id || msg.senderId === user?._id)
-                                                ? "me"
-                                                : (msg.senderId?.username || otherUser?.username || "user");
-                                            setSelectedMedia({ url, type, username: senderName });
-                                        }
-                                    }}
-                                />
-                            </div>
+                            <MessageBubble
+                                key={msg._id}
+                                message={msg}
+                                isMe={msg.senderId?._id === user?._id || msg.senderId === user?._id}
+                                showAvatar={idx === 0 || messages[idx - 1]?.senderId?._id !== msg.senderId?._id || showDateDivider}
+                                otherUser={otherUser}
+                                onEdit={handleMessageAction}
+                                onDelete={setDeletingMessage}
+                                canDelete={!msg.deletedForEveryone && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked}
+                                canReply={!msg.deletedForEveryone && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked}
+                                zenFadeClass={zenFadeClass}
+                                onMediaClick={(url, type) => {
+                                    if (type === "file") {
+                                        setSelectedDoc({ url, fileName: msg.content || "document" });
+                                    } else {
+                                        const senderName = (msg.senderId?._id === user?._id || msg.senderId === user?._id)
+                                            ? "me"
+                                            : (msg.senderId?.username || otherUser?.username || "user");
+                                        setSelectedMedia({ url, type, username: senderName });
+                                    }
+                                }}
+                            />
                         </div>
                     );
                 })}
@@ -1119,72 +1142,7 @@ const ChatWindow = ({ onBack }) => {
                     <button className="zen-skip-btn" onClick={handleSkipIntro}>
                         Skip
                     </button>
-                    
-                    {cinematicPhase && (
-                        <ZenParticleCanvas phase={cinematicPhase} noiseElements={noiseElements} />
-                    )}
-
-                    {(cinematicPhase === "noise" || cinematicPhase === "implosion") && (
-                        <div className="zen-noise-bg-elements" style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 1 }}>
-                            {noiseElements.map((el) => (
-                                <div
-                                    key={el.id}
-                                    className={`zen-ghost-card ${el.isMine ? "mine" : "theirs"} ${cinematicPhase === "implosion" ? "sucked-in" : ""}`}
-                                    style={{
-                                        position: "absolute",
-                                        left: `${el.x}%`,
-                                        top: `${el.y}%`,
-                                        transform: cinematicPhase === "implosion" 
-                                            ? "translate(-50%, -50%) scale(0)" 
-                                            : `translate(-50%, -50%) rotate(${el.rot}deg) scale(${el.scale})`,
-                                        opacity: cinematicPhase === "implosion" ? 0 : 0.45,
-                                        transition: "all 2.2s cubic-bezier(0.76, 0, 0.24, 1)",
-                                        transitionDelay: cinematicPhase === "implosion" ? "0s" : `${el.delay}s`,
-                                        background: el.isMine ? "rgba(61, 165, 217, 0.12)" : "rgba(255, 255, 255, 0.05)",
-                                        border: "1px solid rgba(255, 255, 255, 0.06)",
-                                        borderRadius: "12px",
-                                        padding: "8px 14px",
-                                        fontSize: "0.75rem",
-                                        color: "rgba(255, 255, 255, 0.6)",
-                                        whiteSpace: "nowrap",
-                                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "8px"
-                                    }}
-                                >
-                                    <div style={{ width: "16px", height: "16px", borderRadius: "50%", background: el.isMine ? "var(--color-primary)" : "rgba(255,255,255,0.2)", opacity: 0.5 }} />
-                                    <div>{el.text}</div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {cinematicPhase === "disclaimer" && (
-                        <div className="zen-disclaimer-text">
-                            For the immersive experience, turn your device volume up.
-                        </div>
-                    )}
-                    
-                    {cinematicPhase === "noise" && (
-                        <div className="zen-noise-title" style={{ zIndex: 2 }}>
-                            THE NOISE IS LOUD.
-                        </div>
-                    )}
-                    
-                    {cinematicPhase === "bloom" && (
-                        <div className="zen-bloom-text-container" style={{ zIndex: 2 }}>
-                            <span className="zen-bloom-word">Quiet</span>
-                            <span className="zen-bloom-word">the</span>
-                            <span className="zen-bloom-word">mind.</span>
-                        </div>
-                    )}
-
-                    {cinematicPhase === "mode-name" && (
-                        <div className="zen-mode-name-text" style={{ zIndex: 2 }}>
-                            #ZenMode.
-                        </div>
-                    )}
+                    <ZenParticleCanvas phase={cinematicPhase} noiseElements={noiseElements} />
                 </div>
             )}
             

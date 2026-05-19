@@ -14,7 +14,7 @@ const MODE_LABELS_BUBBLE = {
 
 
 
-const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick, canDelete = true, canReply = true }) => {
+const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick, canDelete = true, canReply = true, zenFadeClass = "" }) => {
     const [mobileDropdown, setMobileDropdown] = useState(false);
     const [isMediaLoaded, setIsMediaLoaded] = useState(false);
     const imgRef = useRef(null);
@@ -109,7 +109,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
 
     if (message.deletedForEveryone || isGhostDeleted) {
         return (
-            <div className={`message-row ${isMe ? "mine" : "theirs"}`}>
+            <div className={`message-row ${isMe ? "mine" : "theirs"} ${zenFadeClass}`}>
                 {!isMe && showAvatar && (
                     <div className="avatar avatar-sm">
                         {otherUser?.avatar ? (
@@ -136,7 +136,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     return (
         <div
             id={`msg-${message._id}`}
-            className={`message-row ${isMe ? "mine" : "theirs"} ${isNew ? "message-slide-up" : ""}`}
+            className={`message-row ${isMe ? "mine" : "theirs"} ${isNew ? "message-slide-up" : ""} ${zenFadeClass}`}
             onDoubleClick={() => !message.deletedForEveryone && canReply && onEdit({ action: "reply", ...message })}
             style={!isShown ? { visibility: 'hidden', height: 0, overflow: 'hidden' } : {}}
         >

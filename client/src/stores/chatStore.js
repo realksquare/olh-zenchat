@@ -13,6 +13,7 @@ export const useChatStore = create(
             messages: {},
             typingUsers: {},
             onlineUsers: new Set(),
+            zenUsers: {},
             unreadCounts: {},
             hasMoreMessages: {},
             isLoadingMessages: false,
@@ -28,6 +29,9 @@ export const useChatStore = create(
             })),
             isZenMode: false,
             toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode })),
+            setUserZenStatus: (userId, isZenMode) => set((state) => ({
+                zenUsers: { ...state.zenUsers, [userId]: isZenMode }
+            })),
 
             checkNetworkSpeed: async () => {
                 if (typeof navigator === "undefined") return false;
@@ -862,7 +866,7 @@ export const useChatStore = create(
             name: "zenchat-chats",
             partialize: (state) => {
                 const { 
-                    activeChat, onlineUsers, typingUsers, 
+                    activeChat, onlineUsers, typingUsers, zenUsers,
                     isLoadingChats, isLoadingMessages, isLoadingOlderMessages,
                     hasMoreMessages, messages, unreadCounts, 
                     isLowBandwidth, peerLowBandwidth, isOffline, _spOpConsecutive,

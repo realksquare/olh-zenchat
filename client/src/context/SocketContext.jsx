@@ -100,6 +100,10 @@ export const SocketProvider = ({ children }) => {
             useChatStore.getState().updateParticipantStatus(userId, false, lastSeen);
         };
 
+        const handleUserZenStatus = ({ userId, isZenMode }) => {
+            useChatStore.getState().setUserZenStatus(userId, isZenMode);
+        };
+
         const handlePeerLowBandwidth = ({ userId, isLowBandwidth }) => {
             useChatStore.getState().setPeerLowBandwidth(userId, isLowBandwidth);
         };
@@ -217,6 +221,7 @@ export const SocketProvider = ({ children }) => {
         socket.on("typing_status", handleTypingStatus);
         socket.on("user_online", handleUserOnline);
         socket.on("user_offline", handleUserOffline);
+        socket.on("user_zen_status", handleUserZenStatus);
         socket.on("peer_low_bandwidth", handlePeerLowBandwidth);
         socket.on("message_edited", handleMessageEdited);
         socket.on("message_deleted", handleMessageDeleted);
@@ -239,6 +244,7 @@ export const SocketProvider = ({ children }) => {
             socket.off("typing_status", handleTypingStatus);
             socket.off("user_online", handleUserOnline);
             socket.off("user_offline", handleUserOffline);
+            socket.off("user_zen_status", handleUserZenStatus);
             socket.off("peer_low_bandwidth", handlePeerLowBandwidth);
             socket.off("message_edited", handleMessageEdited);
             socket.off("message_deleted", handleMessageDeleted);
