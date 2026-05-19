@@ -91,24 +91,7 @@ This document outlines the technical architecture and step-by-step implementatio
   - Create an `@keyframes shake` animation that rapidly translates the X and Y axis by 2-5 pixels for 0.4 seconds.
   - Play a very soft, organic UI sound (using `Audio` API) if the user hasn't muted the tab.
 
----
-
-## 5. Smart Client-Side Media Compression
-**Concept:** Aggressively compress images/videos locally before uploading to save mobile data and cloud storage costs.
-
-### Technical Plan
-**Client-Side (React UI & Utilities)**
-- Implement an image compression utility using `browser-image-compression` or native Canvas API.
-- Intercept the file upload process in `MessageInput.jsx` before sending to Cloudinary.
-- **Workflow:** 
-  1. User selects a high-res photo.
-  2. Local utility resizes/compresses it to ~300KB (maintaining visual quality for mobile screens).
-  3. The compressed blob is uploaded to Cloudinary.
-- This ensures instant uploads and massive data savings for the user.
-
----
-
-## 6. Offline-First Bulletproof Queuing
+## 5. Offline-First Bulletproof Queuing
 **Concept:** Allow users to chat flawlessly during network drops, syncing instantly when connection returns.
 
 ### Technical Plan
@@ -122,7 +105,7 @@ This document outlines the technical architecture and step-by-step implementatio
 
 ---
 
-## 7. Auto-Purging Local Cache (Storage Conservation)
+## 6. Auto-Purging Local Cache (Storage Conservation)
 **Concept:** Prevent the PWA from bloating phone storage by automatically clearing old cached media.
 
 ### Technical Plan
@@ -138,7 +121,7 @@ This document outlines the technical architecture and step-by-step implementatio
 
 ---
 
-## 8. Adaptive Bottom Sheets
+## 7. Adaptive Bottom Sheets
 **Concept:** Modals that act as native slide-up sheets on mobile but standard centered modals on desktop.
 
 ### Technical Plan
@@ -150,7 +133,7 @@ This document outlines the technical architecture and step-by-step implementatio
 
 ---
 
-## 9. PWA App Badging & Shortcuts
+## 8. PWA App Badging & Shortcuts
 **Concept:** Show unread counts on the home screen icon and add long-press quick actions.
 
 ### Technical Plan
@@ -164,7 +147,7 @@ This document outlines the technical architecture and step-by-step implementatio
 
 ---
 
-## 10. Site-Native Pull-to-Refresh (Snapchat Style)
+## 9. Site-Native Pull-to-Refresh (Snapchat Style)
 **Concept:** A custom, branded refresh animation that feels deeply integrated into the app.
 
 ### Technical Plan
@@ -179,7 +162,7 @@ This document outlines the technical architecture and step-by-step implementatio
 
 ---
 
-## 11. Overscroll Bounce Physics
+## 10. Overscroll Bounce Physics
 **Concept:** Add the "rubber-band" effect to lists for a premium native feel.
 
 ### Technical Plan
