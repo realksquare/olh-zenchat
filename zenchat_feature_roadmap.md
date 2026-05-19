@@ -51,24 +51,23 @@ This document outlines the technical architecture and step-by-step implementatio
 - **CSS Transitions:**
   - Apply CSS filters (`blur()`) and opacity transitions to old messages to fade them out smoothly.
   - Add a slow, pulsing breathing-halo glow to the background.
-- **Cinematic First-Time Intro Sequence:**
+- **Cinematic First-Time Intro Sequence ("Deconstruction of Chaos" Rebirth):**
   1. Store an intro flag `localStorage.getItem("zen_intro_shown")`.
   2. If the user toggles Zen Mode and the flag is absent:
      - Render a gorgeous, full-screen overlay `.zen-intro-overlay` with a rich dark absolute backdrop and radial gradient halos.
-     - **10-Second Cinematic Timeline Choreography:**
-       - **0s - 1s (The Awakening):** The absolute overlay fades in (`opacity: 1`). Warm, soft radial gradient halos grow in the background. A canvas initialized behind the text starts rendering tiny dust motes/light embers drifting slowly upwards.
-       - **1s - 4.5s (The Void - Phase 1):** The first message *"Quiet the noise."* emerges at the center. It uses clean, wide-spaced caps typography (`font-weight: 300; letter-spacing: 0.35em`). It smoothly slides up out of a CSS `clip-path` mask boundary, transitioning from `filter: blur(12px); opacity: 0` to `filter: blur(0); opacity: 0.9` using a smooth ease-out curve.
-       - **4.5s - 7.5s (The Mind - Phase 2):** The first message fades out and blurs away. The second message *"Embrace the thought."* is revealed in an elegant, italicized serif font (e.g. `'Playfair Display'`). Behind this text, a soft glowing organic blob/breathing halo slowly pulses.
-       - **7.5s - 9.0s (The Union - Phase 3):** The second message fades out. A minimalist glowing Zen lotus logo emerges alongside the text *"ZEN MODE ACTIVE"*.
-       - **9.0s - 10.0s (The Release):** The complete intro overlay smoothly scales up slightly and drops to `opacity: 0` using a `cubic-bezier(0.16, 1, 0.3, 1)` transition, seamlessly blending into the distraction-free chat window layout.
+     - **10-Second Unorthodox Cinematic Timeline Choreography:**
+       - **0s - 2.5s (The Noise / Chaotic Clutter):** Instead of starting in a peaceful state, the screen simulates absolute digital noise. The chat history, avatars, and interface start trembling, glitching, and shifting with aggressive chromatic aberrations. A raw, high-contrast monospace text blinks in the center: `"THE NOISE IS LOUD."`
+       - **2.5s - 5.0s (The Gravity Well / Implosion):** A heavy, low-end sub-bass "boom" is synthesized (rapidly sliding down from 150Hz to 30Hz, like a cinema drop). On screen, all glitched UI elements are violently sucked/drawn into a single central glowing point (a CSS/Canvas gravity-well/implosion effect). The screen goes completely dark, leaving only the tiny central pixel glowing like a quiet star.
+       - **5.0s - 8.5s (The Liquid Bloom):** The tiny glowing star slowly expands outward as a circular liquid ripple wave. Elegant, warm serif letters (e.g. `'Playfair Display'`) drift upward out of the ripple: `"Quiet the mind."`, leaving trails of ink-like smoke particles on a canvas.
+       - **8.5s - 10.0s (The Integration):** The ink-letters dissolve into the background. The full overlay scales up and dissolves gracefully, leaving behind a beautifully spacious, distraction-free active workspace.
      - Add a tiny, minimalist outline button at the top-right (`.btn-skip-intro`) styled with high transparency (`background: transparent; border: 1px solid rgba(255,255,255,0.2)`) to allow bypassing the sequence instantly.
      - Auto-dismiss and transition into active Zen Mode after 10 seconds, setting `zen_intro_shown` to `"true"`.
      - **Procedural Ambient BGM & Sync:** 
        - Since audio/music assets are heavy and consume data, we will dynamically synthesize a deep, soothing **ambient singing-bowl drone** completely offline using the **Web Audio API** in `utils/audio.js` that is perfectly synced with the visual reveal.
        - *Synthesis & Sync Recipe:*
-         1. **Phase 1: Initial Deep Focus (0s - 3s):** Trigger a low-frequency oscillator triad (110Hz, 165Hz, 220Hz) routed through a low-pass filter (cutoff ~250Hz). As the first text *"Quiet the noise."* fades in, the master gain will gradually swell (`linearRampToValueAtTime`) from 0 to 0.15 to mirror the visual emergence.
-         2. **Phase 2: Harmonious Progression (3s - 7s):** As the second phrase *"Embrace the thought."* starts to slide out of the blur mask, we will trigger a soft, higher seventh chord overtone layer (330Hz and 440Hz sine waves) to create a gentle emotional lift, matching the text reveal velocity.
-         3. **Phase 3: The Fade Out (7s - 10s):** As the motion poster titles fade away to prepare for the active focus space, the synth will gently ramp down its master gain to zero over 1.5 seconds (`linearRampToValueAtTime`) to gracefully fade out without abrupt clicks, syncing perfectly with the transition into Zen Mode.
+         1. **Phase 1: The Glitch Hum (0s - 2.5s):** Trigger a high-pass filtered, slightly detuned sawtooth oscillator pair at 180Hz and 183Hz to create a tense, chaotic digital hum, aligning with the visual clutter.
+         2. **Phase 2: The Gravity Implosion (2.5s - 5.0s):** Trigger a low-frequency oscillator triad (110Hz, 165Hz, 220Hz) routed through a low-pass filter (cutoff ~250Hz). The filter cutoff and gain will sweep dynamically downward to mimic the visual sucking-in of elements, culminating in a silent sub-bass drop.
+         3. **Phase 3: The Liquid Bloom (5.0s - 10.0s):** Fade in a sweet, harmonically rich singing-bowl overtone layer (330Hz and 440Hz sine waves) routed through low-pass filters that sway gently with the ink ripples, ramping the master gain down to zero over 1.5 seconds at the end of the timeline.
 
 ---
 
