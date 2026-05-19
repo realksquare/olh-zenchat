@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import axiosInstance from "../utils/axios";
 import { useAuthStore } from "./authStore";
-import { db, persistChat, persistMessage, getLocalChats, getLocalMessages } from "../db/zenDB";
+import { db, persistChat, persistMessage, getLocalChats, getLocalMessages, healMessageDate } from "../db/zenDB";
 import { decryptMessageIfNeeded } from "../utils/e2eeHelper";
 
 export const useChatStore = create(
@@ -306,7 +306,7 @@ export const useChatStore = create(
                 set({ isLoadingMessages: true });
                 try {
                     const { data } = await axiosInstance.get(`/messages/${chatId}?limit=18`);
-                    const serverMessages = data.messages;
+                    const serverMessages = data.messages.map(msg => healMessageDate(msg));
                     await Promise.all(serverMessages.map(msg => decryptMessageIfNeeded(msg)));
                     serverMessages.forEach(msg => persistMessage({ ...msg, chatId: chatId.toString() }));
 
@@ -364,7 +364,7 @@ export const useChatStore = create(
                 try {
                     const page = Math.floor(existing.length / 18) + 1;
                     const { data } = await axiosInstance.get(`/messages/${chatId}?limit=18&page=${page}`);
-                    const older = data.messages;
+                    const older = data.messages.map(msg => healMessageDate(msg));
                     await Promise.all(older.map(msg => decryptMessageIfNeeded(msg)));
                     older.forEach(msg => persistMessage({ ...msg, chatId: chatId.toString() }));
 
@@ -389,6 +389,7 @@ export const useChatStore = create(
             },
 
             addMessage: (chatId, message) => {
+                message = healMessageDate(message);
                 set((state) => {
                     const chatMessages = state.messages[chatId] || [];
                     let nextMessages = [...chatMessages];

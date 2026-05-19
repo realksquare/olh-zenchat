@@ -32,8 +32,34 @@ db.version(5).stores({
     vault: "id, name, type, size, date",
 });
 
+export const healMessageDate = (message) => {
+    if (!message) return message;
+    if (message.createdAt) {
+        const d = new Date(message.createdAt);
+        if (!isNaN(d.getTime())) return message;
+    }
+    // Try to extract timestamp from MongoDB ObjectId (_id)
+    if (message._id && typeof message._id === 'string' && message._id.length === 24) {
+        try {
+            const timestamp = parseInt(message._id.substring(0, 8), 16) * 1000;
+            const d = new Date(timestamp);
+            if (!isNaN(d.getTime())) {
+                message.createdAt = d.toISOString();
+                return message;
+            }
+        } catch (e) {
+            // Ignore
+        }
+    }
+    message.createdAt = new Date().toISOString();
+    return message;
+};
+
 export const persistChat = async (chat) => {
     try {
+        if (chat && chat.lastMessage) {
+            chat.lastMessage = healMessageDate(chat.lastMessage);
+        }
         await db.chats.put(chat);
     } catch (err) {
         console.error(err);
@@ -42,18 +68,26 @@ export const persistChat = async (chat) => {
 
 export const persistMessage = async (message) => {
     try {
-        await db.messages.put(message);
+        const healed = healMessageDate(message);
+        await db.messages.put(healed);
     } catch (err) {
         console.error(err);
     }
 };
 
 export const getLocalChats = async () => {
-    return await db.chats.reverse().sortBy("updatedAt");
+    const chats = await db.chats.reverse().sortBy("updatedAt");
+    return chats.map(c => {
+        if (c.lastMessage) {
+            c.lastMessage = healMessageDate(c.lastMessage);
+        }
+        return c;
+    });
 };
 
 export const getLocalMessages = async (chatId) => {
-    return await db.messages.where("chatId").equals(chatId).sortBy("createdAt");
+    const msgs = await db.messages.where("chatId").equals(chatId).sortBy("createdAt");
+    return msgs.map(m => healMessageDate(m));
 };
 
 export const clearLocalData = async () => {
