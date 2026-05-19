@@ -4,7 +4,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-com
 
 importScripts('https://unpkg.com/dexie@4.0.8/dist/dexie.js');
 
-const CACHE_NAME = 'zenchat-v1.5';
+const CACHE_NAME = 'zenchat-v2.0';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDuPbl1-IEdxnDctJgELm_VAQoSrLvWEM8",
@@ -80,6 +80,17 @@ try {
     console.log(e);
 }
 
+
+const SHELL_URLS = ['/', '/manifest.json', '/favicon.svg'];
+
+// Pre-cache app shell on install for instant first paint
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_URLS))
+    );
+});
+
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     event.waitUntil(
@@ -87,9 +98,7 @@ self.addEventListener('notificationclick', (event) => {
             if (clientList.length > 0) {
                 let client = clientList[0];
                 for (let i = 0; i < clientList.length; i++) {
-                    if (clientList[i].focused) {
-                        client = clientList[i];
-                    }
+                    if (clientList[i].focused) client = clientList[i];
                 }
                 return client.focus();
             }
@@ -101,46 +110,68 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'CLEAR_NOTIFICATIONS') {
         self.registration.getNotifications().then((notifications) => {
-            notifications.forEach((notification) => notification.close());
+            notifications.forEach((n) => n.close());
         });
     }
-    // Tell clients to skip waiting and activate new SW immediately
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
     }
 });
 
-// Activate: wipe old caches immediately on SW update
+// Activate: wipe old caches, claim clients immediately
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((cacheNames) =>
-            Promise.all(
-                cacheNames
-                    .filter((name) => name !== CACHE_NAME)
-                    .map((name) => caches.delete(name))
-            )
+        caches.keys().then((names) =>
+            Promise.all(names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n)))
         ).then(() => self.clients.claim())
     );
 });
 
-// Network-first fetch: always try network, fall back to cache
 self.addEventListener('fetch', (event) => {
-    // Only handle GET requests for same-origin navigation/assets
     if (event.request.method !== 'GET') return;
     const url = new URL(event.request.url);
-    // Don't cache API or socket calls
-    if (url.pathname.startsWith('/api') || url.pathname.startsWith('/socket.io')) return;
 
+    // Never intercept API or socket calls
+    if (url.pathname.startsWith('/api') || url.pathname.startsWith('/socket.io')) return;
+    // Never intercept cross-origin requests (Firebase, Cloudinary, etc.)
+    if (url.origin !== self.location.origin) return;
+
+    const isNavigation = event.request.mode === 'navigate';
+    const isStaticAsset = url.pathname.startsWith('/assets/') ||
+        url.pathname.endsWith('.js') ||
+        url.pathname.endsWith('.css') ||
+        url.pathname.endsWith('.woff2') ||
+        url.pathname.endsWith('.svg') ||
+        url.pathname.endsWith('.png') ||
+        url.pathname.endsWith('.webp');
+
+    if (isStaticAsset) {
+        // Cache-First: static assets are content-hashed, safe to serve instantly from cache
+        event.respondWith(
+            caches.match(event.request).then((cached) => {
+                if (cached) return cached;
+                return fetch(event.request).then((response) => {
+                    if (response && response.status === 200) {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+                    }
+                    return response;
+                }).catch(() => new Response('', { status: 503 }));
+            })
+        );
+        return;
+    }
+
+    // Network-First for navigation + other same-origin requests, fall back to cache
     event.respondWith(
         fetch(event.request)
             .then((response) => {
-                // Cache a clone of the fresh response
-                if (response && response.status === 200) {
+                if (response && response.status === 200 && isNavigation) {
                     const clone = response.clone();
                     caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
                 }
                 return response;
             })
-            .catch(() => caches.match(event.request).then((res) => res || new Response("Offline or resource unavailable", { status: 503, statusText: "Service Unavailable" })))
+            .catch(() => caches.match(event.request).then((res) => res || caches.match('/') || new Response('Offline', { status: 503 })))
     );
 });

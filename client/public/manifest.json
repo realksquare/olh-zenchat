@@ -1,12 +1,19 @@
 {
   "name": "ZenChat",
   "short_name": "ZenChat",
-  "description": "A real-time, minimal chat application",
+  "description": "Secure real-time messaging with end-to-end encryption",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#121820",
   "theme_color": "#121820",
   "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "/logo192.png",
       "sizes": "192x192",
@@ -17,7 +24,7 @@
       "src": "/logo512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ],
   "shortcuts": [
@@ -26,14 +33,14 @@
       "short_name": "Recents",
       "description": "View your recent chats",
       "url": "/?tab=recents",
-      "icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
     },
     {
       "name": "Contacts",
       "short_name": "Contacts",
       "description": "View your contacts",
       "url": "/?tab=contacts",
-      "icons": [{ "src": "/logo192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
     }
   ]
 }

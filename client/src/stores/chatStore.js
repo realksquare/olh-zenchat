@@ -19,13 +19,7 @@ export const useChatStore = create(
             isLoadingOlderMessages: false,
             isLoadingChats: false,
             isOffline: typeof navigator !== "undefined" ? !navigator.onLine : false,
-            isLowBandwidth: (() => {
-                if (typeof navigator === "undefined") return false;
-                const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-                if (!conn) return false;
-                const type = conn.effectiveType || "";
-                return type.includes("2g") || type.includes("3g") || conn.saveData === true;
-            })(),
+            isLowBandwidth: false,
             setLowBandwidth: (bool) => set({ isLowBandwidth: bool }),
             peerLowBandwidth: {},
             setPeerLowBandwidth: (userId, isLowBandwidth) => set((s) => ({
@@ -104,7 +98,8 @@ export const useChatStore = create(
             },
 
             initLocalData: async () => {
-                await get().checkNetworkSpeed();
+                // Reset hysteresis so stale persisted value never causes a startup false positive
+                set({ _spOpConsecutive: 0 });
 
                 const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
                 if (conn) {
@@ -112,9 +107,13 @@ export const useChatStore = create(
                 }
 
                 if (typeof window !== "undefined" && !window.netCheckInterval) {
-                    window.netCheckInterval = setInterval(() => {
+                    // 6 s warm-up before first probe — avoids false SP-OP on cold server start
+                    window.netCheckInterval = setTimeout(() => {
                         get().checkNetworkSpeed();
-                    }, 3000);
+                        window.netCheckInterval = setInterval(() => {
+                            get().checkNetworkSpeed();
+                        }, 3000);
+                    }, 6000);
                 }
 
                 const localChats = await getLocalChats();
