@@ -447,7 +447,7 @@ const ChatWindow = ({ onBack }) => {
                     </span>
                 </div>
 
-                <div className="chat-header-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
+                <div className="chat-header-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '12px', alignItems: 'center', flexShrink: 0 }}>
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                         <button
                             className="header-action-btn"

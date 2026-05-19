@@ -191,7 +191,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                             className={`chat-card-name ${hasUnread ? "chat-card-name-unread" : ""} ${isContact ? "chat-card-name-contact" : ""}`}
                             style={{ display: "flex", alignItems: "center", gap: "4px", overflow: "hidden", flex: 1, minWidth: 0 }}
                         >
-                            <div className="marquee-container" ref={nameContainerRef}>
+                            <div className="marquee-container" ref={nameContainerRef} style={{ flexShrink: 1, minWidth: 0, width: "auto" }}>
                                 <span
                                     ref={nameContentRef}
                                     className={`marquee-content ${marqueeDist < 0 ? "marquee-active" : ""}`}
