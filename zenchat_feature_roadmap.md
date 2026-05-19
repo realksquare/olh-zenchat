@@ -54,7 +54,10 @@ This document outlines the technical architecture and step-by-step implementatio
 - **Cinematic First-Time Intro Sequence ("Deconstruction of Chaos" Rebirth):**
   1. Store an intro flag `localStorage.getItem("zen_intro_shown")`.
   2. If the user toggles Zen Mode and the flag is absent:
-     - Render a gorgeous, full-screen overlay `.zen-intro-overlay` with a rich dark absolute backdrop and radial gradient halos.
+     - **Pre-Sequence Transition (3.0s total):**
+       - **Tapping Toggle (0s - 0.5s):** Trigger a rapid 0.5-second fade-to-black overlay cover.
+       - **Disclaimer Phase (0.5s - 2.5s):** Fade in a quiet, elegant disclaimer at the center: *"For the immersive experience, turn your device volume up."* (Since standard browser sandboxing does not allow direct reading of the physical OS/device master volume, this cinematic reminder will display gracefully by default).
+       - **Disclaimer Fade Out (2.5s - 3.0s):** Fade out the disclaimer over 0.5 seconds, then immediately trigger the main sequence.
      - **10-Second Unorthodox Cinematic Timeline Choreography:**
        - **0s - 2.5s (The Noise / Chaotic Clutter):** Instead of starting in a peaceful state, the screen simulates absolute digital noise. The chat history, avatars, and interface start trembling, glitching, and shifting with aggressive chromatic aberrations. A raw, high-contrast monospace text blinks in the center: `"THE NOISE IS LOUD."`
        - **2.5s - 5.0s (The Gravity Well / Implosion):** A heavy, low-end sub-bass "boom" is synthesized (rapidly sliding down from 150Hz to 30Hz, like a cinema drop). On screen, all glitched UI elements are violently sucked/drawn into a single central glowing point (a CSS/Canvas gravity-well/implosion effect). The screen goes completely dark, leaving only the tiny central pixel glowing like a quiet star.
@@ -62,12 +65,12 @@ This document outlines the technical architecture and step-by-step implementatio
        - **8.5s - 10.0s (The Integration):** The ink-letters dissolve into the background. The full overlay scales up and dissolves gracefully, leaving behind a beautifully spacious, distraction-free active workspace.
      - Add a tiny, minimalist outline button at the top-right (`.btn-skip-intro`) styled with high transparency (`background: transparent; border: 1px solid rgba(255,255,255,0.2)`) to allow bypassing the sequence instantly.
      - Auto-dismiss and transition into active Zen Mode after 10 seconds, setting `zen_intro_shown` to `"true"`.
-     - **Procedural Ambient BGM & Sync:** 
+     - **Procedural Ambient BGM & Sync (Audio Safety & Smoothness):** 
        - Since audio/music assets are heavy and consume data, we will dynamically synthesize a deep, soothing **ambient singing-bowl drone** completely offline using the **Web Audio API** in `utils/audio.js` that is perfectly synced with the visual reveal.
        - *Synthesis & Sync Recipe:*
-         1. **Phase 1: The Glitch Hum (0s - 2.5s):** Trigger a high-pass filtered, slightly detuned sawtooth oscillator pair at 180Hz and 183Hz to create a tense, chaotic digital hum, aligning with the visual clutter.
-         2. **Phase 2: The Gravity Implosion (2.5s - 5.0s):** Trigger a low-frequency oscillator triad (110Hz, 165Hz, 220Hz) routed through a low-pass filter (cutoff ~250Hz). The filter cutoff and gain will sweep dynamically downward to mimic the visual sucking-in of elements, culminating in a silent sub-bass drop.
-         3. **Phase 3: The Liquid Bloom (5.0s - 10.0s):** Fade in a sweet, harmonically rich singing-bowl overtone layer (330Hz and 440Hz sine waves) routed through low-pass filters that sway gently with the ink ripples, ramping the master gain down to zero over 1.5 seconds at the end of the timeline.
+         1. **Phase 1: The Glitch Hum (0s - 2.5s):** Trigger a high-pass filtered, slightly detuned sawtooth oscillator pair at 180Hz and 183Hz to create a tense, chaotic digital hum, aligning with the visual clutter. To prevent harshness if system volume is high, the detuned sawtooth gain is capped at a conservative `0.03` with a soft low-pass filter (cutoff 200Hz) to keep the hum atmospheric and subtle.
+         2. **Phase 2: The Gravity Implosion (2.5s - 5.0s):** Trigger a low-frequency oscillator triad (110Hz, 165Hz, 220Hz) routed through a low-pass filter (cutoff ~250Hz). The filter cutoff and gain will sweep dynamically downward to mimic the visual sucking-in of elements, culminating in a silent sub-bass drop (gain safely ramping down from `0.06` to `0.001` using `exponentialRampToValueAtTime`).
+         3. **Phase 3: The Liquid Bloom (5.0s - 10.0s):** Fade in a sweet, harmonically rich singing-bowl overtone layer (330Hz and 440Hz sine waves) routed through low-pass filters that sway gently with the ink ripples. The master gain for these warm ambient pads is strictly limited to a comfortable `0.05` to guarantee it never gets loud or intrusive, slowly fading out to 0 over 1.5 seconds at the end of the sequence.
 
 ---
 
