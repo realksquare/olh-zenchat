@@ -59,6 +59,11 @@ This document outlines the technical architecture and step-by-step implementatio
      - Text layers (e.g., *"Quiet the noise."*, *"Embrace the thought."*) will slide out of blur masks sequentially, styled like a movie title motion poster.
      - Add a tiny, minimalist outline button at the top-right (`.btn-skip-intro`) labeled `"Skip Intro"` to allow bypassing the sequence instantly.
      - Auto-dismiss and transition into active Zen Mode after 10 seconds, setting `zen_intro_shown` to `"true"`.
+     - **Procedural Ambient BGM:** 
+       - Since audio/music assets are heavy and consume data, we will dynamically synthesize a deep, soothing **ambient singing-bowl drone** completely offline using the **Web Audio API** in `utils/audio.js`.
+       - *Synthesis Recipe:* We will trigger a low-frequency oscillator triad (e.g. 110Hz, 165Hz, 220Hz), routing them through a BiquadFilterNode configured as a low-pass filter (cutoff ~300Hz) to produce a warm, rich tone.
+       - A low-frequency modulator (LFO) will slowly sway the volume and filter cutoffs over 10 seconds, creating a breathing ambient soundscape.
+       - Upon skipping or closing the intro, the synth will gently ramp down its master gain to zero over 1.5 seconds (`linearRampToValueAtTime`) to gracefully fade out without abrupt clicks.
 
 ---
 
