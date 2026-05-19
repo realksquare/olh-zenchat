@@ -13,6 +13,7 @@ import InviteModal from "../ui/InviteModal";
 import MomentsRow from "./MomentsRow";
 import MomentCreator from "./MomentCreator";
 import MomentViewer from "./MomentViewer";
+import ZenVaultModal from "../ui/ZenVaultModal";
 import { useMomentStore } from "../../stores/momentStore";
 import { VerifiedTick, AdminIcon, HelpIcon, InviteIcon } from "../ui/Icons";
 
@@ -31,7 +32,8 @@ const Sidebar = ({ onChatSelect }) => {
         isLoadingChats: s.isLoadingChats,
         togglePinChat: s.togglePinChat,
         onlineUsers: s.onlineUsers,
-        isOffline: s.isOffline
+        isOffline: s.isOffline,
+        isBareMinimum: s.isBareMinimum
     })));
     const [search, setSearch] = useState("");
     const [searchResults, setSearchResults] = useState([]);
@@ -42,12 +44,14 @@ const Sidebar = ({ onChatSelect }) => {
     const [isE2EEInfoOpen, setIsE2EEInfoOpen] = useState(false);
     const [hoverE2EE, setHoverE2EE] = useState(false);
     const [hoverPWA, setHoverPWA] = useState(false);
+    const [hoverBareMin, setHoverBareMin] = useState(false);
     const [pwaPrompt, setPwaPrompt] = useState(window.deferredPrompt || null);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [isMomentCreatorOpen, setIsMomentCreatorOpen] = useState(false);
     const [activeViewerMoments, setActiveViewerMoments] = useState(null);
     const [activeTab, setActiveTab] = useState("recents");
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [isVaultOpen, setIsVaultOpen] = useState(false);
     const { fetchChats } = useChatStore();
     const { fetchMoments } = useMomentStore();
     
@@ -337,6 +341,56 @@ const Sidebar = ({ onChatSelect }) => {
                         </svg>
                     </button>
                 )}
+                <button 
+                    onClick={() => useChatStore.getState().setBareMinimum(!isBareMinimum)} 
+                    aria-label="Crisis Mode" 
+                    title={isBareMinimum ? "Disable Crisis Mode (#BareMinimum.)" : "Enable Crisis Mode (#BareMinimum.)"}
+                    style={{ 
+                        color: isBareMinimum ? "var(--color-primary)" : (hoverBareMin ? "var(--color-primary)" : "#475569"),
+                        padding: "4px",
+                        borderRadius: "4px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: "8px",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "color 0.15s ease"
+                    }}
+                    onMouseEnter={() => setHoverBareMin(true)}
+                    onMouseLeave={() => setHoverBareMin(false)}
+                >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" />
+                        <line x1="16" y1="8" x2="2" y2="22" />
+                    </svg>
+                </button>
+                <button
+                    onClick={() => setIsVaultOpen(true)}
+                    style={{ 
+                        color: "#475569",
+                        padding: "4px",
+                        borderRadius: "4px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: "8px",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "color 0.15s ease"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = "var(--color-primary)"}
+                    onMouseLeave={(e) => e.currentTarget.style.color = "#475569"}
+                    title="Open Secure Local Safe (ZenVault)"
+                    aria-label="ZenVault"
+                >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                </button>
                 <button className="sidebar-logout" onClick={() => setShowLogoutConfirm(true)} aria-label="Sign out" title="Sign out">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -518,11 +572,13 @@ const Sidebar = ({ onChatSelect }) => {
                 )}
             </div>
 
-            <ProfileModal
-                isOpen={isProfileOpen}
-                onClose={() => setIsProfileOpen(false)}
-                onSave={() => setIsProfileOpen(false)}
-            />
+            {isProfileOpen && (
+                <ProfileModal
+                    isOpen={isProfileOpen}
+                    onClose={() => setIsProfileOpen(false)}
+                    onSave={() => setIsProfileOpen(false)}
+                />
+            )}
 
             {(user?.role === "master_admin" || user?.role === "co_admin") ? (
                 <div style={{ display: 'flex', flexDirection: 'column', padding: '0 16px 16px', gap: '8px' }}>
@@ -561,6 +617,10 @@ const Sidebar = ({ onChatSelect }) => {
                 isOpen={isInviteOpen} 
                 onClose={() => setIsInviteOpen(false)} 
                 username={user?.username} 
+            />
+            <ZenVaultModal 
+                isOpen={isVaultOpen} 
+                onClose={() => setIsVaultOpen(false)} 
             />
 
             {showLogoutConfirm && (

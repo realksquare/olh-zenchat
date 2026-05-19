@@ -8,6 +8,7 @@ import { enqueueOutbox, drainOutbox } from "../db/zenDB";
 import { decryptMessageIfNeeded } from "../utils/e2eeHelper";
 import { encryptMessageContent, encryptMessageContentForBoth } from "../utils/crypto";
 import axiosInstance from "../utils/axios";
+import { compressPacket, decompressPacket } from "../utils/packetCompressor";
 
 const SocketContext = createContext(null);
 
@@ -45,32 +46,33 @@ export const SocketProvider = ({ children }) => {
         };
 
         const handleReceiveMessage = async ({ message }) => {
+            const decompressed = decompressPacket(message);
             // Decrypt transparently in background before saving/state updates
-            await decryptMessageIfNeeded(message);
+            await decryptMessageIfNeeded(decompressed);
 
-            if (message.mediaUrl) {
-                message.mediaUrl = getThumbnailUrl(message.mediaUrl);
+            if (decompressed.mediaUrl) {
+                decompressed.mediaUrl = getThumbnailUrl(decompressed.mediaUrl);
             }
 
             const existingChat = useChatStore.getState().chats.find(
-                (c) => c._id?.toString() === message.chatId?.toString()
+                (c) => c._id?.toString() === decompressed.chatId?.toString()
             );
 
             if (!existingChat) {
                 await useChatStore.getState().fetchChats();
             }
 
-            useChatStore.getState().addMessage(message.chatId, message);
+            useChatStore.getState().addMessage(decompressed.chatId, decompressed);
 
             const activeChat = useChatStore.getState().activeChat;
             const currentUserId = useAuthStore.getState().user?._id;
             const isFromMe =
-                message.senderId?.toString() === currentUserId?.toString() ||
-                message.senderId?._id?.toString() === currentUserId?.toString();
+                decompressed.senderId?.toString() === currentUserId?.toString() ||
+                decompressed.senderId?._id?.toString() === currentUserId?.toString();
 
-            if (activeChat?._id?.toString() === message.chatId?.toString() && !isFromMe) {
-                socketRef.current?.emit("message_read", { chatId: message.chatId });
-                useChatStore.getState().markChatAsRead(message.chatId);
+            if (activeChat?._id?.toString() === decompressed.chatId?.toString() && !isFromMe) {
+                socketRef.current?.emit("message_read", { chatId: decompressed.chatId });
+                useChatStore.getState().markChatAsRead(decompressed.chatId);
             }
             if (!isFromMe) {
                 const { soundEnabled } = useAuthStore.getState();
@@ -192,13 +194,17 @@ export const SocketProvider = ({ children }) => {
             setIsConnected(true);
             const activeChat = useChatStore.getState().activeChat;
             if (activeChat?._id) {
-                socket.emit("join_chat", { chatId: activeChat._id });
+                const isLowBandwidth = useChatStore.getState().isLowBandwidth;
+                const isBareMinimum = useChatStore.getState().isBareMinimum;
+                socket.emit("join_chat", { chatId: activeChat._id, isLowBandwidth, isBareMinimum });
                 useChatStore.getState().fetchMessages(activeChat._id);
             }
             useChatStore.getState().fetchChats();
             const queued = await drainOutbox();
             queued.forEach(({ id: _id, createdAt: _ts, ...payload }) => {
-                socket.emit("send_message", payload);
+                const isBareMinimum = useChatStore.getState().isBareMinimum;
+                const packet = isBareMinimum ? compressPacket(payload) : payload;
+                socket.emit("send_message", packet);
             });
         });
 
@@ -262,9 +268,29 @@ export const SocketProvider = ({ children }) => {
         };
     }, [token, userId]);
 
+    const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
+    const isBareMinimum = useChatStore((s) => s.isBareMinimum);
+
+    useEffect(() => {
+        if (socketRef.current?.connected) {
+            const activeChat = useChatStore.getState().activeChat;
+            socketRef.current.emit("update_low_bandwidth", {
+                chatId: activeChat?._id || "",
+                isLowBandwidth
+            });
+        }
+    }, [isLowBandwidth]);
+
+    useEffect(() => {
+        if (socketRef.current?.connected) {
+            socketRef.current.emit("update_bare_minimum", { isBareMinimum });
+        }
+    }, [isBareMinimum]);
+
     const joinChat = useCallback((chatId) => {
         const isLowBandwidth = useChatStore.getState().isLowBandwidth;
-        socketRef.current?.emit("join_chat", { chatId, isLowBandwidth });
+        const isBareMinimum = useChatStore.getState().isBareMinimum;
+        socketRef.current?.emit("join_chat", { chatId, isLowBandwidth, isBareMinimum });
     }, []);
 
     const updateLowBandwidth = useCallback((chatId, isLowBandwidth) => {
@@ -281,7 +307,9 @@ export const SocketProvider = ({ children }) => {
         if (!socketRef.current?.connected) return;
         const queued = await drainOutbox();
         queued.forEach(({ id: _id, createdAt: _ts, ...payload }) => {
-            socketRef.current.emit("send_message", payload);
+            const isBareMinimum = useChatStore.getState().isBareMinimum;
+            const packet = isBareMinimum ? compressPacket(payload) : payload;
+            socketRef.current.emit("send_message", packet);
         });
     }, []);
 
@@ -330,7 +358,9 @@ export const SocketProvider = ({ children }) => {
         }
 
         if (socketRef.current?.connected && navigator.onLine) {
-            socketRef.current.emit("send_message", payload);
+            const isBareMinimum = useChatStore.getState().isBareMinimum;
+            const packet = isBareMinimum ? compressPacket(payload) : payload;
+            socketRef.current.emit("send_message", packet);
         } else {
             enqueueOutbox(payload);
         }

@@ -1,6 +1,6 @@
 # ZenChat AI Developer Instructions
 
-These are the core operating principles and coding standards to be followed for all future development on ZenChat.
+These are the core operating principles and coding standards to be followed for all future development on ZenChat, to be remembered for every build, chat or edit session.
 
 ## 1. Systematic Analysis & Execution
 - **Analyze completely:** Analyze the whole project (and check all relevant files if doubtful) before making any new change or addition.
@@ -14,9 +14,11 @@ These are the core operating principles and coding standards to be followed for 
 
 ## 3. Development & Debugging
 - **Print Logs When Needed:** When debugging, use `console.log`, `console.warn`, and `console.error` appropriately. Do not clutter logs with excessive output.
+- **Free to use any terminal commands or browser preview:** You can use any terminal commands or browser preview to debug or fix issues.
 
 ## 4. Error Handling
 - **Graceful Failures:** Handle errors gracefully and provide meaningful feedback to the user. Do not leave the application in an inconsistent state.
+- **Different POVs:** If you cannot resolve an issue with usual approaches, try to resolve it from different POVs - think about what could have gone wrong from frontend, backend, database, network, etc. and try to fix it from that POV. Also search the internet for potential solutions.
 
 ## 5. UI & Aesthetics
 - **Professional Typography:** Keep UI text away from fancy dashes or excessive punctuation. Use standard hyphens.

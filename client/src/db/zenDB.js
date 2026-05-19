@@ -23,6 +23,15 @@ db.version(4).stores({
     keys: "key", // Keys: 'privateKey', 'publicKey', 'recoveryKeySaved'
 });
 
+db.version(5).stores({
+    chats: "_id, updatedAt, lastMessage._id",
+    messages: "_id, chatId, createdAt, senderId",
+    settings: "key",
+    outbox: "++id, chatId, createdAt",
+    keys: "key",
+    vault: "id, name, type, size, date",
+});
+
 export const persistChat = async (chat) => {
     try {
         await db.chats.put(chat);
@@ -53,6 +62,7 @@ export const clearLocalData = async () => {
     if (db.settings) await db.settings.clear();
     if (db.outbox) await db.outbox.clear();
     if (db.keys) await db.keys.clear();
+    if (db.vault) await db.vault.clear();
 };
 
 export const enqueueOutbox = async (payload) => {

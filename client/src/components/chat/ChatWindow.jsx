@@ -533,7 +533,7 @@ const ChatWindow = ({ onBack }) => {
     const {
         activeChat, fetchMessages, fetchOlderMessages, isLoadingMessages, isLoadingOlderMessages,
         typingUsers, markChatAsRead, onlineUsers, hasMoreMessages, isLowBandwidth, peerLowBandwidth, isOffline,
-        isZenMode, toggleZenMode, zenUsers
+        isZenMode, toggleZenMode, zenUsers, isBareMinimum
     } = useChatStore(useShallow((s) => ({
         activeChat: s.activeChat,
         fetchMessages: s.fetchMessages,
@@ -549,7 +549,8 @@ const ChatWindow = ({ onBack }) => {
         isOffline: s.isOffline,
         isZenMode: s.isZenMode,
         toggleZenMode: s.toggleZenMode,
-        zenUsers: s.zenUsers
+        zenUsers: s.zenUsers,
+        isBareMinimum: s.isBareMinimum
     })));
 
     const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
@@ -949,7 +950,7 @@ const ChatWindow = ({ onBack }) => {
     }
 
     return (
-        <div className={`chat-window ${isDeleted ? 'user-deleted-mode' : ''} ${isZenMode ? 'zen-active' : ''}`} style={{ position: 'relative' }}>
+        <div className={`chat-window ${isDeleted ? 'user-deleted-mode' : ''} ${isZenMode ? 'zen-active' : ''} ${isBareMinimum ? 'bare-minimum-mode' : ''}`} style={{ position: 'relative' }}>
             <div className="chat-header" style={{ position: 'sticky', top: 0, zIndex: 50 }}>
                 <button className="chat-back-btn" onClick={onBack} aria-label="Back to chats">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -964,7 +965,7 @@ const ChatWindow = ({ onBack }) => {
                         className={`avatar avatar-md ${hasMoments && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked ? 'moments-halo-thin' : ''}`}
                         style={hasMoments && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked ? { '--halo-color': useMomentStore.getState().getHaloColor(otherUser?._id, user?._id) } : {}}
                     >
-                        {otherUser?.avatar ? (
+                        {otherUser?.avatar && !isBareMinimum ? (
                             <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
                         ) : (
                             <span>{otherUser?.username?.slice(0, 2).toUpperCase()}</span>

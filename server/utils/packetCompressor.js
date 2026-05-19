@@ -1,0 +1,54 @@
+const compressPacket = (msg) => {
+    if (!msg) return msg;
+    const compressed = {};
+    if (msg.chatId !== undefined) compressed.c = msg.chatId;
+    if (msg.content !== undefined) compressed.t = msg.content;
+    if (msg.type !== undefined) compressed.y = msg.type;
+    if (msg.mediaUrl !== undefined) compressed.u = msg.mediaUrl;
+    if (msg.replyTo !== undefined) compressed.r = msg.replyTo;
+    if (msg.isViewOnce !== undefined) compressed.v = msg.isViewOnce;
+    if (msg.cid !== undefined) compressed.i = msg.cid;
+    if (msg.isEncrypted !== undefined) compressed.e = msg.isEncrypted;
+    if (msg.encryptedSymmetricKey !== undefined) compressed.k = msg.encryptedSymmetricKey;
+    if (msg.iv !== undefined) compressed.j = msg.iv;
+    if (msg.isLowBandwidth !== undefined) compressed.l = msg.isLowBandwidth;
+    
+    // Include minimal sender & replyTo fields if populated
+    if (msg.senderId) {
+        compressed.s = {
+            _id: msg.senderId._id || msg.senderId,
+            username: msg.senderId.username,
+            avatar: msg.senderId.avatar
+        };
+    }
+    if (msg.createdAt) compressed.d = msg.createdAt; // date
+    if (msg._id) compressed.id = msg._id; // message ID
+    compressed.m = true;
+    return compressed;
+};
+
+const decompressPacket = (msg) => {
+    if (!msg) return msg;
+    if (msg.m || msg.c !== undefined || msg.t !== undefined) {
+        return {
+            _id: msg.id,
+            chatId: msg.c,
+            content: msg.t,
+            type: msg.y || "text",
+            mediaUrl: msg.u,
+            replyTo: msg.r,
+            isViewOnce: msg.v,
+            cid: msg.i,
+            isEncrypted: msg.e,
+            encryptedSymmetricKey: msg.k,
+            iv: msg.j || msg.iv,
+            isLowBandwidth: msg.l,
+            senderId: msg.s,
+            createdAt: msg.d,
+            isCrisisMode: true
+        };
+    }
+    return msg;
+};
+
+module.exports = { compressPacket, decompressPacket };

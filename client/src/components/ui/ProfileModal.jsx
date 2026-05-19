@@ -61,7 +61,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [phoneBody, setPhoneBody] = useState(initialPhone.body);
     const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
     const [is2faEnabled, setIs2faEnabled] = useState(user?.is2faEnabled || false);
-    const [mfaPreference, setMfaPreference] = useState(user?.email ? "phone" : "email");
+    const [mfaPreference, setMfaPreference] = useState((user?.phoneNumber && !user?.email) ? "email" : "phone");
     const [otpCode, setOtpCode] = useState("");
     const [otpSent, setOtpSent] = useState(false);
 
@@ -91,7 +91,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setProfileBlockError(null);
             setPhoneNumber(user.phoneNumber || "");
             setIs2faEnabled(user.is2faEnabled || false);
-            setMfaPreference(user.email ? "phone" : "email");
+            setMfaPreference((user.phoneNumber && !user.email) ? "email" : "phone");
             
             const parsed = parsePhone(user.phoneNumber);
             setCountryCode(parsed.code);
@@ -209,11 +209,16 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             showToast("Please enter a valid phone number.");
             return;
         }
+        if (mfaPreference === "email" && !email.trim()) {
+            showToast("Please enter a valid email address.");
+            return;
+        }
         setIsE2EELoading(true);
         const fullPhone = mfaPreference === "phone" ? (countryCode + phoneBody.trim()) : "";
         try {
             const { data } = await axiosInstance.post("/auth/2fa/setup/request", {
                 phoneNumber: fullPhone,
+                email: mfaPreference === "email" ? email.trim() : undefined,
                 mfaPreference
             });
 
@@ -273,6 +278,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             const { data } = await axiosInstance.post("/auth/2fa/setup/verify", {
                 otpCode: otpCode.trim(),
                 phoneNumber: fullPhone,
+                email: mfaPreference === "email" ? email.trim() : undefined,
                 mfaPreference,
                 firebaseToken
             });
@@ -655,7 +661,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "10px" }}>
                                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                                         <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>Select 2FA Method</label>
-                                        {user?.email ? (
+                                        {mfaPreference === "email" ? (
                                             <div style={{
                                                 background: "rgba(255, 255, 255, 0.04)",
                                                 border: "1px solid rgba(255, 255, 255, 0.08)",
@@ -665,7 +671,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                 color: "#fff",
                                                 fontWeight: "500"
                                             }}>
-                                                Phone SMS OTP (Enter phone number below)
+                                                Email Verification Code (Sends verification to email)
                                             </div>
                                         ) : (
                                             <div style={{
@@ -677,7 +683,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                 color: "#fff",
                                                 fontWeight: "500"
                                             }}>
-                                                Email Verification Code (Sends to your email)
+                                                Phone SMS OTP (Sends OTP via SMS)
                                             </div>
                                         )}
                                     </div>
@@ -727,20 +733,58 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                         </div>
                                     )}
 
+                                    {mfaPreference === "email" && (
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                            <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>Email Address</label>
+                                            <input
+                                                type="email"
+                                                placeholder="you@example.com"
+                                                value={email}
+                                                onChange={(e) => {
+                                                    setEmail(e.target.value);
+                                                    setOtpSent(false);
+                                                }}
+                                                style={{
+                                                    background: "rgba(0, 0, 0, 0.3)",
+                                                    border: "1px solid rgba(255,255,255,0.1)",
+                                                    borderRadius: "8px",
+                                                    padding: "8px 12px",
+                                                    fontSize: "0.8rem",
+                                                    color: "#fff"
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+
                                     {!otpSent ? (
                                         <button
                                             type="button"
                                             onClick={handleSendVerificationCode}
-                                            disabled={mfaPreference === "phone" && !phoneBody.trim()}
+                                            disabled={
+                                                (mfaPreference === "phone" && !phoneBody.trim()) ||
+                                                (mfaPreference === "email" && !email.trim())
+                                            }
                                             style={{ 
-                                                background: (mfaPreference === "phone" && !phoneBody.trim()) ? "rgba(255, 255, 255, 0.05)" : "rgba(61, 165, 217, 0.15)", 
-                                                border: (mfaPreference === "phone" && !phoneBody.trim()) ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(61, 165, 217, 0.3)", 
-                                                color: (mfaPreference === "phone" && !phoneBody.trim()) ? "#64748b" : "var(--color-primary)", 
+                                                background: (
+                                                    (mfaPreference === "phone" && !phoneBody.trim()) ||
+                                                    (mfaPreference === "email" && !email.trim())
+                                                ) ? "rgba(255, 255, 255, 0.05)" : "rgba(61, 165, 217, 0.15)", 
+                                                border: (
+                                                    (mfaPreference === "phone" && !phoneBody.trim()) ||
+                                                    (mfaPreference === "email" && !email.trim())
+                                                ) ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(61, 165, 217, 0.3)", 
+                                                color: (
+                                                    (mfaPreference === "phone" && !phoneBody.trim()) ||
+                                                    (mfaPreference === "email" && !email.trim())
+                                                ) ? "#64748b" : "var(--color-primary)", 
                                                 padding: "8px 16px", 
                                                 borderRadius: "8px", 
                                                 fontSize: "0.8rem", 
                                                 fontWeight: "600", 
-                                                cursor: (mfaPreference === "phone" && !phoneBody.trim()) ? "not-allowed" : "pointer", 
+                                                cursor: (
+                                                    (mfaPreference === "phone" && !phoneBody.trim()) ||
+                                                    (mfaPreference === "email" && !email.trim())
+                                                ) ? "not-allowed" : "pointer", 
                                                 width: "100%", 
                                                 marginTop: "4px" 
                                             }}
@@ -772,14 +816,29 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                     boxSizing: "border-box"
                                                 }}
                                             />
-                                            <div style={{ display: "flex", gap: "8px", width: "100%" }}>
+                                            <div style={{ display: "flex", gap: "10px", width: "100%", justifyContent: "center", marginTop: "4px" }}>
                                                 <button
                                                     type="button"
                                                     onClick={() => {
                                                         setOtpSent(false);
                                                         setOtpCode("");
                                                     }}
-                                                    style={{ flex: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", padding: "8px 10px", borderRadius: "8px", fontSize: "0.78rem", cursor: "pointer", height: "36px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                                    style={{ 
+                                                        flex: 1, 
+                                                        maxWidth: "150px", 
+                                                        background: "rgba(255,255,255,0.06)", 
+                                                        border: "1px solid rgba(255,255,255,0.1)", 
+                                                        color: "#fff", 
+                                                        padding: "10px 16px", 
+                                                        borderRadius: "8px", 
+                                                        fontSize: "0.8rem", 
+                                                        fontWeight: "600", 
+                                                        cursor: "pointer", 
+                                                        height: "40px", 
+                                                        display: "flex", 
+                                                        alignItems: "center", 
+                                                        justifyContent: "center" 
+                                                    }}
                                                 >
                                                     Cancel
                                                 </button>
@@ -787,7 +846,23 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                     type="button"
                                                     onClick={handleVerifyAndEnable2fa}
                                                     disabled={otpCode.length < 6 || isE2EELoading}
-                                                    style={{ flex: 1, background: "var(--color-primary)", color: "black", border: "none", padding: "8px 14px", borderRadius: "8px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", opacity: (otpCode.length < 6 || isE2EELoading) ? 0.5 : 1 }}
+                                                    style={{ 
+                                                        flex: 1, 
+                                                        maxWidth: "150px", 
+                                                        background: "var(--color-primary)", 
+                                                        color: "black", 
+                                                        border: "none", 
+                                                        padding: "10px 16px", 
+                                                        borderRadius: "8px", 
+                                                        fontSize: "0.8rem", 
+                                                        fontWeight: "700", 
+                                                        cursor: "pointer", 
+                                                        height: "40px", 
+                                                        display: "flex", 
+                                                        alignItems: "center", 
+                                                        justifyContent: "center", 
+                                                        opacity: (otpCode.length < 6 || isE2EELoading) ? 0.5 : 1 
+                                                    }}
                                                 >
                                                     Verify
                                                 </button>

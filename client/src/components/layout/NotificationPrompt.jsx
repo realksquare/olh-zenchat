@@ -13,6 +13,10 @@ const NotificationPrompt = () => {
     const fcmTokens = user?.fcmTokens;
 
     useEffect(() => {
+        setDismissed(false);
+    }, [userId]);
+
+    useEffect(() => {
         if (!user) return;
         
         // Safety check for Notification API

@@ -529,15 +529,35 @@ router.post("/logout", authMiddleware, async (req, res) => {
 // Request 2FA Setup OTP
 router.post("/2fa/setup/request", authMiddleware, async (req, res) => {
     try {
-        const { phoneNumber, mfaPreference } = req.body;
+        const { phoneNumber, email, mfaPreference } = req.body;
         const user = await User.findById(req.user._id);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        const cleanPhone = phoneNumber ? phoneNumber.trim() : "";
-        if (mfaPreference === "phone" && !cleanPhone) {
-            return res.status(400).json({ message: "Phone number is required for SMS OTP" });
+        let emailTarget = "";
+        if (mfaPreference === "email") {
+            const cleanEmail = email ? email.trim().toLowerCase() : "";
+            emailTarget = cleanEmail || user.email || "";
+            if (!emailTarget) {
+                return res.status(400).json({ message: "Email address is required for Email 2FA" });
+            }
+            // Basic format validation
+            if (!/\S+@\S+\.\S+/.test(emailTarget)) {
+                return res.status(400).json({ message: "Invalid email format" });
+            }
+            // Check uniqueness if email is different from current
+            if (emailTarget !== user.email) {
+                const existing = await User.findOne({ email: emailTarget });
+                if (existing) {
+                    return res.status(409).json({ message: "Email address already taken" });
+                }
+            }
+        } else {
+            const cleanPhone = phoneNumber ? phoneNumber.trim() : "";
+            if (!cleanPhone) {
+                return res.status(400).json({ message: "Phone number is required for SMS OTP" });
+            }
         }
 
         // Generate 6-digit OTP code
@@ -551,10 +571,10 @@ router.post("/2fa/setup/request", authMiddleware, async (req, res) => {
         await user.save();
 
         if (mfaPreference === "email") {
-            const emailTarget = user.email;
             await send2faEmail(emailTarget, user.username, otpCode);
             res.json({ message: `Verification code sent to email ${emailTarget}` });
         } else {
+            const cleanPhone = phoneNumber.trim();
             // Phone SMS setup dispatch log
             console.log(`[SMS OTP DISPATCH] to ${cleanPhone}: Your ZenChat 2FA Setup Code is ${otpCode}`);
             res.json({ message: `Verification code sent to phone ${cleanPhone}` });
@@ -568,7 +588,7 @@ router.post("/2fa/setup/request", authMiddleware, async (req, res) => {
 // Verify and enable 2FA
 router.post("/2fa/setup/verify", authMiddleware, async (req, res) => {
     try {
-        const { otpCode, phoneNumber, mfaPreference, firebaseToken } = req.body;
+        const { otpCode, phoneNumber, email, mfaPreference, firebaseToken } = req.body;
         const user = await User.findById(req.user._id);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
@@ -602,7 +622,7 @@ router.post("/2fa/setup/verify", authMiddleware, async (req, res) => {
 
         // Code is valid! Enable 2FA and save settings
         user.is2faEnabled = true;
-        if (phoneNumber) {
+        if (mfaPreference === "phone" && phoneNumber) {
             const cleanPhone = phoneNumber.trim();
             if (cleanPhone && cleanPhone !== user.phoneNumber) {
                 const existing = await User.findOne({ phoneNumber: cleanPhone });
@@ -611,6 +631,16 @@ router.post("/2fa/setup/verify", authMiddleware, async (req, res) => {
                 }
             }
             user.phoneNumber = cleanPhone || undefined;
+        }
+        if (mfaPreference === "email" && email) {
+            const cleanEmail = email.trim().toLowerCase();
+            if (cleanEmail && cleanEmail !== user.email) {
+                const existing = await User.findOne({ email: cleanEmail });
+                if (existing) {
+                    return res.status(409).json({ message: "Email address already taken" });
+                }
+            }
+            user.email = cleanEmail || undefined;
         }
         if (mfaPreference) {
             user.mfaPreference = mfaPreference;

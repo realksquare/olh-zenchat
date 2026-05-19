@@ -5986,3 +5986,26 @@ select {
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.02) 8%, rgba(0,0,0,0.3) 22%, #000 45%, #000 100%);
   transition: mask-image 1.5s ease, -webkit-mask-image 1.5s ease;
 }
+
+/* ==========================================================================
+   Crisis Mode (#BareMinimum.) Overrides
+   ========================================================================== */
+.bare-minimum-mode *,
+.bare-minimum-mode *::before,
+.bare-minimum-mode *::after {
+  transition: none !important;
+  animation: none !important;
+  transition-duration: 0s !important;
+  animation-duration: 0s !important;
+}
+
+.chat-window.zen-active.bare-minimum-mode .chat-messages {
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+}
+
+.chat-window.zen-active.bare-minimum-mode .message-row {
+  filter: none !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}

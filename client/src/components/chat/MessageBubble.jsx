@@ -21,8 +21,9 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const user = useAuthStore((s) => s.user);
     const { toggleStarMessage, markViewOnceAsViewed } = useChatStore.getState();
     const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
+    const isBareMinimum = useChatStore((s) => s.isBareMinimum);
     const [manualLoad, setManualLoad] = useState(false);
-    const shouldDelayLoad = isLowBandwidth && !isMe && !manualLoad;
+    const shouldDelayLoad = (isLowBandwidth || isBareMinimum) && !isMe && !manualLoad;
     const status = message?.status ?? "sent";
     const progress = message?.progress ?? 0;
     const outerRef = useRef(null);
@@ -112,7 +113,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
             <div className={`message-row ${isMe ? "mine" : "theirs"} ${zenFadeClass}`}>
                 {!isMe && showAvatar && (
                     <div className="avatar avatar-sm">
-                        {otherUser?.avatar ? (
+                        {otherUser?.avatar && !isBareMinimum ? (
                             <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
                         ) : (
                             <span>{otherUser?.username?.slice(0, 2).toUpperCase()}</span>
@@ -136,13 +137,13 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     return (
         <div
             id={`msg-${message._id}`}
-            className={`message-row ${isMe ? "mine" : "theirs"} ${isNew ? "message-slide-up" : ""} ${zenFadeClass}`}
+            className={`message-row ${isMe ? "mine" : "theirs"} ${isNew && !isBareMinimum ? "message-slide-up" : ""} ${zenFadeClass}`}
             onDoubleClick={() => !message.deletedForEveryone && canReply && onEdit({ action: "reply", ...message })}
             style={!isShown ? { visibility: 'hidden', height: 0, overflow: 'hidden' } : {}}
         >
             {!isMe && showAvatar && (
                 <div className="avatar avatar-sm">
-                    {otherUser?.avatar ? (
+                    {otherUser?.avatar && !isBareMinimum ? (
                         <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
                     ) : (
                         <span>{otherUser?.username?.slice(0, 2).toUpperCase()}</span>
@@ -379,7 +380,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                 <span className="message-text">
                                     <DecryptedText
                                         text={message.content}
-                                        animate={isNew && !isMe && message.canSeeScramble && !isLowBandwidth && !message.isLowBandwidth}
+                                        animate={isNew && !isMe && message.canSeeScramble && !isLowBandwidth && !message.isLowBandwidth && !isBareMinimum}
                                     />
                                 </span>
                             )}

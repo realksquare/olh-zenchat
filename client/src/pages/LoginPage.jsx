@@ -211,8 +211,8 @@ const LoginPage = () => {
     };
 
     if (otpSent || mfaRequired) {
-        const maskedDest = mfaRequired ? mfaMaskedValue : form.phoneNumber;
-        const currentMfaType = mfaRequired ? mfaType : "SMS";
+        const maskedDest = mfaRequired ? mfaMaskedValue : (countryCode + phoneBody);
+        const currentMfaType = mfaRequired ? (mfaType === "phone" ? "SMS" : "Email") : "SMS";
 
         return (
             <div className="auth-page">

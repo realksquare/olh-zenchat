@@ -27,6 +27,8 @@ export const useChatStore = create(
             setPeerLowBandwidth: (userId, isLowBandwidth) => set((s) => ({
                 peerLowBandwidth: { ...s.peerLowBandwidth, [userId]: isLowBandwidth }
             })),
+            isBareMinimum: false,
+            setBareMinimum: (bool) => set({ isBareMinimum: bool }),
             isZenMode: false,
             toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode })),
             setUserZenStatus: (userId, isZenMode) => set((state) => ({
@@ -870,7 +872,7 @@ export const useChatStore = create(
                     isLoadingChats, isLoadingMessages, isLoadingOlderMessages,
                     hasMoreMessages, messages, unreadCounts, 
                     isLowBandwidth, peerLowBandwidth, isOffline, _spOpConsecutive,
-                    isZenMode,
+                    isZenMode, isBareMinimum,
                     ...rest 
                 } = state;
                 return rest;

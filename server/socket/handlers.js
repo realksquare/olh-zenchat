@@ -3,6 +3,7 @@ const Chat = require("../models/Chat");
 const User = require("../models/User");
 const mongoose = require("mongoose");
 const { sendPushNotification } = require("../utils/firebase");
+const { decompressPacket, compressPacket } = require("../utils/packetCompressor");
 
 const onlineUsers = new Map();
 const disconnectTimeouts = new Map();
@@ -186,7 +187,7 @@ const registerSocketHandlers = (io) => {
                                 clearTimeout(disconnectTimeouts.get(userId + "_inactive"));
                                 disconnectTimeouts.delete(userId + "_inactive");
                             }
-                            broadcastUserStatus(userId, false, now);
+                            broadcastUserStatus(userId, false, now, io);
                             await cleanupInstantMessages(userId, io);
                         }, 2000);
                         disconnectTimeouts.set(userId, timeout);
@@ -198,7 +199,7 @@ const registerSocketHandlers = (io) => {
                                 const timeout = setTimeout(async () => {
                                     const now = new Date();
                                     await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
-                                    broadcastUserStatus(userId, false, now);
+                                    broadcastUserStatus(userId, false, now, io);
                                     // Trigger instant message cleanup
                                     await cleanupInstantMessages(userId, io);
                                 }, 2000);
@@ -289,23 +290,40 @@ const registerSocketHandlers = (io) => {
             })();
         }
 
-        socket.on("join_chat", ({ chatId, isLowBandwidth }) => {
+        socket.on("join_chat", ({ chatId, isLowBandwidth, isBareMinimum }) => {
             socket.join(chatId);
+            if (userData && userData.sockets.has(socket.id)) {
+                const sData = userData.sockets.get(socket.id);
+                sData.isLowBandwidth = isLowBandwidth;
+                sData.isBareMinimum = isBareMinimum;
+            }
             if (isLowBandwidth !== undefined) {
                 socket.to(chatId).emit("peer_low_bandwidth", { userId, isLowBandwidth });
             }
         });
 
         socket.on("update_low_bandwidth", ({ chatId, isLowBandwidth }) => {
+            if (userData && userData.sockets.has(socket.id)) {
+                userData.sockets.get(socket.id).isLowBandwidth = isLowBandwidth;
+            }
             socket.to(chatId).emit("peer_low_bandwidth", { userId, isLowBandwidth });
+        });
+
+        socket.on("update_bare_minimum", ({ isBareMinimum }) => {
+            if (userData && userData.sockets.has(socket.id)) {
+                userData.sockets.get(socket.id).isBareMinimum = isBareMinimum;
+            }
         });
 
         socket.on("leave_chat", ({ chatId }) => {
             socket.leave(chatId);
         });
 
-        socket.on("send_message", async ({ chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth }) => {
+        socket.on("send_message", async (rawPayload) => {
             try {
+                const decompressed = decompressPacket(rawPayload);
+                const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth } = decompressed;
+
                 const chat = await Chat.findById(chatId).populate("participants", "privacySettings contacts");
                 if (!chat) return;
 
@@ -376,10 +394,11 @@ const registerSocketHandlers = (io) => {
                     const userData = onlineUsers.get(pIdStr);
                     if (userData && userData.sockets && userData.sockets.size > 0) {
                         userData.sockets.forEach((sData, socketId) => {
-                            if (pIdStr === userId.toString()) {
-                                io.to(socketId).emit("receive_message", { message: messagePayloadBase });
+                            const payloadToSend = pIdStr === userId.toString() ? messagePayloadBase : messagePayload;
+                            if (sData.isBareMinimum) {
+                                io.to(socketId).emit("receive_message", { message: compressPacket(payloadToSend) });
                             } else {
-                                io.to(socketId).emit("receive_message", { message: messagePayload });
+                                io.to(socketId).emit("receive_message", { message: payloadToSend });
                             }
                         });
                     }
