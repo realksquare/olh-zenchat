@@ -56,9 +56,11 @@ const NetworkBanner = () => {
       
       clearTimeout(reconnectTimer.current);
 
+      const isLiveConnected = socket?.connected || false;
+
       if (offline) {
         showBanner("offline");
-      } else if (!isConnected) {
+      } else if (!isLiveConnected) {
         // 1.5-second grace period to ignore transient handshake states on mount/reconnect
         reconnectTimer.current = setTimeout(() => {
           showBanner("reconnecting");

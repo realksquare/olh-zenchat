@@ -1,24 +1,38 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
+const PWA_DISMISS_KEY = "zenchat_pwa_install_dismissed_time";
+
 const InstallPWA = () => {
     const [deferredPrompt, setDeferredPrompt] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
 
+    const shouldShowPrompt = () => {
+        const dismissedTime = localStorage.getItem(PWA_DISMISS_KEY);
+        if (dismissedTime) {
+            const elapsed = Date.now() - parseInt(dismissedTime, 10);
+            const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+            if (elapsed < ONE_DAY_MS) {
+                return false;
+            }
+        }
+        return true;
+    };
+
     useEffect(() => {
         const isStandalone =
             window.matchMedia("(display-mode: standalone)").matches ||
             window.navigator.standalone === true;
 
-        if (isStandalone || sessionStorage.getItem("pwaPromptDismissed")) return;
+        if (isStandalone || !shouldShowPrompt()) return;
 
         const handler = (e) => {
             e.preventDefault();
             setDeferredPrompt(e);
             setTimeout(() => {
-                if (!sessionStorage.getItem("pwaPromptDismissed")) {
+                if (shouldShowPrompt()) {
                     setShowModal(true);
                 }
             }, 1500);
@@ -38,7 +52,7 @@ const InstallPWA = () => {
 
             if (outcome === 'accepted') {
                 setIsSuccess(true);
-                sessionStorage.setItem("pwaPromptDismissed", "true");
+                localStorage.setItem(PWA_DISMISS_KEY, Date.now().toString());
                 setTimeout(() => setShowModal(false), 3000);
             } else {
                 handleDismiss();
@@ -53,7 +67,7 @@ const InstallPWA = () => {
     };
 
     const handleDismiss = () => {
-        sessionStorage.setItem("pwaPromptDismissed", "true");
+        localStorage.setItem(PWA_DISMISS_KEY, Date.now().toString());
         setShowModal(false);
     };
 
