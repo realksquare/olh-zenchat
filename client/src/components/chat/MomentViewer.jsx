@@ -221,7 +221,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                     ))}
                 </div>
 
-                <div className={`aura-viewer-header ${(!hasMedia) ? 'with-bg' : ''}`}>
+                <div className={`aura-viewer-header${(!hasMedia) ? ' with-bg' : ' with-gradient'}`}>
                     <div className="aura-user-meta-container">
                         <div className="aura-user-meta">
                             <div className="avatar-aura-wrap">

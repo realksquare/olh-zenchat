@@ -4,7 +4,7 @@ import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { playReceiveSound } from "../utils/audio";
 import { useMomentStore } from "../stores/momentStore";
-import { enqueueOutbox, drainOutbox } from "../db/zenDB";
+import { enqueueOutbox, drainOutbox, drainPendingMedia } from "../db/zenDB";
 import { decryptMessageIfNeeded } from "../utils/e2eeHelper";
 import { encryptMessageContent, encryptMessageContentForBoth } from "../utils/crypto";
 import axiosInstance from "../utils/axios";
@@ -201,10 +201,11 @@ export const SocketProvider = ({ children }) => {
                 useChatStore.getState().fetchMessages(activeChat._id);
             }
             useChatStore.getState().fetchChats();
-            const queued = await drainOutbox();
-            queued.forEach(({ id: _id, createdAt: _ts, ...payload }) => {
-                socket.emit("send_message", payload);
-            });
+            // Use flushOutbox so E2EE re-encryption is applied to queued messages
+            setTimeout(() => {
+                flushOutboxRef.current?.();
+                flushMediaOutboxRef.current?.();
+            }, 300);
         });
 
         socket.on("disconnect", () => {
@@ -345,11 +346,57 @@ export const SocketProvider = ({ children }) => {
         }
     }, []);
 
+    const flushOutboxRef = useRef(null);
+    const flushMediaOutboxRef = useRef(null);
+    useEffect(() => { flushOutboxRef.current = flushOutbox; }, [flushOutbox]);
+
+    const flushMediaOutbox = useCallback(async () => {
+        if (!socketRef.current?.connected || !navigator.onLine) return;
+        const pending = await drainPendingMedia();
+        if (!pending.length) return;
+        for (const item of pending) {
+            try {
+                const { id: _id, createdAt: _ts, base64, fileName, fileType, uploadType, chatId, textContent, replyTo, isViewOnce, cid, isZenMessage, isLowBandwidth } = item;
+                const byteString = atob(base64);
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+                const blob = new Blob([ab], { type: fileType });
+                const file = new File([blob], fileName, { type: fileType });
+
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("upload_preset", "ml_default");
+
+                const res = await fetch(
+                    `https://api.cloudinary.com/v1_1/du4nvei7j/${uploadType}/upload`,
+                    { method: "POST", body: formData }
+                );
+                const data = await res.json();
+                if (!data.secure_url) throw new Error("Upload failed");
+
+                const msgType = uploadType === "video" ? "video" : uploadType === "raw" ? "file" : "image";
+                socketRef.current.emit("send_message", {
+                    chatId, content: textContent || "", type: msgType,
+                    mediaUrl: data.secure_url, replyTo, isViewOnce,
+                    cid, isLowBandwidth, isZenMessage
+                });
+            } catch (err) {
+                console.error("[SocketContext] flushMediaOutbox item failed:", err);
+            }
+        }
+    }, []);
+
+    useEffect(() => { flushMediaOutboxRef.current = flushMediaOutbox; }, [flushMediaOutbox]);
+
     useEffect(() => {
-        const handleOnline = () => flushOutbox();
+        const handleOnline = () => {
+            flushOutbox();
+            flushMediaOutbox();
+        };
         window.addEventListener("online", handleOnline);
         return () => window.removeEventListener("online", handleOnline);
-    }, [flushOutbox]);
+    }, [flushOutbox, flushMediaOutbox]);
 
     const sendMessage = useCallback(async (chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null, isZenMessage = false) => {
         const isLowBandwidth = useChatStore.getState().isLowBandwidth;

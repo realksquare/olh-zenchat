@@ -4198,6 +4198,10 @@ select {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.aura-viewer-header.with-gradient {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.62) 0%, transparent 100%);
+}
+
 .aura-user-meta {
   display: flex;
   align-items: center;

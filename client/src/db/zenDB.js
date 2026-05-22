@@ -32,6 +32,16 @@ db.version(5).stores({
     vault: "id, name, type, size, date",
 });
 
+db.version(6).stores({
+    chats: "_id, updatedAt, lastMessage._id",
+    messages: "_id, chatId, createdAt, senderId",
+    settings: "key",
+    outbox: "++id, chatId, createdAt",
+    keys: "key",
+    vault: "id, name, type, size, date",
+    pendingMediaOutbox: "++id, chatId, createdAt",
+});
+
 export const healMessageDate = (message) => {
     if (!message) return message;
     if (message.createdAt) {
@@ -97,6 +107,7 @@ export const clearLocalData = async () => {
     if (db.outbox) await db.outbox.clear();
     if (db.keys) await db.keys.clear();
     if (db.vault) await db.vault.clear();
+    if (db.pendingMediaOutbox) await db.pendingMediaOutbox.clear();
 };
 
 export const enqueueOutbox = async (payload) => {
@@ -114,6 +125,25 @@ export const drainOutbox = async () => {
         return items;
     } catch (err) {
         console.error(err);
+        return [];
+    }
+};
+
+export const enqueuePendingMedia = async (payload) => {
+    try {
+        await db.pendingMediaOutbox.add({ ...payload, createdAt: Date.now() });
+    } catch (err) {
+        console.error("[zenDB] enqueuePendingMedia failed:", err);
+    }
+};
+
+export const drainPendingMedia = async () => {
+    try {
+        const items = await db.pendingMediaOutbox.orderBy("createdAt").toArray();
+        await db.pendingMediaOutbox.clear();
+        return items;
+    } catch (err) {
+        console.error("[zenDB] drainPendingMedia failed:", err);
         return [];
     }
 };

@@ -6,6 +6,7 @@ import { useChatStore } from "../../stores/chatStore";
 import { playSendSound } from "../../utils/audio";
 import axiosInstance from "../../utils/axios";
 import axios from "axios";
+import { enqueuePendingMedia } from "../../db/zenDB";
 
 const ACCEPTED_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const ACCEPTED_VIDEO = ["video/mp4", "video/quicktime", "video/webm", "video/mpeg", "video/x-msvideo"];
@@ -362,11 +363,13 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 const isImage = ACCEPTED_IMAGE.includes(file.type);
                 const isDoc = !isImage && !isVideo;
                 const msgType = isVideo ? "video" : isImage ? "image" : "file";
+                const uploadType = isVideo ? "video" : isImage ? "image" : "raw";
 
                 const tempId = `temp-${Date.now()}-${Math.random()}`;
 
                 const activeChat = useChatStore.getState().activeChat;
                 const isZen = useChatStore.getState().isZenMode;
+                const isLowBandwidth = useChatStore.getState().isLowBandwidth;
                 addMessage(chatId, {
                     _id: tempId,
                     cid: tempId,
@@ -390,21 +393,47 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 formData.append("file", fileToUpload);
                 formData.append("upload_preset", uploadPreset);
 
-                const uploadType = isVideo ? 'video' : isImage ? 'image' : 'raw';
-                const res = await axios.post(
-                    `https://api.cloudinary.com/v1_1/${cloudName}/${uploadType}/upload`,
-                    formData,
-                    {
-                        onUploadProgress: (p) => {
-                            const percent = Math.round((p.loaded * 100) / p.total);
-                            updateMessage(chatId, { _id: tempId, progress: percent });
+                try {
+                    const res = await axios.post(
+                        `https://api.cloudinary.com/v1_1/${cloudName}/${uploadType}/upload`,
+                        formData,
+                        {
+                            onUploadProgress: (p) => {
+                                const percent = Math.round((p.loaded * 100) / p.total);
+                                updateMessage(chatId, { _id: tempId, progress: percent });
+                            }
                         }
+                    );
+                    const downloadURL = res.data.secure_url;
+                    const isZenMessage = useChatStore.getState().isZenMode;
+                    sendMessage(chatId, files.length === 1 ? textContent : (isDoc ? file.name : ""), msgType, downloadURL, replyToId, isViewOnceVal, tempId, isZenMessage);
+                } catch (uploadErr) {
+                    console.warn("[MessageInput] Upload failed, queuing for retry:", uploadErr?.message);
+                    updateMessage(chatId, { _id: tempId, status: "pending" });
+                    // Persist as base64 for retry on reconnect
+                    try {
+                        const reader = new FileReader();
+                        reader.onload = async (e) => {
+                            const base64 = e.target.result.split(",")[1];
+                            await enqueuePendingMedia({
+                                base64,
+                                fileName: fileToUpload.name,
+                                fileType: fileToUpload.type,
+                                uploadType,
+                                chatId,
+                                textContent: files.length === 1 ? textContent : (isDoc ? file.name : ""),
+                                replyTo: replyToId,
+                                isViewOnce: isViewOnceVal,
+                                cid: tempId,
+                                isZenMessage: isZen,
+                                isLowBandwidth
+                            });
+                        };
+                        reader.readAsDataURL(fileToUpload);
+                    } catch (qErr) {
+                        console.error("[MessageInput] Failed to queue media for retry:", qErr);
                     }
-                );
-
-                const downloadURL = res.data.secure_url;
-                const isZenMessage = useChatStore.getState().isZenMode;
-                sendMessage(chatId, files.length === 1 ? textContent : (isDoc ? file.name : ""), msgType, downloadURL, replyToId, isViewOnceVal, tempId, isZenMessage);
+                }
             }
             if (soundEnabled) playSendSound();
         } catch (error) {

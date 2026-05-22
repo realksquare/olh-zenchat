@@ -192,13 +192,20 @@ const App = () => {
   const socketContext = useSocket();
   const socket = socketContext?.socket;
   const [serverReady, setServerReady] = useState(false);
-  const [prevToken] = useState(token);
+  const prevTokenRef = useRef(token);
+  const mountedRef = useRef(false);
 
   useEffect(() => {
-    if (token !== prevToken) {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      prevTokenRef.current = token;
+      return;
+    }
+    if (token !== prevTokenRef.current) {
+      prevTokenRef.current = token;
       window.location.reload();
     }
-  }, [token, prevToken]);
+  }, [token]);
 
   useEffect(() => {
     if (token && userId) {

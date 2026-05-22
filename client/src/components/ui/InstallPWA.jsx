@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 
 const PWA_DISMISS_KEY = "zenchat_pwa_install_dismissed_time";
@@ -9,6 +9,7 @@ const InstallPWA = () => {
     const [showNudgeModal, setShowNudgeModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const handleInstallRef = useRef(null);
 
     const shouldShowPrompt = () => {
         const dismissedTime = localStorage.getItem(PWA_DISMISS_KEY);
@@ -74,7 +75,7 @@ const InstallPWA = () => {
         const handleOpenInstall = () => {
             setShowModal(true);
             setTimeout(() => {
-                handleInstall();
+                handleInstallRef.current?.();
             }, 100);
         };
         const handleOpenNudge = () => {
@@ -88,11 +89,15 @@ const InstallPWA = () => {
             window.removeEventListener("open-pwa-install-modal", handleOpenInstall);
             window.removeEventListener("open-pwa-nudge-modal", handleOpenNudge);
         };
-    }, [deferredPrompt]);
+    }, []);
 
     const handleInstall = async () => {
         const promptToUse = deferredPrompt || window.deferredPrompt;
-        if (!promptToUse) return;
+        if (!promptToUse) {
+            setShowModal(false);
+            alert("Install prompt is unavailable. Try refreshing the page or use your browser's 'Add to Home Screen' option.");
+            return;
+        }
         setIsLoading(true);
 
         try {
@@ -116,6 +121,9 @@ const InstallPWA = () => {
             window.deferredPrompt = null;
         }
     };
+
+    // Keep ref in sync so event listeners always call latest version
+    useEffect(() => { handleInstallRef.current = handleInstall; }, [deferredPrompt]);
 
     const handleDismiss = () => {
         localStorage.setItem(PWA_DISMISS_KEY, Date.now().toString());

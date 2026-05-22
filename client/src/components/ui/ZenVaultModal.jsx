@@ -357,7 +357,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                             <span style={{ fontSize: "0.7rem", verticalAlign: "middle", background: "rgba(61, 165, 217, 0.15)", color: "var(--color-primary)", padding: "2px 8px", borderRadius: "10px", marginLeft: "10px", fontWeight: "600" }}>LOCAL SAFE</span>
                         </h2>
                     </div>
-                    <button 
+                    <button
                         onClick={onClose}
                         style={{
                             background: "none",
@@ -397,7 +397,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                         <form onSubmit={handleSetup} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                             <div style={{ background: "rgba(61, 165, 217, 0.04)", border: "1px solid rgba(61, 165, 217, 0.1)", padding: "14px", borderRadius: "12px", fontSize: "0.8rem", color: "#94a3b8", lineHeight: "1.5" }}>
                                 <strong style={{ color: "#fff", display: "block", marginBottom: "6px" }}>Set up your ZenVault Password</strong>
-                                Unlike device-level locks (like biometrics or pin codes) which can be bypassed by anyone who knows your device passcode, ZenVault secures your files with custom 256-bit AES-GCM local encryption right inside your browser. Your password never leaves this device, meaning zero server footprint and complete privacy—but remember, if you lose it, we can't recover your files!
+                                Unlike device-level locks (like biometrics or pin codes) which can be bypassed by anyone who knows your device passcode, ZenVault secures your files with custom 256-bit AES-GCM local encryption right inside your browser. Your password never leaves this device, meaning zero server footprint and complete privacy - but remember, if you lose it, we can't recover your files!
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                                 <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "600" }}>Vault Password</label>
@@ -543,8 +543,8 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                                             borderRadius: "12px",
                                             transition: "background 0.2s"
                                         }}
-                                        onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)"}
-                                        onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.02)"}
+                                            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.04)"}
+                                            onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.02)"}
                                         >
                                             <div style={{ display: "flex", alignItems: "center", gap: "12px", overflow: "hidden", marginRight: "10px" }}>
                                                 <div style={{ background: "rgba(61, 165, 217, 0.1)", borderRadius: "8px", padding: "8px", display: "flex", alignItems: "center" }}>

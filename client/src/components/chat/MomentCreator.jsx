@@ -14,6 +14,33 @@ const FILTER_PRESETS = [
     { id: "bw", name: "B&W", style: { filter: "grayscale(1) contrast(1.2)" } }
 ];
 
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+const compressImage = (file, quality = 0.78) => new Promise((resolve) => {
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return resolve(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            let scale = 1;
+            const targetBytes = 300 * 1024;
+            if (file.size > targetBytes * 3) scale = 0.6;
+            else if (file.size > targetBytes) scale = 0.8;
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(
+                (blob) => resolve(blob && blob.size < file.size ? new File([blob], file.name, { type: "image/jpeg" }) : file),
+                "image/jpeg",
+                quality
+            );
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
 const suggestMoodGenre = (text) => {
     const lower = text.toLowerCase();
     if (lower.includes("sad") || lower.includes("cry") || lower.includes("hurt") || lower.includes("alone") || lower.includes("miss")) return "acoustic-sad";
@@ -55,6 +82,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const [toast, setToast] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [imageQuality, setImageQuality] = useState("standard"); // "standard" | "og"
     
     const audioRef = useRef(null);
     const seekTimeoutRef = useRef(null);
@@ -224,7 +252,9 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 const cloudName = "du4nvei7j";
                 const uploadPreset = "ml_default";
                 const formData = new FormData();
-                formData.append("file", selectedFile);
+                let fileToUpload = selectedFile;
+                if (imageQuality === "standard") fileToUpload = await compressImage(selectedFile);
+                formData.append("file", fileToUpload);
                 formData.append("upload_preset", uploadPreset);
 
                 const res = await axios.post(
@@ -280,6 +310,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
         setDisappearHours(24);
         setSuggestedGenre("");
         setUploadProgress(0);
+        setImageQuality("standard");
     };
 
     const handleClose = () => {
@@ -442,6 +473,29 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                     </div>
                                                 )}
                                                 
+                                                {/* Quality Toggle */}
+                                                {filePreview && (
+                                                    <div style={{ position: 'absolute', top: '8px', left: '8px', display: 'flex', gap: '4px' }}>
+                                                        <button
+                                                            onClick={() => setImageQuality(q => q === "og" ? "standard" : "og")}
+                                                            style={{
+                                                                background: imageQuality === "og" ? 'rgba(61,165,217,0.25)' : 'rgba(15,23,42,0.75)',
+                                                                backdropFilter: 'blur(6px)',
+                                                                border: imageQuality === "og" ? '1px solid rgba(61,165,217,0.6)' : '1px solid rgba(255,255,255,0.1)',
+                                                                borderRadius: '6px',
+                                                                padding: '3px 8px',
+                                                                color: imageQuality === "og" ? 'var(--color-primary)' : '#94a3b8',
+                                                                fontSize: '0.62rem',
+                                                                fontWeight: '900',
+                                                                cursor: 'pointer',
+                                                                letterSpacing: '0.5px'
+                                                            }}
+                                                        >
+                                                            {imageQuality === "og" ? "OG" : "STD"}
+                                                        </button>
+                                                    </div>
+                                                )}
+
                                                 {/* Disappear Timer Pill */}
                                                 <div style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(6px)', padding: '3px 8px', borderRadius: '12px', fontSize: '0.62rem', fontWeight: 'bold', color: '#cbd5e1' }}>
                                                     Expires in {disappearHours}h
