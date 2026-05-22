@@ -119,8 +119,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             // Will be updated by onLoadedMetadata
         } else if (currentMoment.music && currentMoment.music.duration) {
             duration = currentMoment.music.duration;
-        } else if (currentMoment.type === "image") {
-            duration = 5;
         }
         setTotalDuration(duration);
         setTimeLeft(duration);

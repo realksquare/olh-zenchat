@@ -1,9 +1,20 @@
 const admin = require("firebase-admin");
 
+const path = require("path");
+const fs = require("fs");
+
 let isFirebaseInitialized = false;
 
 try {
-    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+    const localKeyPath = path.join(__dirname, "../serviceAccountKey.json");
+    if (fs.existsSync(localKeyPath)) {
+        const serviceAccount = JSON.parse(fs.readFileSync(localKeyPath, "utf8"));
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+        isFirebaseInitialized = true;
+        console.log("[Firebase] Successfully initialized using local serviceAccountKey.json");
+    } else if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
         const serviceAccount = JSON.parse(
             Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_KEY, 'base64').toString('utf-8')
         );
@@ -11,9 +22,12 @@ try {
             credential: admin.credential.cert(serviceAccount)
         });
         isFirebaseInitialized = true;
+        console.log("[Firebase] Successfully initialized using environment base64 key");
+    } else {
+        console.warn("[Firebase] Warning: Firebase Admin credentials not found. Real-time services (FCM/OTP) will fall back to mock systems.");
     }
 } catch (error) {
-    console.error(error.message);
+    console.error("[Firebase] Initialization error:", error.message);
 }
 
 const User = require("../models/User");
