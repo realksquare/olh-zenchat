@@ -203,6 +203,12 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     return createPortal(
         <div className={`modal-overlay moments-aura-viewer-overlay ${isClosing ? 'fading-out' : ''}`}>
             <div className="moments-aura-viewer-content" onClick={(e) => e.stopPropagation()} style={bgStyle}>
+                {currentMoment.mediaUrl && (
+                    <div 
+                        className="aura-blur-backdrop" 
+                        style={{ backgroundImage: `url(${currentMoment.mediaUrl})` }} 
+                    />
+                )}
                 <div className="aura-progress-bars" style={{ display: 'flex', gap: '4px', position: 'absolute', top: '12px', left: '12px', right: '12px', zIndex: 1100 }}>
                     {moments.map((_, idx) => (
                         <div key={`${currentIndex}-${idx}`} className="aura-progress-bg" style={{ flex: 1, height: '3px', background: 'rgba(255, 255, 255, 0.3)', borderRadius: '2px', overflow: 'hidden' }}>

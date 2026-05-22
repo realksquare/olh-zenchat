@@ -27,6 +27,11 @@ export const useChatStore = create(
             setPeerLowBandwidth: (userId, isLowBandwidth) => set((s) => ({
                 peerLowBandwidth: { ...s.peerLowBandwidth, [userId]: isLowBandwidth }
             })),
+            clearOnlinePresence: () => set({
+                onlineUsers: new Set(),
+                peerLowBandwidth: {},
+                zenUsers: {}
+            }),
 
             isZenMode: false,
             toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode })),

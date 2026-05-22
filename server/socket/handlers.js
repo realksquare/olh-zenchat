@@ -91,6 +91,36 @@ const broadcastUserStatus = async (uid, isOnline, lastSeen = null, io) => {
     }
 };
 
+const broadcastUserLowBandwidth = async (uid, isLowBandwidth, io) => {
+    try {
+        const user = await User.findById(uid).select("privacySettings contacts blockedUsers");
+        if (!user) return;
+
+        for (const [targetId, targetData] of onlineUsers.entries()) {
+            if (targetId === uid) continue;
+
+            const targetUser = await User.findById(targetId).select("blockedUsers");
+            const theyBlockedUs = targetUser?.blockedUsers?.some(u => u.userId.toString() === uid.toString());
+            const weBlockedThem = user?.blockedUsers?.some(u => u.userId.toString() === targetId.toString());
+            if (theyBlockedUs || weBlockedThem) {
+                continue;
+            }
+
+            const hasMutualChat = await Chat.findOne({
+                participants: { $all: [new mongoose.Types.ObjectId(uid), new mongoose.Types.ObjectId(targetId)] }
+            }).select("_id").lean();
+
+            if (hasMutualChat) {
+                targetData.sockets.forEach((sData, sId) => {
+                    io.to(sId).emit("peer_low_bandwidth", { userId: uid, isLowBandwidth });
+                });
+            }
+        }
+    } catch (err) {
+        console.error("Error broadcasting low bandwidth:", err);
+    }
+};
+
 const setUserActivePresence = async (io, userId, isActive) => {
     if (!userId) return;
 
@@ -281,6 +311,12 @@ const registerSocketHandlers = (io) => {
                             if (otherData?.isZenMode) {
                                 socket.emit("user_zen_status", { userId: otherId, isZenMode: true });
                             }
+                            const isOtherLowBandwidth = otherData && otherData.sockets
+                                ? Array.from(otherData.sockets.values()).some(s => s.isLowBandwidth)
+                                : false;
+                            if (isOtherLowBandwidth) {
+                                socket.emit("peer_low_bandwidth", { userId: otherId, isLowBandwidth: true });
+                            }
                         }
                     }
 
@@ -297,7 +333,7 @@ const registerSocketHandlers = (io) => {
                 sData.isLowBandwidth = isLowBandwidth;
             }
             if (isLowBandwidth !== undefined) {
-                socket.to(chatId).emit("peer_low_bandwidth", { userId, isLowBandwidth });
+                broadcastUserLowBandwidth(userId, isLowBandwidth, io);
             }
         });
 
@@ -305,22 +341,7 @@ const registerSocketHandlers = (io) => {
             if (userData && userData.sockets.has(socket.id)) {
                 userData.sockets.get(socket.id).isLowBandwidth = isLowBandwidth;
             }
-            // Emit to active chat room if provided
-            if (chatId) {
-                socket.to(chatId).emit("peer_low_bandwidth", { userId, isLowBandwidth });
-            }
-            // Also broadcast to ALL other chat rooms this user is in so sidebar/UserCard update everywhere
-            try {
-                const allChats = await Chat.find({ participants: userId }).select("_id").lean();
-                for (const chat of allChats) {
-                    const cid = chat._id.toString();
-                    if (cid !== chatId) {
-                        socket.to(cid).emit("peer_low_bandwidth", { userId, isLowBandwidth });
-                    }
-                }
-            } catch (err) {
-                console.error("[update_low_bandwidth] broadcast to all chats failed:", err);
-            }
+            await broadcastUserLowBandwidth(userId, isLowBandwidth, io);
         });
 
         socket.on("leave_chat", ({ chatId }) => {

@@ -194,13 +194,19 @@ export const SocketProvider = ({ children }) => {
 
         socket.on("connect", async () => {
             setIsConnected(true);
-            const activeChat = useChatStore.getState().activeChat;
+            const chatStore = useChatStore.getState();
+            chatStore.clearOnlinePresence();
+            
+            const activeChat = chatStore.activeChat;
+            const isLowBandwidth = chatStore.isLowBandwidth;
+            
+            socket.emit("update_low_bandwidth", { chatId: activeChat?._id || "", isLowBandwidth });
+            
             if (activeChat?._id) {
-                const isLowBandwidth = useChatStore.getState().isLowBandwidth;
                 socket.emit("join_chat", { chatId: activeChat._id, isLowBandwidth });
-                useChatStore.getState().fetchMessages(activeChat._id);
+                chatStore.fetchMessages(activeChat._id);
             }
-            useChatStore.getState().fetchChats();
+            chatStore.fetchChats();
             // Use flushOutbox so E2EE re-encryption is applied to queued messages
             setTimeout(() => {
                 flushOutboxRef.current?.();
@@ -210,6 +216,7 @@ export const SocketProvider = ({ children }) => {
 
         socket.on("disconnect", () => {
             setIsConnected(false);
+            useChatStore.getState().clearOnlinePresence();
         });
 
         socket.on("online_users", ({ userIds }) => {

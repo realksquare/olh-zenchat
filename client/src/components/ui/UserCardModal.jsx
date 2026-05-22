@@ -88,15 +88,17 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                 </button>
 
                 <div className="user-card-header">
-                    <div
-                        className={`avatar avatar-xl ${hasMoments && !iBlocked && !theyBlocked ? 'moments-halo-thin' : ''}`}
-                        style={hasMoments && !iBlocked && !theyBlocked ? { '--halo-color': haloColor } : {}}
-                    >
-                        {user.avatar ? (
-                            <img src={user.avatar} alt={username} />
-                        ) : (
-                            <span>{initials}</span>
-                        )}
+                    <div className="user-card-avatar-wrap">
+                        <div
+                            className={`avatar avatar-xl ${hasMoments && !iBlocked && !theyBlocked ? 'moments-halo-thin' : ''}`}
+                            style={hasMoments && !iBlocked && !theyBlocked ? { '--halo-color': haloColor } : {}}
+                        >
+                            {user.avatar ? (
+                                <img src={user.avatar} alt={username} />
+                            ) : (
+                                <span>{initials}</span>
+                            )}
+                        </div>
                         {effectiveIsOnline && <span className={`online-dot-large${isSPOp ? ' online-dot-large--amber' : ''}`} />}
                     </div>
                 </div>
