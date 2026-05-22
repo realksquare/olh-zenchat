@@ -8,6 +8,7 @@ import { enqueueOutbox, drainOutbox } from "../db/zenDB";
 import { decryptMessageIfNeeded } from "../utils/e2eeHelper";
 import { encryptMessageContent, encryptMessageContentForBoth } from "../utils/crypto";
 import axiosInstance from "../utils/axios";
+import { decompressPacket } from "../utils/packetCompressor";
 
 
 

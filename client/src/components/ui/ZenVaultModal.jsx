@@ -5,8 +5,8 @@ import { useAuthStore } from "../../stores/authStore";
 const ZenVaultModal = ({ isOpen, onClose }) => {
     const { user } = useAuthStore();
     const [vaultState, setVaultState] = useState("locked"); // "setup", "locked", "unlocked"
-    const [passphrase, setPassphrase] = useState("");
-    const [confirmPassphrase, setConfirmPassphrase] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [files, setFiles] = useState([]);
@@ -43,8 +43,8 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
         }
         setError("");
         setSuccess("");
-        setPassphrase("");
-        setConfirmPassphrase("");
+        setPassword("");
+        setConfirmPassword("");
     };
 
     const loadFiles = async () => {
@@ -101,18 +101,18 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
     const handleSetup = async (e) => {
         e.preventDefault();
         setError("");
-        if (passphrase.length < 8) {
-            setError("Passphrase must be at least 8 characters long.");
+        if (password.length < 3 || password.length > 8) {
+            setError("Password must be between 3 and 8 characters long.");
             return;
         }
-        if (passphrase !== confirmPassphrase) {
-            setError("Passphrases do not match.");
+        if (password !== confirmPassword) {
+            setError("Passwords do not match.");
             return;
         }
 
         setIsLoading(true);
         try {
-            const derived = await deriveKey(passphrase);
+            const derived = await deriveKey(password);
             const encoder = new TextEncoder();
             const tokenBytes = encoder.encode("zenvault-validation-token");
             const iv = window.crypto.getRandomValues(new Uint8Array(12));
@@ -165,7 +165,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                 ivBytes[i] = parseInt(ivHex.substr(i * 2, 2), 16);
             }
 
-            const derived = await deriveKey(passphrase);
+            const derived = await deriveKey(password);
 
             const decrypted = await window.crypto.subtle.decrypt(
                 { name: "AES-GCM", iv: ivBytes },
@@ -179,13 +179,13 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
             if (decryptedText === "zenvault-validation-token") {
                 activeKeyRef.current = derived;
                 setVaultState("unlocked");
-                setPassphrase("");
+                setPassword("");
             } else {
-                setError("Incorrect passphrase.");
+                setError("Incorrect password.");
             }
         } catch (err) {
             console.error("Vault decrypt verification failed:", err);
-            setError("Incorrect passphrase or corrupt validation token.");
+            setError("Incorrect password or corrupt validation token.");
         } finally {
             setIsLoading(false);
         }
@@ -194,8 +194,8 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
     const handleLock = () => {
         activeKeyRef.current = null;
         setVaultState("locked");
-        setPassphrase("");
-        setConfirmPassphrase("");
+        setPassword("");
+        setConfirmPassword("");
         setError("");
         setSuccess("");
     };
@@ -396,28 +396,28 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                     {vaultState === "setup" && (
                         <form onSubmit={handleSetup} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                             <div style={{ background: "rgba(61, 165, 217, 0.04)", border: "1px solid rgba(61, 165, 217, 0.1)", padding: "14px", borderRadius: "12px", fontSize: "0.8rem", color: "#94a3b8", lineHeight: "1.5" }}>
-                                <strong style={{ color: "#fff", display: "block", marginBottom: "4px" }}>Create your Master Passphrase</strong>
-                                ZenVault uses industry-standard 256-bit AES-GCM local-only encryption. Your passphrase is never sent to the server. If you lose this passphrase, your local files cannot be recovered.
+                                <strong style={{ color: "#fff", display: "block", marginBottom: "6px" }}>Set up your ZenVault Password</strong>
+                                Unlike device-level locks (like biometrics or pin codes) which can be bypassed by anyone who knows your device passcode, ZenVault secures your files with custom 256-bit AES-GCM local encryption right inside your browser. Your password never leaves this device, meaning zero server footprint and complete privacy—but remember, if you lose it, we can't recover your files!
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                                <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "600" }}>Master Passphrase</label>
+                                <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "600" }}>Vault Password</label>
                                 <input
                                     type="password"
                                     required
-                                    placeholder="Minimum 8 characters"
-                                    value={passphrase}
-                                    onChange={(e) => setPassphrase(e.target.value)}
+                                    placeholder="3 to 8 characters/numbers"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                     style={{ background: "rgba(0, 0, 0, 0.2)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "10px 14px", fontSize: "0.9rem", color: "#fff" }}
                                 />
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                                <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "600" }}>Confirm Passphrase</label>
+                                <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "600" }}>Confirm Password</label>
                                 <input
                                     type="password"
                                     required
-                                    placeholder="Re-enter passphrase"
-                                    value={confirmPassphrase}
-                                    onChange={(e) => setConfirmPassphrase(e.target.value)}
+                                    placeholder="Re-enter password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
                                     style={{ background: "rgba(0, 0, 0, 0.2)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "10px 14px", fontSize: "0.9rem", color: "#fff" }}
                                 />
                             </div>
@@ -443,13 +443,13 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                                 </div>
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                                <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "600", textAlign: "center" }}>Enter Master Passphrase to Unlock Safe</label>
+                                <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "600", textAlign: "center" }}>Enter Vault Password to Unlock Safe</label>
                                 <input
                                     type="password"
                                     required
-                                    placeholder="Passphrase"
-                                    value={passphrase}
-                                    onChange={(e) => setPassphrase(e.target.value)}
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                     style={{ background: "rgba(0, 0, 0, 0.2)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "12px 14px", fontSize: "1rem", color: "#fff", textAlign: "center" }}
                                 />
                             </div>

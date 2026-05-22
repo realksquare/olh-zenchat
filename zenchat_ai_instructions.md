@@ -23,6 +23,7 @@ These are the core operating principles and coding standards to be followed for 
 ## 5. UI & Aesthetics
 - **Professional Typography:** Keep UI text away from fancy dashes or excessive punctuation. Use standard hyphens.
 - **Iconography over Emojis:** Do not use emojis in the UI text. Always use Lucid icons or SVG icons wherever visual representation is needed.
+- **UI Consistency:** When adding new UI elements, ensure the styles and UI of the new elements are consistent with the existing UI elements, unless the component being added is intended to be visually distinct/unique from the components around it.
 
 ## 6. Version Control Protocol
 - **Comprehensive Commits:** After completing changes or building new features, ensure all files are staged before pushing. Always use `git add .` (or `git add -A`) to ensure no newly created files or subtle changes are left behind before committing (based on the changes done) and finally pushing to GitHub (`git push origin main`) to the repo `github.com/realksquare/olh-zenchat`.

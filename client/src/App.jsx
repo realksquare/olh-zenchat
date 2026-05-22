@@ -192,6 +192,13 @@ const App = () => {
   const socketContext = useSocket();
   const socket = socketContext?.socket;
   const [serverReady, setServerReady] = useState(false);
+  const [prevToken] = useState(token);
+
+  useEffect(() => {
+    if (token !== prevToken) {
+      window.location.reload();
+    }
+  }, [token, prevToken]);
 
   useEffect(() => {
     if (token && userId) {

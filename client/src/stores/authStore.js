@@ -20,6 +20,7 @@ export const useAuthStore = create(
     mfaType: null,
     mfaUserId: null,
     mfaMaskedValue: null,
+    tempPassword: null,
 
     clearTempRecoveryKey: () => set({ tempRecoveryKey: null }),
 
@@ -67,6 +68,7 @@ export const useAuthStore = create(
                     mfaType: data.mfaType,
                     mfaUserId: data.userId,
                     mfaMaskedValue: data.phoneMasked || data.emailMasked,
+                    tempPassword: password,
                     isLoading: false
                 });
                 return { success: true, mfaRequired: true, mfaType: data.mfaType, userId: data.userId };
@@ -183,9 +185,11 @@ export const useAuthStore = create(
                 await db.settings.put({ key: "apiUrl", value: import.meta.env.VITE_API_URL || "" });
             }
 
+            const password = useAuthStore.getState().tempPassword;
+
             let recoveryKey = null;
             try {
-                recoveryKey = await setupE2EEForUser(data.user, null);
+                recoveryKey = await setupE2EEForUser(data.user, password);
             } catch (e2eeErr) {
                 console.error("[AuthStore] MFA E2EE setup/sync failed:", e2eeErr);
             }
@@ -194,6 +198,7 @@ export const useAuthStore = create(
                 token: data.token,
                 user: data.user,
                 tempRecoveryKey: recoveryKey,
+                tempPassword: null,
                 isLoading: false,
                 mfaRequired: false,
                 mfaType: null,
@@ -214,6 +219,7 @@ export const useAuthStore = create(
             mfaType: null,
             mfaUserId: null,
             mfaMaskedValue: null,
+            tempPassword: null,
             error: null
         });
     },
