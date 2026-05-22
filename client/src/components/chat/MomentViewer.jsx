@@ -330,60 +330,23 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                 style={FILTER_STYLES[currentMoment.filter] || FILTER_STYLES.none}
                             />
                             {currentMoment.locationTag && (
-                                <div className="aura-image-location-pill" style={{
-                                    position: 'absolute',
-                                    bottom: '136px',
-                                    left: '16px',
-                                    background: 'rgba(0, 0, 0, 0.55)',
-                                    backdropFilter: 'blur(10px)',
-                                    WebkitBackdropFilter: 'blur(10px)',
-                                    padding: '6px 14px',
-                                    borderRadius: '16px',
-                                    border: '1px solid rgba(255, 255, 255, 0.12)',
-                                    color: '#ffffff',
-                                    pointerEvents: 'none',
-                                    zIndex: 10,
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    alignItems: 'flex-start',
-                                    gap: '2px',
-                                    boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.25)'
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                <div className="aura-image-location-pill">
+                                    <div className="aura-location-header">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }} className="aura-location-icon">
                                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                                             <circle cx="12" cy="10" r="3" />
                                         </svg>
-                                        <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#ffffff', letterSpacing: '0.01em' }}>
+                                        <span className="aura-location-text">
                                             {currentMoment.locationTag}
                                         </span>
                                     </div>
-                                    <div style={{ fontSize: '0.55rem', color: 'rgba(255, 255, 255, 0.45)', fontWeight: '600', letterSpacing: '0.03em', textTransform: 'uppercase' }}>
-                                        #Moment. on OLH ZenChat
+                                    <div className="aura-location-sub">
+                                        #moments. on OLH ZenChat
                                     </div>
                                 </div>
                             )}
                             {currentMoment.caption && currentMoment.caption.trim().length >= 3 && (
-                                <div className="aura-image-caption-pill" style={{
-                                    position: 'absolute',
-                                    bottom: '80px',
-                                    left: '50%',
-                                    transform: 'translateX(-50%)',
-                                    background: 'rgba(0, 0, 0, 0.65)',
-                                    backdropFilter: 'blur(12px)',
-                                    WebkitBackdropFilter: 'blur(12px)',
-                                    padding: '8px 18px',
-                                    borderRadius: '24px',
-                                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                                    color: '#ffffff',
-                                    fontSize: '0.95rem',
-                                    fontWeight: '500',
-                                    textAlign: 'center',
-                                    maxWidth: '85%',
-                                    pointerEvents: 'none',
-                                    zIndex: 10,
-                                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)'
-                                }}>
+                                <div className="aura-image-caption-pill">
                                     {currentMoment.caption}
                                 </div>
                             )}
