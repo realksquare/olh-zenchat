@@ -301,11 +301,26 @@ const registerSocketHandlers = (io) => {
             }
         });
 
-        socket.on("update_low_bandwidth", ({ chatId, isLowBandwidth }) => {
+        socket.on("update_low_bandwidth", async ({ chatId, isLowBandwidth }) => {
             if (userData && userData.sockets.has(socket.id)) {
                 userData.sockets.get(socket.id).isLowBandwidth = isLowBandwidth;
             }
-            socket.to(chatId).emit("peer_low_bandwidth", { userId, isLowBandwidth });
+            // Emit to active chat room if provided
+            if (chatId) {
+                socket.to(chatId).emit("peer_low_bandwidth", { userId, isLowBandwidth });
+            }
+            // Also broadcast to ALL other chat rooms this user is in so sidebar/UserCard update everywhere
+            try {
+                const allChats = await Chat.find({ participants: userId }).select("_id").lean();
+                for (const chat of allChats) {
+                    const cid = chat._id.toString();
+                    if (cid !== chatId) {
+                        socket.to(cid).emit("peer_low_bandwidth", { userId, isLowBandwidth });
+                    }
+                }
+            } catch (err) {
+                console.error("[update_low_bandwidth] broadcast to all chats failed:", err);
+            }
         });
 
         socket.on("leave_chat", ({ chatId }) => {
