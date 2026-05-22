@@ -29,6 +29,19 @@ const maskPhone = (phone) => {
     return `${phone.substring(0, 3)}******${phone.substring(phone.length - 2)}`;
 };
 
+const getWebOtpDomain = (req) => {
+    try {
+        const origin = req.get("origin") || req.get("referer");
+        if (origin) {
+            const url = new URL(origin);
+            return url.hostname;
+        }
+    } catch (e) {
+        // Fallback
+    }
+    return "zenchat.app";
+};
+
 // 1. Phone-First Registration
 router.post("/register/phone", async (req, res) => {
     try {
@@ -46,11 +59,12 @@ router.post("/register/phone", async (req, res) => {
         }
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const domain = getWebOtpDomain(req);
         
         console.log("\n=======================================================");
         console.log(`💬 [SMS GATEWAY MOCK] OTP sent to ${phoneNumber}`);
         console.log(`Message: Your ZenChat verification code is ${otp}.`);
-        console.log(`@zenchat.app #${otp}`);
+        console.log(`@${domain} #${otp}`);
         console.log("=======================================================\n");
 
         // Create temporary unverified user
@@ -89,11 +103,12 @@ router.post("/login/phone", async (req, res) => {
         }
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const domain = getWebOtpDomain(req);
 
         console.log("\n=======================================================");
         console.log(`💬 [SMS GATEWAY MOCK] OTP sent to ${phoneNumber}`);
         console.log(`Message: Your ZenChat verification code is ${otp}.`);
-        console.log(`@zenchat.app #${otp}`);
+        console.log(`@${domain} #${otp}`);
         console.log("=======================================================\n");
 
         user.verificationSession = {
@@ -469,11 +484,12 @@ router.post(
             // Check if 2FA is active
             if (user.is2faEnabled) {
                 const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                const domain = getWebOtpDomain(req);
                 
                 console.log("\n=======================================================");
                 console.log(`💬 [SMS GATEWAY MOCK] 2FA OTP sent to ${user.phoneNumber}`);
                 console.log(`Message: Your ZenChat verification code is ${otp}.`);
-                console.log(`@zenchat.app #${otp}`);
+                console.log(`@${domain} #${otp}`);
                 console.log("=======================================================\n");
 
                 user.verificationSession = {
@@ -575,8 +591,13 @@ router.post("/2fa/setup/request", authMiddleware, async (req, res) => {
             res.json({ message: `Verification code sent to email ${emailTarget}` });
         } else {
             const cleanPhone = phoneNumber.trim();
+            const domain = getWebOtpDomain(req);
             // Phone SMS setup dispatch log
-            console.log(`[SMS OTP DISPATCH] to ${cleanPhone}: Your ZenChat 2FA Setup Code is ${otpCode}`);
+            console.log("\n=======================================================");
+            console.log(`[SMS OTP DISPATCH] to ${cleanPhone}`);
+            console.log(`Message: Your ZenChat 2FA Setup Code is ${otpCode}.`);
+            console.log(`@${domain} #${otpCode}`);
+            console.log("=======================================================\n");
             res.json({ message: `Verification code sent to phone ${cleanPhone}` });
         }
     } catch (err) {
