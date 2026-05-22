@@ -23,8 +23,7 @@ const Sidebar = ({ onChatSelect }) => {
     const { hasActiveMoment, getHaloColor } = useMomentStore.getState();
     const { 
         chats, activeChat, setActiveChat, 
-        addChat, isLoadingChats, togglePinChat, onlineUsers, isOffline,
-        isBareMinimum
+        addChat, isLoadingChats, togglePinChat, onlineUsers, isOffline
     } = useChatStore(useShallow((s) => ({
         chats: s.chats,
         activeChat: s.activeChat,
@@ -33,8 +32,7 @@ const Sidebar = ({ onChatSelect }) => {
         isLoadingChats: s.isLoadingChats,
         togglePinChat: s.togglePinChat,
         onlineUsers: s.onlineUsers,
-        isOffline: s.isOffline,
-        isBareMinimum: s.isBareMinimum
+        isOffline: s.isOffline
     })));
     const [search, setSearch] = useState("");
     const [searchResults, setSearchResults] = useState([]);
@@ -45,7 +43,6 @@ const Sidebar = ({ onChatSelect }) => {
     const [isE2EEInfoOpen, setIsE2EEInfoOpen] = useState(false);
     const [hoverE2EE, setHoverE2EE] = useState(false);
     const [hoverPWA, setHoverPWA] = useState(false);
-    const [hoverBareMin, setHoverBareMin] = useState(false);
     const [pwaPrompt, setPwaPrompt] = useState(window.deferredPrompt || null);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [isMomentCreatorOpen, setIsMomentCreatorOpen] = useState(false);
@@ -342,31 +339,6 @@ const Sidebar = ({ onChatSelect }) => {
                         </svg>
                     </button>
                 )}
-                <button 
-                    onClick={() => useChatStore.getState().setBareMinimum(!isBareMinimum)} 
-                    aria-label="Crisis Mode" 
-                    title={isBareMinimum ? "Disable Crisis Mode (#BareMinimum.)" : "Enable Crisis Mode (#BareMinimum.)"}
-                    style={{ 
-                        color: isBareMinimum ? "var(--color-primary)" : (hoverBareMin ? "var(--color-primary)" : "#475569"),
-                        padding: "4px",
-                        borderRadius: "4px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginRight: "8px",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        transition: "color 0.15s ease"
-                    }}
-                    onMouseEnter={() => setHoverBareMin(true)}
-                    onMouseLeave={() => setHoverBareMin(false)}
-                >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" />
-                        <line x1="16" y1="8" x2="2" y2="22" />
-                    </svg>
-                </button>
                 <button
                     onClick={() => setIsVaultOpen(true)}
                     style={{ 

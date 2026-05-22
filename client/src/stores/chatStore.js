@@ -27,24 +27,37 @@ export const useChatStore = create(
             setPeerLowBandwidth: (userId, isLowBandwidth) => set((s) => ({
                 peerLowBandwidth: { ...s.peerLowBandwidth, [userId]: isLowBandwidth }
             })),
-            isBareMinimum: false,
-            setBareMinimum: (bool) => {
-                set({ isBareMinimum: bool });
-                if (bool) {
-                    set({ isLowBandwidth: false, _spOpConsecutive: 0 });
-                }
-            },
+
             isZenMode: false,
             toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode })),
             setUserZenStatus: (userId, isZenMode) => set((state) => ({
                 zenUsers: { ...state.zenUsers, [userId]: isZenMode }
             })),
 
+            purgeZenMessages: (chatId) => {
+                set((state) => {
+                    const msgs = state.messages[chatId] || [];
+                    const zenMsgIds = msgs.filter(m => m.isZenMessage).map(m => m._id).filter(Boolean);
+                    // Purge from IndexedDB
+                    zenMsgIds.forEach(id => db.messages.delete(id).catch(() => {}));
+                    const nextMsgs = msgs.filter(m => !m.isZenMessage);
+                    const latest = [...nextMsgs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
+                    const nextChats = state.chats.map(c =>
+                        c._id === chatId ? { ...c, lastMessage: latest || c.lastMessage } : c
+                    );
+                    const nextActive = state.activeChat?._id === chatId
+                        ? { ...state.activeChat, lastMessage: latest || state.activeChat.lastMessage }
+                        : state.activeChat;
+                    return {
+                        messages: { ...state.messages, [chatId]: nextMsgs },
+                        chats: nextChats,
+                        activeChat: nextActive,
+                    };
+                });
+            },
+
+
             checkNetworkSpeed: async () => {
-                if (get().isBareMinimum) {
-                    if (get().isLowBandwidth !== false) set({ isLowBandwidth: false, _spOpConsecutive: 0 });
-                    return false;
-                }
                 if (typeof navigator === "undefined") return false;
 
                 if (!navigator.onLine) {
@@ -882,7 +895,7 @@ export const useChatStore = create(
                     isLoadingChats, isLoadingMessages, isLoadingOlderMessages,
                     hasMoreMessages, messages, unreadCounts, 
                     isLowBandwidth, peerLowBandwidth, isOffline, _spOpConsecutive,
-                    isZenMode, isBareMinimum,
+                    isZenMode,
                     ...rest 
                 } = state;
                 return rest;

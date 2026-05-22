@@ -290,12 +290,11 @@ const registerSocketHandlers = (io) => {
             })();
 
 
-        socket.on("join_chat", ({ chatId, isLowBandwidth, isBareMinimum }) => {
+        socket.on("join_chat", ({ chatId, isLowBandwidth }) => {
             socket.join(chatId);
             if (userData && userData.sockets.has(socket.id)) {
                 const sData = userData.sockets.get(socket.id);
                 sData.isLowBandwidth = isLowBandwidth;
-                sData.isBareMinimum = isBareMinimum;
             }
             if (isLowBandwidth !== undefined) {
                 socket.to(chatId).emit("peer_low_bandwidth", { userId, isLowBandwidth });
@@ -309,20 +308,24 @@ const registerSocketHandlers = (io) => {
             socket.to(chatId).emit("peer_low_bandwidth", { userId, isLowBandwidth });
         });
 
-        socket.on("update_bare_minimum", ({ isBareMinimum }) => {
-            if (userData && userData.sockets.has(socket.id)) {
-                userData.sockets.get(socket.id).isBareMinimum = isBareMinimum;
-            }
-        });
-
         socket.on("leave_chat", ({ chatId }) => {
             socket.leave(chatId);
+        });
+
+        socket.on("zen_session_clear", async ({ chatId, messageIds }) => {
+            try {
+                if (!messageIds || messageIds.length === 0) return;
+                await Message.deleteMany({ _id: { $in: messageIds } });
+                io.to(chatId).emit("zen_messages_cleared", { chatId });
+            } catch (err) {
+                console.error("Error clearing zen session messages:", err);
+            }
         });
 
         socket.on("send_message", async (rawPayload) => {
             try {
                 const decompressed = decompressPacket(rawPayload);
-                const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth } = decompressed;
+                const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth, isZenMessage } = decompressed;
 
                 const chat = await Chat.findById(chatId).populate("participants", "privacySettings contacts");
                 if (!chat) return;
@@ -341,7 +344,8 @@ const registerSocketHandlers = (io) => {
                     isEncrypted: isEncrypted || false,
                     encryptedSymmetricKey: encryptedSymmetricKey || "",
                     iv: iv || "",
-                    isLowBandwidth: isLowBandwidth || false
+                    isLowBandwidth: isLowBandwidth || false,
+                    isZenMessage: isZenMessage || false
                 });
 
                 await Chat.findByIdAndUpdate(chatId, {
@@ -395,11 +399,7 @@ const registerSocketHandlers = (io) => {
                     if (userData && userData.sockets && userData.sockets.size > 0) {
                         userData.sockets.forEach((sData, socketId) => {
                             const payloadToSend = pIdStr === userId.toString() ? messagePayloadBase : messagePayload;
-                            if (sData.isBareMinimum) {
-                                io.to(socketId).emit("receive_message", { message: compressPacket(payloadToSend) });
-                            } else {
-                                io.to(socketId).emit("receive_message", { message: payloadToSend });
-                            }
+                            io.to(socketId).emit("receive_message", { message: payloadToSend });
                         });
                     }
                 }));

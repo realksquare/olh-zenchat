@@ -1,8 +1,8 @@
 import { useState, useEffect, memo } from "react";
 import axiosInstance from "../../utils/axios";
 
-const MusicSearch = ({ onSelect, onClose }) => {
-    const [query, setQuery] = useState("");
+const MusicSearch = ({ onSelect, onClose, initialQuery = "" }) => {
+    const [query, setQuery] = useState(initialQuery);
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
 

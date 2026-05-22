@@ -4,13 +4,6 @@ import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import DecryptedText from "./DecryptedText";
 
-const MODE_LABELS_BUBBLE = {
-    instant: 'going offline',
-    '1h': '1 hour',
-    '8h': '8 hours',
-    '24h': '1 day',
-    '7d': '7 days',
-};
 
 
 
@@ -21,9 +14,8 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const user = useAuthStore((s) => s.user);
     const { toggleStarMessage, markViewOnceAsViewed } = useChatStore.getState();
     const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
-    const isBareMinimum = useChatStore((s) => s.isBareMinimum);
     const [manualLoad, setManualLoad] = useState(false);
-    const shouldDelayLoad = (isLowBandwidth || isBareMinimum) && !isMe && !manualLoad;
+    const shouldDelayLoad = isLowBandwidth && !isMe && !manualLoad;
     const status = message?.status ?? "sent";
     const progress = message?.progress ?? 0;
     const outerRef = useRef(null);
@@ -113,7 +105,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
             <div className={`message-row ${isMe ? "mine" : "theirs"} ${zenFadeClass}`}>
                 {!isMe && showAvatar && (
                     <div className="avatar avatar-sm">
-                        {otherUser?.avatar && !isBareMinimum ? (
+                        {otherUser?.avatar ? (
                             <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
                         ) : (
                             <span>{otherUser?.username?.slice(0, 2).toUpperCase()}</span>
@@ -137,13 +129,13 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     return (
         <div
             id={`msg-${message._id}`}
-            className={`message-row ${isMe ? "mine" : "theirs"} ${isNew && !isBareMinimum ? "message-slide-up" : ""} ${zenFadeClass}`}
+            className={`message-row ${isMe ? "mine" : "theirs"} ${isNew ? "message-slide-up" : ""} ${zenFadeClass}`}
             onDoubleClick={() => !message.deletedForEveryone && canReply && onEdit({ action: "reply", ...message })}
             style={!isShown ? { visibility: 'hidden', height: 0, overflow: 'hidden' } : {}}
         >
             {!isMe && showAvatar && (
                 <div className="avatar avatar-sm">
-                    {otherUser?.avatar && !isBareMinimum ? (
+                    {otherUser?.avatar ? (
                         <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
                     ) : (
                         <span>{otherUser?.username?.slice(0, 2).toUpperCase()}</span>
@@ -268,9 +260,9 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                  <span style={{ fontSize: '12px', fontWeight: '500', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.2px' }}>
                                                      Tap to load {message.type}
                                                  </span>
-                                                 <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>
-                                                     {isBareMinimum ? "#BareMinimum. mode active" : "#SP-OP mode active"}
-                                                 </span>
+                                                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>
+                                                      #SP-OP mode active
+                                                  </span>
                                              </div>
                                          </div>
                                      ) : (
@@ -380,7 +372,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                 <span className="message-text">
                                     <DecryptedText
                                         text={message.content}
-                                        animate={isNew && !isMe && message.canSeeScramble && !isLowBandwidth && !message.isLowBandwidth && !isBareMinimum}
+                                        animate={isNew && !isMe && message.canSeeScramble && !isLowBandwidth && !message.isLowBandwidth}
                                     />
                                 </span>
                             )}
@@ -393,35 +385,25 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                         </>
                     )}
 
-                    <div className="message-meta">
-                        {message.starredBy?.includes(user?._id) && (
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="#eab308" stroke="#eab308" style={{ marginRight: '2px' }}>
-                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                            </svg>
-                        )}
-                        {message.isEdited && <span className="message-edited-label">(edited)</span>}
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                            {message.disappearingMode && message.disappearingMode !== "off" && (
-                                <svg
-                                    width="10" height="10"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    style={{ opacity: 0.65, flexShrink: 0 }}
-                                    title={`Disappears after ${MODE_LABELS_BUBBLE[message.disappearingMode] || message.disappearingMode}`}
-                                >
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <polyline points="12 6 12 12 16 14"></polyline>
+                        <div className="message-meta">
+                            {message.starredBy?.includes(user?._id) && (
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="#eab308" stroke="#eab308" style={{ marginRight: '2px' }}>
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                                 </svg>
                             )}
-                            <span className="message-time">
-                                {new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            {message.isEdited && <span className="message-edited-label">(edited)</span>}
+                            {message.isZenMessage && (
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.75, flexShrink: 0 }} title="Sent in ZenMode">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <text x="12" y="16" textAnchor="middle" fontSize="10" fontWeight="900" fill="var(--color-primary)" stroke="none" fontFamily="inherit">Z</text>
+                                </svg>
+                            )}
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <span className="message-time">
+                                    {new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                </span>
                             </span>
-                        </span>
-                    </div>
+                        </div>
 
                 </div>
 

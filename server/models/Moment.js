@@ -37,7 +37,26 @@ const momentSchema = new mongoose.Schema(
         createdAt: {
             type: Date,
             default: Date.now,
-            expires: 86400, // 24 hours in seconds (TTL Index)
+        },
+        caption: {
+            type: String,
+            default: "",
+        },
+        locationTag: {
+            type: String,
+            default: "",
+        },
+        filter: {
+            type: String,
+            default: "none",
+        },
+        disappearAfterHours: {
+            type: Number,
+            default: 24,
+        },
+        expiresAt: {
+            type: Date,
+            default: null,
         },
     },
     { timestamps: true }
@@ -45,5 +64,6 @@ const momentSchema = new mongoose.Schema(
 
 // Index for performance
 momentSchema.index({ userId: 1, createdAt: -1 });
+momentSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 module.exports = mongoose.model("Moment", momentSchema);

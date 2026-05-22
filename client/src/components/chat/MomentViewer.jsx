@@ -4,6 +4,15 @@ import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
 import { formatDistanceToNow } from "date-fns";
 
+const FILTER_STYLES = {
+    none: {},
+    warm: { filter: "sepia(0.3) saturate(1.2) contrast(1.1)" },
+    cold: { filter: "hue-rotate(180deg) saturate(1.1) contrast(1.05)" },
+    vivid: { filter: "saturate(1.6) contrast(1.15)" },
+    fade: { filter: "brightness(1.1) contrast(0.95) saturate(0.9)" },
+    bw: { filter: "grayscale(1) contrast(1.2)" }
+};
+
 const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isMuted, setIsMuted] = useState(false);
@@ -110,6 +119,8 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             // Will be updated by onLoadedMetadata
         } else if (currentMoment.music && currentMoment.music.duration) {
             duration = currentMoment.music.duration;
+        } else if (currentMoment.type === "image") {
+            duration = 5;
         }
         setTotalDuration(duration);
         setTimeLeft(duration);
@@ -255,7 +266,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                         <circle cx="12" cy="12" r="3" />
                                     </svg>
-                                    <span style={{ fontSize: '0.9rem', fontWeight: '700' }}>{getViewCount(currentMoment._id, currentMoment.userId)}</span>
+                                    <span style={{ fontSize: '0.9rem', fontWeight: '700' }}>{useMomentStore.getState().getViewCount(currentMoment._id, currentMoment.userId)}</span>
                                 </div>
                             )}
 
@@ -314,7 +325,70 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                         />
                     ) : hasMedia ? (
                         <div className="aura-media-content" key={currentMoment._id}>
-                            <img src={currentMoment.mediaUrl} alt="Moment" className="viewer-main-media" />
+                            <img 
+                                src={currentMoment.mediaUrl} 
+                                alt="Moment" 
+                                className="viewer-main-media" 
+                                style={FILTER_STYLES[currentMoment.filter] || FILTER_STYLES.none}
+                            />
+                            {currentMoment.locationTag && (
+                                <div className="aura-image-location-pill" style={{
+                                    position: 'absolute',
+                                    bottom: '136px',
+                                    left: '16px',
+                                    background: 'rgba(0, 0, 0, 0.55)',
+                                    backdropFilter: 'blur(10px)',
+                                    WebkitBackdropFilter: 'blur(10px)',
+                                    padding: '6px 14px',
+                                    borderRadius: '16px',
+                                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                                    color: '#ffffff',
+                                    pointerEvents: 'none',
+                                    zIndex: 10,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'flex-start',
+                                    gap: '2px',
+                                    boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.25)'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                            <circle cx="12" cy="10" r="3" />
+                                        </svg>
+                                        <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#ffffff', letterSpacing: '0.01em' }}>
+                                            {currentMoment.locationTag}
+                                        </span>
+                                    </div>
+                                    <div style={{ fontSize: '0.55rem', color: 'rgba(255, 255, 255, 0.45)', fontWeight: '600', letterSpacing: '0.03em', textTransform: 'uppercase' }}>
+                                        #Moment. on OLH ZenChat
+                                    </div>
+                                </div>
+                            )}
+                            {currentMoment.caption && currentMoment.caption.trim().length >= 3 && (
+                                <div className="aura-image-caption-pill" style={{
+                                    position: 'absolute',
+                                    bottom: '80px',
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    background: 'rgba(0, 0, 0, 0.65)',
+                                    backdropFilter: 'blur(12px)',
+                                    WebkitBackdropFilter: 'blur(12px)',
+                                    padding: '8px 18px',
+                                    borderRadius: '24px',
+                                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                                    color: '#ffffff',
+                                    fontSize: '0.95rem',
+                                    fontWeight: '500',
+                                    textAlign: 'center',
+                                    maxWidth: '85%',
+                                    pointerEvents: 'none',
+                                    zIndex: 10,
+                                    boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)'
+                                }}>
+                                    {currentMoment.caption}
+                                </div>
+                            )}
                             {hasText && (
                                 <div className="aura-content-overlay">
                                     <p className="aura-overlay-text">{currentMoment.content}</p>

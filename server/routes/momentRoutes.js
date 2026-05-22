@@ -7,13 +7,21 @@ const { sendPushNotification } = require("../utils/firebase");
 
 router.post("/", protect, async (req, res) => {
     try {
-        const { type, content, mediaUrl, music } = req.body;
+        const { type, content, mediaUrl, music, caption, locationTag, filter, disappearAfterHours } = req.body;
+        const hours = disappearAfterHours ? Number(disappearAfterHours) : 24;
+        const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000);
+
         const moment = await Moment.create({
             userId: req.user._id,
             type,
             content,
             mediaUrl,
-            music
+            music,
+            caption: caption || "",
+            locationTag: locationTag || "",
+            filter: filter || "none",
+            disappearAfterHours: hours,
+            expiresAt
         });
 
         const populated = await Moment.findById(moment._id).populate("userId", "username avatar fullName");

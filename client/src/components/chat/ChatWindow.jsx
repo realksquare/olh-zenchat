@@ -533,7 +533,7 @@ const ChatWindow = ({ onBack }) => {
     const {
         activeChat, fetchMessages, fetchOlderMessages, isLoadingMessages, isLoadingOlderMessages,
         typingUsers, markChatAsRead, onlineUsers, hasMoreMessages, isLowBandwidth, peerLowBandwidth, isOffline,
-        isZenMode, toggleZenMode, zenUsers, isBareMinimum
+        isZenMode, toggleZenMode, zenUsers
     } = useChatStore(useShallow((s) => ({
         activeChat: s.activeChat,
         fetchMessages: s.fetchMessages,
@@ -549,8 +549,7 @@ const ChatWindow = ({ onBack }) => {
         isOffline: s.isOffline,
         isZenMode: s.isZenMode,
         toggleZenMode: s.toggleZenMode,
-        zenUsers: s.zenUsers,
-        isBareMinimum: s.isBareMinimum
+        zenUsers: s.zenUsers
     })));
 
     const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
@@ -633,47 +632,26 @@ const ChatWindow = ({ onBack }) => {
         }, 3600);
     }, [toggleZenMode]);
 
+    /* CINEMATIC SEQUENCE COMMENTED OUT — preserved for future use
     const runCinematicSequence = useCallback((clientX, clientY) => {
         clearCinematicTimers();
         setCinematicPhase("fade-black");
-        
-        const t1 = setTimeout(() => {
-            setCinematicPhase("disclaimer");
-        }, 500);
-        
-        const t2 = setTimeout(() => {
-            setCinematicPhase("fade-disclaimer");
-        }, 2500);
-        
-        const t3 = setTimeout(() => {
-            setCinematicPhase("noise");
-            startZenIntroAudio();
-        }, 3000);
-        
-        const t4 = setTimeout(() => {
-            setCinematicPhase("implosion");
-        }, 5500);
-        
-        const t5 = setTimeout(() => {
-            setCinematicPhase("bloom");
-        }, 8000);
-        
-        const t6 = setTimeout(() => {
-            setCinematicPhase("mode-name");
-        }, 11500);
-        
-        const t7 = setTimeout(() => {
-            setCinematicPhase("integration");
-        }, 12500);
-        
+        const t1 = setTimeout(() => { setCinematicPhase("disclaimer"); }, 500);
+        const t2 = setTimeout(() => { setCinematicPhase("fade-disclaimer"); }, 2500);
+        const t3 = setTimeout(() => { setCinematicPhase("noise"); startZenIntroAudio(); }, 3000);
+        const t4 = setTimeout(() => { setCinematicPhase("implosion"); }, 5500);
+        const t5 = setTimeout(() => { setCinematicPhase("bloom"); }, 8000);
+        const t6 = setTimeout(() => { setCinematicPhase("mode-name"); }, 11500);
+        const t7 = setTimeout(() => { setCinematicPhase("integration"); }, 12500);
         const t8 = setTimeout(() => {
             setCinematicPhase(null);
             localStorage.setItem("zen_intro_shown", "true");
             triggerCircularReveal(clientX, clientY, true);
         }, 14000);
-        
         cinematicTimers.current = [t1, t2, t3, t4, t5, t6, t7, t8];
     }, [clearCinematicTimers, triggerCircularReveal]);
+    */
+
 
     const handleZenToggle = useCallback((e) => {
         e.stopPropagation();
@@ -681,15 +659,11 @@ const ChatWindow = ({ onBack }) => {
         const y = e.clientY || window.innerHeight / 2;
         const wasZen = isZenMode;
         if (!wasZen) {
-            // Unlock and prime Web Audio API context directly inside the user gesture bounds!
+            // Unlock and prime Web Audio API context directly inside the user gesture bounds
             try {
                 const audioCtx = getAudioContext();
                 if (audioCtx) {
-                    if (audioCtx.state === "suspended") {
-                        audioCtx.resume();
-                    }
-                    // Generate and play a silent 1-millisecond buffer immediately.
-                    // This activates hardware DAC/speaker outputs on iOS/Android devices.
+                    if (audioCtx.state === "suspended") { audioCtx.resume(); }
                     const buffer = audioCtx.createBuffer(1, 1, 22050);
                     const source = audioCtx.createBufferSource();
                     source.buffer = buffer;
@@ -697,13 +671,14 @@ const ChatWindow = ({ onBack }) => {
                     source.start(0);
                 }
             } catch (err) {
-                console.warn("Failed to unlock audio context in user gesture:", err);
+                console.warn("Failed to unlock audio context:", err);
             }
-            runCinematicSequence(x, y);
+            // Cinematic sequence commented out — go straight to reveal
+            triggerCircularReveal(x, y, true);
         } else {
             triggerCircularReveal(x, y, false);
         }
-    }, [isZenMode, runCinematicSequence, triggerCircularReveal]);
+    }, [isZenMode, triggerCircularReveal]);
 
     const handleSkipIntro = useCallback((e) => {
         if (e) e.stopPropagation();
@@ -725,6 +700,21 @@ const ChatWindow = ({ onBack }) => {
             }
         };
     }, [clearCinematicTimers]);
+
+    // ZenMode off: purge all ZenMode messages from server + store for both sides
+    const prevIsZenModeRef = useRef(isZenMode);
+    useEffect(() => {
+        if (prevIsZenModeRef.current === true && isZenMode === false && activeChat?._id) {
+            const msgs = useChatStore.getState().messages[activeChat._id] || [];
+            const zenIds = msgs.filter(m => m.isZenMessage && m._id).map(m => m._id);
+            if (zenIds.length > 0 && socket?.connected) {
+                socket.emit("zen_session_clear", { chatId: activeChat._id, messageIds: zenIds });
+            }
+            // Optimistic local purge immediately
+            useChatStore.getState().purgeZenMessages(activeChat._id);
+        }
+        prevIsZenModeRef.current = isZenMode;
+    }, [isZenMode, activeChat?._id, socket]);
 
     useEffect(() => {
         if (socket?.connected) {
@@ -950,7 +940,7 @@ const ChatWindow = ({ onBack }) => {
     }
 
     return (
-        <div className={`chat-window ${isDeleted ? 'user-deleted-mode' : ''} ${isZenMode ? 'zen-active' : ''} ${isBareMinimum ? 'bare-minimum-mode' : ''}`} style={{ position: 'relative' }}>
+        <div className={`chat-window ${isDeleted ? 'user-deleted-mode' : ''} ${isZenMode ? 'zen-active' : ''}`} style={{ position: 'relative' }}>
             <div className="chat-header" style={{ position: 'sticky', top: 0, zIndex: 50 }}>
                 <button className="chat-back-btn" onClick={onBack} aria-label="Back to chats">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -965,7 +955,7 @@ const ChatWindow = ({ onBack }) => {
                         className={`avatar avatar-md ${hasMoments && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked ? 'moments-halo-thin' : ''}`}
                         style={hasMoments && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked ? { '--halo-color': useMomentStore.getState().getHaloColor(otherUser?._id, user?._id) } : {}}
                     >
-                        {otherUser?.avatar && !isBareMinimum ? (
+                        {otherUser?.avatar ? (
                             <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
                         ) : (
                             <span>{otherUser?.username?.slice(0, 2).toUpperCase()}</span>
@@ -999,9 +989,9 @@ const ChatWindow = ({ onBack }) => {
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                         <button
                             className="header-action-btn"
-                            onClick={() => setShowDisappearingMenu(!showDisappearingMenu)}
-                            title="Disappearing messages mode"
-                            style={{ flexShrink: 0 }}
+                            disabled
+                            title="Coming soon!"
+                            style={{ flexShrink: 0, opacity: 0.35, cursor: 'not-allowed', pointerEvents: 'none' }}
                         >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <circle cx="12" cy="12" r="10" />
@@ -1265,14 +1255,14 @@ const ChatWindow = ({ onBack }) => {
                 />
             )}
 
+            {/* Cinematic overlay commented out — preserved for future use
             {cinematicPhase && (
                 <div className={`zen-cinematic-overlay phase-${cinematicPhase}`}>
-                    <button className="zen-skip-btn" onClick={handleSkipIntro}>
-                        Skip
-                    </button>
+                    <button className="zen-skip-btn" onClick={handleSkipIntro}>Skip</button>
                     <ZenParticleCanvas phase={cinematicPhase} noiseElements={noiseElements} />
                 </div>
             )}
+            */}
             
             {revealCircle && (
                 <div

@@ -5226,7 +5226,7 @@ select {
   top: 12px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 9999;
+  z-index: 999999;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -5602,7 +5602,7 @@ select {
   top: 20px;
   left: 50%;
   transform: translateX(-50%) translateY(-100px);
-  z-index: 99999;
+  z-index: 999999;
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(12px);
   padding: 10px 14px 10px 16px;
@@ -5988,25 +5988,4 @@ select {
   transition: mask-image 1.5s ease, -webkit-mask-image 1.5s ease;
 }
 
-/* ==========================================================================
-   Crisis Mode (#BareMinimum.) Overrides
-   ========================================================================== */
-.bare-minimum-mode *,
-.bare-minimum-mode *::before,
-.bare-minimum-mode *::after {
-  transition: none !important;
-  animation: none !important;
-  transition-duration: 0s !important;
-  animation-duration: 0s !important;
-}
 
-.chat-window.zen-active.bare-minimum-mode .chat-messages {
-  mask-image: none !important;
-  -webkit-mask-image: none !important;
-}
-
-.chat-window.zen-active.bare-minimum-mode .message-row {
-  filter: none !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-}

@@ -53,13 +53,13 @@ const NetworkBanner = () => {
     const handleStatusChange = () => {
       const offline = !navigator.onLine;
       useChatStore.getState().setOffline(offline);
-      
       clearTimeout(reconnectTimer.current);
-
-      const isLiveConnected = socket?.connected || false;
 
       if (offline) {
         showBanner("offline");
+      } else if (!isConnected) {
+        // Online but socket not yet reconnected
+        showBanner("reconnecting");
       } else {
         showBanner("online");
         hideBanner();
@@ -88,7 +88,8 @@ const NetworkBanner = () => {
     };
   }, [socket, isConnected]);
 
-  if (!visible || status === "online" || dismissed) return null;
+  if (!visible || dismissed) return null;
+  if (status === "online") return null;
 
   return (
     <div className="network-banner" data-status={status} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -100,7 +101,7 @@ const NetworkBanner = () => {
       ) : (
         <>
           <span className="banner-spinner" />
-          <span style={{ flex: 1 }}>Reconnecting</span>
+          <span style={{ flex: 1 }}>{status === "reconnecting" ? "Reconnecting to server" : "Reconnecting"}</span>
         </>
       )}
       <button
@@ -119,7 +120,6 @@ const NetworkBanner = () => {
 
 const NetworkToast = () => {
   const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
-  const isBareMinimum = useChatStore((s) => s.isBareMinimum);
   const [toastMessage, setToastMessage] = useState(null);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastIsLow, setToastIsLow] = useState(false);
@@ -127,14 +127,9 @@ const NetworkToast = () => {
   const timer = useRef(null);
 
   useEffect(() => {
-    if (isBareMinimum) {
-      prevLowBandwidth.current = false;
-      setToastVisible(false);
-      return;
-    }
     // Skip identical state (no change)
     if (prevLowBandwidth.current === isLowBandwidth) return;
-    // On very first evaluation, only show if low (not on initial false→false)
+    // On very first evaluation, only show if low (not on initial false)
     if (prevLowBandwidth.current === null) {
       prevLowBandwidth.current = isLowBandwidth;
       if (isLowBandwidth) {
@@ -157,7 +152,7 @@ const NetworkToast = () => {
     setToastVisible(true);
     timer.current = setTimeout(() => setToastVisible(false), 3000);
     prevLowBandwidth.current = isLowBandwidth;
-  }, [isLowBandwidth, isBareMinimum]);
+  }, [isLowBandwidth]);
 
   if (!toastVisible) return null;
 

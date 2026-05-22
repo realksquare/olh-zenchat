@@ -96,6 +96,10 @@ const messageSchema = new mongoose.Schema(
         isLowBandwidth: {
             type: Boolean,
             default: false
+        },
+        isZenMessage: {
+            type: Boolean,
+            default: false
         }
     },
     { timestamps: true }

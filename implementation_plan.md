@@ -1,111 +1,71 @@
-# Implementation Plan - ZenChat Premium Features & Core Fixes
+# Implementation Plan - Offline-First Bulletproof Queuing
 
-This plan outlines the implementation of four major engagement/security features along with fixes for critical UI bugs and presence tracking.
+Implement an offline-first bulletproof messaging and sync queue in ZenChat. This ensures immediate optimistic rendering in the UI with a pending status icon, robust offline queuing in IndexedDB, secure on-reconnection E2EE encryption, and seamless message ID reconciliation with server acknowledgements.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **ZenVault Security Disclaimer:**
-> ZenVault is a local-only encrypted vault using the browser's Web Crypto API (AES-GCM 256-bit). The encryption keys are derived dynamically from a Master Passphrase and never sent to the server. If a user loses their passphrase, their local vault files are permanently unrecoverable. 
-
-> [!WARNING]
-> **Zen Whispers Fallback Proximity Detection:**
-> Because the browser's native `DeviceProximityEvent` is deprecated or unavailable on many mobile platforms, we will use the `DeviceOrientationEvent` (monitoring screen tilt angle) as a fallback to trigger Whisper Mode (Private ear-playback level and volume lowering) when the user lifts the phone to their ear.
+> **E2EE Encryption at Sync Time:**
+> Since public key retrieval requests to `/auth/users/:id/public-key` require active network connectivity, messages queued while completely offline are stored locally in IndexedDB as plaintext. 
+> To guarantee E2EE integrity, these queued text messages will be transparently encrypted **during the outbox flush sequence** immediately after connection is restored, before they are emitted to the socket server. This preserves the security model while allowing offline messaging.
 
 ---
 
 ## Proposed Changes
 
-### Component 1: Core Bug Fixes
+### 1. Database & Outbox Layer
+Ensure offline messages are persisted with all relevant fields (including the client-side correlation ID `cid`).
 
-#### [MODIFY] [handlers.js](file:///c:/olh-zenchat/server/socket/handlers.js)
-- Fix the presence detection bug by passing the `io` instance to `broadcastUserStatus` inside the socket `disconnect` callback (lines 189 and 201). This will ensure offline status is successfully broadcast to all users when a client disconnects.
-
-#### [MODIFY] [ProfileModal.jsx](file:///c:/olh-zenchat/client/src/components/ui/ProfileModal.jsx)
-- **Restricted 2FA Options:** If `user.email` exists (email signup), display only Phone SMS OTP as the 2FA option. If `user.phoneNumber` exists and `!user.email` (phone signup), display only Email Verification as the 2FA option.
-- **Email Input Validation:** Add an email input field when setting up Email 2FA (for phone signups without an email in their profile) so that they can specify and verify their email. Ensure input fields (email or phone) are validated and required before the "Send Verification Code" button is enabled.
-- **Button Alignment:** Fix the alignment of the "Cancel" and "Verify" buttons on the manual OTP entry screen to render centered and properly padded on mobile viewports.
-- **SP-OP Toggle Synchronization:** Ensure the `#SP-OP` toggle state renders correctly and updates in real-time when the network speed auto-check changes the state.
-
-#### [MODIFY] [auth.js](file:///c:/olh-zenchat/server/routes/auth.js)
-- Update the `/2fa/setup/request` and `/2fa/setup/verify` routes to accept `email` in the request body. If setting up Email 2FA, validate the email format and uniqueness, and update the user's email in the database upon successful verification.
+#### [MODIFY] [zenDB.js](file:///d:/olh-zenchat/client/src/db/zenDB.js)
+No structural database schema modifications are required since `db.version(5)` already includes an `outbox` table mapped to `++id, chatId, createdAt`. We will ensure the helper methods are correctly aligned with the state store.
 
 ---
 
-### Component 2: ZenVault (Secure Local Safe)
+### 2. Socket & Reconnection Layer
+Implement connection monitoring, concurrency-safe outbox flushing, E2EE encryption during flush, and socket dispatch.
 
-#### [MODIFY] [zenDB.js](file:///c:/olh-zenchat/client/src/db/zenDB.js)
-- Increment the Dexie database schema to version 5 and add a `vault` store to save secure document metadata and encrypted payloads:
-  ```javascript
-  db.version(5).stores({
-      chats: "_id, updatedAt, lastMessage._id",
-      messages: "_id, chatId, createdAt, senderId",
-      settings: "key",
-      outbox: "++id, chatId, createdAt",
-      keys: "key",
-      vault: "id, name, type, size, date",
-  });
-  ```
-
-#### [NEW] [ZenVaultModal.jsx](file:///c:/olh-zenchat/client/src/components/ui/ZenVaultModal.jsx)
-- A highly polished, glassmorphic modal utilizing vanilla CSS.
-- **Setup State:** Prompts users to define a Master Passphrase. Derives a key using `PBKDF2` and encrypts a verification token stored locally.
-- **Access State:** Prompts users for their password, derives the AES-GCM 256-bit key, and decrypts the verification token.
-- **Secure Storage:** Allows dragging/dropping files, encrypts them in-memory using Web Crypto, and saves the binary payload and IV in Dexie. Decrypts and previews files in-memory when tapped. Contains an immediate "Lock Safe" state resetter.
-
-#### [MODIFY] [Sidebar.jsx](file:///c:/olh-zenchat/client/src/components/chat/Sidebar.jsx)
-- Add the Vault lock button next to the Logout button in the header. Tapping it opens the `ZenVaultModal`.
+#### [MODIFY] [SocketContext.jsx](file:///d:/olh-zenchat/client/src/context/SocketContext.jsx)
+- Introduce a concurrency lock `isFlushingRef = useRef(false)` to prevent duplicate drains and race conditions during simultaneous socket connection and window online events.
+- Consolidate socket `connect` and window `online` hooks to call a single unified `flushOutbox` function.
+- In `flushOutbox`, detect unsent plaintext text messages, resolve the other participant's ID (by matching the `chatId` against the store's loaded chat array), fetch public keys via `axiosInstance`, and transparently encrypt the message content via E2EE before emitting `send_message`.
 
 ---
 
-### Component 3: Zen Whispers (Ambient Voice Messaging)
+### 3. State Management Layer
+Handle optimistic state updates, client-side deduplication, and database cleanup upon server acknowledgement.
 
-#### [MODIFY] [MessageInput.jsx](file:///c:/olh-zenchat/client/src/components/chat/MessageInput.jsx)
-- Add a mic recording action sheet that lets users select an ambient sound overlay: "None", "Fireplace Warmth", or "Gentle Rain".
-- Set up a Web Audio API graph (`AudioContext`) that mixes the microphone input with a procedurally synthesized ambient loop (pink noise + crackling spikes for fireplace; low-pass filtered white noise + volume modulation for rain).
-- Send the mixed stream to `MediaRecorder`, compile the final blob, and upload it as a voice message of type `"voice"`.
-
-#### [MODIFY] [MessageBubble.jsx](file:///c:/olh-zenchat/client/src/components/chat/MessageBubble.jsx)
-- Listen to `deviceorientation` events when a voice message is playing.
-- If the device tilt transitions to a vertical ear-listening posture (e.g., `beta > 75` and `|gamma| < 25`), lower the audio volume significantly, apply a lowpass filter, and hide standard background noise to ensure high-fidelity whispering directly to the ear.
+#### [MODIFY] [chatStore.js](file:///d:/olh-zenchat/client/src/stores/chatStore.js)
+`addMessage` already supports matching optimistic temporary messages by client ID (`cid`), deleting the temp record from IndexedDB `messages`, and replacing it with the server-assigned message and status. No structural changes are required here, but we will review and ensure absolute consistency.
 
 ---
 
-### Component 4: Inner Circle Spatial Dashboard
+### 4. UI Layer
+Align with ZenChat's beautiful signature message status mechanic instead of adding redundant, cluttered checkmarks or clock icons next to the timestamp.
 
-#### [NEW] [InnerCircleCanvas.jsx](file:///c:/olh-zenchat/client/src/components/chat/InnerCircleCanvas.jsx)
-- Renders an interactive spatial grid/canvas.
-- Grabs the user's closest contacts (by filtering the `close_circle` tag, or fallback to all contacts).
-- Renders contacts as glassmorphic circles floating and drifting dynamically using spring physics and wall collisions.
-- Emits pulsing glow circles under typing contacts.
-- Supports drag-and-drop mechanics. Dragging a contact sphere to the center of the canvas opens the direct message chat window immediately.
-
-#### [MODIFY] [Sidebar.jsx](file:///c:/olh-zenchat/client/src/components/chat/Sidebar.jsx)
-- Add an "Inner Circle" tab to the sidebar navigation (Recents | Contacts | Inner Circle).
-- When selected, mount the `InnerCircleCanvas` inside the sidebar panel.
-
----
-
-### Component 5: Zero-Payload Crisis Mode
-
-#### [NEW] [packetCompressor.js](file:///c:/olh-zenchat/client/src/utils/packetCompressor.js)
-- Maps websocket payloads to highly minimized key structures (e.g. `chatId` -> `c`, `content` -> `t`, `type` -> `y`, etc.) when `isLowBandwidth` is active, significantly lowering network packet overhead.
-
-#### [MODIFY] [SocketContext.jsx](file:///c:/olh-zenchat/client/src/context/SocketContext.jsx)
-- Integrate key mapping for outgoing and incoming websocket frames when in low bandwidth.
-
-#### [MODIFY] [handlers.js](file:///c:/olh-zenchat/server/socket/handlers.js)
-- Handle compressed incoming packets transparently, restoring them to full model keys prior to saving to database.
-
-#### [MODIFY] [ChatWindow.jsx](file:///c:/olh-zenchat/client/src/components/chat/ChatWindow.jsx) / [MessageBubble.jsx](file:///c:/olh-zenchat/client/src/components/chat/MessageBubble.jsx)
-- When `isLowBandwidth` is active, disable all fluid layout animations, transition triggers, and gradient blurred masks. Renders simple initials instead of avatar images.
+#### [MODIFY] [MessageBubble.jsx](file:///d:/olh-zenchat/client/src/components/chat/MessageBubble.jsx)
+- **Do not add any checkmark or clock icons next to the timestamp.** Adding these would conflict with the premium, clutter-free aesthetics of ZenChat.
+- **Preserve the background-color and shadow-based status indicators:** Let the outgoing bubble background and shadow communicate the status:
+  - `status === "sending"`: Displays a grey-translucent background with a dashed border (`.mine.status-sending`).
+  - `status === "sent"`: Displays a solid slate-grey background (`.mine.status-sent`).
+  - `status === "delivered"`: Displays a royal blue background with a blue glow shadow (`.mine.status-delivered`).
+  - `status === "read"` or `"seen"`: Displays a gorgeous teal background with a teal glow shadow (`.mine.status-seen`).
+- Keep the existing file upload progress overlay (circular progress for media uploads, linear bar for texts) intact so that active uploads under `status === "sending"` display the accurate progress.
 
 ---
 
 ## Verification Plan
 
-### Automated & Manual Tests
-- **Presence Broadcast:** Connect two browser windows as different users. Verify minimizing or locking screen transitions the user offline within 2 seconds, and broadcasts status properly now that `io` is supplied to `broadcastUserStatus`.
-- **2FA Validation:** Attempt to set up 2FA for a user without email/phone, ensuring the send button is disabled until valid input is typed, and that verify/cancel buttons are perfectly aligned.
-- **ZenVault Encryption:** Check IndexedDB records inside Chrome DevTools to verify files are stored as encrypted blobs and cannot be read without the passphrase.
-- **Audio Mixing & Whispers:** Record an ambient voice message and review the uploaded waveform. Verify tilt transitions drop playback volume.
+### Manual Verification
+1. **Offline Queueing Simulation:**
+   - Turn off Wi-Fi or toggle DevTools Network to "Offline" mode.
+   - Type and send a message.
+   - Verify it appears immediately in the chat area with a grey-translucent background and dashed border indicating it is in a pending/sending status.
+2. **Offline Page Reload Resilience:**
+   - With DevTools still set to Offline, refresh the page.
+   - Navigate to the active chat and verify that the optimistic pending message is successfully loaded from IndexedDB and still displays the grey-translucent dashed background.
+3. **Reconnection & Sync:**
+   - Toggle DevTools Network back to "Online" mode.
+   - Verify the outbox flushes instantly.
+   - Verify the message border turns solid and the background updates instantly to solid slate grey ("sent"), then royal blue ("delivered") and teal ("seen") as the socket server delivers acknowledgements.
+   - Verify no duplicate message bubbles appear in the chat.
+

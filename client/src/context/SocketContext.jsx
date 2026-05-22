@@ -8,7 +8,8 @@ import { enqueueOutbox, drainOutbox } from "../db/zenDB";
 import { decryptMessageIfNeeded } from "../utils/e2eeHelper";
 import { encryptMessageContent, encryptMessageContentForBoth } from "../utils/crypto";
 import axiosInstance from "../utils/axios";
-import { compressPacket, decompressPacket } from "../utils/packetCompressor";
+
+
 
 const SocketContext = createContext(null);
 
@@ -195,16 +196,13 @@ export const SocketProvider = ({ children }) => {
             const activeChat = useChatStore.getState().activeChat;
             if (activeChat?._id) {
                 const isLowBandwidth = useChatStore.getState().isLowBandwidth;
-                const isBareMinimum = useChatStore.getState().isBareMinimum;
-                socket.emit("join_chat", { chatId: activeChat._id, isLowBandwidth, isBareMinimum });
+                socket.emit("join_chat", { chatId: activeChat._id, isLowBandwidth });
                 useChatStore.getState().fetchMessages(activeChat._id);
             }
             useChatStore.getState().fetchChats();
             const queued = await drainOutbox();
             queued.forEach(({ id: _id, createdAt: _ts, ...payload }) => {
-                const isBareMinimum = useChatStore.getState().isBareMinimum;
-                const packet = isBareMinimum ? compressPacket(payload) : payload;
-                socket.emit("send_message", packet);
+                socket.emit("send_message", payload);
             });
         });
 
@@ -237,6 +235,9 @@ export const SocketProvider = ({ children }) => {
         socket.on("instant_messages_deleted", handleInstantMessagesDeleted);
         socket.on("new_moment", handleNewMoment);
         socket.on("moment_deleted", handleMomentDeleted);
+        socket.on("zen_messages_cleared", ({ chatId }) => {
+            useChatStore.getState().purgeZenMessages(chatId);
+        });
         socket.on("user_blocked", handleUserBlocked);
         socket.on("user_unblocked", handleUserUnblocked);
         socket.on("force_logout", handleForceLogout);
@@ -260,6 +261,7 @@ export const SocketProvider = ({ children }) => {
             socket.off("instant_messages_deleted", handleInstantMessagesDeleted);
             socket.off("new_moment", handleNewMoment);
             socket.off("moment_deleted", handleMomentDeleted);
+            socket.off("zen_messages_cleared");
             socket.off("user_blocked", handleUserBlocked);
             socket.off("user_unblocked", handleUserUnblocked);
             socket.off("force_logout", handleForceLogout);
@@ -269,7 +271,6 @@ export const SocketProvider = ({ children }) => {
     }, [token, userId]);
 
     const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
-    const isBareMinimum = useChatStore((s) => s.isBareMinimum);
 
     useEffect(() => {
         if (socketRef.current?.connected) {
@@ -281,16 +282,9 @@ export const SocketProvider = ({ children }) => {
         }
     }, [isLowBandwidth]);
 
-    useEffect(() => {
-        if (socketRef.current?.connected) {
-            socketRef.current.emit("update_bare_minimum", { isBareMinimum });
-        }
-    }, [isBareMinimum]);
-
     const joinChat = useCallback((chatId) => {
         const isLowBandwidth = useChatStore.getState().isLowBandwidth;
-        const isBareMinimum = useChatStore.getState().isBareMinimum;
-        socketRef.current?.emit("join_chat", { chatId, isLowBandwidth, isBareMinimum });
+        socketRef.current?.emit("join_chat", { chatId, isLowBandwidth });
     }, []);
 
     const updateLowBandwidth = useCallback((chatId, isLowBandwidth) => {
@@ -303,14 +297,51 @@ export const SocketProvider = ({ children }) => {
         socketRef.current?.emit("leave_chat", { chatId });
     }, []);
 
+    const isFlushingRef = useRef(false);
     const flushOutbox = useCallback(async () => {
-        if (!socketRef.current?.connected) return;
-        const queued = await drainOutbox();
-        queued.forEach(({ id: _id, createdAt: _ts, ...payload }) => {
-            const isBareMinimum = useChatStore.getState().isBareMinimum;
-            const packet = isBareMinimum ? compressPacket(payload) : payload;
-            socketRef.current.emit("send_message", packet);
-        });
+        if (!socketRef.current?.connected || isFlushingRef.current) return;
+        isFlushingRef.current = true;
+        try {
+            const queued = await drainOutbox();
+            for (const item of queued) {
+                const { id: _id, createdAt: _ts, ...payload } = item;
+                if (payload.content && payload.type === "text" && !payload.isEncrypted) {
+                    try {
+                        const activeChat = useChatStore.getState().chats.find(c => c._id?.toString() === payload.chatId?.toString()) || useChatStore.getState().activeChat;
+                        const currentUserId = useAuthStore.getState().user?._id;
+                        const otherParticipant = activeChat?.participants?.find(p => (p._id || p) !== currentUserId);
+                        const otherParticipantId = otherParticipant?._id || otherParticipant;
+
+                        if (otherParticipantId && currentUserId) {
+                            const [recRes, sndRes] = await Promise.all([
+                                axiosInstance.get(`/auth/users/${otherParticipantId}/public-key`),
+                                axiosInstance.get(`/auth/users/${currentUserId}/public-key`)
+                            ]);
+
+                            if (recRes.data?.publicKey && sndRes.data?.publicKey) {
+                                const encrypted = await encryptMessageContentForBoth(
+                                    payload.content,
+                                    recRes.data.publicKey,
+                                    sndRes.data.publicKey
+                                );
+                                payload.content = encrypted.ciphertext;
+                                payload.encryptedSymmetricKey = JSON.stringify({
+                                    [otherParticipantId]: encrypted.encryptedSymmetricKeyRec,
+                                    [currentUserId]: encrypted.encryptedSymmetricKeySnd
+                                });
+                                payload.iv = encrypted.iv;
+                                payload.isEncrypted = true;
+                            }
+                        }
+                    } catch (err) {
+                        console.error("[SocketContext] E2EE encryption-on-flush skipped/failed:", err);
+                    }
+                }
+                socketRef.current.emit("send_message", payload);
+            }
+        } finally {
+            isFlushingRef.current = false;
+        }
     }, []);
 
     useEffect(() => {
@@ -319,9 +350,9 @@ export const SocketProvider = ({ children }) => {
         return () => window.removeEventListener("online", handleOnline);
     }, [flushOutbox]);
 
-    const sendMessage = useCallback(async (chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null) => {
+    const sendMessage = useCallback(async (chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null, isZenMessage = false) => {
         const isLowBandwidth = useChatStore.getState().isLowBandwidth;
-        let payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isLowBandwidth };
+        let payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isLowBandwidth, isZenMessage };
 
         // Transparent E2EE Message Encryption
         if (content && type === "text") {
@@ -358,9 +389,7 @@ export const SocketProvider = ({ children }) => {
         }
 
         if (socketRef.current?.connected && navigator.onLine) {
-            const isBareMinimum = useChatStore.getState().isBareMinimum;
-            const packet = isBareMinimum ? compressPacket(payload) : payload;
-            socketRef.current.emit("send_message", packet);
+            socketRef.current.emit("send_message", payload);
         } else {
             enqueueOutbox(payload);
         }

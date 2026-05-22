@@ -366,6 +366,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 const tempId = `temp-${Date.now()}-${Math.random()}`;
 
                 const activeChat = useChatStore.getState().activeChat;
+                const isZen = useChatStore.getState().isZenMode;
                 addMessage(chatId, {
                     _id: tempId,
                     cid: tempId,
@@ -378,7 +379,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     progress: 0,
                     replyTo: replyToId,
                     createdAt: new Date().toISOString(),
-                    disappearingMode: activeChat?.disappearingMode || "off"
+                    disappearingMode: activeChat?.disappearingMode || "off",
+                    isZenMessage: isZen
                 });
 
                 let fileToUpload = file;
@@ -401,7 +403,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 );
 
                 const downloadURL = res.data.secure_url;
-                sendMessage(chatId, files.length === 1 ? textContent : (isDoc ? file.name : ""), msgType, downloadURL, replyToId, isViewOnceVal, tempId);
+                const isZenMessage = useChatStore.getState().isZenMode;
+                sendMessage(chatId, files.length === 1 ? textContent : (isDoc ? file.name : ""), msgType, downloadURL, replyToId, isViewOnceVal, tempId, isZenMessage);
             }
             if (soundEnabled) playSendSound();
         } catch (error) {
@@ -438,6 +441,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
         } else {
             const tempId = `temp-${Date.now()}-${Math.random()}`;
             const activeChat = useChatStore.getState().activeChat;
+            const isZen = useChatStore.getState().isZenMode;
             addMessage(chatId, {
                 _id: tempId,
                 cid: tempId,
@@ -447,9 +451,10 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 type: "text",
                 status: "sending",
                 createdAt: new Date().toISOString(),
-                disappearingMode: activeChat?.disappearingMode || "off"
+                disappearingMode: activeChat?.disappearingMode || "off",
+                isZenMessage: isZen
             });
-            sendMessage(chatId, filteredContent, "text", "", replyingTo?._id, false, tempId);
+            sendMessage(chatId, filteredContent, "text", "", replyingTo?._id, false, tempId, isZen);
             if (soundEnabled) playSendSound();
             onCancelReply();
         }
