@@ -57,7 +57,7 @@ const NetworkBanner = () => {
 
       if (offline) {
         showBanner("offline");
-      } else if (!isConnected) {
+      } else if (socket && !isConnected) {
         // Online but socket not yet reconnected
         showBanner("reconnecting");
       } else {
