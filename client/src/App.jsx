@@ -1,3 +1,4 @@
+// ZenChat PWA Application Root
 import { useEffect, useRef, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./stores/authStore";
