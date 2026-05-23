@@ -465,7 +465,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                    user?.fcmTokens?.some(t => t.deviceType === currentDeviceType);
 
     return createPortal(
-        <div className="modal-overlay moments-aura-overlay" onClick={onClose} style={{ zIndex: 10000 }}>
+        <div className="modal-overlay moments-aura-overlay" style={{ zIndex: 10000 }}>
             {toast && <div className="aura-toast" style={{ zIndex: 10001, bottom: '20px' }}>{toast}</div>}
             {isSubscribing && <LoadingOverlay message="Subscribing..." subMessage="Setting up your secure connection" />}
             {isE2EELoading && <LoadingOverlay message="Generating key..." subMessage="Performing zero-knowledge cryptographic operations" />}

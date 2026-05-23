@@ -11,7 +11,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import HomePage from "./pages/HomePage";
 import InstallPWA from "./components/ui/InstallPWA";
 import RecoveryKeyModal from "./components/ui/RecoveryKeyModal";
-import { primeAudioContext } from "./utils/audio";
+import { primeAudioContext, getAudioContext } from "./utils/audio";
 import { requestNotificationPermission } from "./utils/firebase";
 import axiosInstance from "./utils/axios";
 import NotificationPrompt from "./components/layout/NotificationPrompt";
@@ -188,12 +188,30 @@ const NetworkToast = () => {
 const App = () => {
   const token = useAuthStore((s) => s.token);
   const userId = useAuthStore((s) => s.user?._id);
+  const user = useAuthStore((s) => s.user);
+  const activeChat = useChatStore((s) => s.activeChat);
   const checkAuth = useAuthStore((s) => s.checkAuth);
   const socketContext = useSocket();
   const socket = socketContext?.socket;
   const [serverReady, setServerReady] = useState(false);
   const prevTokenRef = useRef(token);
   const mountedRef = useRef(false);
+
+  // Global ZenMode States and Refs from context
+  const incomingZenInvite = socketContext?.incomingZenInvite;
+  const setIncomingZenInvite = socketContext?.setIncomingZenInvite;
+  const incomingZenExit = socketContext?.incomingZenExit;
+  const setIncomingZenExit = socketContext?.setIncomingZenExit;
+  const zenWaitingState = socketContext?.zenWaitingState;
+  const setZenWaitingState = socketContext?.setZenWaitingState;
+  const zenCountdown = socketContext?.zenCountdown;
+  const zenToast = socketContext?.zenToast;
+  const clearZenTimers = socketContext?.clearZenTimers;
+  const startZenTimer = socketContext?.startZenTimer;
+  const showExitConfirm = socketContext?.showExitConfirm;
+  const setShowExitConfirm = socketContext?.setShowExitConfirm;
+
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   useEffect(() => {
     if (!mountedRef.current) {
@@ -344,6 +362,290 @@ const App = () => {
       <InstallPWA />
       <NotificationPrompt />
       <RecoveryKeyModal />
+
+      {/* 1. Global Zen Waiting Overlay */}
+      {zenWaitingState && (
+        <div className="zen-modal-overlay">
+          <div className="zen-modal-container" onClick={(e) => e.stopPropagation()}>
+            {zenWaitingState === "invite-waiting" && (
+              <>
+                <div className="zen-waiting-loader">
+                  <div className="zen-waiting-circle-bg" />
+                  <div className="zen-waiting-circle-fg" />
+                  <span className="zen-countdown-number">{zenCountdown}</span>
+                </div>
+                <h3 className="zen-modal-title">Connecting...</h3>
+                <p className="zen-modal-desc">Waiting for peer to accept #ZenMode connection request.</p>
+                <button 
+                  className="zen-btn zen-btn-secondary" 
+                  style={{ width: '100%' }} 
+                  onClick={() => setShowCancelConfirm(true)}
+                >
+                  Cancel Request
+                </button>
+              </>
+            )}
+            {zenWaitingState === "exit-waiting" && (
+              <>
+                <div className="zen-waiting-loader">
+                  <div className="zen-waiting-circle-bg" />
+                  <div className="zen-waiting-circle-fg" />
+                  <span className="zen-countdown-number">{zenCountdown}</span>
+                </div>
+                <h3 className="zen-modal-title">Requesting Exit...</h3>
+                <p className="zen-modal-desc">Waiting for peer to approve ending the #ZenMode session.</p>
+                <button 
+                  className="zen-btn zen-btn-secondary" 
+                  style={{ width: '100%' }} 
+                  onClick={() => {
+                    clearZenTimers();
+                    setZenWaitingState(null);
+                  }}
+                >
+                  Cancel
+                </button>
+              </>
+            )}
+            {zenWaitingState === "no-response" && (
+              <>
+                <div className="zen-waiting-loader" style={{ animation: 'none' }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: 'auto' }}>
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                </div>
+                <h3 className="zen-modal-title">No Response</h3>
+                <p className="zen-modal-desc">User did not respond in time.</p>
+              </>
+            )}
+            {zenWaitingState === "refused" && (
+              <>
+                <div className="zen-waiting-loader" style={{ animation: 'none' }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: 'auto' }}>
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                  </svg>
+                </div>
+                <h3 className="zen-modal-title">Declined</h3>
+                <p className="zen-modal-desc">Request was declined.</p>
+              </>
+            )}
+            {zenWaitingState === "cancelled" && (
+              <>
+                <div className="zen-waiting-loader" style={{ animation: 'none' }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: 'auto' }}>
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                </div>
+                <h3 className="zen-modal-title">Cancelled</h3>
+                <p className="zen-modal-desc">Connection request was cancelled.</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 2. Custom Cancel Confirmation Prompt */}
+      {showCancelConfirm && (
+        <div className="zen-modal-overlay">
+          <div className="zen-modal-container" onClick={(e) => e.stopPropagation()}>
+            <h3 className="zen-modal-title">Cancel Zen Request?</h3>
+            <p className="zen-modal-desc">Are you sure you want to cancel the connection request?</p>
+            <div className="zen-modal-actions" style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+              <button 
+                className="zen-btn zen-btn-secondary" 
+                style={{ flex: 1 }} 
+                onClick={() => setShowCancelConfirm(false)}
+              >
+                Keep Waiting
+              </button>
+              <button 
+                className="zen-btn zen-btn-danger" 
+                style={{ flex: 1, background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }} 
+                onClick={() => {
+                  clearZenTimers();
+                  setZenWaitingState(null);
+                  setShowCancelConfirm(false);
+                  if (socket && activeChat) {
+                    socket.emit("zen_invite_respond", { 
+                      chatId: activeChat._id, 
+                      responderId: user._id, 
+                      requesterId: user._id, 
+                      accepted: false 
+                    });
+                  }
+                }}
+              >
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Global Incoming Zen Invite Overlay */}
+      {incomingZenInvite && (
+        <div className="zen-modal-overlay">
+          <div className="zen-modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="zen-waiting-loader">
+              <div className="zen-waiting-circle-bg" />
+              <div className="zen-waiting-circle-fg" />
+              <span className="zen-countdown-number">{zenCountdown}</span>
+            </div>
+            <h3 className="zen-modal-title">#ZenMode Invite</h3>
+            <p className="zen-modal-desc">@{incomingZenInvite.senderName || "User"} wants to connect in #ZenMode with you. Messages will be end-to-end encrypted and completely erased after session.</p>
+            <div className="zen-modal-actions">
+              <button className="zen-btn zen-btn-secondary" onClick={() => {
+                clearZenTimers();
+                if (socket) {
+                  socket.emit("zen_invite_respond", { chatId: incomingZenInvite.chatId, responderId: user._id, requesterId: incomingZenInvite.senderId, accepted: false });
+                }
+                setIncomingZenInvite(null);
+              }}>
+                Ignore
+              </button>
+              <button className="zen-btn zen-btn-primary" onClick={async () => {
+                clearZenTimers();
+                
+                // Priming B's audio
+                try {
+                  const audioCtx = getAudioContext();
+                  if (audioCtx && audioCtx.state === "suspended") {
+                    await audioCtx.resume();
+                  }
+                } catch (err) {}
+
+                if (socket) {
+                  socket.emit("zen_invite_respond", { chatId: incomingZenInvite.chatId, responderId: user._id, requesterId: incomingZenInvite.senderId, accepted: true });
+                }
+
+                // Programmatically find target chat in stores and open it
+                const chatList = useChatStore.getState().chats;
+                let target = chatList.find(c => c._id === incomingZenInvite.chatId);
+                if (!target) {
+                  await useChatStore.getState().fetchChats();
+                  target = useChatStore.getState().chats.find(c => c._id === incomingZenInvite.chatId);
+                }
+                if (target) {
+                  useChatStore.getState().setActiveChat(target);
+                }
+
+                setIncomingZenInvite(null);
+              }}>
+                Connect
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Global Incoming Zen Exit Overlay */}
+      {incomingZenExit && (
+        <div className="zen-modal-overlay">
+          <div className="zen-modal-container" onClick={(e) => e.stopPropagation()}>
+            <div className="zen-waiting-loader">
+              <div className="zen-waiting-circle-bg" />
+              <div className="zen-waiting-circle-fg" />
+              <span className="zen-countdown-number">{zenCountdown}</span>
+            </div>
+            <h3 className="zen-modal-title">End #ZenMode?</h3>
+            <p className="zen-modal-desc">@{incomingZenExit.senderName || "User"} wants to end the #ZenMode session. All session messages will be permanently cleared from both devices.</p>
+            <div className="zen-modal-actions">
+              <button className="zen-btn zen-btn-secondary" onClick={() => {
+                clearZenTimers();
+                if (socket) {
+                  socket.emit("zen_exit_respond", { chatId: incomingZenExit.chatId, responderId: user._id, requesterId: incomingZenExit.senderId, accepted: false });
+                }
+                setIncomingZenExit(null);
+              }}>
+                Stay
+              </button>
+              <button className="zen-btn zen-btn-primary" onClick={() => {
+                clearZenTimers();
+                if (socket) {
+                  socket.emit("zen_exit_respond", { chatId: incomingZenExit.chatId, responderId: user._id, requesterId: incomingZenExit.senderId, accepted: true });
+                }
+                setIncomingZenExit(null);
+              }}>
+                Exit Convo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Custom Exit Confirmation Prompt */}
+      {showExitConfirm && (
+        <div className="zen-modal-overlay">
+          <div className="zen-modal-container" onClick={(e) => e.stopPropagation()}>
+            <h3 className="zen-modal-title">End Zen Session?</h3>
+            <p className="zen-modal-desc">Are you sure you want to end this Zen session? All messages will be permanently cleared from both devices.</p>
+            <div className="zen-modal-actions" style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+              <button 
+                className="zen-btn zen-btn-secondary" 
+                style={{ flex: 1 }} 
+                onClick={() => setShowExitConfirm(false)}
+              >
+                Keep Chatting
+              </button>
+              <button 
+                className="zen-btn zen-btn-danger" 
+                style={{ flex: 1, background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }} 
+                onClick={() => {
+                  setShowExitConfirm(false);
+                  
+                  // Find peer user ID
+                  const currentUserId = user?._id;
+                  const otherParticipant = activeChat?.participants?.find(p => (p._id || p) !== currentUserId);
+                  const otherParticipantId = otherParticipant?._id || otherParticipant;
+
+                  if (socket && activeChat && otherParticipantId) {
+                    socket.emit("zen_exit_request", {
+                      chatId: activeChat._id,
+                      senderId: currentUserId,
+                      receiverId: otherParticipantId
+                    });
+                    setZenWaitingState("exit-waiting");
+                    startZenTimer("exit-waiting", activeChat._id, currentUserId, otherParticipantId);
+                  }
+                }}
+              >
+                Yes, End Session
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. Global Zen Toast Alerts */}
+      {zenToast && (
+        <div className={`zen-toast zen-toast-${zenToast.type}`}>
+          {zenToast.type === 'success' && (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
+          {zenToast.type === 'info' && (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+          )}
+          {zenToast.type === 'error' && (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+          )}
+          <span>{zenToast.text}</span>
+        </div>
+      )}
       <Routes>
         <Route
           path="/login"

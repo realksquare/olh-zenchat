@@ -6465,6 +6465,17 @@ select {
   }
 }
 
+/* Global Stacking Blur Custom Overrides */
+.modal-overlay,
+.admin-modal-overlay,
+.mobile-bottom-sheet-overlay,
+.delete-modal-overlay,
+.moments-aura-overlay,
+.zen-modal-overlay {
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
 
 
 

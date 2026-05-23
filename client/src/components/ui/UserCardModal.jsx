@@ -82,7 +82,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
     };
 
     return createPortal(
-        <div className="modal-overlay" onClick={onClose} style={{ zIndex: 1000 }}>
+        <div className="modal-overlay" style={{ zIndex: 1000 }}>
             <div className="modal-content user-card-modal" onClick={(e) => e.stopPropagation()}>
                 <button className="modal-close" onClick={onClose}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -153,7 +153,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                 </div>
             </div>
             {showConfirmBlock && createPortal(
-                <div className="modal-overlay moments-aura-overlay" onClick={() => setShowConfirmBlock(false)} style={{ zIndex: 20000 }}>
+                <div className="modal-overlay moments-aura-overlay" style={{ zIndex: 20000 }}>
                     <div className="moments-aura-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "320px", padding: "32px", textAlign: "center" }}>
                         <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px", color: "#ef4444" }}>
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

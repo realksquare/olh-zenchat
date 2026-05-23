@@ -80,7 +80,7 @@ const NotificationPrompt = () => {
     if (!show) return null;
 
     return (
-        <div className="modal-overlay moments-aura-overlay" onClick={isLoading ? undefined : handleDismiss} style={{ zIndex: 20001 }}>
+        <div className="modal-overlay moments-aura-overlay" style={{ zIndex: 20001 }}>
             <div
                 className="moments-aura-content notif-prompt-popup"
                 onClick={(e) => e.stopPropagation()}

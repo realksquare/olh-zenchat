@@ -70,7 +70,7 @@ const InviteModal = ({ isOpen, onClose, username }) => {
     const currentTab = tabs.find(t => t.id === activeTab);
 
     return createPortal(
-        <div className="modal-overlay moments-aura-overlay" onClick={onClose} style={{ zIndex: 10000 }}>
+        <div className="modal-overlay moments-aura-overlay" style={{ zIndex: 10000 }}>
             {copied && <div className="aura-toast" style={{ zIndex: 10001, bottom: '20px' }}>📋 Invitation copied to clipboard!</div>}
 
             <div className="moments-aura-content invite-modal-v3" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "95%", padding: 0 }}>

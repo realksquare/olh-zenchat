@@ -100,7 +100,7 @@ const AdminPanel = ({ onClose }) => {
     );
 
     return createPortal(
-        <div className="admin-modal-overlay" onClick={onClose}>
+        <div className="admin-modal-overlay">
             {toast && <div className="aura-toast" style={{ zIndex: 9999 }}>🔔 {toast}</div>}
             <div className="admin-modal-content" onClick={e => e.stopPropagation()}>
                 <div className="admin-header">

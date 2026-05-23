@@ -47,11 +47,17 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
 
     if (isMobile) {
         return createPortal(
-            <div className="mobile-bottom-sheet-overlay" onClick={onClose} style={{ zIndex: 2000 }}>
+            <div className="mobile-bottom-sheet-overlay" style={{ zIndex: 2000 }}>
                 <div className="mobile-bottom-sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: '82vh', display: 'flex', flexDirection: 'column', gap: '0', padding: '16px 20px 24px' }}>
                     <div className="mobile-bottom-sheet-handle" />
-                    <div className="mobile-bottom-sheet-header" style={{ marginBottom: '14px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
-                        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff' }}>End-to-End Encryption FAQ</h3>
+                    <div className="mobile-bottom-sheet-header" style={{ marginBottom: '14px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff', margin: 0 }}>End-to-End Encryption FAQ</h3>
+                        <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }} aria-label="Close E2EE FAQ">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
                     </div>
                     <div className="mobile-bottom-sheet-content" style={{ overflowY: 'auto', flex: 1, paddingRight: '4px', gap: '16px' }}>
                         {infoContent.map((item, i) => (
@@ -71,7 +77,7 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
     }
 
     return createPortal(
-        <div className="admin-modal-overlay" onClick={onClose} style={{ zIndex: 2000 }}>
+        <div className="admin-modal-overlay" style={{ zIndex: 2000 }}>
             <div className="admin-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
                 <div className="admin-header">
                     <h2>End-to-End Encryption FAQ</h2>

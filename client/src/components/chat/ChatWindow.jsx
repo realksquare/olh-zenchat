@@ -593,7 +593,20 @@ const ChatWindow = ({ onBack }) => {
         return result;
     }, [rawMessages, showOnlyStarred, user?._id]);
 
-    const { joinChat, leaveChat, markAsRead, deleteMessage, updateLowBandwidth, socket } = useSocket();
+    const { 
+        joinChat, 
+        leaveChat, 
+        markAsRead, 
+        deleteMessage, 
+        updateLowBandwidth, 
+        socket,
+        setZenWaitingState,
+        startZenTimer,
+        showZenToast,
+        clearZenTimers,
+        setShowExitConfirm,
+        hasInitiatedBackRef
+    } = useSocket();
     const messagesEndRef = useRef(null);
     const isLoadingOlderRef = useRef(false);
 
@@ -606,68 +619,16 @@ const ChatWindow = ({ onBack }) => {
     const [selectedDoc, setSelectedDoc] = useState(null);
     const [activeViewerMoments, setActiveViewerMoments] = useState(null);
     const [showDisappearingMenu, setShowDisappearingMenu] = useState(false);
-    const [zenWaitingState, setZenWaitingState] = useState(null);
-    const [incomingZenInvite, setIncomingZenInvite] = useState(null);
-    const [incomingZenExit, setIncomingZenExit] = useState(null);
-    const [zenCountdown, setZenCountdown] = useState(18);
-    const [zenToast, setZenToast] = useState(null);
 
-    const waitingTimeoutRef = useRef(null);
-    const countdownIntervalRef = useRef(null);
-    const toastTimeoutRef = useRef(null);
     const [offlineCountdown, setOfflineCountdown] = useState(null);
     const offlineCountdownIntervalRef = useRef(null);
-    const zenExitTimeoutCountRef = useRef(0);
 
-    const clearZenTimers = useCallback(() => {
-        if (waitingTimeoutRef.current) {
-            clearTimeout(waitingTimeoutRef.current);
-            waitingTimeoutRef.current = null;
-        }
-        if (countdownIntervalRef.current) {
-            clearInterval(countdownIntervalRef.current);
-            countdownIntervalRef.current = null;
-        }
+    const clearOfflineTimers = useCallback(() => {
         if (offlineCountdownIntervalRef.current) {
             clearInterval(offlineCountdownIntervalRef.current);
             offlineCountdownIntervalRef.current = null;
         }
     }, []);
-
-    const showZenToast = useCallback((type, text) => {
-        if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-        setZenToast({ type, text });
-        toastTimeoutRef.current = setTimeout(() => {
-            setZenToast(null);
-        }, 3000);
-    }, []);
-
-    const startZenTimer = useCallback((type) => {
-        clearZenTimers();
-        let remaining = 18;
-        setZenCountdown(remaining);
-
-        countdownIntervalRef.current = setInterval(() => {
-            remaining -= 1;
-            if (remaining >= 0) {
-                setZenCountdown(remaining);
-            }
-        }, 1000);
-
-        waitingTimeoutRef.current = setTimeout(() => {
-            clearZenTimers();
-            if (type === "invite-waiting" || type === "exit-waiting") {
-                if (type === "exit-waiting") {
-                    zenExitTimeoutCountRef.current += 1;
-                }
-                setZenWaitingState("no-response");
-                showZenToast("info", "User didn't respond");
-                setTimeout(() => {
-                    setZenWaitingState(null);
-                }, 3000);
-            }
-        }, 18000);
-    }, [clearZenTimers, showZenToast]);
 
     const messagesContainerRef = useRef(null);
 
@@ -742,37 +703,32 @@ const ChatWindow = ({ onBack }) => {
         if (!activeChat?._id || !otherUser?._id) return;
         const wasZen = isZenMode;
         if (!wasZen) {
+            if (!isPeerOnline) {
+                showZenToast("error", "ZenMode can only be activated when the other user is online.");
+                return;
+            }
             socket.emit("zen_invite_send", {
                 chatId: activeChat._id,
                 senderId: user._id,
                 receiverId: otherUser._id
             });
             setZenWaitingState("invite-waiting");
-            startZenTimer("invite-waiting");
+            startZenTimer("invite-waiting", activeChat._id, user._id, otherUser._id);
         } else {
-            if (zenExitTimeoutCountRef.current >= 2) {
-                clearZenTimers();
-                zenExitTimeoutCountRef.current = 0;
-                socket.emit("zen_exit_respond", {
-                    chatId: activeChat._id,
-                    responderId: user._id,
-                    requesterId: otherUser._id,
-                    accepted: true
-                });
-                triggerCircularReveal(window.innerWidth / 2, window.innerHeight / 2, false);
-                showZenToast("success", "ZenMode ended after consecutive timeouts");
-                return;
-            }
-
-            socket.emit("zen_exit_request", {
-                chatId: activeChat._id,
-                senderId: user._id,
-                receiverId: otherUser._id
-            });
-            setZenWaitingState("exit-waiting");
-            startZenTimer("exit-waiting");
+            setShowExitConfirm(true);
         }
-    }, [isZenMode, socket, activeChat?._id, user?._id, otherUser?._id, startZenTimer, triggerCircularReveal, showZenToast, clearZenTimers]);
+    }, [isZenMode, isPeerOnline, socket, activeChat?._id, user?._id, otherUser?._id, startZenTimer, showZenToast, setZenWaitingState, setShowExitConfirm]);
+
+    const handleBackClick = useCallback((e) => {
+        if (isZenMode) {
+            if (hasInitiatedBackRef) {
+                hasInitiatedBackRef.current = true;
+            }
+            setShowExitConfirm(true);
+        } else {
+            onBack();
+        }
+    }, [isZenMode, onBack, hasInitiatedBackRef, setShowExitConfirm]);
 
     const handleSkipIntro = useCallback((e) => {
         if (e) e.stopPropagation();
@@ -789,116 +745,22 @@ const ChatWindow = ({ onBack }) => {
         return () => {
             clearCinematicTimers();
             stopZenIntroAudio();
-            clearZenTimers();
+            clearOfflineTimers();
             if (useChatStore.getState().isZenMode) {
                 useChatStore.getState().toggleZenMode();
             }
         };
-    }, [clearCinematicTimers, clearZenTimers]);
+    }, [clearCinematicTimers, clearOfflineTimers]);
 
+    const prevIsZenModeAnimRef = useRef(isZenMode);
     useEffect(() => {
-        if (!socket) return;
-
-        const onReceiveInvite = ({ chatId, senderId, receiverId }) => {
-            if (activeChat?._id === chatId) {
-                setIncomingZenInvite({ chatId, senderId });
-                clearZenTimers();
-                let remaining = 18;
-                setZenCountdown(remaining);
-                countdownIntervalRef.current = setInterval(() => {
-                    remaining -= 1;
-                    if (remaining >= 0) {
-                        setZenCountdown(remaining);
-                    }
-                }, 1000);
-
-                waitingTimeoutRef.current = setTimeout(() => {
-                    clearZenTimers();
-                    setIncomingZenInvite(null);
-                }, 18000);
-            }
-        };
-
-        const onInviteResult = ({ chatId, responderId, requesterId, accepted }) => {
-            if (activeChat?._id === chatId) {
-                clearZenTimers();
-                setIncomingZenInvite(null);
-                
-                if (accepted) {
-                    setZenWaitingState(null);
-                    try {
-                        const audioCtx = getAudioContext();
-                        if (audioCtx && audioCtx.state === "suspended") { audioCtx.resume(); }
-                    } catch (err) {}
-                    
-                    triggerCircularReveal(window.innerWidth / 2, window.innerHeight / 2, true);
-                    showZenToast("success", "Connected in #ZenMode");
-                } else {
-                    if (user?._id === requesterId) {
-                        setZenWaitingState("refused");
-                        showZenToast("error", "User rejected connection request");
-                        setTimeout(() => {
-                            setZenWaitingState(null);
-                        }, 3000);
-                    }
-                }
-            }
-        };
-
-        const onReceiveExitRequest = ({ chatId, senderId, receiverId }) => {
-            if (activeChat?._id === chatId) {
-                setIncomingZenExit({ chatId, senderId });
-                clearZenTimers();
-                let remaining = 18;
-                setZenCountdown(remaining);
-                countdownIntervalRef.current = setInterval(() => {
-                    remaining -= 1;
-                    if (remaining >= 0) {
-                        setZenCountdown(remaining);
-                    }
-                }, 1000);
-
-                waitingTimeoutRef.current = setTimeout(() => {
-                    clearZenTimers();
-                    setIncomingZenExit(null);
-                }, 18000);
-            }
-        };
-
-        const onExitResult = ({ chatId, responderId, requesterId, accepted }) => {
-            if (activeChat?._id === chatId) {
-                clearZenTimers();
-                setIncomingZenExit(null);
-                zenExitTimeoutCountRef.current = 0;
-
-                if (accepted) {
-                    setZenWaitingState(null);
-                    triggerCircularReveal(window.innerWidth / 2, window.innerHeight / 2, false);
-                    showZenToast("success", "Ended #ZenMode session");
-                } else {
-                    if (user?._id === requesterId) {
-                        setZenWaitingState("refused");
-                        showZenToast("error", "User refused to end #ZenMode");
-                        setTimeout(() => {
-                            setZenWaitingState(null);
-                        }, 3000);
-                    }
-                }
-            }
-        };
-
-        socket.on("zen_receive_invite", onReceiveInvite);
-        socket.on("zen_invite_result", onInviteResult);
-        socket.on("zen_receive_exit_request", onReceiveExitRequest);
-        socket.on("zen_exit_result", onExitResult);
-
-        return () => {
-            socket.off("zen_receive_invite", onReceiveInvite);
-            socket.off("zen_invite_result", onInviteResult);
-            socket.off("zen_receive_exit_request", onReceiveExitRequest);
-            socket.off("zen_exit_result", onExitResult);
-        };
-    }, [socket, activeChat?._id, user?._id, triggerCircularReveal, clearZenTimers, showZenToast]);
+        if (prevIsZenModeAnimRef.current === false && isZenMode === true) {
+            triggerCircularReveal(window.innerWidth / 2, window.innerHeight / 2, true);
+        } else if (prevIsZenModeAnimRef.current === true && isZenMode === false) {
+            triggerCircularReveal(window.innerWidth / 2, window.innerHeight / 2, false);
+        }
+        prevIsZenModeAnimRef.current = isZenMode;
+    }, [isZenMode, triggerCircularReveal]);
 
     // ZenMode off: purge all ZenMode messages from server + store for both sides
     const prevIsZenModeRef = useRef(isZenMode);
@@ -1179,7 +1041,7 @@ const ChatWindow = ({ onBack }) => {
     return (
         <div className={`chat-window ${isDeleted ? 'user-deleted-mode' : ''} ${isZenMode ? 'zen-active' : ''}`} style={{ position: 'relative' }}>
             <div className="chat-header" style={{ position: 'sticky', top: 0, zIndex: 50 }}>
-                <button className="chat-back-btn" onClick={onBack} aria-label="Back to chats">
+                <button className="chat-back-btn" onClick={handleBackClick} aria-label="Back to chats">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="15 18 9 12 15 6" />
                     </svg>
@@ -1442,7 +1304,7 @@ const ChatWindow = ({ onBack }) => {
             />
 
             {deletingMessage && (
-                <div className="delete-modal-overlay" onClick={() => setDeletingMessage(null)}>
+                <div className="delete-modal-overlay">
                     <div className="delete-modal" onClick={(e) => e.stopPropagation()}>
                         <p className="delete-modal-title">Delete message?</p>
                         <p className="delete-modal-subtitle">This action cannot be undone.</p>
@@ -1523,168 +1385,7 @@ const ChatWindow = ({ onBack }) => {
                 />
             )}
 
-            {zenWaitingState && (
-                <div className="zen-modal-overlay">
-                    <div className="zen-modal-container" onClick={(e) => e.stopPropagation()}>
-                        {zenWaitingState === "invite-waiting" && (
-                            <>
-                                <div className="zen-waiting-loader">
-                                    <div className="zen-waiting-circle-bg" />
-                                    <div className="zen-waiting-circle-fg" />
-                                    <span className="zen-countdown-number">{zenCountdown}</span>
-                                </div>
-                                <h3 className="zen-modal-title">Connecting...</h3>
-                                <p className="zen-modal-desc">Waiting for {displayName || "user"} to accept #ZenMode connection request.</p>
-                                <button className="zen-btn zen-btn-secondary" style={{ width: '100%' }} onClick={() => {
-                                    clearZenTimers();
-                                    setZenWaitingState(null);
-                                    if (socket) {
-                                        socket.emit("zen_invite_respond", { chatId: activeChat._id, responderId: user._id, requesterId: user._id, accepted: false });
-                                    }
-                                }}>
-                                    Cancel Request
-                                </button>
-                            </>
-                        )}
-                        {zenWaitingState === "exit-waiting" && (
-                            <>
-                                <div className="zen-waiting-loader">
-                                    <div className="zen-waiting-circle-bg" />
-                                    <div className="zen-waiting-circle-fg" />
-                                    <span className="zen-countdown-number">{zenCountdown}</span>
-                                </div>
-                                <h3 className="zen-modal-title">Requesting Exit...</h3>
-                                <p className="zen-modal-desc">Waiting for {displayName || "user"} to approve ending the #ZenMode session.</p>
-                                <button className="zen-btn zen-btn-secondary" style={{ width: '100%' }} onClick={() => {
-                                    clearZenTimers();
-                                    setZenWaitingState(null);
-                                }}>
-                                    Cancel
-                                </button>
-                            </>
-                        )}
-                        {zenWaitingState === "no-response" && (
-                            <>
-                                <div className="zen-waiting-loader" style={{ animation: 'none' }}>
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: 'auto' }}>
-                                        <circle cx="12" cy="12" r="10" />
-                                        <line x1="12" y1="8" x2="12" y2="12" />
-                                        <line x1="12" y1="16" x2="12.01" y2="16" />
-                                    </svg>
-                                </div>
-                                <h3 className="zen-modal-title">No Response</h3>
-                                <p className="zen-modal-desc">User didn't respond in time.</p>
-                            </>
-                        )}
-                        {zenWaitingState === "refused" && (
-                            <>
-                                <div className="zen-waiting-loader" style={{ animation: 'none' }}>
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: 'auto' }}>
-                                        <circle cx="12" cy="12" r="10" />
-                                        <line x1="15" y1="9" x2="9" y2="15" />
-                                        <line x1="9" y1="9" x2="15" y2="15" />
-                                    </svg>
-                                </div>
-                                <h3 className="zen-modal-title">Declined</h3>
-                                <p className="zen-modal-desc">Request was declined.</p>
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
 
-            {incomingZenInvite && (
-                <div className="zen-modal-overlay">
-                    <div className="zen-modal-container" onClick={(e) => e.stopPropagation()}>
-                        <div className="zen-waiting-loader">
-                            <div className="zen-waiting-circle-bg" />
-                            <div className="zen-waiting-circle-fg" />
-                            <span className="zen-countdown-number">{zenCountdown}</span>
-                        </div>
-                        <h3 className="zen-modal-title">#ZenMode Invite</h3>
-                        <p className="zen-modal-desc">@{displayName || "User"} wants to connect in #ZenMode with you. Messages will be end-to-end encrypted and completely erased after session.</p>
-                        <div className="zen-modal-actions">
-                            <button className="zen-btn zen-btn-secondary" onClick={() => {
-                                clearZenTimers();
-                                if (socket) {
-                                    socket.emit("zen_invite_respond", { chatId: activeChat._id, responderId: user._id, requesterId: incomingZenInvite.senderId, accepted: false });
-                                }
-                                setIncomingZenInvite(null);
-                            }}>
-                                Ignore
-                            </button>
-                            <button className="zen-btn zen-btn-primary" onClick={() => {
-                                clearZenTimers();
-                                if (socket) {
-                                    socket.emit("zen_invite_respond", { chatId: activeChat._id, responderId: user._id, requesterId: incomingZenInvite.senderId, accepted: true });
-                                }
-                                setIncomingZenInvite(null);
-                            }}>
-                                Connect
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {incomingZenExit && (
-                <div className="zen-modal-overlay">
-                    <div className="zen-modal-container" onClick={(e) => e.stopPropagation()}>
-                        <div className="zen-waiting-loader">
-                            <div className="zen-waiting-circle-bg" />
-                            <div className="zen-waiting-circle-fg" />
-                            <span className="zen-countdown-number">{zenCountdown}</span>
-                        </div>
-                        <h3 className="zen-modal-title">End #ZenMode?</h3>
-                        <p className="zen-modal-desc">@{displayName || "User"} wants to end the #ZenMode session. All session messages will be permanently cleared from both devices.</p>
-                        <div className="zen-modal-actions">
-                            <button className="zen-btn zen-btn-secondary" onClick={() => {
-                                clearZenTimers();
-                                if (socket) {
-                                    socket.emit("zen_exit_respond", { chatId: activeChat._id, responderId: user._id, requesterId: incomingZenExit.senderId, accepted: false });
-                                }
-                                setIncomingZenExit(null);
-                            }}>
-                                Stay
-                            </button>
-                            <button className="zen-btn zen-btn-primary" onClick={() => {
-                                clearZenTimers();
-                                if (socket) {
-                                    socket.emit("zen_exit_respond", { chatId: activeChat._id, responderId: user._id, requesterId: incomingZenExit.senderId, accepted: true });
-                                }
-                                setIncomingZenExit(null);
-                            }}>
-                                Exit Convo
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {zenToast && (
-                <div className={`zen-toast zen-toast-${zenToast.type}`}>
-                    {zenToast.type === 'success' && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                            <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                    )}
-                    {zenToast.type === 'info' && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="12" y1="16" x2="12" y2="12" />
-                            <line x1="12" y1="8" x2="12.01" y2="8" />
-                        </svg>
-                    )}
-                    {zenToast.type === 'error' && (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="15" y1="9" x2="9" y2="15" />
-                            <line x1="9" y1="9" x2="15" y2="15" />
-                        </svg>
-                    )}
-                    <span>{zenToast.text}</span>
-                </div>
-            )}
         </div>
     );
 };

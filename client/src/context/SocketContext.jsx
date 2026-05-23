@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, useCallback, useMemo, use
 import { io } from "socket.io-client";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
-import { playReceiveSound } from "../utils/audio";
+import { playReceiveSound, getAudioContext } from "../utils/audio";
 import { useMomentStore } from "../stores/momentStore";
 import { enqueueOutbox, drainOutbox, drainPendingMedia } from "../db/zenDB";
 import { decryptMessageIfNeeded } from "../utils/e2eeHelper";
@@ -38,6 +38,83 @@ export const SocketProvider = ({ children }) => {
     const [isConnected, setIsConnected] = useState(false);
     const userId = useAuthStore((state) => state.user?._id);
     const token = useAuthStore((state) => state.token);
+
+    // Global ZenMode States
+    const [incomingZenInvite, setIncomingZenInvite] = useState(null);
+    const [incomingZenExit, setIncomingZenExit] = useState(null);
+    const [zenWaitingState, setZenWaitingState] = useState(null);
+    const [zenCountdown, setZenCountdown] = useState(0);
+    const [zenToast, setZenToast] = useState(null);
+    const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+    // Global ZenMode Refs
+    const zenWaitingTimeoutRef = useRef(null);
+    const zenCountdownIntervalRef = useRef(null);
+    const zenToastTimeoutRef = useRef(null);
+    const zenExitTimeoutCountRef = useRef(0);
+    const hasInitiatedBackRef = useRef(false);
+
+    const clearZenTimers = useCallback(() => {
+        if (zenWaitingTimeoutRef.current) {
+            clearTimeout(zenWaitingTimeoutRef.current);
+            zenWaitingTimeoutRef.current = null;
+        }
+        if (zenCountdownIntervalRef.current) {
+            clearInterval(zenCountdownIntervalRef.current);
+            zenCountdownIntervalRef.current = null;
+        }
+    }, []);
+
+    const showZenToast = useCallback((type, text) => {
+        if (zenToastTimeoutRef.current) {
+            clearTimeout(zenToastTimeoutRef.current);
+        }
+        setZenToast({ type, text });
+        zenToastTimeoutRef.current = setTimeout(() => {
+            setZenToast(null);
+            zenToastTimeoutRef.current = null;
+        }, 4000);
+    }, []);
+
+    const startZenTimer = useCallback((type, chatId, senderId, receiverId) => {
+        clearZenTimers();
+        let remaining = 18;
+        setZenCountdown(remaining);
+
+        zenCountdownIntervalRef.current = setInterval(() => {
+            remaining -= 1;
+            if (remaining >= 0) {
+                setZenCountdown(remaining);
+            }
+        }, 1000);
+
+        zenWaitingTimeoutRef.current = setTimeout(() => {
+            clearZenTimers();
+            if (type === "invite-waiting" || type === "exit-waiting") {
+                if (type === "exit-waiting") {
+                    zenExitTimeoutCountRef.current += 1;
+                    if (zenExitTimeoutCountRef.current >= 2) {
+                        clearZenTimers();
+                        zenExitTimeoutCountRef.current = 0;
+                        socketRef.current?.emit("zen_exit_respond", {
+                            chatId,
+                            responderId: userId,
+                            requesterId: receiverId || senderId,
+                            accepted: true
+                        });
+                        showZenToast("success", "ZenMode ended after consecutive timeouts");
+                        setZenWaitingState(null);
+                        return;
+                    }
+                }
+                setZenWaitingState("no-response");
+                showZenToast("info", "User didn't respond");
+                setTimeout(() => {
+                    setZenWaitingState(null);
+                }, 3000);
+            }
+        }, 18000);
+    }, [clearZenTimers, showZenToast, userId]);
 
     useEffect(() => {
         if (!token || !userId) return;
@@ -206,6 +283,118 @@ export const SocketProvider = ({ children }) => {
             }
         };
 
+        const handleZenReceiveInvite = ({ chatId, senderId }) => {
+            // Find target chat to get sender's username
+            const targetChat = useChatStore.getState().chats.find(
+                (c) => c._id?.toString() === chatId?.toString()
+            );
+            const otherParticipant = targetChat?.participants?.find(
+                (p) => (p._id || p)?.toString() === senderId?.toString()
+            );
+            const senderName = otherParticipant?.username || "Someone";
+
+            clearZenTimers();
+            setIncomingZenInvite({ chatId, senderId, senderName });
+            
+            let remaining = 18;
+            setZenCountdown(remaining);
+            zenCountdownIntervalRef.current = setInterval(() => {
+                remaining -= 1;
+                if (remaining >= 0) {
+                    setZenCountdown(remaining);
+                }
+            }, 1000);
+
+            zenWaitingTimeoutRef.current = setTimeout(() => {
+                clearZenTimers();
+                setIncomingZenInvite(null);
+            }, 18000);
+        };
+
+        const handleZenInviteResult = ({ chatId, responderId, requesterId, accepted }) => {
+            clearZenTimers();
+            setIncomingZenInvite(null);
+
+            if (accepted) {
+                setZenWaitingState(null);
+                try {
+                    const audioCtx = getAudioContext();
+                    if (audioCtx && audioCtx.state === "suspended") {
+                        audioCtx.resume();
+                    }
+                } catch (err) {}
+                showZenToast("success", "Connected in #ZenMode");
+            } else {
+                if (userId === requesterId) {
+                    if (responderId === requesterId) {
+                        setZenWaitingState("cancelled");
+                        showZenToast("info", "Connection request cancelled");
+                    } else {
+                        setZenWaitingState("refused");
+                        showZenToast("error", "User rejected connection request");
+                    }
+                    setTimeout(() => {
+                        setZenWaitingState(null);
+                    }, 3000);
+                }
+            }
+        };
+
+        const handleZenReceiveExitRequest = ({ chatId, senderId }) => {
+            const targetChat = useChatStore.getState().chats.find(
+                (c) => c._id?.toString() === chatId?.toString()
+            );
+            const otherParticipant = targetChat?.participants?.find(
+                (p) => (p._id || p)?.toString() === senderId?.toString()
+            );
+            const senderName = otherParticipant?.username || "Someone";
+
+            clearZenTimers();
+            setIncomingZenExit({ chatId, senderId, senderName });
+
+            let remaining = 18;
+            setZenCountdown(remaining);
+            zenCountdownIntervalRef.current = setInterval(() => {
+                remaining -= 1;
+                if (remaining >= 0) {
+                    setZenCountdown(remaining);
+                }
+            }, 1000);
+
+            zenWaitingTimeoutRef.current = setTimeout(() => {
+                clearZenTimers();
+                setIncomingZenExit(null);
+            }, 18000);
+        };
+
+        const handleZenExitResult = ({ chatId, responderId, requesterId, accepted }) => {
+            clearZenTimers();
+            setIncomingZenExit(null);
+            zenExitTimeoutCountRef.current = 0;
+
+            if (accepted) {
+                setZenWaitingState(null);
+                showZenToast("success", "Ended #ZenMode session");
+                
+                // If hasInitiatedBackRef is true and this is the requester, go back automatically
+                if (hasInitiatedBackRef.current && userId === requesterId) {
+                    hasInitiatedBackRef.current = false;
+                    const backBtn = document.querySelector(".chat-back-btn");
+                    if (backBtn) {
+                        backBtn.click();
+                    }
+                }
+            } else {
+                if (userId === requesterId) {
+                    setZenWaitingState("refused");
+                    showZenToast("error", "User refused to end #ZenMode");
+                    setTimeout(() => {
+                        setZenWaitingState(null);
+                    }, 3000);
+                }
+            }
+        };
+
         const handleForceLogout = () => {
             useAuthStore.getState().logout();
             window.location.href = "/login";
@@ -270,6 +459,11 @@ export const SocketProvider = ({ children }) => {
         socket.on("user_unblocked", handleUserUnblocked);
         socket.on("force_logout", handleForceLogout);
 
+        socket.on("zen_receive_invite", handleZenReceiveInvite);
+        socket.on("zen_invite_result", handleZenInviteResult);
+        socket.on("zen_receive_exit_request", handleZenReceiveExitRequest);
+        socket.on("zen_exit_result", handleZenExitResult);
+
         return () => {
             socket.off("connect");
             socket.off("disconnect");
@@ -293,6 +487,12 @@ export const SocketProvider = ({ children }) => {
             socket.off("user_blocked", handleUserBlocked);
             socket.off("user_unblocked", handleUserUnblocked);
             socket.off("force_logout", handleForceLogout);
+
+            socket.off("zen_receive_invite", handleZenReceiveInvite);
+            socket.off("zen_invite_result", handleZenInviteResult);
+            socket.off("zen_receive_exit_request", handleZenReceiveExitRequest);
+            socket.off("zen_exit_result", handleZenExitResult);
+
             socket.disconnect();
             socketRef.current = null;
         };
@@ -551,8 +751,30 @@ export const SocketProvider = ({ children }) => {
         editMessage,
         deleteMessage,
         updateLowBandwidth,
-        isOnline: navigator.onLine
-    }), [isConnected, joinChat, leaveChat, sendMessage, startTyping, stopTyping, markAsRead, editMessage, deleteMessage, updateLowBandwidth]);
+        isOnline: navigator.onLine,
+
+        // Expose Zen states and control helpers globally
+        incomingZenInvite,
+        setIncomingZenInvite,
+        incomingZenExit,
+        setIncomingZenExit,
+        zenWaitingState,
+        setZenWaitingState,
+        zenCountdown,
+        setZenCountdown,
+        zenToast,
+        setZenToast,
+        clearZenTimers,
+        showZenToast,
+        startZenTimer,
+        zenExitTimeoutCountRef,
+        hasInitiatedBackRef,
+        showExitConfirm,
+        setShowExitConfirm
+    }), [
+        isConnected, joinChat, leaveChat, sendMessage, startTyping, stopTyping, markAsRead, editMessage, deleteMessage, updateLowBandwidth,
+        incomingZenInvite, incomingZenExit, zenWaitingState, zenCountdown, zenToast, clearZenTimers, showZenToast, startZenTimer, showExitConfirm
+    ]);
 
     return (
         <SocketContext.Provider value={socketValue}>
