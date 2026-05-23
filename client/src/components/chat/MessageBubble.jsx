@@ -400,6 +400,12 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                 </svg>
                             )}
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                {isZenMode && (
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.65, flexShrink: 0 }}>
+                                        <circle cx="12" cy="12" r="10" />
+                                        <polyline points="12 6 12 12 16 14" />
+                                    </svg>
+                                )}
                                 <span className="message-time">
                                     {new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                                 </span>

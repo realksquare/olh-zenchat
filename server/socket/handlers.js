@@ -367,7 +367,7 @@ const registerSocketHandlers = (io) => {
             }
         });
 
-        socket.on("zen_invite_respond", ({ chatId, responderId, requesterId, accepted }) => {
+        socket.on("zen_invite_respond", ({ chatId, responderId, requesterId, receiverId, accepted }) => {
             if (accepted) {
                 const reqUserData = onlineUsers.get(requesterId);
                 const respUserData = onlineUsers.get(responderId);
@@ -381,14 +381,24 @@ const registerSocketHandlers = (io) => {
             const reqUserData = onlineUsers.get(requesterId);
             if (reqUserData && reqUserData.sockets) {
                 reqUserData.sockets.forEach((sData, socketId) => {
-                    io.to(socketId).emit("zen_invite_result", { chatId, responderId, requesterId, accepted });
+                    io.to(socketId).emit("zen_invite_result", { chatId, responderId, requesterId, receiverId, accepted });
                 });
             }
             const respUserData = onlineUsers.get(responderId);
             if (respUserData && respUserData.sockets) {
                 respUserData.sockets.forEach((sData, socketId) => {
-                    io.to(socketId).emit("zen_invite_result", { chatId, responderId, requesterId, accepted });
+                    io.to(socketId).emit("zen_invite_result", { chatId, responderId, requesterId, receiverId, accepted });
                 });
+            }
+
+            // Propagate early cancellation to the invitee (User B) if A cancelled
+            if (!accepted && receiverId && responderId === requesterId) {
+                const recUserData = onlineUsers.get(receiverId);
+                if (recUserData && recUserData.sockets) {
+                    recUserData.sockets.forEach((sData, socketId) => {
+                        io.to(socketId).emit("zen_invite_result", { chatId, responderId, requesterId, receiverId, accepted });
+                    });
+                }
             }
         });
 

@@ -35,6 +35,7 @@ export const useChatStore = create(
 
             isZenMode: false,
             toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode })),
+            setZenModeState: (bool) => set({ isZenMode: bool }),
             setUserZenStatus: (userId, isZenMode) => set((state) => ({
                 zenUsers: { ...state.zenUsers, [userId]: isZenMode }
             })),

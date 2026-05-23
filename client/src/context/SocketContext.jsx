@@ -324,6 +324,12 @@ export const SocketProvider = ({ children }) => {
                     }
                 } catch (err) {}
                 showZenToast("success", "Connected in #ZenMode");
+
+                // Set the current chat's Zen Mode state to true if matched
+                const activeChat = useChatStore.getState().activeChat;
+                if (activeChat && activeChat._id === chatId) {
+                    useChatStore.getState().setZenModeState(true);
+                }
             } else {
                 if (userId === requesterId) {
                     if (responderId === requesterId) {
@@ -336,6 +342,12 @@ export const SocketProvider = ({ children }) => {
                     setTimeout(() => {
                         setZenWaitingState(null);
                     }, 3000);
+                } else {
+                    // This is User B receiving User A's early cancellation
+                    if (responderId === requesterId) {
+                        showZenToast("info", "Connection request was cancelled by the requester");
+                        setIncomingZenInvite(null);
+                    }
                 }
             }
         };
@@ -375,6 +387,9 @@ export const SocketProvider = ({ children }) => {
             if (accepted) {
                 setZenWaitingState(null);
                 showZenToast("success", "Ended #ZenMode session");
+
+                // Sync store isZenMode to false
+                useChatStore.getState().setZenModeState(false);
                 
                 // If hasInitiatedBackRef is true and this is the requester, go back automatically
                 if (hasInitiatedBackRef.current && userId === requesterId) {

@@ -364,90 +364,97 @@ const App = () => {
       <RecoveryKeyModal />
 
       {/* 1. Global Zen Waiting Overlay */}
-      {zenWaitingState && (
-        <div className="zen-modal-overlay">
-          <div className="zen-modal-container" onClick={(e) => e.stopPropagation()}>
-            {zenWaitingState === "invite-waiting" && (
-              <>
-                <div className="zen-waiting-loader">
-                  <div className="zen-waiting-circle-bg" />
-                  <div className="zen-waiting-circle-fg" />
-                  <span className="zen-countdown-number">{zenCountdown}</span>
-                </div>
-                <h3 className="zen-modal-title">Connecting...</h3>
-                <p className="zen-modal-desc">Waiting for peer to accept #ZenMode connection request.</p>
-                <button 
-                  className="zen-btn zen-btn-secondary" 
-                  style={{ width: '100%' }} 
-                  onClick={() => setShowCancelConfirm(true)}
-                >
-                  Cancel Request
-                </button>
-              </>
-            )}
-            {zenWaitingState === "exit-waiting" && (
-              <>
-                <div className="zen-waiting-loader">
-                  <div className="zen-waiting-circle-bg" />
-                  <div className="zen-waiting-circle-fg" />
-                  <span className="zen-countdown-number">{zenCountdown}</span>
-                </div>
-                <h3 className="zen-modal-title">Requesting Exit...</h3>
-                <p className="zen-modal-desc">Waiting for peer to approve ending the #ZenMode session.</p>
-                <button 
-                  className="zen-btn zen-btn-secondary" 
-                  style={{ width: '100%' }} 
-                  onClick={() => {
-                    clearZenTimers();
-                    setZenWaitingState(null);
-                  }}
-                >
-                  Cancel
-                </button>
-              </>
-            )}
-            {zenWaitingState === "no-response" && (
-              <>
-                <div className="zen-waiting-loader" style={{ animation: 'none' }}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: 'auto' }}>
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                </div>
-                <h3 className="zen-modal-title">No Response</h3>
-                <p className="zen-modal-desc">User did not respond in time.</p>
-              </>
-            )}
-            {zenWaitingState === "refused" && (
-              <>
-                <div className="zen-waiting-loader" style={{ animation: 'none' }}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: 'auto' }}>
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="15" y1="9" x2="9" y2="15" />
-                    <line x1="9" y1="9" x2="15" y2="15" />
-                  </svg>
-                </div>
-                <h3 className="zen-modal-title">Declined</h3>
-                <p className="zen-modal-desc">Request was declined.</p>
-              </>
-            )}
-            {zenWaitingState === "cancelled" && (
-              <>
-                <div className="zen-waiting-loader" style={{ animation: 'none' }}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: 'auto' }}>
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                </div>
-                <h3 className="zen-modal-title">Cancelled</h3>
-                <p className="zen-modal-desc">Connection request was cancelled.</p>
-              </>
-            )}
+      {zenWaitingState && (() => {
+        const otherParticipant = activeChat?.participants?.find(p => {
+          const pid = p?._id?.toString() || p?.toString();
+          return pid && pid !== userId?.toString();
+        });
+        const otherUserDisplayName = otherParticipant?.username || "the other user";
+        return (
+          <div className="zen-modal-overlay">
+            <div className="zen-modal-container" onClick={(e) => e.stopPropagation()}>
+              {zenWaitingState === "invite-waiting" && (
+                <>
+                  <div className="zen-waiting-loader">
+                    <div className="zen-waiting-circle-bg" />
+                    <div className="zen-waiting-circle-fg" />
+                    <span className="zen-countdown-number">{zenCountdown}</span>
+                  </div>
+                  <h3 className="zen-modal-title">Connecting...</h3>
+                  <p className="zen-modal-desc">Waiting for @{otherUserDisplayName} to accept #ZenMode connection request.</p>
+                  <button 
+                    className="zen-btn zen-btn-secondary" 
+                    style={{ width: '100%' }} 
+                    onClick={() => setShowCancelConfirm(true)}
+                  >
+                    Cancel Request
+                  </button>
+                </>
+              )}
+              {zenWaitingState === "exit-waiting" && (
+                <>
+                  <div className="zen-waiting-loader">
+                    <div className="zen-waiting-circle-bg" />
+                    <div className="zen-waiting-circle-fg" />
+                    <span className="zen-countdown-number">{zenCountdown}</span>
+                  </div>
+                  <h3 className="zen-modal-title">Requesting Exit...</h3>
+                  <p className="zen-modal-desc">Waiting for @{otherUserDisplayName} to approve ending the #ZenMode session.</p>
+                  <button 
+                    className="zen-btn zen-btn-secondary" 
+                    style={{ width: '100%' }} 
+                    onClick={() => {
+                      clearZenTimers();
+                      setZenWaitingState(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+              {zenWaitingState === "no-response" && (
+                <>
+                  <div className="zen-waiting-loader" style={{ animation: 'none' }}>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: 'auto' }}>
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                  </div>
+                  <h3 className="zen-modal-title">No Response</h3>
+                  <p className="zen-modal-desc">@{otherUserDisplayName} didn't respond.</p>
+                </>
+              )}
+              {zenWaitingState === "refused" && (
+                <>
+                  <div className="zen-waiting-loader" style={{ animation: 'none' }}>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: 'auto' }}>
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="15" y1="9" x2="9" y2="15" />
+                      <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                  </div>
+                  <h3 className="zen-modal-title">Declined</h3>
+                  <p className="zen-modal-desc">@{otherUserDisplayName} rejected the request to connect via #ZenMode.</p>
+                </>
+              )}
+              {zenWaitingState === "cancelled" && (
+                <>
+                  <div className="zen-waiting-loader" style={{ animation: 'none' }}>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: 'auto' }}>
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                  </div>
+                  <h3 className="zen-modal-title">Cancelled</h3>
+                  <p className="zen-modal-desc">Connection request was cancelled.</p>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 2. Custom Cancel Confirmation Prompt */}
       {showCancelConfirm && (
@@ -471,10 +478,16 @@ const App = () => {
                   setZenWaitingState(null);
                   setShowCancelConfirm(false);
                   if (socket && activeChat) {
+                    const otherParticipant = activeChat.participants?.find(p => {
+                      const pid = p?._id?.toString() || p?.toString();
+                      return pid && pid !== user?._id?.toString();
+                    });
+                    const otherParticipantId = otherParticipant?._id || otherParticipant;
                     socket.emit("zen_invite_respond", { 
                       chatId: activeChat._id, 
                       responderId: user._id, 
                       requesterId: user._id, 
+                      receiverId: otherParticipantId?.toString(),
                       accepted: false 
                     });
                   }
