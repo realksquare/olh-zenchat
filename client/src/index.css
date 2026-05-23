@@ -4327,7 +4327,7 @@ select {
   top: 0;
   left: 0;
   right: 0;
-  padding: 40px 16px 20px 16px;
+  padding: 50px 16px 24px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4335,10 +4335,10 @@ select {
   z-index: 1000;
   overflow: visible;
   flex-wrap: wrap;
-  background: rgba(0, 0, 0, 0.5) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 100%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-bottom: none !important;
 }
 
 .aura-header-location {
@@ -4353,7 +4353,7 @@ select {
   padding: 4px 8px;
   border-radius: 6px;
   width: max-content;
-  max-width: 140px;
+  max-width: 220px;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -4362,8 +4362,13 @@ select {
   display: inline-block;
   white-space: nowrap;
   overflow: hidden;
-  max-width: 110px;
+  max-width: 190px;
   vertical-align: middle;
+}
+
+.aura-header-location-content {
+  display: inline-block;
+  white-space: nowrap;
 }
 
 .aura-user-meta {
@@ -4757,15 +4762,15 @@ select {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  height: 80px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 100%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-top: none !important;
   z-index: 1000;
   pointer-events: none;
 }

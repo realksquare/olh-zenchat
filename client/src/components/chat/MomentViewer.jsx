@@ -55,7 +55,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                 return;
             }
             const contentWidth = locationContentRef.current.scrollWidth;
-            const scrollDist = contentWidth - 110;
+            const scrollDist = contentWidth - 190;
             setLocMarqueeDist(scrollDist > 0 ? -scrollDist : 0);
         };
         
@@ -311,7 +311,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                         <span className="aura-header-location-text">
                                             <span 
                                                 ref={locationContentRef}
-                                                className={locMarqueeDist < 0 ? "marquee-bidirectional" : ""}
+                                                className={`aura-header-location-content ${locMarqueeDist < 0 ? "marquee-bidirectional" : ""}`}
                                                 style={locMarqueeDist < 0 ? { "--marquee-dist": `${locMarqueeDist}px` } : {}}
                                             >
                                                 {currentMoment.locationTag}
