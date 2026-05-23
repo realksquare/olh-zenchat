@@ -24,8 +24,6 @@ const userSchema = new mongoose.Schema(
         },
         phoneNumber: {
             type: String,
-            unique: true,
-            sparse: true,
         },
         is2faEnabled: {
             type: Boolean,
@@ -33,7 +31,7 @@ const userSchema = new mongoose.Schema(
         },
         mfaPreference: {
             type: String,
-            enum: ["phone", "email", "none"],
+            enum: ["email", "none"],
             default: "none",
         },
         verificationSession: {

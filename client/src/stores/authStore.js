@@ -98,86 +98,10 @@ export const useAuthStore = create(
         }
     },
 
-    registerPhone: async (username, phoneNumber) => {
+    verify2faOtp: async (userId, otpCode) => {
         set({ isLoading: true, error: null });
         try {
-            const { data } = await axiosInstance.post("/auth/register/phone", {
-                username,
-                phoneNumber
-            });
-            set({ isLoading: false });
-            return { success: true, userId: data.userId };
-        } catch (err) {
-            const message = err.response?.data?.message || "Registration failed";
-            set({ error: message, isLoading: false });
-            return { success: false, message };
-        }
-    },
-
-    loginPhone: async (phoneNumber) => {
-        set({ isLoading: true, error: null });
-        try {
-            const { data } = await axiosInstance.post("/auth/login/phone", { phoneNumber });
-            set({ isLoading: false });
-            return { success: true, userId: data.userId };
-        } catch (err) {
-            const message = err.response?.data?.message || "Phone login failed";
-            set({ error: message, isLoading: false });
-            return { success: false, message };
-        }
-    },
-
-    verifyOtp: async (userId, otpCode, firebaseToken) => {
-        set({ isLoading: true, error: null });
-        try {
-            const { data } = await axiosInstance.post("/auth/verify-otp", { userId, otpCode, firebaseToken });
-            
-            if (data.mfaRequired) {
-                set({
-                    mfaRequired: true,
-                    mfaType: data.mfaType,
-                    mfaUserId: data.userId,
-                    mfaMaskedValue: data.emailMasked || data.phoneMasked,
-                    isLoading: false
-                });
-                return { success: true, mfaRequired: true, mfaType: data.mfaType, userId: data.userId };
-            }
-
-            localStorage.setItem(TOKEN_KEY, data.token);
-            localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-            if (db?.settings) {
-                await db.settings.put({ key: "token", value: data.token });
-                await db.settings.put({ key: "apiUrl", value: import.meta.env.VITE_API_URL || "" });
-            }
-
-            // Setup E2EE for Phone registration (Without password, E2EE private key is encrypted under recoveryKey only!)
-            let recoveryKey = null;
-            try {
-                recoveryKey = await setupE2EEForUser(data.user, null);
-            } catch (e2eeErr) {
-                console.error("[AuthStore] Phone E2EE setup failed:", e2eeErr);
-            }
-
-            set({
-                token: data.token,
-                user: data.user,
-                tempRecoveryKey: recoveryKey,
-                isLoading: false,
-                mfaRequired: false,
-                mfaType: null
-            });
-            return { success: true };
-        } catch (err) {
-            const message = err.response?.data?.message || "OTP Verification failed";
-            set({ error: message, isLoading: false });
-            return { success: false, message };
-        }
-    },
-
-    verify2faOtp: async (userId, otpCode, firebaseToken) => {
-        set({ isLoading: true, error: null });
-        try {
-            const { data } = await axiosInstance.post("/auth/verify-2fa-otp", { userId, otpCode, firebaseToken });
+            const { data } = await axiosInstance.post("/auth/verify-2fa-otp", { userId, otpCode });
             localStorage.setItem(TOKEN_KEY, data.token);
             localStorage.setItem(USER_KEY, JSON.stringify(data.user));
             if (db?.settings) {

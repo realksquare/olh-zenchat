@@ -42,168 +42,12 @@ const getWebOtpDomain = (req) => {
     return "zenchat.app";
 };
 
-// 1. Phone-First Registration
-router.post("/register/phone", async (req, res) => {
-    try {
-        const { username, phoneNumber } = req.body;
-        if (!username || !phoneNumber) {
-            return res.status(400).json({ message: "Username and Phone Number are required" });
-        }
 
-        const existingUser = await User.findOne({
-            $or: [{ username }, { phoneNumber }],
-        });
-
-        if (existingUser) {
-            return res.status(409).json({ message: "Username or phone number already taken" });
-        }
-
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const domain = getWebOtpDomain(req);
-        
-        console.log("\n=======================================================");
-        console.log(`💬 [SMS GATEWAY MOCK] OTP sent to ${phoneNumber}`);
-        console.log(`Message: Your ZenChat verification code is ${otp}.`);
-        console.log(`@${domain} #${otp}`);
-        console.log("=======================================================\n");
-
-        // Create temporary unverified user
-        const user = await User.create({
-            username,
-            phoneNumber,
-            isVerified: false,
-            verificationSession: {
-                otpCode: otp,
-                otpExpires: new Date(Date.now() + 5 * 60 * 1000)
-            }
-        });
-
-        res.status(201).json({ message: "OTP sent successfully to your device", userId: user._id });
-    } catch (err) {
-        console.error("Phone register error:", err);
-        res.status(500).json({ message: "Server error" });
-    }
-});
-
-// 2. Phone-First Login
-router.post("/login/phone", async (req, res) => {
-    try {
-        const { phoneNumber } = req.body;
-        if (!phoneNumber) {
-            return res.status(400).json({ message: "Phone number is required" });
-        }
-
-        const user = await User.findOne({ phoneNumber });
-        if (!user) {
-            return res.status(404).json({ message: "No account registered with this phone number" });
-        }
-
-        if (user.isSuspended) {
-            return res.status(403).json({ message: "Account Suspended", isSuspended: true });
-        }
-
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const domain = getWebOtpDomain(req);
-
-        console.log("\n=======================================================");
-        console.log(`💬 [SMS GATEWAY MOCK] OTP sent to ${phoneNumber}`);
-        console.log(`Message: Your ZenChat verification code is ${otp}.`);
-        console.log(`@${domain} #${otp}`);
-        console.log("=======================================================\n");
-
-        user.verificationSession = {
-            otpCode: otp,
-            otpExpires: new Date(Date.now() + 5 * 60 * 1000)
-        };
-        await user.save();
-
-        res.json({ message: "OTP sent successfully", userId: user._id });
-    } catch (err) {
-        console.error("Phone login error:", err);
-        res.status(500).json({ message: "Server error" });
-    }
-});
-
-// 3. Verify OTP (For both Sign-Up and Phone Login first factor)
-router.post("/verify-otp", async (req, res) => {
-    try {
-        const { userId, otpCode, firebaseToken } = req.body;
-        if (!userId) {
-            return res.status(400).json({ message: "User ID is required" });
-        }
-
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        let isVerified = false;
-
-        if (firebaseToken) {
-            try {
-                const decoded = await verifyFirebaseIdToken(firebaseToken);
-                if (decoded && decoded.phone_number) {
-                    isVerified = true;
-                }
-            } catch (fbErr) {
-                console.warn("Firebase ID Token verification failed, falling back to mock OTP check:", fbErr.message);
-            }
-        }
-
-        if (!isVerified) {
-            if (!otpCode) {
-                return res.status(400).json({ message: "Verification code is required" });
-            }
-            const session = user.verificationSession;
-            if (!session || !session.otpCode || session.otpCode !== otpCode) {
-                return res.status(400).json({ message: "Invalid verification code" });
-            }
-            if (new Date() > new Date(session.otpExpires)) {
-                return res.status(400).json({ message: "Verification code has expired" });
-            }
-        }
-
-        // OTP is correct! Clear primary OTP session
-        user.verificationSession = undefined;
-        user.isVerified = true;
-        await user.save();
-
-        // Check if 2FA is active
-        if (user.is2faEnabled) {
-            // Trigger Secondary Factor: Send Email OTP via Brevo
-            const emailOtp = Math.floor(100000 + Math.random() * 900000).toString();
-            await send2faEmail(user.email, user.username, emailOtp);
-
-            user.verificationSession = {
-                emailOtpCode: emailOtp,
-                emailOtpExpires: new Date(Date.now() + 5 * 60 * 1000)
-            };
-            await user.save();
-
-            return res.json({
-                mfaRequired: true,
-                mfaType: "email",
-                emailMasked: maskEmail(user.email),
-                userId: user._id
-            });
-        }
-
-        // Login complete
-        await User.findByIdAndUpdate(user._id, { isOnline: true });
-        const populatedUser = await User.findById(user._id).populate("blockedUsers.userId", "username avatar");
-        const token = generateToken(user);
-
-        res.json({ token, user: populatedUser.toPrivateJSON() });
-    } catch (err) {
-        console.error("Verify OTP error:", err);
-        res.status(500).json({ message: "Server error" });
-    }
-});
 
 // 4. Verify 2FA OTP (For secondary factor)
 router.post("/verify-2fa-otp", async (req, res) => {
     try {
-        const { userId, otpCode, firebaseToken } = req.body;
+        const { userId, otpCode } = req.body;
         if (!userId) {
             return res.status(400).json({ message: "User ID is required" });
         }
@@ -218,30 +62,14 @@ router.post("/verify-2fa-otp", async (req, res) => {
             return res.status(400).json({ message: "No active verification session" });
         }
 
-        let isVerified = false;
-
-        if (firebaseToken) {
-            try {
-                const decoded = await verifyFirebaseIdToken(firebaseToken);
-                if (decoded && decoded.phone_number) {
-                    isVerified = true;
-                }
-            } catch (fbErr) {
-                console.warn("Firebase ID Token 2FA verification failed:", fbErr.message);
-            }
+        if (!otpCode) {
+            return res.status(400).json({ message: "Verification code is required" });
         }
 
-        if (!isVerified) {
-            if (!otpCode) {
-                return res.status(400).json({ message: "Verification code is required" });
-            }
-            // Validate either secondary Email OTP or Phone OTP
-            const isValidEmailOtp = session.emailOtpCode && session.emailOtpCode === otpCode && new Date() <= new Date(session.emailOtpExpires);
-            const isValidPhoneOtp = session.otpCode && session.otpCode === otpCode && new Date() <= new Date(session.otpExpires);
+        const isValidOtp = session.otpCode && session.otpCode === otpCode && new Date() <= new Date(session.otpExpires);
 
-            if (!isValidEmailOtp && !isValidPhoneOtp) {
-                return res.status(400).json({ message: "Invalid or expired verification code" });
-            }
+        if (!isValidOtp) {
+            return res.status(400).json({ message: "Invalid or expired verification code" });
         }
 
         // Clear session
@@ -484,13 +312,8 @@ router.post(
             // Check if 2FA is active
             if (user.is2faEnabled) {
                 const otp = Math.floor(100000 + Math.random() * 900000).toString();
-                const domain = getWebOtpDomain(req);
                 
-                console.log("\n=======================================================");
-                console.log(`💬 [SMS GATEWAY MOCK] 2FA OTP sent to ${user.phoneNumber}`);
-                console.log(`Message: Your ZenChat verification code is ${otp}.`);
-                console.log(`@${domain} #${otp}`);
-                console.log("=======================================================\n");
+                await send2faEmail(user.email, user.username, otp);
 
                 user.verificationSession = {
                     otpCode: otp,
@@ -500,8 +323,8 @@ router.post(
 
                 return res.json({
                     mfaRequired: true,
-                    mfaType: "phone",
-                    phoneMasked: maskPhone(user.phoneNumber),
+                    mfaType: "email",
+                    emailMasked: maskEmail(user.email),
                     userId: user._id
                 });
             }
@@ -545,35 +368,14 @@ router.post("/logout", authMiddleware, async (req, res) => {
 // Request 2FA Setup OTP
 router.post("/2fa/setup/request", authMiddleware, async (req, res) => {
     try {
-        const { phoneNumber, email, mfaPreference } = req.body;
         const user = await User.findById(req.user._id);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        let emailTarget = "";
-        if (mfaPreference === "email") {
-            const cleanEmail = email ? email.trim().toLowerCase() : "";
-            emailTarget = cleanEmail || user.email || "";
-            if (!emailTarget) {
-                return res.status(400).json({ message: "Email address is required for Email 2FA" });
-            }
-            // Basic format validation
-            if (!/\S+@\S+\.\S+/.test(emailTarget)) {
-                return res.status(400).json({ message: "Invalid email format" });
-            }
-            // Check uniqueness if email is different from current
-            if (emailTarget !== user.email) {
-                const existing = await User.findOne({ email: emailTarget });
-                if (existing) {
-                    return res.status(409).json({ message: "Email address already taken" });
-                }
-            }
-        } else {
-            const cleanPhone = phoneNumber ? phoneNumber.trim() : "";
-            if (!cleanPhone) {
-                return res.status(400).json({ message: "Phone number is required for SMS OTP" });
-            }
+        const emailTarget = user.email ? user.email.trim().toLowerCase() : "";
+        if (!emailTarget) {
+            return res.status(400).json({ message: "An email address is required to configure 2FA" });
         }
 
         // Generate 6-digit OTP code
@@ -586,20 +388,8 @@ router.post("/2fa/setup/request", authMiddleware, async (req, res) => {
         };
         await user.save();
 
-        if (mfaPreference === "email") {
-            await send2faEmail(emailTarget, user.username, otpCode);
-            res.json({ message: `Verification code sent to email ${emailTarget}` });
-        } else {
-            const cleanPhone = phoneNumber.trim();
-            const domain = getWebOtpDomain(req);
-            // Phone SMS setup dispatch log
-            console.log("\n=======================================================");
-            console.log(`[SMS OTP DISPATCH] to ${cleanPhone}`);
-            console.log(`Message: Your ZenChat 2FA Setup Code is ${otpCode}.`);
-            console.log(`@${domain} #${otpCode}`);
-            console.log("=======================================================\n");
-            res.json({ message: `Verification code sent to phone ${cleanPhone}` });
-        }
+        await send2faEmail(emailTarget, user.username, otpCode);
+        res.json({ message: `Verification code sent to email ${emailTarget}` });
     } catch (err) {
         console.error("2FA request setup error:", err);
         res.status(500).json({ message: "Server error" });
@@ -609,64 +399,27 @@ router.post("/2fa/setup/request", authMiddleware, async (req, res) => {
 // Verify and enable 2FA
 router.post("/2fa/setup/verify", authMiddleware, async (req, res) => {
     try {
-        const { otpCode, phoneNumber, email, mfaPreference, firebaseToken } = req.body;
+        const { otpCode } = req.body;
         const user = await User.findById(req.user._id);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        let isVerified = false;
-
-        if (firebaseToken) {
-            try {
-                const decoded = await verifyFirebaseIdToken(firebaseToken);
-                if (decoded && decoded.phone_number) {
-                    isVerified = true;
-                }
-            } catch (fbErr) {
-                console.warn("Firebase ID Token setup verification failed, falling back to mock OTP check:", fbErr.message);
-            }
+        if (!otpCode) {
+            return res.status(400).json({ message: "Verification code is required" });
         }
 
-        if (!isVerified) {
-            if (!otpCode) {
-                return res.status(400).json({ message: "Verification code is required" });
-            }
-            const session = user.verificationSession;
-            if (!session || !session.otpCode || session.otpCode !== otpCode) {
-                return res.status(400).json({ message: "Invalid verification code" });
-            }
-            if (new Date() > new Date(session.otpExpires)) {
-                return res.status(400).json({ message: "Verification code has expired" });
-            }
+        const session = user.verificationSession;
+        if (!session || !session.otpCode || session.otpCode !== otpCode) {
+            return res.status(400).json({ message: "Invalid verification code" });
+        }
+        if (new Date() > new Date(session.otpExpires)) {
+            return res.status(400).json({ message: "Verification code has expired" });
         }
 
         // Code is valid! Enable 2FA and save settings
         user.is2faEnabled = true;
-        if (mfaPreference === "phone" && phoneNumber) {
-            const cleanPhone = phoneNumber.trim();
-            if (cleanPhone && cleanPhone !== user.phoneNumber) {
-                const existing = await User.findOne({ phoneNumber: cleanPhone });
-                if (existing) {
-                    return res.status(409).json({ message: "Phone number already taken" });
-                }
-            }
-            user.phoneNumber = cleanPhone || undefined;
-        }
-        if (mfaPreference === "email" && email) {
-            const cleanEmail = email.trim().toLowerCase();
-            if (cleanEmail && cleanEmail !== user.email) {
-                const existing = await User.findOne({ email: cleanEmail });
-                if (existing) {
-                    return res.status(409).json({ message: "Email address already taken" });
-                }
-            }
-            user.email = cleanEmail || undefined;
-        }
-        if (mfaPreference) {
-            user.mfaPreference = mfaPreference;
-        }
-
+        user.mfaPreference = "email";
         user.verificationSession = undefined;
         await user.save();
 
@@ -768,8 +521,8 @@ router.put(
 
             if (req.body.is2faEnabled !== undefined) {
                 const enabled = req.body.is2faEnabled === 'true' || req.body.is2faEnabled === true;
-                if (enabled && !user.phoneNumber && !req.body.phoneNumber) {
-                    return res.status(400).json({ message: "A phone number is required to enable 2FA" });
+                if (enabled && !user.email) {
+                    return res.status(400).json({ message: "An email address is required to enable 2FA" });
                 }
                 user.is2faEnabled = enabled;
             }

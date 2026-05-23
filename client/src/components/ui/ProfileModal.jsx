@@ -8,27 +8,7 @@ import LoadingOverlay from "./LoadingOverlay";
 import { db } from "../../db/zenDB";
 import { generateRecoveryKey, rotateUserRecoveryKey, setupE2EEForUser } from "../../utils/e2eeHelper";
 
-const countryCodes = [
-    { code: "+1", label: "US/CA (+1)" },
-    { code: "+91", label: "IN (+91)" },
-    { code: "+44", label: "UK (+44)" },
-    { code: "+61", label: "AU (+61)" },
-    { code: "+81", label: "JP (+81)" },
-    { code: "+49", label: "DE (+49)" },
-    { code: "+33", label: "FR (+33)" },
-    { code: "+86", label: "CN (+86)" },
-    { code: "+7", label: "RU (+7)" },
-    { code: "+55", label: "BR (+55)" }
-];
-
-const parsePhone = (phone) => {
-    if (!phone) return { code: "+1", body: "" };
-    const matchingCode = countryCodes.find(c => phone.startsWith(c.code));
-    if (matchingCode) {
-        return { code: matchingCode.code, body: phone.substring(matchingCode.code.length) };
-    }
-    return { code: "+1", body: phone };
-};
+// Phone parser and country codes removed in favor of Email 2FA
 
 const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const { user, updateProfile, isLoading, soundEnabled, toggleSound, unblockUser } = useAuthStore();
@@ -56,14 +36,47 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [isConfirmingRotate, setIsConfirmingRotate] = useState(false);
     const [localKeysMissing, setLocalKeysMissing] = useState(false);
     const [profileBlockError, setProfileBlockError] = useState(null);
-    const initialPhone = parsePhone(user?.phoneNumber);
-    const [countryCode, setCountryCode] = useState(initialPhone.code);
-    const [phoneBody, setPhoneBody] = useState(initialPhone.body);
-    const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
     const [is2faEnabled, setIs2faEnabled] = useState(user?.is2faEnabled || false);
-    const [mfaPreference, setMfaPreference] = useState((user?.phoneNumber && !user?.email) ? "email" : "phone");
     const [otpCode, setOtpCode] = useState("");
     const [otpSent, setOtpSent] = useState(false);
+    const [expiryTimeLeft, setExpiryTimeLeft] = useState(300); // 5 minutes countdown
+    const [resendLockTimeLeft, setResendLockTimeLeft] = useState(0); // 1 minute rate-limit
+
+    useEffect(() => {
+        let timer = null;
+        if (otpSent) {
+            timer = setInterval(() => {
+                setExpiryTimeLeft((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(timer);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => {
+            if (timer) clearInterval(timer);
+        };
+    }, [otpSent]);
+
+    useEffect(() => {
+        let timer = null;
+        if (resendLockTimeLeft > 0) {
+            timer = setInterval(() => {
+                setResendLockTimeLeft((prev) => {
+                    if (prev <= 1) {
+                        clearInterval(timer);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => {
+            if (timer) clearInterval(timer);
+        };
+    }, [resendLockTimeLeft]);
 
     const fileInputRef = useRef(null);
     const importInputRef = useRef(null);
@@ -89,13 +102,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setIsSubscribing(false);
             setImageError(false);
             setProfileBlockError(null);
-            setPhoneNumber(user.phoneNumber || "");
             setIs2faEnabled(user.is2faEnabled || false);
-            setMfaPreference((user.phoneNumber && !user.email) ? "email" : "phone");
-            
-            const parsed = parsePhone(user.phoneNumber);
-            setCountryCode(parsed.code);
-            setPhoneBody(parsed.body);
             setOtpSent(false);
             setOtpCode("");
         }
@@ -181,9 +188,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         } else if (!avatarPreview) {
             formData.append("clearAvatar", "true");
         }
-        if (phoneNumber !== (user.phoneNumber || "")) formData.append("phoneNumber", phoneNumber);
         formData.append("is2faEnabled", is2faEnabled ? "true" : "false");
-        formData.append("mfaPreference", mfaPreference);
+        formData.append("mfaPreference", "email");
 
         const privacySettings = { 
             onlineStatus: onlineVisibility, 
@@ -205,50 +211,17 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     };
 
     const handleSendVerificationCode = async () => {
-        if (mfaPreference === "phone" && !phoneBody.trim()) {
-            showToast("Please enter a valid phone number.");
-            return;
-        }
-        if (mfaPreference === "email" && !email.trim()) {
+        if (!email.trim()) {
             showToast("Please enter a valid email address.");
             return;
         }
         setIsE2EELoading(true);
-        const fullPhone = mfaPreference === "phone" ? (countryCode + phoneBody.trim()) : "";
         try {
-            const { data } = await axiosInstance.post("/auth/2fa/setup/request", {
-                phoneNumber: fullPhone,
-                email: mfaPreference === "email" ? email.trim() : undefined,
-                mfaPreference
-            });
-
-            if (mfaPreference === "phone") {
-                try {
-                    const { auth: clientAuth } = await import("../../utils/firebase");
-                    const { RecaptchaVerifier, signInWithPhoneNumber } = await import("firebase/auth");
-                    
-                    let verifier = window.recaptchaVerifier;
-                    if (!verifier) {
-                        verifier = new RecaptchaVerifier(clientAuth, 'recaptcha-container', {
-                            size: 'invisible'
-                        });
-                        window.recaptchaVerifier = verifier;
-                    }
-
-                    const confirmation = await signInWithPhoneNumber(clientAuth, fullPhone, verifier);
-                    window.confirmationResult = confirmation;
-                    showToast(`Verification code sent to ${fullPhone}`);
-                    setOtpSent(true);
-                } catch (fbErr) {
-                    console.warn("Firebase 2FA Auth dispatch failed, falling back to mock gateway:", fbErr.message);
-                    window.confirmationResult = null;
-                    showToast(data.message || "Verification code sent (mock mode).");
-                    setOtpSent(true);
-                }
-            } else {
-                showToast(data.message || "Verification code sent to your email.");
-                setOtpSent(true);
-            }
+            const { data } = await axiosInstance.post("/auth/2fa/setup/request");
+            showToast(data.message || "Verification code sent to your email.");
+            setOtpSent(true);
+            setExpiryTimeLeft(300); // 5 minutes countdown
+            setResendLockTimeLeft(60); // 1 minute resend rate-limit
         } catch (err) {
             showToast(err.response?.data?.message || "Failed to initiate verification.");
         } finally {
@@ -261,26 +234,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         if (!otpCode.trim()) return;
         setIsE2EELoading(true);
         try {
-            const fullPhone = mfaPreference === "phone" ? (countryCode + phoneBody.trim()) : "";
-            
-            let firebaseToken = null;
-            if (mfaPreference === "phone" && window.confirmationResult) {
-                try {
-                    const result = await window.confirmationResult.confirm(otpCode.trim());
-                    firebaseToken = await result.user.getIdToken();
-                } catch (fbErr) {
-                    showToast("Invalid verification code");
-                    setIsE2EELoading(false);
-                    return;
-                }
-            }
-
             const { data } = await axiosInstance.post("/auth/2fa/setup/verify", {
-                otpCode: otpCode.trim(),
-                phoneNumber: fullPhone,
-                email: mfaPreference === "email" ? email.trim() : undefined,
-                mfaPreference,
-                firebaseToken
+                otpCode: otpCode.trim()
             });
             if (data.user) {
                 useAuthStore.getState().updateUser(data.user);
@@ -626,7 +581,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                         <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "12px" }}>
                             <div>
                                 <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem" }}>Two-Factor Authentication (2FA)</span>
-                                <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Secure your account using SMS/Email OTP</span>
+                                <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Secure your account using Email OTP</span>
                             </div>
 
                             {is2faEnabled ? (
@@ -637,7 +592,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                             2FA is Active
                                         </div>
                                         <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "2px" }}>
-                                            Preference: {mfaPreference === "phone" ? `Phone SMS (${user?.phoneNumber || ""})` : `Email (${user?.email || ""})`}
+                                            Code will be sent to email: {user?.email || ""}
                                         </div>
                                     </div>
                                     <button
@@ -650,141 +605,43 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 </div>
                             ) : (
                                 <div style={{ display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "10px" }}>
-                                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                        <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>Select 2FA Method</label>
-                                        {mfaPreference === "email" ? (
-                                            <div style={{
-                                                background: "rgba(255, 255, 255, 0.04)",
-                                                border: "1px solid rgba(255, 255, 255, 0.08)",
-                                                borderRadius: "8px",
-                                                padding: "10px",
-                                                fontSize: "0.8rem",
-                                                color: "#fff",
-                                                fontWeight: "500"
-                                            }}>
-                                                Email Verification Code (Sends verification to email)
-                                            </div>
-                                        ) : (
-                                            <div style={{
-                                                background: "rgba(255, 255, 255, 0.04)",
-                                                border: "1px solid rgba(255, 255, 255, 0.08)",
-                                                borderRadius: "8px",
-                                                padding: "10px",
-                                                fontSize: "0.8rem",
-                                                color: "#fff",
-                                                fontWeight: "500"
-                                            }}>
-                                                Phone SMS OTP (Sends OTP via SMS)
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {mfaPreference === "phone" && (
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                            <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>Phone Number</label>
-                                            <div style={{ display: "flex", gap: "8px" }}>
-                                                <select
-                                                    value={countryCode}
-                                                    onChange={(e) => setCountryCode(e.target.value)}
-                                                    style={{
-                                                        width: "95px",
-                                                        background: "rgba(0, 0, 0, 0.3)",
-                                                        border: "1px solid rgba(255,255,255,0.1)",
-                                                        borderRadius: "8px",
-                                                        padding: "8px",
-                                                        fontSize: "0.8rem",
-                                                        color: "#fff"
-                                                    }}
-                                                >
-                                                    {countryCodes.map(c => (
-                                                        <option key={c.code} value={c.code} style={{ background: "#1e293b", color: "#fff" }}>
-                                                            {c.label}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                                <input
-                                                    type="tel"
-                                                    placeholder="234 567 8900"
-                                                    value={phoneBody}
-                                                    onChange={(e) => {
-                                                        setPhoneBody(e.target.value.replace(/\D/g, ""));
-                                                        setOtpSent(false);
-                                                    }}
-                                                    style={{
-                                                        flex: 1,
-                                                        background: "rgba(0, 0, 0, 0.3)",
-                                                        border: "1px solid rgba(255,255,255,0.1)",
-                                                        borderRadius: "8px",
-                                                        padding: "8px 12px",
-                                                        fontSize: "0.8rem",
-                                                        color: "#fff"
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {mfaPreference === "email" && (
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                            <label style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "500" }}>Email Address</label>
-                                            <input
-                                                type="email"
-                                                placeholder="you@example.com"
-                                                value={email}
-                                                onChange={(e) => {
-                                                    setEmail(e.target.value);
-                                                    setOtpSent(false);
-                                                }}
-                                                style={{
-                                                    background: "rgba(0, 0, 0, 0.3)",
-                                                    border: "1px solid rgba(255,255,255,0.1)",
-                                                    borderRadius: "8px",
-                                                    padding: "8px 12px",
-                                                    fontSize: "0.8rem",
-                                                    color: "#fff"
-                                                }}
-                                            />
-                                        </div>
-                                    )}
-
                                     {!otpSent ? (
-                                        <button
-                                            type="button"
-                                            onClick={handleSendVerificationCode}
-                                            disabled={
-                                                (mfaPreference === "phone" && !phoneBody.trim()) ||
-                                                (mfaPreference === "email" && !email.trim())
-                                            }
-                                            style={{ 
-                                                background: (
-                                                    (mfaPreference === "phone" && !phoneBody.trim()) ||
-                                                    (mfaPreference === "email" && !email.trim())
-                                                ) ? "rgba(255, 255, 255, 0.05)" : "rgba(61, 165, 217, 0.15)", 
-                                                border: (
-                                                    (mfaPreference === "phone" && !phoneBody.trim()) ||
-                                                    (mfaPreference === "email" && !email.trim())
-                                                ) ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(61, 165, 217, 0.3)", 
-                                                color: (
-                                                    (mfaPreference === "phone" && !phoneBody.trim()) ||
-                                                    (mfaPreference === "email" && !email.trim())
-                                                ) ? "#64748b" : "var(--color-primary)", 
-                                                padding: "8px 16px", 
-                                                borderRadius: "8px", 
-                                                fontSize: "0.8rem", 
-                                                fontWeight: "600", 
-                                                cursor: (
-                                                    (mfaPreference === "phone" && !phoneBody.trim()) ||
-                                                    (mfaPreference === "email" && !email.trim())
-                                                ) ? "not-allowed" : "pointer", 
-                                                width: "100%", 
-                                                marginTop: "4px" 
-                                            }}
-                                        >
-                                            Send Verification Code
-                                        </button>
+                                        <>
+                                            <span style={{ fontSize: "0.75rem", color: "#94a3b8", lineHeight: "1.4" }}>
+                                                Two-factor authentication adds an extra layer of security. When enabled, you will be required to enter a 6-digit OTP code sent to your registered email address (<strong style={{ color: "var(--color-primary)" }}>{email}</strong>) during sign in.
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={handleSendVerificationCode}
+                                                disabled={!email.trim()}
+                                                style={{ 
+                                                    background: !email.trim() ? "rgba(255, 255, 255, 0.05)" : "rgba(61, 165, 217, 0.15)", 
+                                                    border: !email.trim() ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(61, 165, 217, 0.3)", 
+                                                    color: !email.trim() ? "#64748b" : "var(--color-primary)", 
+                                                    padding: "8px 16px", 
+                                                    borderRadius: "8px", 
+                                                    fontSize: "0.8rem", 
+                                                    fontWeight: "600", 
+                                                    cursor: !email.trim() ? "not-allowed" : "pointer", 
+                                                    width: "100%", 
+                                                    marginTop: "4px" 
+                                                }}
+                                            >
+                                                Enable 2FA
+                                            </button>
+                                        </>
                                     ) : (
                                         <div style={{ display: "flex", flexDirection: "column", gap: "10px", background: "rgba(255,255,255,0.02)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
-                                            <label style={{ fontSize: "0.75rem", color: "var(--color-primary)", fontWeight: "600" }}>Enter 6-Digit Code Manually</label>
+                                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                                <label style={{ fontSize: "0.75rem", color: "var(--color-primary)", fontWeight: "600" }}>Enter 6-Digit Code</label>
+                                                <span style={{ fontSize: "0.75rem", color: expiryTimeLeft > 0 ? "#94a3b8" : "#ef4444", fontWeight: "700" }}>
+                                                    {expiryTimeLeft > 0 ? (
+                                                        `Expires in: ${Math.floor(expiryTimeLeft / 60)}:${String(expiryTimeLeft % 60).padStart(2, '0')}`
+                                                    ) : (
+                                                        "Code Expired"
+                                                    )}
+                                                </span>
+                                            </div>
                                             <input
                                                 type="text"
                                                 inputMode="numeric"
@@ -807,7 +664,25 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                     boxSizing: "border-box"
                                                 }}
                                             />
-                                            <div style={{ display: "flex", gap: "10px", width: "100%", justifyContent: "center", marginTop: "4px" }}>
+                                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "4px" }}>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleSendVerificationCode}
+                                                    disabled={resendLockTimeLeft > 0}
+                                                    style={{
+                                                        background: "none",
+                                                        border: "none",
+                                                        color: resendLockTimeLeft > 0 ? "#64748b" : "var(--color-primary)",
+                                                        cursor: resendLockTimeLeft > 0 ? "not-allowed" : "pointer",
+                                                        fontSize: "0.75rem",
+                                                        textDecoration: "underline",
+                                                        fontWeight: "600"
+                                                    }}
+                                                >
+                                                    {resendLockTimeLeft > 0 ? `Resend Code (${resendLockTimeLeft}s)` : "Resend Code"}
+                                                </button>
+                                            </div>
+                                            <div style={{ display: "flex", gap: "10px", width: "100%", justifyContent: "center", marginTop: "8px" }}>
                                                 <button
                                                     type="button"
                                                     onClick={() => {
@@ -836,7 +711,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                 <button
                                                     type="button"
                                                     onClick={handleVerifyAndEnable2fa}
-                                                    disabled={otpCode.length < 6 || isE2EELoading}
+                                                    disabled={otpCode.length < 6 || isE2EELoading || expiryTimeLeft === 0}
                                                     style={{ 
                                                         flex: 1, 
                                                         maxWidth: "150px", 
@@ -852,7 +727,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                         display: "flex", 
                                                         alignItems: "center", 
                                                         justifyContent: "center", 
-                                                        opacity: (otpCode.length < 6 || isE2EELoading) ? 0.5 : 1 
+                                                        opacity: (otpCode.length < 6 || isE2EELoading || expiryTimeLeft === 0) ? 0.5 : 1 
                                                     }}
                                                 >
                                                     Verify
@@ -1188,7 +1063,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                             <span>Import Archive</span>
                         </button>
                         <input ref={importInputRef} type="file" accept=".json,application/json" style={{ display: "none" }} onChange={handleImport} />
-                        <div id="recaptcha-container"></div>
+                        {/* recaptcha container removed */}
                     </div>
 
                     <button type="submit" className="btn btn-primary" disabled={isLoading} style={{ width: "100%", marginTop: "1rem", padding: "12px" }}>

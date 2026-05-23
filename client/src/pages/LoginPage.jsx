@@ -9,25 +9,10 @@ const validatePassword = (pw) => {
     return null;
 };
 
-const countryCodes = [
-    { code: "+1", label: "US/CA (+1)" },
-    { code: "+91", label: "IN (+91)" },
-    { code: "+44", label: "UK (+44)" },
-    { code: "+61", label: "AU (+61)" },
-    { code: "+81", label: "JP (+81)" },
-    { code: "+49", label: "DE (+49)" },
-    { code: "+33", label: "FR (+33)" },
-    { code: "+86", label: "CN (+86)" },
-    { code: "+7", label: "RU (+7)" },
-    { code: "+55", label: "BR (+55)" }
-];
-
 const LoginPage = () => {
     const navigate = useNavigate();
     const {
         login,
-        loginPhone,
-        verifyOtp,
         verify2faOtp,
         triggerChallenge,
         resetMfaState,
@@ -40,17 +25,10 @@ const LoginPage = () => {
         clearError
     } = useAuthStore();
 
-    const setIsLoading = (bool) => useAuthStore.setState({ isLoading: bool });
-
-    const [activeTab, setActiveTab] = useState("email");
-    const [form, setForm] = useState({ email: "", password: "", phoneNumber: "" });
-    const [countryCode, setCountryCode] = useState("+1");
-    const [phoneBody, setPhoneBody] = useState("");
+    const [form, setForm] = useState({ email: "", password: "" });
     const [pwError, setPwError] = useState("");
     const [showPassword, setShowPassword] = useState(false);
 
-    const [otpSent, setOtpSent] = useState(false);
-    const [tempUserId, setTempUserId] = useState("");
     const [otpCode, setOtpCode] = useState("");
     const [showRecoveryBypass, setShowRecoveryBypass] = useState(false);
     const [recoveryKey, setRecoveryKey] = useState("");
@@ -65,34 +43,16 @@ const LoginPage = () => {
     }, [resetMfaState, clearError]);
 
     useEffect(() => {
-        if ((otpSent || mfaRequired) && otpInputRef.current) {
+        if (mfaRequired && otpInputRef.current) {
             otpInputRef.current.focus();
         }
-    }, [otpSent, mfaRequired]);
+    }, [mfaRequired]);
 
     useEffect(() => {
         if (showRecoveryBypass && recoveryInputRef.current) {
             recoveryInputRef.current.focus();
         }
     }, [showRecoveryBypass]);
-
-    useEffect(() => {
-        if ('OTPCredential' in window && (otpSent || mfaRequired)) {
-            const ac = new AbortController();
-            navigator.credentials.get({
-                otp: { transport: ['sms'] },
-                signal: ac.signal
-            }).then(otp => {
-                if (otp && otp.code) {
-                    setOtpCode(otp.code);
-                    handleVerifyOtpDirect(otp.code);
-                }
-            }).catch(err => {
-                console.log("WebOTP verification skipped or cancelled:", err);
-            });
-            return () => ac.abort();
-        }
-    }, [otpSent, mfaRequired]);
 
     const handleChange = (e) => {
         clearError();
@@ -115,42 +75,6 @@ const LoginPage = () => {
         }
     };
 
-    const handlePhoneSubmit = async (e) => {
-        e.preventDefault();
-        const fullPhone = countryCode + phoneBody.trim();
-        if (!phoneBody.trim()) return;
-
-        setIsLoading(true);
-        const result = await loginPhone(fullPhone);
-        if (result.success) {
-            setTempUserId(result.userId);
-
-            try {
-                const { auth: clientAuth } = await import("../utils/firebase");
-                const { RecaptchaVerifier, signInWithPhoneNumber } = await import("firebase/auth");
-
-                let verifier = window.recaptchaVerifier;
-                if (!verifier) {
-                    verifier = new RecaptchaVerifier(clientAuth, 'recaptcha-container', {
-                        size: 'invisible'
-                    });
-                    window.recaptchaVerifier = verifier;
-                }
-
-                const confirmation = await signInWithPhoneNumber(clientAuth, fullPhone, verifier);
-                window.confirmationResult = confirmation;
-                setSuccessMessage(`Verification code sent to ${fullPhone}`);
-                setOtpSent(true);
-            } catch (fbErr) {
-                console.warn("Firebase Phone Auth failed, using mock fallback:", fbErr.message);
-                window.confirmationResult = null;
-                setSuccessMessage(`OTP sent to ${fullPhone}`);
-                setOtpSent(true);
-            }
-        }
-        setIsLoading(false);
-    };
-
     const handleVerifyOtp = async (e) => {
         e.preventDefault();
         await handleVerifyOtpDirect(otpCode);
@@ -159,61 +83,30 @@ const LoginPage = () => {
     const handleVerifyOtpDirect = async (codeToVerify) => {
         if (!codeToVerify || codeToVerify.length < 6) return;
 
-        setIsLoading(true);
-        if (mfaRequired) {
-            const result = await verify2faOtp(mfaUserId, codeToVerify);
-            if (result.success) {
-                navigate("/");
-            }
-        } else {
-            let firebaseToken = null;
-            if (window.confirmationResult) {
-                try {
-                    const result = await window.confirmationResult.confirm(codeToVerify);
-                    firebaseToken = await result.user.getIdToken();
-                } catch (fbErr) {
-                    setError("Invalid or expired verification code");
-                    setIsLoading(false);
-                    return;
-                }
-            }
-
-            const result = await verifyOtp(tempUserId, codeToVerify, firebaseToken);
-            if (result.success) {
-                if (!result.mfaRequired) {
-                    navigate("/");
-                } else {
-                    setOtpCode("");
-                    setSuccessMessage("Phone verified! Secondary 2FA required.");
-                }
-            }
+        const result = await verify2faOtp(mfaUserId, codeToVerify);
+        if (result.success) {
+            navigate("/");
         }
-        setIsLoading(false);
     };
 
     const handleRecoveryBypassSubmit = async (e) => {
         e.preventDefault();
         if (!recoveryKey.trim()) return;
 
-        const targetUserId = mfaRequired ? mfaUserId : tempUserId;
-        const result = await triggerChallenge(targetUserId, recoveryKey.trim());
+        const result = await triggerChallenge(mfaUserId, recoveryKey.trim());
         if (result.success) {
             navigate("/");
         }
     };
 
     const handleBackToLogin = () => {
-        setOtpSent(false);
         setShowRecoveryBypass(false);
         resetMfaState();
         clearError();
         setSuccessMessage("");
     };
 
-    if (otpSent || mfaRequired) {
-        const maskedDest = mfaRequired ? mfaMaskedValue : (countryCode + phoneBody);
-        const currentMfaType = mfaRequired ? (mfaType === "phone" ? "SMS" : "Email") : "SMS";
-
+    if (mfaRequired) {
         return (
             <div className="auth-page">
                 <div className="auth-card" style={{ maxWidth: "440px", border: "1px solid rgba(255, 255, 255, 0.08)", background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(20px)" }}>
@@ -229,7 +122,7 @@ const LoginPage = () => {
                         <>
                             <h1 className="auth-title" style={{ fontSize: "1.6rem", textAlign: "center" }}>Enter Code</h1>
                             <p className="auth-subtitle" style={{ textAlign: "center", marginBottom: "24px" }}>
-                                We sent a 6-digit code to <strong style={{ color: "var(--color-primary)" }}>{maskedDest}</strong> via {currentMfaType}.
+                                We sent a 6-digit code to <strong style={{ color: "var(--color-primary)" }}>{mfaMaskedValue}</strong> via Email.
                             </p>
 
                             {successMessage && (
@@ -279,36 +172,34 @@ const LoginPage = () => {
                                 </button>
                             </form>
 
-                            {mfaRequired && (
-                                <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                                    <button
-                                        type="button"
-                                        className="btn-secondary"
-                                        onClick={() => setShowRecoveryBypass(true)}
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            gap: "8px",
-                                            background: "rgba(99, 102, 241, 0.1)",
-                                            border: "1px solid rgba(99, 102, 241, 0.2)",
-                                            color: "#a5b4fc",
-                                            transition: "all 0.2s"
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.background = "rgba(99, 102, 241, 0.2)";
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.background = "rgba(99, 102, 241, 0.1)";
-                                        }}
-                                    >
-                                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m-9 5a3 3 0 11-6 0 3 3 0 016 0zm6.342 1.658L16 20m0 0l-2.343-2.343m2.343 2.343l2.343-2.343M16 12H8" />
-                                        </svg>
-                                        Use E2EE Offline Recovery Key
-                                    </button>
-                                </div>
-                            )}
+                            <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                                <button
+                                    type="button"
+                                    className="btn-secondary"
+                                    onClick={() => setShowRecoveryBypass(true)}
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: "8px",
+                                        background: "rgba(99, 102, 241, 0.1)",
+                                        border: "1px solid rgba(99, 102, 241, 0.2)",
+                                        color: "#a5b4fc",
+                                        transition: "all 0.2s"
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.background = "rgba(99, 102, 241, 0.2)";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.background = "rgba(99, 102, 241, 0.1)";
+                                    }}
+                                >
+                                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m-9 5a3 3 0 11-6 0 3 3 0 016 0zm6.342 1.658L16 20m0 0l-2.343-2.343m2.343 2.343l2.343-2.343M16 12H8" />
+                                    </svg>
+                                    Use E2EE Offline Recovery Key
+                                </button>
+                            </div>
 
                             <button
                                 type="button"
@@ -404,51 +295,6 @@ const LoginPage = () => {
                 <h1 className="auth-title">Welcome back</h1>
                 <p className="auth-subtitle">Sign in to your account</p>
 
-                {/* Premium Tab Bar with HSL tailored design */}
-                <div style={{
-                    display: "flex",
-                    background: "rgba(30, 41, 59, 0.5)",
-                    padding: "4px",
-                    borderRadius: "10px",
-                    marginBottom: "24px",
-                    border: "1px solid rgba(255,255,255,0.05)"
-                }}>
-                    <button
-                        type="button"
-                        onClick={() => { setActiveTab("email"); clearError(); }}
-                        style={{
-                            flex: 1,
-                            padding: "10px",
-                            borderRadius: "8px",
-                            border: "none",
-                            background: activeTab === "email" ? "rgba(61, 165, 217, 0.15)" : "none",
-                            color: activeTab === "email" ? "#3da5d9" : "#94a3b8",
-                            fontWeight: "600",
-                            cursor: "pointer",
-                            transition: "all 0.2s"
-                        }}
-                    >
-                        via Email
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => { setActiveTab("phone"); clearError(); }}
-                        style={{
-                            flex: 1,
-                            padding: "10px",
-                            borderRadius: "8px",
-                            border: "none",
-                            background: activeTab === "phone" ? "rgba(61, 165, 217, 0.15)" : "none",
-                            color: activeTab === "phone" ? "#3da5d9" : "#94a3b8",
-                            fontWeight: "600",
-                            cursor: "pointer",
-                            transition: "all 0.2s"
-                        }}
-                    >
-                        via Phone OTP
-                    </button>
-                </div>
-
                 {error && (
                     <div className={`auth-error ${error === "Account Suspended" ? "auth-error-suspended" : ""}`} role="alert">
                         {error === "Account Suspended" ? (
@@ -463,129 +309,77 @@ const LoginPage = () => {
                     </div>
                 )}
 
-                {activeTab === "email" ? (
-                    <form onSubmit={handleEmailSubmit} className="auth-form">
-                        <div className="field">
-                            <label htmlFor="email">Email</label>
+                <form onSubmit={handleEmailSubmit} className="auth-form">
+                    <div className="field">
+                        <label htmlFor="email">Email</label>
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            autoComplete="email"
+                            required
+                            placeholder="you@example.com"
+                            value={form.email}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    <div className="field">
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                            <label htmlFor="password" style={{ marginBottom: 0 }}>Password</label>
+                            <Link to="/forgot-password" style={{ fontSize: "0.8rem", color: "var(--color-primary)", textDecoration: "none" }}>Forgot password?</Link>
+                        </div>
+                        <div style={{ position: "relative" }}>
                             <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
+                                id="password"
+                                name="password"
+                                type={showPassword ? "text" : "password"}
+                                autoComplete="current-password"
                                 required
-                                placeholder="you@example.com"
-                                value={form.email}
+                                placeholder="Your password"
+                                minLength={7}
+                                maxLength={18}
+                                value={form.password}
                                 onChange={handleChange}
+                                style={{ width: "100%", paddingRight: "40px" }}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{
+                                    position: "absolute",
+                                    right: "12px",
+                                    top: "50%",
+                                    transform: "translateY(-50%)",
+                                    background: "none",
+                                    border: "none",
+                                    color: "#64748b",
+                                    cursor: "pointer",
+                                    padding: 0,
+                                    display: "flex",
+                                    alignItems: "center"
+                                }}
+                                aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                                {showPassword ? (
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                ) : (
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                )}
+                            </button>
                         </div>
+                        {pwError && <span className="field-hint field-hint-error">{pwError}</span>}
+                    </div>
 
-                        <div className="field">
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                                <label htmlFor="password" style={{ marginBottom: 0 }}>Password</label>
-                                <Link to="/forgot-password" style={{ fontSize: "0.8rem", color: "var(--color-primary)", textDecoration: "none" }}>Forgot password?</Link>
-                            </div>
-                            <div style={{ position: "relative" }}>
-                                <input
-                                    id="password"
-                                    name="password"
-                                    type={showPassword ? "text" : "password"}
-                                    autoComplete="current-password"
-                                    required
-                                    placeholder="Your password"
-                                    minLength={7}
-                                    maxLength={18}
-                                    value={form.password}
-                                    onChange={handleChange}
-                                    style={{ width: "100%", paddingRight: "40px" }}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    style={{
-                                        position: "absolute",
-                                        right: "12px",
-                                        top: "50%",
-                                        transform: "translateY(-50%)",
-                                        background: "none",
-                                        border: "none",
-                                        color: "#64748b",
-                                        cursor: "pointer",
-                                        padding: 0,
-                                        display: "flex",
-                                        alignItems: "center"
-                                    }}
-                                    aria-label={showPassword ? "Hide password" : "Show password"}
-                                >
-                                    {showPassword ? (
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                                    ) : (
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                    )}
-                                </button>
-                            </div>
-                            {pwError && <span className="field-hint field-hint-error">{pwError}</span>}
-                        </div>
-
-                        <button type="submit" className="btn-primary" disabled={isLoading}>
-                            {isLoading ? "Signing in..." : "Sign in"}
-                        </button>
-                    </form>
-                ) : (
-                    <form onSubmit={handlePhoneSubmit} className="auth-form">
-                        <div className="field">
-                            <label htmlFor="phoneNumber">Phone Number</label>
-                            <div style={{ display: "flex", gap: "8px" }}>
-                                <select
-                                    value={countryCode}
-                                    onChange={(e) => setCountryCode(e.target.value)}
-                                    style={{
-                                        width: "110px",
-                                        background: "rgba(30, 41, 59, 0.6)",
-                                        border: "1px solid rgba(255,255,255,0.1)",
-                                        borderRadius: "8px",
-                                        color: "#fff",
-                                        padding: "10px",
-                                        fontSize: "0.95rem",
-                                        outline: "none"
-                                    }}
-                                >
-                                    {countryCodes.map(c => (
-                                        <option key={c.code} value={c.code} style={{ background: "#1e293b", color: "#fff" }}>
-                                            {c.label}
-                                        </option>
-                                    ))}
-                                </select>
-                                <input
-                                    id="phoneNumber"
-                                    name="phoneNumber"
-                                    type="tel"
-                                    required
-                                    placeholder="234 567 8900"
-                                    value={phoneBody}
-                                    onChange={(e) => {
-                                        clearError();
-                                        setPhoneBody(e.target.value.replace(/\D/g, ""));
-                                    }}
-                                    style={{
-                                        flex: 1,
-                                        fontSize: "1.05rem",
-                                        letterSpacing: "0.5px"
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        <button type="submit" className="btn-primary" disabled={isLoading || !phoneBody.trim()}>
-                            {isLoading ? "Sending OTP..." : "Request Verification Code"}
-                        </button>
-                    </form>
-                )}
+                    <button type="submit" className="btn-primary" disabled={isLoading}>
+                        {isLoading ? "Signing in..." : "Sign in"}
+                    </button>
+                </form>
 
                 <p className="auth-switch">
                     Don't have an account?{" "}
                     <Link to="/register">Create one!</Link>
                 </p>
-                <div id="recaptcha-container"></div>
             </div>
         </div>
     );
