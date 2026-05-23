@@ -4216,15 +4216,26 @@ select {
   z-index: 1000;
   overflow: visible;
   flex-wrap: wrap;
+  background: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-.aura-viewer-header.with-bg {
-  background: rgba(0, 0, 0, 0.7);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+.aura-header-location {
+  display: flex;
+  align-items: center;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: #10b981;
+  font-weight: 500;
 }
 
-.aura-viewer-header.with-gradient {
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.62) 0%, transparent 100%);
+.aura-header-location-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
 }
 
 .aura-user-meta {
@@ -4597,17 +4608,24 @@ select {
 
 .aura-viewer-footer-wrapper {
   position: absolute;
-  bottom: 24px;
+  bottom: 0;
   left: 0;
   right: 0;
+  height: 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 1000;
   pointer-events: none;
 }
 
 .aura-viewer-footer {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 900;
   color: rgba(255, 255, 255, 0.2);
   letter-spacing: 0.1em;
@@ -6017,49 +6035,7 @@ select {
   transition: mask-image 1.5s ease, -webkit-mask-image 1.5s ease;
 }
 
-/* Location tag and caption styles in Moment Viewer */
-.aura-image-location-pill {
-  position: absolute;
-  bottom: 136px;
-  right: 16px;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 6px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #ffffff;
-  pointer-events: none;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.25);
-  transition: all 0.3s ease;
-}
-
-.aura-location-header {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.aura-location-text {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #ffffff;
-  letter-spacing: 0.01em;
-}
-
-.aura-location-sub {
-  font-size: 0.55rem;
-  color: rgba(255, 255, 255, 0.45);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
+/* Caption styles in Moment Viewer */
 .aura-image-caption-pill {
   position: absolute;
   bottom: 80px;
@@ -6081,24 +6057,8 @@ select {
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
-/* Mobile responsive styles for location pill and caption */
+/* Mobile responsive styles for caption */
 @media (max-width: 768px) {
-  .aura-image-location-pill {
-    bottom: 120px;
-    right: 12px;
-    padding: 4px 10px;
-    border-radius: 12px;
-    gap: 1px;
-  }
-  
-  .aura-location-text {
-    font-size: 0.65rem;
-  }
-  
-  .aura-location-sub {
-    font-size: 0.48rem;
-  }
-  
   .aura-image-caption-pill {
     bottom: 72px;
     padding: 6px 14px;

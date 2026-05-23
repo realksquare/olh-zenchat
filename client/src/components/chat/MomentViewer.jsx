@@ -259,6 +259,17 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                         </div>
                                     )}
                                 </div>
+                                {currentMoment.locationTag && (
+                                    <div className="aura-header-location">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginRight: '3px' }}>
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                            <circle cx="12" cy="10" r="3" />
+                                        </svg>
+                                        <span className="aura-header-location-text">
+                                            {currentMoment.locationTag}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -335,22 +346,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                 className="viewer-main-media" 
                                 style={FILTER_STYLES[currentMoment.filter] || FILTER_STYLES.none}
                             />
-                            {currentMoment.locationTag && (
-                                <div className="aura-image-location-pill">
-                                    <div className="aura-location-header">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }} className="aura-location-icon">
-                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                                            <circle cx="12" cy="10" r="3" />
-                                        </svg>
-                                        <span className="aura-location-text">
-                                            {currentMoment.locationTag}
-                                        </span>
-                                    </div>
-                                    <div className="aura-location-sub">
-                                        #moments. on OLH ZenChat
-                                    </div>
-                                </div>
-                            )}
+
                             {currentMoment.caption && currentMoment.caption.trim().length >= 3 && (
                                 <div className="aura-image-caption-pill">
                                     {currentMoment.caption}
