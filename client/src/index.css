@@ -481,17 +481,29 @@ select {
   min-width: 0;
   overflow: hidden;
 }
+.sidebar-profile-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2); /* Tight, neat 8px gap between buttons */
+  flex-shrink: 0;
+}
 
-.sidebar-logout {
+.sidebar-profile-btn {
   color: #475569;
-  padding: var(--space-1);
+  padding: var(--space-1); /* 4px padding */
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: color var(--transition-interactive, 0.15s ease), background-color var(--transition-interactive, 0.15s ease);
 }
 
-.sidebar-logout:hover {
+.sidebar-profile-btn:hover {
+  color: var(--color-primary);
+  background-color: var(--color-surface-offset);
+}
+
+.sidebar-profile-btn.logout:hover {
   color: #f87171;
 }
 

@@ -42,9 +42,6 @@ const Sidebar = ({ onChatSelect }) => {
     const [isAdminOpen, setIsAdminOpen] = useState(false);
     const [isFAQOpen, setIsFAQOpen] = useState(false);
     const [isE2EEInfoOpen, setIsE2EEInfoOpen] = useState(false);
-    const [hoverE2EE, setHoverE2EE] = useState(false);
-    const [hoverHome, setHoverHome] = useState(false);
-    const [hoverPWA, setHoverPWA] = useState(false);
     const [pwaPrompt, setPwaPrompt] = useState(window.deferredPrompt || null);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [isMomentCreatorOpen, setIsMomentCreatorOpen] = useState(false);
@@ -296,115 +293,66 @@ const Sidebar = ({ onChatSelect }) => {
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{user?.username}</span>
                     {user?.isVerified && <VerifiedTick style={{ marginLeft: 0, flexShrink: 0 }} />}
                 </span>
-                <button 
-                    onClick={() => setIsE2EEInfoOpen(true)} 
-                    aria-label="E2EE Security Info" 
-                    title="E2EE Security Info"
-                    style={{ 
-                        color: hoverE2EE ? "var(--color-primary)" : "#475569",
-                        padding: "4px",
-                        borderRadius: "4px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginRight: "8px",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        transition: "color 0.15s ease"
-                    }}
-                    onMouseEnter={() => setHoverE2EE(true)}
-                    onMouseLeave={() => setHoverE2EE(false)}
-                >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                </button>
-                <button
-                    onClick={() => window.open("/intro", "_blank", "noopener,noreferrer")}
-                    aria-label="ZenChat Home / About"
-                    title="ZenChat Home"
-                    style={{
-                        color: hoverHome ? "var(--color-primary)" : "#475569",
-                        padding: "4px",
-                        borderRadius: "4px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginRight: "8px",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        transition: "color 0.15s ease"
-                    }}
-                    onMouseEnter={() => setHoverHome(true)}
-                    onMouseLeave={() => setHoverHome(false)}
-                >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                        <polyline points="9 22 9 12 15 12 15 22" />
-                    </svg>
-                </button>
-                {!isStandalone && (
+                <div className="sidebar-profile-actions">
                     <button 
-                        onClick={handlePwaButtonClick}
-                        aria-label="Download App" 
-                        title={isPwaInstalled ? "Open PWA" : "Install ZenChat App"}
-                        style={{ 
-                            color: hoverPWA ? "var(--color-primary)" : "#475569",
-                            padding: "4px",
-                            borderRadius: "4px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            marginRight: "8px",
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            transition: "color 0.15s ease"
-                        }}
-                        onMouseEnter={() => setHoverPWA(true)}
-                        onMouseLeave={() => setHoverPWA(false)}
+                        className="sidebar-profile-btn"
+                        onClick={() => setIsE2EEInfoOpen(true)} 
+                        aria-label="E2EE Security Info" 
+                        title="E2EE Security Info"
                     >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                            <polyline points="7 10 12 15 17 10" />
-                            <line x1="12" y1="15" x2="12" y2="3" />
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                         </svg>
                     </button>
-                )}
-                <button
-                    onClick={() => setIsVaultOpen(true)}
-                    style={{ 
-                        color: "#475569",
-                        padding: "4px",
-                        borderRadius: "4px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginRight: "8px",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        transition: "color 0.15s ease"
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = "var(--color-primary)"}
-                    onMouseLeave={(e) => e.currentTarget.style.color = "#475569"}
-                    title="Open Secure Local Safe (ZenVault)"
-                    aria-label="ZenVault"
-                >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    </svg>
-                </button>
-                <button className="sidebar-logout" onClick={() => setShowLogoutConfirm(true)} aria-label="Sign out" title="Sign out">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                        <polyline points="16 17 21 12 16 7" />
-                        <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                </button>
+                    <button
+                        className="sidebar-profile-btn"
+                        onClick={() => window.open("/intro", "_blank", "noopener,noreferrer")}
+                        aria-label="ZenChat Home / About"
+                        title="ZenChat Home"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                            <polyline points="9 22 9 12 15 12 15 22" />
+                        </svg>
+                    </button>
+                    {!isStandalone && (
+                        <button 
+                            className="sidebar-profile-btn"
+                            onClick={handlePwaButtonClick}
+                            aria-label="Download App" 
+                            title={isPwaInstalled ? "Open PWA" : "Install ZenChat App"}
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                        </button>
+                    )}
+                    <button
+                        className="sidebar-profile-btn"
+                        onClick={() => setIsVaultOpen(true)}
+                        title="Open Secure Local Safe (ZenVault)"
+                        aria-label="ZenVault"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                    </button>
+                    <button 
+                        className="sidebar-profile-btn logout" 
+                        onClick={() => setShowLogoutConfirm(true)} 
+                        aria-label="Sign out" 
+                        title="Sign out"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                            <polyline points="16 17 21 12 16 7" />
+                            <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <MomentsRow 
