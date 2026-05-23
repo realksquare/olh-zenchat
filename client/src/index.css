@@ -6442,6 +6442,29 @@ select {
   }
 }
 
+.zen-offline-banner {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin: 0 16px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fca5a5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: zen-fade-in 0.3s ease forwards;
+}
+
+@media (max-width: 768px) {
+  .zen-offline-banner {
+    margin: 0 12px 8px;
+    padding: 8px 12px;
+    font-size: 0.78rem;
+  }
+}
+
 
 
 

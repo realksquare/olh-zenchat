@@ -14,6 +14,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const user = useAuthStore((s) => s.user);
     const { toggleStarMessage, markViewOnceAsViewed } = useChatStore.getState();
     const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
+    const isZenMode = useChatStore((s) => s.isZenMode);
     const [manualLoad, setManualLoad] = useState(false);
     const shouldDelayLoad = isLowBandwidth && !isMe && !manualLoad;
     const status = message?.status ?? "sent";
@@ -409,15 +410,17 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
 
                 {!isMobile && (
                     <div className={`message-dropdown ${mobileDropdown ? "mobile-visible" : ""} ${!isMe ? "theirs-dropdown" : ""}`}>
-                        <button
-                            className="message-dropdown-item"
-                            onMouseDown={(e) => { e.preventDefault(); setMobileDropdown(false); toggleStarMessage(message._id, message.chatId); }}
-                        >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
-                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                            </svg>
-                            <span>{message.starredBy?.includes(user?._id) ? "Unfav" : "Fav"}</span>
-                        </button>
+                        {!isZenMode && (
+                            <button
+                                className="message-dropdown-item"
+                                onMouseDown={(e) => { e.preventDefault(); setMobileDropdown(false); toggleStarMessage(message._id, message.chatId); }}
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                </svg>
+                                <span>{message.starredBy?.includes(user?._id) ? "Unfav" : "Fav"}</span>
+                            </button>
+                        )}
                         {canReply && (
                             <button
                                 className="message-dropdown-item"
@@ -429,7 +432,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                 <span>Reply</span>
                             </button>
                         )}
-                        {isMe && canDelete && (
+                        {isMe && canDelete && !isZenMode && (
                             <>
                                 {isWithinEditWindow && (
                                     <button
@@ -497,33 +500,35 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                             Message Options
                         </div>
 
-                        <button
-                            className="bottom-sheet-item"
-                            onClick={() => { setMobileDropdown(false); toggleStarMessage(message._id, message.chatId); }}
-                            style={{
-                                width: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px',
-                                padding: '14px 16px',
-                                background: 'transparent',
-                                border: 'none',
-                                borderRadius: '12px',
-                                color: '#c9d1d9',
-                                fontSize: '0.92rem',
-                                fontWeight: 500,
-                                textAlign: 'left',
-                                cursor: 'pointer',
-                                transition: 'background 0.15s ease'
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                        >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill={message.starredBy?.includes(user?._id) ? "#eab308" : "none"} stroke={message.starredBy?.includes(user?._id) ? "#eab308" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                            </svg>
-                            <span>{message.starredBy?.includes(user?._id) ? "Unfavorite Message" : "Favorite Message"}</span>
-                        </button>
+                        {!isZenMode && (
+                            <button
+                                className="bottom-sheet-item"
+                                onClick={() => { setMobileDropdown(false); toggleStarMessage(message._id, message.chatId); }}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    padding: '14px 16px',
+                                    background: 'transparent',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    color: '#c9d1d9',
+                                    fontSize: '0.92rem',
+                                    fontWeight: 500,
+                                    textAlign: 'left',
+                                    cursor: 'pointer',
+                                    transition: 'background 0.15s ease'
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill={message.starredBy?.includes(user?._id) ? "#eab308" : "none"} stroke={message.starredBy?.includes(user?._id) ? "#eab308" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                </svg>
+                                <span>{message.starredBy?.includes(user?._id) ? "Unfavorite Message" : "Favorite Message"}</span>
+                            </button>
+                        )}
 
                         {canReply && (
                             <button
@@ -555,7 +560,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                             </button>
                         )}
 
-                        {isMe && canDelete && (
+                        {isMe && canDelete && !isZenMode && (
                             <>
                                 {isWithinEditWindow && (
                                     <button

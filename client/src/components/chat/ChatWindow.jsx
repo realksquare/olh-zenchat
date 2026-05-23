@@ -574,6 +574,12 @@ const ChatWindow = ({ onBack }) => {
     const otherUser = isDeleted ? null : otherParticipant;
     const otherUserId = otherUser?._id?.toString() || otherParticipant?._id?.toString() || otherParticipant?.toString();
 
+    const isPeerOnline = useMemo(() => {
+        if (!otherUser) return false;
+        return !isOffline && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked && 
+               (otherUser.isOnline || onlineUsers.has(otherUser._id) || onlineUsers.has(otherUser._id?.toString()));
+    }, [otherUser, isOffline, activeChat?.blockStatus?.iBlocked, activeChat?.blockStatus?.theyBlocked, onlineUsers]);
+
     const messages = useMemo(() => {
         const currentUserId = user?._id;
         const sorted = [...rawMessages].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
@@ -609,6 +615,9 @@ const ChatWindow = ({ onBack }) => {
     const waitingTimeoutRef = useRef(null);
     const countdownIntervalRef = useRef(null);
     const toastTimeoutRef = useRef(null);
+    const [offlineCountdown, setOfflineCountdown] = useState(null);
+    const offlineCountdownIntervalRef = useRef(null);
+    const zenExitTimeoutCountRef = useRef(0);
 
     const clearZenTimers = useCallback(() => {
         if (waitingTimeoutRef.current) {
@@ -618,6 +627,10 @@ const ChatWindow = ({ onBack }) => {
         if (countdownIntervalRef.current) {
             clearInterval(countdownIntervalRef.current);
             countdownIntervalRef.current = null;
+        }
+        if (offlineCountdownIntervalRef.current) {
+            clearInterval(offlineCountdownIntervalRef.current);
+            offlineCountdownIntervalRef.current = null;
         }
     }, []);
 
@@ -644,6 +657,9 @@ const ChatWindow = ({ onBack }) => {
         waitingTimeoutRef.current = setTimeout(() => {
             clearZenTimers();
             if (type === "invite-waiting" || type === "exit-waiting") {
+                if (type === "exit-waiting") {
+                    zenExitTimeoutCountRef.current += 1;
+                }
                 setZenWaitingState("no-response");
                 showZenToast("info", "User didn't respond");
                 setTimeout(() => {
@@ -734,6 +750,20 @@ const ChatWindow = ({ onBack }) => {
             setZenWaitingState("invite-waiting");
             startZenTimer("invite-waiting");
         } else {
+            if (zenExitTimeoutCountRef.current >= 2) {
+                clearZenTimers();
+                zenExitTimeoutCountRef.current = 0;
+                socket.emit("zen_exit_respond", {
+                    chatId: activeChat._id,
+                    responderId: user._id,
+                    requesterId: otherUser._id,
+                    accepted: true
+                });
+                triggerCircularReveal(window.innerWidth / 2, window.innerHeight / 2, false);
+                showZenToast("success", "ZenMode ended after consecutive timeouts");
+                return;
+            }
+
             socket.emit("zen_exit_request", {
                 chatId: activeChat._id,
                 senderId: user._id,
@@ -742,7 +772,7 @@ const ChatWindow = ({ onBack }) => {
             setZenWaitingState("exit-waiting");
             startZenTimer("exit-waiting");
         }
-    }, [isZenMode, socket, activeChat?._id, user?._id, otherUser?._id, startZenTimer]);
+    }, [isZenMode, socket, activeChat?._id, user?._id, otherUser?._id, startZenTimer, triggerCircularReveal, showZenToast, clearZenTimers]);
 
     const handleSkipIntro = useCallback((e) => {
         if (e) e.stopPropagation();
@@ -839,6 +869,7 @@ const ChatWindow = ({ onBack }) => {
             if (activeChat?._id === chatId) {
                 clearZenTimers();
                 setIncomingZenExit(null);
+                zenExitTimeoutCountRef.current = 0;
 
                 if (accepted) {
                     setZenWaitingState(null);
@@ -889,6 +920,54 @@ const ChatWindow = ({ onBack }) => {
             socket.emit("zen_mode_status", { isZenMode });
         }
     }, [isZenMode, socket, socket?.connected]);
+
+    useEffect(() => {
+        if (isZenMode && !isPeerOnline) {
+            if (offlineCountdownIntervalRef.current) return;
+            
+            let remaining = 30;
+            setOfflineCountdown(remaining);
+            
+            offlineCountdownIntervalRef.current = setInterval(() => {
+                remaining -= 1;
+                if (remaining > 0) {
+                    setOfflineCountdown(remaining);
+                } else {
+                    clearInterval(offlineCountdownIntervalRef.current);
+                    offlineCountdownIntervalRef.current = null;
+                    setOfflineCountdown(null);
+                    
+                    if (socket?.connected) {
+                        socket.emit("zen_exit_respond", { 
+                            chatId: activeChat._id, 
+                            responderId: user._id, 
+                            requesterId: otherUserId, 
+                            accepted: true 
+                        });
+                    }
+                    triggerCircularReveal(window.innerWidth / 2, window.innerHeight / 2, false);
+                    showZenToast("info", "ZenMode ended due to inactivity");
+                }
+            }, 1000);
+        } else {
+            if (offlineCountdownIntervalRef.current) {
+                clearInterval(offlineCountdownIntervalRef.current);
+                offlineCountdownIntervalRef.current = null;
+                
+                if (isZenMode && isPeerOnline && offlineCountdown !== null) {
+                    showZenToast("success", `${displayName || "User"} came back online`);
+                }
+            }
+            setOfflineCountdown(null);
+        }
+        
+        return () => {
+            if (offlineCountdownIntervalRef.current) {
+                clearInterval(offlineCountdownIntervalRef.current);
+                offlineCountdownIntervalRef.current = null;
+            }
+        };
+    }, [isZenMode, isPeerOnline, activeChat?._id, user?._id, otherUserId, socket, triggerCircularReveal, showZenToast, displayName, offlineCountdown]);
 
     const handleToggleDisappearing = async (mode) => {
         try {
@@ -998,10 +1077,13 @@ const ChatWindow = ({ onBack }) => {
         setEditingMessage(null);
         setReplyingTo(null);
         setDeletingMessage(null);
+        zenExitTimeoutCountRef.current = 0;
+        clearZenTimers();
+        setOfflineCountdown(null);
         if (useChatStore.getState().isZenMode) {
             useChatStore.getState().toggleZenMode();
         }
-    }, [activeChat?._id]);
+    }, [activeChat?._id, clearZenTimers]);
 
     useEffect(() => {
         if (activeChat?._id && updateLowBandwidth) {
@@ -1329,6 +1411,17 @@ const ChatWindow = ({ onBack }) => {
                     <div style={{ marginTop: '4px', fontSize: '0.7rem', opacity: 0.6 }}>
                         This account has been deleted.
                     </div>
+                </div>
+            )}
+
+            {offlineCountdown !== null && (
+                <div className="zen-offline-banner">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" style={{ marginRight: '8px', flexShrink: 0 }}>
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <span>@{displayName || "User"} has gone offline - exiting #ZenMode in {offlineCountdown} seconds</span>
                 </div>
             )}
 
