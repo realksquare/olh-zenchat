@@ -420,6 +420,8 @@ export const SocketProvider = ({ children }) => {
             const chatStore = useChatStore.getState();
             chatStore.clearOnlinePresence();
             
+            socket.emit("zen_mode_status", { isZenMode: chatStore.isZenMode });
+            
             const activeChat = chatStore.activeChat;
             const isLowBandwidth = chatStore.isLowBandwidth;
             
@@ -592,7 +594,7 @@ export const SocketProvider = ({ children }) => {
     useEffect(() => { flushOutboxRef.current = flushOutbox; }, [flushOutbox]);
 
     const flushMediaOutbox = useCallback(async () => {
-        if (!socketRef.current?.connected || !navigator.onLine) return;
+        if (!socketRef.current?.connected) return;
         const pending = await drainPendingMedia();
         if (!pending.length) return;
         for (const item of pending) {
@@ -677,7 +679,7 @@ export const SocketProvider = ({ children }) => {
             }
         }
 
-        if (socketRef.current?.connected && navigator.onLine) {
+        if (socketRef.current?.connected) {
             socketRef.current.emit("send_message", payload);
         } else {
             enqueueOutbox(payload);

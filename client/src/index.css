@@ -1256,10 +1256,10 @@ select {
 
 .message-bubble.mine.status-seen,
 .message-bubble.mine.status-read {
-  background: #0d9488;
+  background: #0b7f73;
   
   color: #fff;
-  box-shadow: 0 4px 15px rgba(13, 148, 136, 0.2);
+  box-shadow: 0 4px 15px rgba(11, 127, 115, 0.2);
 }
 
 .message-text {

@@ -156,7 +156,7 @@ export const useChatStore = create(
                         get().checkNetworkSpeed();
                         window.netCheckInterval = setInterval(() => {
                             get().checkNetworkSpeed();
-                        }, 3000);
+                        }, 7000);
                     }, 6000);
                 }
 

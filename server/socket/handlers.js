@@ -277,6 +277,7 @@ const registerSocketHandlers = (io) => {
                         });
                     }
 
+                    const visibleOnlineUserIds = [];
                     for (const [otherId, otherData] of onlineUsers.entries()) {
                         if (otherId === userId) continue;
 
@@ -307,7 +308,7 @@ const registerSocketHandlers = (io) => {
                         }
 
                         if (canSee) {
-                            socket.emit("user_online", { userId: otherId });
+                            visibleOnlineUserIds.push(otherId);
                             if (otherData?.isZenMode) {
                                 socket.emit("user_zen_status", { userId: otherId, isZenMode: true });
                             }
@@ -319,6 +320,7 @@ const registerSocketHandlers = (io) => {
                             }
                         }
                     }
+                    socket.emit("online_users", { userIds: visibleOnlineUserIds });
 
                 } catch (err) {
                     console.error("Error in connection async block:", err);

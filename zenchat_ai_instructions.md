@@ -15,7 +15,7 @@ These are the core operating principles and coding standards to be followed for 
 
 ## 3. Development & Debugging
 - **Print Logs When Needed:** When debugging, use `console.log`, `console.warn`, and `console.error` appropriately. Do not clutter logs with excessive output.
-- **Free to use any terminal commands or browser preview:** You can use any terminal commands or browser preview to debug or fix issues.
+- **Free to use any terminal commands or browser preview:** You can use any terminal commands or browser preview to debug or fix issues - Prefer Command Prompt over Windows PowerShell cuz it can run all commands whereas the latter won't allow some commands.
 
 ## 4. Error Handling
 - **Graceful Failures:** Handle errors gracefully and provide meaningful feedback to the user. Do not leave the application in an inconsistent state.
@@ -27,4 +27,4 @@ These are the core operating principles and coding standards to be followed for 
 - **UI Consistency:** When adding new UI elements, ensure the styles and UI of the new elements are consistent with the existing UI elements, unless the component being added is intended to be visually distinct/unique from the components around it.
 
 ## 6. Version Control Protocol
-- **Comprehensive Commits:** After completing changes or building new features, ensure all files are staged before pushing. Always use `git add .` (or `git add -A`) to ensure no newly created files or subtle changes are left behind before committing (based on the changes done) and finally pushing to GitHub (`git push origin main`) to the repo `github.com/realksquare/olh-zenchat`.
+- **Comprehensive Commits:** After completing changes or building new features, ensure all files are staged before pushing. Always use `git add .` (or `git add -A`) to ensure no newly created files or subtle changes are left behind before committing (`git commit -m` based on the changes done) and finally pushing to GitHub (`git push origin main`) to the repo `github.com/realksquare/olh-zenchat`. 

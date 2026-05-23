@@ -93,7 +93,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
 
     const handleViewOnce = () => {
         if (onMediaClick && message.mediaUrl) {
-            onMediaClick(message.mediaUrl, message.type);
+            onMediaClick(message.mediaUrl, message.type, true);
             markViewOnceAsViewed(message._id, message.chatId);
         }
     };
@@ -208,7 +208,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                         if (shouldDelayLoad) {
                                             setManualLoad(true);
                                         } else if (onMediaClick) {
-                                            onMediaClick(message.mediaUrl, message.type);
+                                            onMediaClick(message.mediaUrl, message.type, message.isViewOnce || false);
                                         }
                                     }} 
                                     onDoubleClick={(e) => e.stopPropagation()} 
@@ -400,12 +400,6 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                 </svg>
                             )}
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                {isZenMode && (
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.65, flexShrink: 0 }}>
-                                        <circle cx="12" cy="12" r="10" />
-                                        <polyline points="12 6 12 12 16 14" />
-                                    </svg>
-                                )}
                                 <span className="message-time">
                                     {new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                                 </span>

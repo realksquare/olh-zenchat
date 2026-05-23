@@ -533,7 +533,7 @@ const ChatWindow = ({ onBack }) => {
     const {
         activeChat, fetchMessages, fetchOlderMessages, isLoadingMessages, isLoadingOlderMessages,
         typingUsers, markChatAsRead, onlineUsers, hasMoreMessages, isLowBandwidth, peerLowBandwidth, isOffline,
-        isZenMode, toggleZenMode, zenUsers
+        isZenMode, toggleZenMode, setZenModeState, zenUsers
     } = useChatStore(useShallow((s) => ({
         activeChat: s.activeChat,
         fetchMessages: s.fetchMessages,
@@ -549,6 +549,7 @@ const ChatWindow = ({ onBack }) => {
         isOffline: s.isOffline,
         isZenMode: s.isZenMode,
         toggleZenMode: s.toggleZenMode,
+        setZenModeState: s.setZenModeState,
         zenUsers: s.zenUsers
     })));
 
@@ -666,9 +667,7 @@ const ChatWindow = ({ onBack }) => {
     const triggerCircularReveal = useCallback((x, y, nextZenState) => {
         setRevealCircle({ x, y, fading: false });
         setTimeout(() => {
-            if (useChatStore.getState().isZenMode !== nextZenState) {
-                toggleZenMode();
-            }
+            useChatStore.getState().setZenModeState(nextZenState);
         }, 400);
         setTimeout(() => {
             setRevealCircle(prev => prev ? { ...prev, fading: true } : null);
@@ -676,7 +675,7 @@ const ChatWindow = ({ onBack }) => {
         setTimeout(() => {
             setRevealCircle(null);
         }, 3600);
-    }, [toggleZenMode]);
+    }, []);
 
     /* CINEMATIC SEQUENCE COMMENTED OUT — preserved for future use
     const runCinematicSequence = useCallback((clientX, clientY) => {
@@ -738,18 +737,16 @@ const ChatWindow = ({ onBack }) => {
         setCinematicPhase(null);
         localStorage.setItem("zen_intro_shown", "true");
         if (!isZenMode) {
-            toggleZenMode();
+            useChatStore.getState().setZenModeState(true);
         }
-    }, [isZenMode, toggleZenMode, clearCinematicTimers]);
+    }, [isZenMode, clearCinematicTimers]);
 
     useEffect(() => {
         return () => {
             clearCinematicTimers();
             stopZenIntroAudio();
             clearOfflineTimers();
-            if (useChatStore.getState().isZenMode) {
-                useChatStore.getState().toggleZenMode();
-            }
+            useChatStore.getState().setZenModeState(false);
         };
     }, [clearCinematicTimers, clearOfflineTimers]);
 
@@ -885,7 +882,7 @@ const ChatWindow = ({ onBack }) => {
                 clearInterval(offlineCountdownIntervalRef.current);
                 offlineCountdownIntervalRef.current = null;
                 
-                if (isZenMode && isPeerOnline && offlineCountdown !== null) {
+                if (isZenMode && isPeerOnline) {
                     showZenToast("success", `${displayName || "User"} came back online`);
                 }
             }
@@ -898,7 +895,16 @@ const ChatWindow = ({ onBack }) => {
                 offlineCountdownIntervalRef.current = null;
             }
         };
-    }, [isZenMode, isPeerOnline, activeChat?._id, user?._id, otherUserId, socket, triggerCircularReveal, showZenToast, displayName, offlineCountdown]);
+    }, [isZenMode, isPeerOnline, activeChat?._id, user?._id, otherUserId, socket, triggerCircularReveal, showZenToast, displayName]);
+
+    useEffect(() => {
+        if (!activeChat?._id || !otherUserId) return;
+        const otherZen = zenUsers[otherUserId];
+        if (isZenMode && isPeerOnline && otherZen === false) {
+            triggerCircularReveal(window.innerWidth / 2, window.innerHeight / 2, false);
+            showZenToast("info", "ZenMode ended because peer is no longer in #ZenMode");
+        }
+    }, [isZenMode, zenUsers, otherUserId, isPeerOnline, triggerCircularReveal, showZenToast, activeChat?._id]);
 
     useEffect(() => {
         if (!activeChat?._id) return;
@@ -943,9 +949,7 @@ const ChatWindow = ({ onBack }) => {
         zenExitTimeoutCountRef.current = 0;
         clearZenTimers();
         setOfflineCountdown(null);
-        if (useChatStore.getState().isZenMode) {
-            useChatStore.getState().toggleZenMode();
-        }
+        useChatStore.getState().setZenModeState(false);
     }, [activeChat?._id, clearZenTimers]);
 
     useEffect(() => {
@@ -1233,14 +1237,14 @@ const ChatWindow = ({ onBack }) => {
                                 canDelete={!msg.deletedForEveryone && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked}
                                 canReply={!msg.deletedForEveryone && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked}
                                 zenFadeClass={zenFadeClass}
-                                onMediaClick={(url, type) => {
+                                onMediaClick={(url, type, isViewOnce) => {
                                     if (type === "file") {
                                         setSelectedDoc({ url, fileName: msg.content || "document" });
                                     } else {
                                         const senderName = (msg.senderId?._id === user?._id || msg.senderId === user?._id)
                                             ? "me"
                                             : (msg.senderId?.username || otherUser?.username || "user");
-                                        setSelectedMedia({ url, type, username: senderName });
+                                        setSelectedMedia({ url, type, username: senderName, isViewOnce });
                                     }
                                 }}
                             />
@@ -1354,6 +1358,7 @@ const ChatWindow = ({ onBack }) => {
                     url={selectedMedia.url}
                     type={selectedMedia.type}
                     username={selectedMedia.username}
+                    isViewOnce={selectedMedia.isViewOnce}
                     onClose={() => setSelectedMedia(null)}
                 />
             )}
