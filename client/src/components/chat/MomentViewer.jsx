@@ -32,6 +32,22 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const locationContentRef = useRef(null);
     const [locMarqueeDist, setLocMarqueeDist] = useState(0);
 
+    // Make the viewer reactive by pulling the latest moments for this user
+    const allMoments = useMomentStore((s) => s.moments);
+    const currentUserId = useAuthStore((s) => s.user?._id);
+
+    const moments = useMemo(() => {
+        if (!initialMoments || initialMoments.length === 0) return [];
+        // Cast to string to avoid object comparison issues
+        const targetUserId = (initialMoments[0].userId?._id || initialMoments[0].userId)?.toString();
+        if (!targetUserId) return initialMoments; // Fallback to initial if ID extraction fails
+        
+        const filtered = allMoments.filter(m => (m.userId?._id || m.userId)?.toString() === targetUserId);
+        return filtered.length > 0 ? filtered : initialMoments;
+    }, [allMoments, initialMoments]);
+
+    const currentMoment = moments[currentIndex];
+
     useEffect(() => {
         const measure = () => {
             if (!locationContainerRef.current || !locationContentRef.current) {
@@ -50,22 +66,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             setLocMarqueeDist(0);
         }
     }, [currentMoment?.locationTag, currentIndex, isOpen]);
-    
-    // Make the viewer reactive by pulling the latest moments for this user
-    const allMoments = useMomentStore((s) => s.moments);
-    const currentUserId = useAuthStore((s) => s.user?._id);
-
-    const moments = useMemo(() => {
-        if (!initialMoments || initialMoments.length === 0) return [];
-        // Cast to string to avoid object comparison issues
-        const targetUserId = (initialMoments[0].userId?._id || initialMoments[0].userId)?.toString();
-        if (!targetUserId) return initialMoments; // Fallback to initial if ID extraction fails
-        
-        const filtered = allMoments.filter(m => (m.userId?._id || m.userId)?.toString() === targetUserId);
-        return filtered.length > 0 ? filtered : initialMoments;
-    }, [allMoments, initialMoments]);
-
-    const currentMoment = moments[currentIndex];
 
     // Handle array shrinking (deletion)
     useEffect(() => {

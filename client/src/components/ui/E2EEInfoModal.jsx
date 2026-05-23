@@ -1,14 +1,24 @@
-import { memo, useEffect } from "react";
+import { memo, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 const E2EEInfoModal = ({ isOpen, onClose }) => {
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
     useEffect(() => {
-        if (isOpen) {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    useEffect(() => {
+        // Scroll lock only on desktop to prevent mobile sticky scroll issues
+        if (isOpen && !isMobile) {
             document.body.style.overflow = "hidden";
             return () => {
                 document.body.style.overflow = "";
             };
         }
-    }, [isOpen]);
+    }, [isOpen, isMobile]);
 
     if (!isOpen) return null;
 
@@ -35,7 +45,32 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
         }
     ];
 
-    return (
+    if (isMobile) {
+        return createPortal(
+            <div className="mobile-bottom-sheet-overlay" onClick={onClose} style={{ zIndex: 2000 }}>
+                <div className="mobile-bottom-sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: '82vh', display: 'flex', flexDirection: 'column', gap: '0', padding: '16px 20px 24px' }}>
+                    <div className="mobile-bottom-sheet-handle" />
+                    <div className="mobile-bottom-sheet-header" style={{ marginBottom: '14px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
+                        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff' }}>End-to-End Encryption FAQ</h3>
+                    </div>
+                    <div className="mobile-bottom-sheet-content" style={{ overflowY: 'auto', flex: 1, paddingRight: '4px', gap: '16px' }}>
+                        {infoContent.map((item, i) => (
+                            <div key={i} className="faq-item" style={{ marginBottom: '16px' }}>
+                                <h4 style={{ color: 'var(--color-primary)', fontSize: '0.92rem', fontWeight: 600, marginBottom: '6px', marginTop: 0 }}>{item.q}</h4>
+                                <p style={{ color: '#94a3b8', fontSize: '0.82rem', lineHeight: '1.5', margin: 0 }}>{item.a}</p>
+                            </div>
+                        ))}
+                        <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', fontSize: '0.78rem', color: '#64748b', textAlign: 'center' }}>
+                            Zero-Knowledge Security | ZenChat E2EE Protocol v1.0b
+                        </div>
+                    </div>
+                </div>
+            </div>,
+            document.body
+        );
+    }
+
+    return createPortal(
         <div className="admin-modal-overlay" onClick={onClose} style={{ zIndex: 2000 }}>
             <div className="admin-modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
                 <div className="admin-header">
@@ -61,7 +96,8 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

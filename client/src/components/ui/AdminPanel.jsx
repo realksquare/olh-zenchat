@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import axiosInstance from "../../utils/axios";
 import { useAuthStore } from "../../stores/authStore";
 
@@ -89,15 +90,16 @@ const AdminPanel = ({ onClose }) => {
         }
     };
 
-    if (loading) return (
+    if (loading) return createPortal(
         <div className="admin-modal-overlay">
             <div className="admin-modal-content">
                 <div className="loader" />
             </div>
-        </div>
+        </div>,
+        document.body
     );
 
-    return (
+    return createPortal(
         <div className="admin-modal-overlay" onClick={onClose}>
             {toast && <div className="aura-toast" style={{ zIndex: 9999 }}>🔔 {toast}</div>}
             <div className="admin-modal-content" onClick={e => e.stopPropagation()}>
@@ -249,7 +251,8 @@ const AdminPanel = ({ onClose }) => {
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 
