@@ -605,7 +605,8 @@ const ChatWindow = ({ onBack }) => {
         showZenToast,
         clearZenTimers,
         setShowExitConfirm,
-        hasInitiatedBackRef
+        hasInitiatedBackRef,
+        zenExitTimeoutCountRef
     } = useSocket();
     const messagesEndRef = useRef(null);
     const isLoadingOlderRef = useRef(false);
