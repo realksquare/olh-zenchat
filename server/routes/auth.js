@@ -277,6 +277,51 @@ router.post("/referral/click/:username", async (req, res) => {
     }
 });
 
+router.get("/debug-login-err", async (req, res) => {
+    try {
+        const email = "onlinelearninghubteam@gmail.com";
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.json({ error: "User not found" });
+        }
+        
+        const checks = {};
+        checks.userFound = true;
+        checks.userId = user._id;
+        checks.is2faEnabled = user.is2faEnabled;
+        checks.mfaPreference = user.mfaPreference;
+        checks.isSuspended = user.isSuspended;
+        
+        try {
+            await User.findByIdAndUpdate(user._id, { isOnline: true });
+            checks.isOnlineUpdated = true;
+        } catch (e) {
+            checks.isOnlineUpdatedError = e.message;
+        }
+        
+        try {
+            const populatedUser = await User.findById(user._id).populate("blockedUsers.userId", "username avatar");
+            checks.populated = true;
+            checks.populatedPrivateJSON = populatedUser.toPrivateJSON();
+        } catch (e) {
+            checks.populatedError = e.message;
+        }
+        
+        try {
+            checks.jwtSecretLength = process.env.JWT_SECRET ? process.env.JWT_SECRET.length : 0;
+            checks.jwtExpiresIn = process.env.JWT_EXPIRES_IN;
+            const token = generateToken(user);
+            checks.tokenGenerated = true;
+        } catch (e) {
+            checks.tokenGenerationError = e.stack || e.message;
+        }
+        
+        res.json({ success: true, checks });
+    } catch (err) {
+        res.status(500).json({ error: err.stack || err.message });
+    }
+});
+
 router.post(
     "/login",
     [
