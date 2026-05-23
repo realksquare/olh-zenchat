@@ -315,6 +315,34 @@ router.get("/debug-login-err", async (req, res) => {
         } catch (e) {
             checks.tokenGenerationError = e.stack || e.message;
         }
+
+        if (user.is2faEnabled) {
+            checks.is2faBranch = true;
+            try {
+                const otp = "123456";
+                checks.otp = otp;
+                
+                try {
+                    await send2faEmail(user.email, user.username, otp);
+                    checks.send2faEmailSucceeded = true;
+                } catch (emailErr) {
+                    checks.send2faEmailError = emailErr.stack || emailErr.message;
+                }
+                
+                try {
+                    user.verificationSession = {
+                        otpCode: otp,
+                        otpExpires: new Date(Date.now() + 5 * 60 * 1000)
+                    };
+                    await user.save();
+                    checks.userSaved = true;
+                } catch (saveErr) {
+                    checks.userSaveError = saveErr.stack || saveErr.message;
+                }
+            } catch (err2fa) {
+                checks.branch2faError = err2fa.stack || err2fa.message;
+            }
+        }
         
         res.json({ success: true, checks });
     } catch (err) {
