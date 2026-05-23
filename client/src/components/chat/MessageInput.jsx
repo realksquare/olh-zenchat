@@ -23,8 +23,22 @@ const ACCEPTED_RAW = [
 const ACCEPTED_ALL = [...ACCEPTED_IMAGE, ...ACCEPTED_VIDEO, ...ACCEPTED_RAW];
 const MAX_FILES = 3;
 
+const isImageFile = (file) => {
+    if (!file) return false;
+    const type = file.type || "";
+    const name = file.name ? file.name.toLowerCase() : "";
+    return ACCEPTED_IMAGE.includes(type) || !!name.match(/\.(jpg|jpeg|png|webp|gif)$/i);
+};
+
+const isVideoFile = (file) => {
+    if (!file) return false;
+    const type = file.type || "";
+    const name = file.name ? file.name.toLowerCase() : "";
+    return ACCEPTED_VIDEO.includes(type) || !!name.match(/\.(mp4|mov|webm|mpeg|avi|mkv)$/i);
+};
+
 const compressImage = (file, targetKB = 300) => new Promise((resolve) => {
-    if (!ACCEPTED_IMAGE.includes(file.type) || file.type === "image/gif") return resolve(file);
+    if (!isImageFile(file) || file.type === "image/gif") return resolve(file);
     const reader = new FileReader();
     reader.onload = (e) => {
         const img = new Image();
@@ -64,8 +78,8 @@ const MediaUploadPopup = ({ onClose, onFilesSelected, showToast }) => {
         const valid = [];
         const errors = [];
         for (const file of files) {
-            const isImage = ACCEPTED_IMAGE.includes(file.type);
-            const isVideo = ACCEPTED_VIDEO.includes(file.type);
+            const isImage = isImageFile(file);
+            const isVideo = isVideoFile(file);
             const isDoc = ACCEPTED_RAW.includes(file.type) || (file.name.match(/\.(pdf|doc|docx|zip|rar|txt)$/i));
 
             if (!isImage && !isVideo && !isDoc) {
@@ -158,7 +172,7 @@ const MediaPreview = ({ files, onRemove, onToggleQuality }) => {
     if (!files.length) return null;
 
     const getStagedFileSizeText = (file, isHD) => {
-        const isImage = ACCEPTED_IMAGE.includes(file.type);
+        const isImage = isImageFile(file);
         let size = file.size;
         if (isImage && !isHD) {
             size = Math.round(size * 0.78);
@@ -170,8 +184,8 @@ const MediaPreview = ({ files, onRemove, onToggleQuality }) => {
         <div className="media-preview-strip">
             {files.map((item, i) => {
                 const { file, isHD } = item;
-                const isImg = ACCEPTED_IMAGE.includes(file.type);
-                const isVid = ACCEPTED_VIDEO.includes(file.type);
+                const isImg = isImageFile(file);
+                const isVid = isVideoFile(file);
                 const isMedia = isImg || isVid;
                 const url = URL.createObjectURL(file);
                 return (
@@ -359,8 +373,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
 
             for (const item of files) {
                 const { file, isHD } = item;
-                const isVideo = ACCEPTED_VIDEO.includes(file.type);
-                const isImage = ACCEPTED_IMAGE.includes(file.type);
+                const isVideo = isVideoFile(file);
+                const isImage = isImageFile(file);
                 const isDoc = !isImage && !isVideo;
                 const msgType = isVideo ? "video" : isImage ? "image" : "file";
                 const uploadType = isVideo ? "video" : isImage ? "image" : "raw";
@@ -513,8 +527,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const getFileCategory = (file) => {
         const type = file.type;
         const name = file.name.toLowerCase();
-        const isImage = ACCEPTED_IMAGE.includes(type);
-        const isVideo = ACCEPTED_VIDEO.includes(type);
+        const isImage = isImageFile(file);
+        const isVideo = isVideoFile(file);
         if (isImage || isVideo) return "media";
         const isZip = type === "application/zip" || 
                       type === "application/x-zip-compressed" || 
@@ -706,7 +720,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     {isViewOnce && (
                         <span className="view-once-hint">View Once active</span>
                     )}
-                    {stagedFiles.some(f => ACCEPTED_IMAGE.includes(f.file.type)) && (
+                    {stagedFiles.some(f => isImageFile(f.file)) && (
                         <span className="view-once-hint" style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'var(--color-text-muted)', border: '1px solid rgba(255,255,255,0.08)' }}>
                             Double-tap image to toggle OG
                         </span>

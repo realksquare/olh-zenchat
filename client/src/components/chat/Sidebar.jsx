@@ -307,7 +307,7 @@ const Sidebar = ({ onChatSelect }) => {
                     </button>
                     <button
                         className="sidebar-profile-btn"
-                        onClick={() => window.open("/intro", "_blank", "noopener,noreferrer")}
+                        onClick={() => { window.location.href = "/intro"; }}
                         aria-label="ZenChat Home / About"
                         title="ZenChat Home"
                     >
@@ -536,7 +536,7 @@ const Sidebar = ({ onChatSelect }) => {
             )}
 
             {(user?.role === "master_admin" || user?.role === "co_admin") ? (
-                <div style={{ display: 'flex', flexDirection: 'column', padding: '0 16px 16px', gap: '8px' }}>
+                <div className="sidebar-footer-container">
                     <button className="sidebar-admin-btn" style={{ margin: 0, background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.2)' }} onClick={handleInviteClick}>
                         <InviteIcon size={18} />
                         Invite People
@@ -553,7 +553,7 @@ const Sidebar = ({ onChatSelect }) => {
                     </div>
                 </div>
             ) : (
-                <div className="sidebar-footer-dual" style={{ padding: '0 16px 16px' }}>
+                <div className="sidebar-footer-container sidebar-footer-container-dual">
                     <button className="footer-btn" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.2)' }} onClick={handleInviteClick}>
                         <InviteIcon size={16} />
                         Invite

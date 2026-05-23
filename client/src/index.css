@@ -456,7 +456,7 @@ select {
 .sidebar {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  height: 100%;
   overflow: hidden;
   overscroll-behavior-y: contain;
   position: relative;
@@ -1051,7 +1051,7 @@ select {
 .chat-window {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  height: 100%;
   width: 100%;
   overflow: hidden;
   position: relative;
@@ -2083,7 +2083,7 @@ select {
 .chat-window {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  height: 100%;
   width: 100%;
   overflow: hidden;
   position: relative;
@@ -3268,6 +3268,19 @@ select {
 }
 
 /* ── Dual Footer Bar ────────────────────────────────── */
+.sidebar-footer-container {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom));
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+.sidebar-footer-container-dual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
 .sidebar-footer-dual {
   margin: 12px;
   display: grid;
@@ -5707,7 +5720,7 @@ select {
 @media (max-width: 768px) { .chat-window {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  height: 100%;
   width: 100%;
   overflow: hidden;
   position: relative;
@@ -6493,7 +6506,18 @@ select {
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
 }
-
-
-
-
+@media (max-width: 768px) {
+  html, body {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  .home-layout {
+    height: 100% !important;
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+  }
+}

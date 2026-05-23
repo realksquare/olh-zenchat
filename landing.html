@@ -959,10 +959,57 @@
     }
     .footer-tagline { font-size: 0.8rem; color: var(--text-faint); }
     .footer-credit { font-size: 0.76rem; color: var(--text-faint); margin-top: 2px; }
-    .footer-links { display: flex; gap: 28px; list-style: none; }
+    .footer-links { display: flex; gap: 20px 28px; list-style: none; flex-wrap: wrap; }
     .footer-links a { font-size: 0.85rem; color: var(--text-muted); text-decoration: none; transition: color 150ms ease; }
     .footer-links a:hover { color: var(--text); }
     .footer-copy { font-size: 0.78rem; color: var(--text-faint); }
+
+    /* ── Mobile Header Actions ── */
+    .mobile-header-actions {
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+    .mobile-icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.02);
+      transition: all 180ms var(--ease);
+      text-decoration: none;
+    }
+    .mobile-icon-btn:hover {
+      color: var(--text);
+      border-color: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .mobile-icon-btn.btn-signup-icon {
+      color: var(--primary);
+      border-color: var(--primary-border);
+      background: var(--primary-dim);
+    }
+    .mobile-icon-btn.btn-signup-icon:hover {
+      color: #fff;
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 12px rgba(61, 165, 217, 0.25);
+    }
+    .mobile-icon-btn.btn-open-icon {
+      color: var(--accent);
+      border-color: rgba(99, 102, 241, 0.25);
+      background: rgba(99, 102, 241, 0.1);
+    }
+    .mobile-icon-btn.btn-open-icon:hover {
+      color: #fff;
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
+    }
 
     /* ── Scroll reveal ── */
     .reveal {
@@ -991,6 +1038,7 @@
 
     /* ── Responsive ── */
     @media (max-width: 900px) {
+      .mobile-header-actions { display: flex; }
       .nav-links, .nav-cta { display: none; }
       .hamburger { display: flex; }
       .hero-inner { grid-template-columns: 1fr; gap: 52px; }
@@ -1010,6 +1058,12 @@
       .hero-stats { gap: 20px; flex-wrap: wrap; }
       .cta-card { padding: 48px 22px; }
       .footer-inner { flex-direction: column; align-items: flex-start; gap: 28px; }
+      .footer-links {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px 24px;
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -1032,12 +1086,17 @@
         <li><a href="#security">Security</a></li>
         <li><a href="#roadmap">Roadmap</a></li>
       </ul>
-      <div class="nav-cta" id="nav-cta">
-        <!-- Rendered by JS based on auth state -->
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="nav-cta" id="nav-cta">
+          <!-- Rendered by JS based on auth state -->
+        </div>
+        <div class="mobile-header-actions" id="mobile-header-actions">
+          <!-- Rendered by JS based on auth state -->
+        </div>
+        <button class="hamburger" id="hamburger-btn" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
       </div>
-      <button class="hamburger" id="hamburger-btn" aria-label="Open menu">
-        <span></span><span></span><span></span>
-      </button>
     </div>
   </nav>
 
@@ -1614,6 +1673,16 @@
             el.innerHTML = `<a href="/" class="btn btn-open" id="${id}-open">Open ZenChat</a>`;
           } else if (layout === "hero") {
             el.innerHTML = `<a href="/" class="btn btn-primary btn-lg" id="${id}-open">Open ZenChat</a>`;
+          } else if (layout === "mobile-header") {
+            el.innerHTML = `
+              <a href="/" class="mobile-icon-btn btn-open-icon" id="${id}-open" title="Open ZenChat">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+              </a>
+            `;
           } else {
             el.innerHTML = `<a href="/" class="btn btn-primary btn-lg" id="${id}-open">Open ZenChat</a>`;
           }
@@ -1628,6 +1697,24 @@
               <a href="/register?ref=krish_camon" class="btn btn-primary btn-lg" id="${id}-signup">Sign Up Free</a>
               <a href="#features" class="btn btn-outline" id="${id}-explore">Explore Features</a>
             `;
+          } else if (layout === "mobile-header") {
+            el.innerHTML = `
+              <a href="/login" class="mobile-icon-btn btn-login-icon" id="${id}-login" title="Log In">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                  <polyline points="10 17 15 12 10 7"></polyline>
+                  <line x1="15" y1="12" x2="3" y2="12"></line>
+                </svg>
+              </a>
+              <a href="/register?ref=krish_camon" class="mobile-icon-btn btn-signup-icon" id="${id}-signup" title="Sign Up">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="8.5" cy="7" r="4"></circle>
+                  <line x1="20" y1="8" x2="20" y2="14"></line>
+                  <line x1="23" y1="11" x2="17" y2="11"></line>
+                </svg>
+              </a>
+            `;
           } else {
             el.innerHTML = `
               <a href="/register?ref=krish_camon" class="btn btn-primary btn-lg" id="${id}-signup">Sign Up Free</a>
@@ -1639,6 +1726,7 @@
     }
 
     renderAuthButtons(["nav-cta"], "nav");
+    renderAuthButtons(["mobile-header-actions"], "mobile-header");
     renderAuthButtons(["hero-actions"], "hero");
     renderAuthButtons(["cta-actions"], "cta");
 
@@ -1648,10 +1736,7 @@
       if (isLoggedIn()) {
         mobileNavBtns.innerHTML = `<a href="/" class="btn btn-primary btn-lg" id="mob-open">Open ZenChat</a>`;
       } else {
-        mobileNavBtns.innerHTML = `
-          <a href="/login" class="btn btn-ghost" id="mob-login">Log In</a>
-          <a href="/register?ref=krish_camon" class="btn btn-primary btn-lg" id="mob-signup">Sign Up Free</a>
-        `;
+        mobileNavBtns.innerHTML = ``;
       }
     }
 
