@@ -28,6 +28,29 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const audioRef = useRef(null);
     const videoRef = useRef(null);
     
+    const locationContainerRef = useRef(null);
+    const locationContentRef = useRef(null);
+    const [locMarqueeDist, setLocMarqueeDist] = useState(0);
+
+    useEffect(() => {
+        const measure = () => {
+            if (!locationContainerRef.current || !locationContentRef.current) {
+                setLocMarqueeDist(0);
+                return;
+            }
+            const contentWidth = locationContentRef.current.scrollWidth;
+            const scrollDist = contentWidth - 110;
+            setLocMarqueeDist(scrollDist > 0 ? -scrollDist : 0);
+        };
+        
+        if (isOpen && currentMoment?.locationTag) {
+            const timer = setTimeout(measure, 150);
+            return () => clearTimeout(timer);
+        } else {
+            setLocMarqueeDist(0);
+        }
+    }, [currentMoment?.locationTag, currentIndex, isOpen]);
+    
     // Make the viewer reactive by pulling the latest moments for this user
     const allMoments = useMomentStore((s) => s.moments);
     const currentUserId = useAuthStore((s) => s.user?._id);
@@ -280,13 +303,17 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                     )}
                                 </div>
                                 {currentMoment.locationTag && (
-                                    <div className="aura-header-location">
+                                    <div className="aura-header-location" ref={locationContainerRef}>
                                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginRight: '4px' }}>
                                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                                             <circle cx="12" cy="10" r="3" />
                                         </svg>
                                         <span className="aura-header-location-text">
-                                            <span className={currentMoment.locationTag.length > 15 ? "marquee-text" : ""}>
+                                            <span 
+                                                ref={locationContentRef}
+                                                className={locMarqueeDist < 0 ? "marquee-bidirectional" : ""}
+                                                style={locMarqueeDist < 0 ? { "--marquee-dist": `${locMarqueeDist}px` } : {}}
+                                            >
                                                 {currentMoment.locationTag}
                                             </span>
                                         </span>

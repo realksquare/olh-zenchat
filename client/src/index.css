@@ -2866,7 +2866,7 @@ select {
   justify-content: center;
   border: none;
   cursor: pointer;
-  z-index: 1000;
+  z-index: 15;
   opacity: 0;
   pointer-events: none;
   transform: translateY(10px);
@@ -4448,6 +4448,24 @@ select {
 
   100% {
     transform: translateX(-100%);
+  }
+}
+
+.marquee-bidirectional {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee-bidirectional-scroll 10s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+@keyframes marquee-bidirectional-scroll {
+  0%, 15% {
+    transform: translateX(0);
+  }
+  45%, 60% {
+    transform: translateX(var(--marquee-dist, 0px));
+  }
+  90%, 100% {
+    transform: translateX(0);
   }
 }
 
