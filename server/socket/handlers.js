@@ -668,6 +668,70 @@ const registerSocketHandlers = (io) => {
             }
         });
 
+        socket.on("message_react", async ({ chatId, messageId, emoji }) => {
+            try {
+                const message = await Message.findById(messageId);
+                if (!message) return;
+
+                if (!message.reactions) {
+                    message.reactions = [];
+                }
+
+                const existingIndex = message.reactions.findIndex(
+                    (r) => r.userId.toString() === userId.toString()
+                );
+
+                if (existingIndex > -1) {
+                    if (message.reactions[existingIndex].emoji === emoji) {
+                        message.reactions.splice(existingIndex, 1);
+                    } else {
+                        message.reactions[existingIndex].emoji = emoji;
+                    }
+                } else {
+                    message.reactions.push({ userId, emoji });
+                }
+
+                await message.save();
+
+                const payload = {
+                    _id: messageId.toString(),
+                    chatId: chatId.toString(),
+                    reactions: message.reactions.map(r => ({
+                        userId: r.userId.toString(),
+                        emoji: r.emoji
+                    }))
+                };
+
+                io.to(chatId).emit("message_reaction_updated", payload);
+
+                const chat = await Chat.findById(chatId);
+                if (chat) {
+                    chat.participants.filter(p => p.toString() !== userId).forEach(participantId => {
+                        const userData = onlineUsers.get(participantId.toString());
+                        if (userData && userData.sockets) {
+                            userData.sockets.forEach((sData, socketId) => {
+                                const room = io.sockets.adapter.rooms.get(chatId);
+                                if (!room?.has(socketId)) {
+                                    io.to(socketId).emit("message_reaction_updated", payload);
+                                }
+                            });
+                        }
+                    });
+                }
+
+                const myData = onlineUsers.get(userId);
+                if (myData && myData.sockets) {
+                    myData.sockets.forEach((sData, socketId) => {
+                        if (socketId !== socket.id) {
+                            io.to(socketId).emit("message_reaction_updated", payload);
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to react to message:", err);
+            }
+        });
+
         socket.on("delete_message", async ({ chatId, messageId, deleteFor }) => {
             try {
                 const message = await Message.findById(messageId);

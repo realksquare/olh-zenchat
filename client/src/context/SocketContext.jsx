@@ -212,6 +212,10 @@ export const SocketProvider = ({ children }) => {
             useChatStore.getState().updateMessage(message.chatId, message);
         };
 
+        const handleMessageReactionUpdated = ({ chatId, _id, reactions }) => {
+            useChatStore.getState().updateMessage(chatId, { _id, reactions });
+        };
+
         const handleMessageDeleted = ({ messageId, chatId, deleteFor }) => {
             useChatStore.getState().deleteMessage(chatId, messageId, deleteFor);
         };
@@ -462,6 +466,7 @@ export const SocketProvider = ({ children }) => {
         socket.on("user_zen_status", handleUserZenStatus);
         socket.on("peer_low_bandwidth", handlePeerLowBandwidth);
         socket.on("message_edited", handleMessageEdited);
+        socket.on("message_reaction_updated", handleMessageReactionUpdated);
         socket.on("message_deleted", handleMessageDeleted);
         socket.on("new_chat", handleNewChat);
         socket.on("chat_deleted", handleChatDeleted);
@@ -493,6 +498,7 @@ export const SocketProvider = ({ children }) => {
             socket.off("user_zen_status", handleUserZenStatus);
             socket.off("peer_low_bandwidth", handlePeerLowBandwidth);
             socket.off("message_edited", handleMessageEdited);
+            socket.off("message_reaction_updated", handleMessageReactionUpdated);
             socket.off("message_deleted", handleMessageDeleted);
             socket.off("new_chat", handleNewChat);
             socket.off("chat_deleted", handleChatDeleted);
@@ -704,6 +710,12 @@ export const SocketProvider = ({ children }) => {
         }
     }, []);
 
+    const reactToMessage = useCallback((chatId, messageId, emoji) => {
+        if (socketRef.current?.connected) {
+            socketRef.current.emit("message_react", { chatId, messageId, emoji });
+        }
+    }, []);
+
     const editMessage = useCallback(async (chatId, messageId, newContent) => {
         if (socketRef.current?.connected) {
             const messages = useChatStore.getState().messages;
@@ -756,7 +768,7 @@ export const SocketProvider = ({ children }) => {
         }
     }, []);
 
-    const socketValue = useMemo(() => ({
+     const socketValue = useMemo(() => ({
         socket: socketRef.current,
         isConnected,
         joinChat,
@@ -767,6 +779,7 @@ export const SocketProvider = ({ children }) => {
         markAsRead,
         editMessage,
         deleteMessage,
+        reactToMessage,
         updateLowBandwidth,
         isOnline: navigator.onLine,
 
@@ -789,7 +802,7 @@ export const SocketProvider = ({ children }) => {
         showExitConfirm,
         setShowExitConfirm
     }), [
-        isConnected, joinChat, leaveChat, sendMessage, startTyping, stopTyping, markAsRead, editMessage, deleteMessage, updateLowBandwidth,
+        isConnected, joinChat, leaveChat, sendMessage, startTyping, stopTyping, markAsRead, editMessage, deleteMessage, reactToMessage, updateLowBandwidth,
         incomingZenInvite, incomingZenExit, zenWaitingState, zenCountdown, zenToast, clearZenTimers, showZenToast, startZenTimer, showExitConfirm
     ]);
 

@@ -1319,12 +1319,10 @@ select {
   z-index: -1;
 }
 
-@media (hover: hover) {
-  .message-bubble-outer:hover .message-dropdown {
-    opacity: 1;
-    pointer-events: all;
-    transform: translateY(-50%);
-  }
+.message-dropdown.visible {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(-50%);
 }
 
 .message-dropdown.mobile-visible {
@@ -6522,4 +6520,363 @@ select {
     inset: 0;
     overflow: hidden;
   }
+}
+
+/* ── ZenChat Premium Reactions Styles & Animations ── */
+
+.reactions-hover-pill {
+  position: absolute;
+  top: -46px;
+  right: 12px;
+  background: rgba(22, 27, 34, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 1001;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transform-origin: bottom center;
+  animation: reactionsPillPopIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: auto;
+}
+
+.message-row.theirs .reactions-hover-pill {
+  right: auto;
+  left: 12px;
+}
+
+@keyframes reactionsPillPopIn {
+  from { transform: scale(0.6) translateY(12px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.reaction-option-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), color 0.25s ease, background 0.2s ease;
+  width: 32px;
+  height: 32px;
+}
+
+.reaction-option-btn:hover {
+  transform: scale(1.3) translateY(-4px);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.reaction-option-btn svg {
+  transition: stroke 0.25s ease, fill 0.25s ease, transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transform-origin: center center;
+}
+
+/* Infinitely looping bubble reaction capsule overlay */
+.bubble-reactions-capsule {
+  position: absolute;
+  bottom: -15px;
+  right: 14px;
+  background: rgba(22, 27, 34, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 3px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: reactionCapsulePopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.25s ease;
+}
+
+.message-row.theirs .bubble-reactions-capsule {
+  right: auto;
+  left: 14px;
+}
+
+.bubble-reactions-capsule:hover {
+  background: rgba(30, 37, 48, 0.98);
+  border-color: rgba(255,255,255,0.18);
+  transform: translateY(-1px);
+}
+
+/* Glowing outline for messages the user has reacted to */
+.bubble-reactions-capsule.user-has-reacted {
+  border-color: rgba(61, 165, 217, 0.35);
+  background: rgba(61, 165, 217, 0.12);
+  box-shadow: 0 4px 12px rgba(61, 165, 217, 0.15);
+}
+
+/* Dynamic sizes based on number of reactions */
+.bubble-reactions-capsule.reactions-count-1 {
+  padding: 2px 5px;
+  min-width: 22px;
+  height: 20px;
+}
+.bubble-reactions-capsule.reactions-count-1 .bubble-reaction-item {
+  width: 16px;
+  height: 16px;
+}
+.bubble-reactions-capsule.reactions-count-2 {
+  padding: 3px 6px;
+  min-width: 42px;
+  height: 24px;
+}
+.bubble-reactions-capsule.reactions-count-2 .bubble-reaction-item {
+  width: 20px;
+  height: 20px;
+}
+
+@keyframes reactionCapsulePopIn {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+.bubble-reaction-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  transition: all 0.2s ease;
+}
+
+/* Subtle highlights to distinguish own reactions vs peer reactions */
+.bubble-reaction-item.is-own {
+  background: rgba(61, 165, 217, 0.25);
+  border: 1px solid rgba(61, 165, 217, 0.5);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(61, 165, 217, 0.3);
+  padding: 1px;
+}
+
+.bubble-reaction-item.is-peer {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  padding: 1px;
+}
+
+.bubble-reaction-item svg {
+  width: 100%;
+  height: 100%;
+  transform-origin: center center;
+}
+
+/* ── Lucide-Style SVG Reaction Custom Easing Micro-Animations ── */
+
+/* 1. HEART PULSE */
+.reaction-heart svg {
+  fill: transparent;
+  stroke: #ef4444;
+}
+.reaction-option-btn.reaction-heart:hover svg,
+.bubble-reactions-capsule .reaction-heart svg {
+  fill: #ef4444;
+  animation: r-heartbeat 1s infinite ease-in-out;
+}
+@keyframes r-heartbeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.18); }
+  45% { transform: scale(1.05); }
+  70% { transform: scale(1.25); }
+}
+
+/* 2. THUMBS UP thrust */
+.reaction-thumbsup svg {
+  stroke: #3b82f6;
+  fill: transparent;
+}
+.reaction-option-btn.reaction-thumbsup:hover svg,
+.bubble-reactions-capsule .reaction-thumbsup svg {
+  fill: rgba(59, 130, 246, 0.2);
+  animation: r-thumbsup 1s infinite ease-in-out;
+}
+@keyframes r-thumbsup {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  30% { transform: translateY(2px) rotate(-10deg); }
+  60% { transform: translateY(-4px) rotate(8deg); }
+}
+
+/* 3. LAUGHING smile/wobble */
+.reaction-laughing svg {
+  stroke: #eab308;
+}
+.reaction-option-btn.reaction-laughing:hover svg,
+.bubble-reactions-capsule .reaction-laughing svg {
+  animation: r-laughing 1.2s infinite ease-in-out;
+}
+@keyframes r-laughing {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-8deg) scale(1.1); }
+  70% { transform: rotate(8deg) scale(1.1); }
+}
+
+/* 4. SAD tear slide */
+.reaction-sad svg {
+  stroke: #60a5fa;
+}
+.reaction-option-btn.reaction-sad:hover svg,
+.bubble-reactions-capsule .reaction-sad svg {
+  animation: r-sad 1.5s infinite ease-in-out;
+}
+@keyframes r-sad {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(1.5px) rotate(-3deg); }
+}
+
+/* 5. ANGRY vibrate */
+.reaction-angry svg {
+  stroke: #f87171;
+}
+.reaction-option-btn.reaction-angry:hover svg,
+.bubble-reactions-capsule .reaction-angry svg {
+  animation: r-angry 0.6s infinite linear;
+}
+@keyframes r-angry {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  20% { transform: translate(-1px, 1px) rotate(-2deg); }
+  40% { transform: translate(1px, -1px) rotate(2deg); }
+  60% { transform: translate(-1px, -1px) rotate(-1deg); }
+  80% { transform: translate(1px, 1px) rotate(1deg); }
+}
+
+/* 6. HIFI spark/clap */
+.reaction-hifi svg {
+  stroke: #a78bfa;
+}
+.reaction-option-btn.reaction-hifi:hover svg,
+.bubble-reactions-capsule .reaction-hifi svg {
+  animation: r-hifi 1.1s infinite ease-in-out;
+}
+@keyframes r-hifi {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  35% { transform: scale(1.22) rotate(-8deg); }
+  70% { transform: scale(1.1) rotate(8deg); }
+}
+
+/* ── WhatsApp-Like Reaction Detail list sheets ── */
+.reactions-detail-modal {
+  background: #161b22;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 380px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+  animation: modalPopUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.reactions-detail-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reactions-detail-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.reactions-detail-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.reactions-detail-close:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.reactions-detail-body {
+  padding: 8px 12px 20px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.reaction-row-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 8px;
+  border-radius: var(--radius-md);
+  transition: background 0.2s;
+}
+
+.reaction-row-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.reaction-row-item.is-own {
+  background: rgba(61, 165, 217, 0.06);
+  border: 1px solid rgba(61, 165, 217, 0.15);
+}
+
+.reaction-row-item.is-own:hover {
+  background: rgba(61, 165, 217, 0.1);
+}
+
+.reaction-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reaction-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.reaction-user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reaction-user-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.reaction-row-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
 }

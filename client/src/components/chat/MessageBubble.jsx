@@ -1,30 +1,189 @@
-import { useState, useRef, useEffect, memo, useMemo } from "react";
+import { useState, useRef, useEffect, memo, useMemo, useContext } from "react";
 import { createPortal } from "react-dom";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
+import { useSocket } from "../../context/SocketContext";
 import DecryptedText from "./DecryptedText";
 
+const HeartReaction = ({ size = 20 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="reaction-heart">
+        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+    </svg>
+);
 
+const ThumbsUpReaction = ({ size = 20 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="reaction-thumbsup">
+        <path d="M7 10v12" />
+        <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h3l3.15-6.3a2.12 2.12 0 0 1 4.05 1.18z" />
+    </svg>
+);
 
+const LaughingReaction = ({ size = 20 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="reaction-laughing">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M8 9.5 9.5 11 8 12.5" />
+        <path d="M16 9.5 14.5 11 16 12.5" />
+        <path d="M9 15a3 3 0 0 0 6 0H9z" />
+    </svg>
+);
+
+const SadReaction = ({ size = 20 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="reaction-sad">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="9" y1="9" x2="9" y2="11" />
+        <line x1="15" y1="9" x2="15" y2="11" />
+        <path d="M16 17a4 4 0 0 0-8 0" />
+        <path d="M9.2 11.5c.2.8-.2 1.5-.7 1.5s-.7-.7-.7-1.5.5-1.5.7-1.5.5.7.7 1.5z" fill="#60a5fa" stroke="none" />
+    </svg>
+);
+
+const AngryReaction = ({ size = 20 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="reaction-angry">
+        <circle cx="12" cy="12" r="10" />
+        <path d="m8 9 2.5 1" />
+        <path d="m16 9-2.5 1" />
+        <circle cx="9" cy="11.5" r="1" fill="currentColor" stroke="none" />
+        <circle cx="15" cy="11.5" r="1" fill="currentColor" stroke="none" />
+        <path d="M14 16a2 2 0 0 0-4 0" />
+    </svg>
+);
+
+const HifiReaction = ({ size = 20 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="reaction-hifi">
+        <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+        <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5 5 3Z" opacity="0.6" />
+        <path d="m19 15 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1 1-2.5Z" opacity="0.6" />
+    </svg>
+);
+
+const REACTIONS_MAP = {
+    heart: HeartReaction,
+    thumbsup: ThumbsUpReaction,
+    laughing: LaughingReaction,
+    sad: SadReaction,
+    angry: AngryReaction,
+    hifi: HifiReaction
+};
 
 const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick, canDelete = true, canReply = true, zenFadeClass = "" }) => {
-    const [mobileDropdown, setMobileDropdown] = useState(false);
-    const [isMediaLoaded, setIsMediaLoaded] = useState(false);
-    const imgRef = useRef(null);
     const user = useAuthStore((s) => s.user);
     const { toggleStarMessage, markViewOnceAsViewed } = useChatStore.getState();
     const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
     const isZenMode = useChatStore((s) => s.isZenMode);
+    
+    const [mobileDropdown, setMobileDropdown] = useState(false);
+    const { reactToMessage } = useSocket();
+    const [showReactionsPill, setShowReactionsPill] = useState(false);
+    const [reactionsSheetOpen, setReactionsSheetOpen] = useState(false);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [isMediaLoaded, setIsMediaLoaded] = useState(false);
     const [manualLoad, setManualLoad] = useState(false);
+    
+    const reactionsTimeoutRef = useRef(null);
+    const lastTapRef = useRef(0);
+    const tapTimeoutRef = useRef(null);
+    const imgRef = useRef(null);
+    const outerRef = useRef(null);
+
+    const isMobile = window.innerWidth <= 768;
     const shouldDelayLoad = isLowBandwidth && !isMe && !manualLoad;
     const status = message?.status ?? "sent";
     const progress = message?.progress ?? 0;
-    const outerRef = useRef(null);
-
     const isViewOnce = message.isViewOnce;
     const isMediaMsg = (message.type === "image" || message.type === "video") && message.mediaUrl;
     const needsLoading = isMediaMsg && !isViewOnce && !shouldDelayLoad && status !== "sending";
     const isShown = !needsLoading || isMediaLoaded;
+
+    const handleMouseEnter = () => {
+        if (reactionsTimeoutRef.current) {
+            clearTimeout(reactionsTimeoutRef.current);
+            reactionsTimeoutRef.current = null;
+        }
+        setShowReactionsPill(true);
+    };
+
+    const handleMouseLeave = () => {
+        if (reactionsTimeoutRef.current) clearTimeout(reactionsTimeoutRef.current);
+        reactionsTimeoutRef.current = setTimeout(() => {
+            setShowReactionsPill(false);
+        }, 1000);
+    };
+
+    const handleReact = (emojiKey) => {
+        reactToMessage(message.chatId, message._id, emojiKey);
+        setShowReactionsPill(false);
+        setReactionsSheetOpen(false);
+    };
+
+    const handleBubbleClick = (e) => {
+        if (e.target.closest('.replied-message-preview') || 
+            e.target.closest('.message-media-wrap') || 
+            e.target.closest('.view-once-placeholder') ||
+            e.target.closest('.file-attachment-card') ||
+            e.target.closest('a') ||
+            e.target.closest('button')) {
+            return;
+        }
+
+        if (isMobile) {
+            e.preventDefault();
+            e.stopPropagation();
+            const now = Date.now();
+            if (now - lastTapRef.current < 250) {
+                if (tapTimeoutRef.current) {
+                    clearTimeout(tapTimeoutRef.current);
+                    tapTimeoutRef.current = null;
+                }
+                setMobileDropdown(true);
+            } else {
+                lastTapRef.current = now;
+                tapTimeoutRef.current = setTimeout(() => {
+                    setReactionsSheetOpen(true);
+                    tapTimeoutRef.current = null;
+                }, 250);
+            }
+        }
+    };
+
+    const handleBubbleDoubleClick = (e) => {
+        if (e.target.closest('.replied-message-preview') || 
+            e.target.closest('.message-media-wrap') || 
+            e.target.closest('.view-once-placeholder') ||
+            e.target.closest('.file-attachment-card') ||
+            e.target.closest('a') ||
+            e.target.closest('button')) {
+            return;
+        }
+        if (!isMobile) {
+            e.preventDefault();
+            e.stopPropagation();
+            setMobileDropdown(prev => !prev);
+        }
+    };
+
+    const handleCapsuleClick = (e) => {
+        e.stopPropagation();
+        setShowDetailsModal(true);
+    };
+
+    const sortedReactions = useMemo(() => {
+        if (!message.reactions || !message.reactions.length) return [];
+        const peerReaction = message.reactions.find(r => r.userId === otherUser?._id || r.userId?.toString() === otherUser?._id);
+        const myReaction = message.reactions.find(r => r.userId === user?._id || r.userId?.toString() === user?._id);
+        const list = [];
+        if (peerReaction) list.push(peerReaction);
+        if (myReaction) list.push(myReaction);
+        message.reactions.forEach(r => {
+            if (r.userId !== otherUser?._id && r.userId !== user?._id && r.userId?.toString() !== otherUser?._id && r.userId?.toString() !== user?._id) {
+                list.push(r);
+            }
+        });
+        return list;
+    }, [message.reactions, otherUser?._id, user?._id]);
+
+    const userHasReacted = useMemo(() => {
+        return message.reactions?.some(r => r.userId === user?._id || r.userId?.toString() === user?._id) || false;
+    }, [message.reactions, user?._id]);
 
     useEffect(() => {
         if (needsLoading && imgRef.current && imgRef.current.complete) {
@@ -125,13 +284,11 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
 
     const isViewedByMe = message.viewedBy?.includes(user?._id);
     const isViewedByAnyone = message.viewedBy?.length > 0;
-    const isMobile = window.innerWidth <= 768;
 
     return (
         <div
             id={`msg-${message._id}`}
             className={`message-row ${isMe ? "mine" : "theirs"} ${isNew ? "message-slide-up" : ""} ${zenFadeClass}`}
-            onDoubleClick={() => !message.deletedForEveryone && canReply && onEdit({ action: "reply", ...message })}
             style={!isShown ? { visibility: 'hidden', height: 0, overflow: 'hidden' } : {}}
         >
             {!isMe && showAvatar && (
@@ -145,14 +302,16 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
             )}
             {!isMe && !showAvatar && <div className="avatar-spacer" />}
 
-            <div className="message-bubble-outer" ref={outerRef}>
+            <div 
+                className="message-bubble-outer" 
+                ref={outerRef}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+            >
                 <div
                     className={`message-bubble ${isMe ? `mine status-${status === "read" ? "seen" : status}` : "theirs"} ${isViewOnce ? "view-once" : ""}`}
-                    onClick={() => {
-                        if (!window.matchMedia("(hover: hover)").matches) {
-                            setMobileDropdown((p) => !p);
-                        }
-                    }}
+                    onClick={handleBubbleClick}
+                    onDoubleClick={handleBubbleDoubleClick}
                 >
                     {isViewOnce && isMe ? (
                         <div className={`view-once-placeholder ${isViewedByAnyone ? 'viewed' : ''}`}>
@@ -409,7 +568,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                 </div>
 
                 {!isMobile && (
-                    <div className={`message-dropdown ${mobileDropdown ? "mobile-visible" : ""} ${!isMe ? "theirs-dropdown" : ""}`}>
+                    <div className={`message-dropdown ${mobileDropdown ? "visible" : ""} ${!isMe ? "theirs-dropdown" : ""}`}>
                         {!isZenMode && (
                             <button
                                 className="message-dropdown-item"
@@ -455,6 +614,53 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                     <span>Delete</span>
                                 </button>
                             </>
+                        )}
+                    </div>
+                )}
+
+                {showReactionsPill && (
+                    <div 
+                        className="reactions-hover-pill"
+                        onMouseEnter={handleMouseEnter}
+                        onMouseLeave={handleMouseLeave}
+                    >
+                        {Object.keys(REACTIONS_MAP).map(key => {
+                            const Icon = REACTIONS_MAP[key];
+                            return (
+                                <button
+                                    key={key}
+                                    className={`reaction-option-btn reaction-${key}`}
+                                    onClick={() => handleReact(key)}
+                                    title={key}
+                                >
+                                    <Icon size={18} />
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {sortedReactions.length > 0 && (
+                    <div 
+                        className={`bubble-reactions-capsule reactions-count-${message.reactions.length} ${userHasReacted ? "user-has-reacted" : ""}`}
+                        onClick={handleCapsuleClick}
+                    >
+                        {sortedReactions.map((r, i) => {
+                            const Icon = REACTIONS_MAP[r.emoji];
+                            if (!Icon) return null;
+                            const isSelf = r.userId === user?._id || r.userId?.toString() === user?._id;
+                            const name = isSelf ? "You" : (otherUser?.username || "User");
+                            const itemClass = isSelf ? "is-own" : "is-peer";
+                            return (
+                                <div key={i} className={`bubble-reaction-item ${itemClass} reaction-${r.emoji}`} title={`${name} reacted`}>
+                                    <Icon size={message.reactions.length === 1 ? 10 : 12} />
+                                </div>
+                            );
+                        })}
+                        {message.reactions.length > 1 && (
+                            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', marginLeft: '1px' }}>
+                                {message.reactions.length}
+                            </span>
                         )}
                     </div>
                 )}
@@ -620,6 +826,139 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                 </button>
                             </>
                         )}
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {reactionsSheetOpen && createPortal(
+                <div 
+                    className="mobile-bottom-sheet-overlay" 
+                    onClick={() => setReactionsSheetOpen(false)}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(9, 13, 20, 0.7)',
+                        backdropFilter: 'blur(8px)',
+                        zIndex: 9999999,
+                        display: 'flex',
+                        alignItems: 'flex-end',
+                        justifyContent: 'center',
+                        animation: 'fadeIn 0.2s ease-out'
+                    }}
+                >
+                    <div 
+                        className="mobile-bottom-sheet"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            width: '100%',
+                            background: '#161b22',
+                            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+                            borderTopLeftRadius: '24px',
+                            borderTopRightRadius: '24px',
+                            padding: '24px',
+                            boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.5)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '16px',
+                            animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#fff' }}>React to message</span>
+                            <button 
+                                onClick={() => setReactionsSheetOpen(false)}
+                                style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#64748b', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                            >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '8px 0' }}>
+                            {Object.keys(REACTIONS_MAP).map(key => {
+                                const Icon = REACTIONS_MAP[key];
+                                return (
+                                    <button
+                                        key={key}
+                                        className={`reaction-option-btn reaction-${key}`}
+                                        onClick={() => handleReact(key)}
+                                        style={{ width: '40px', height: '40px' }}
+                                    >
+                                        <Icon size={24} />
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
+            {showDetailsModal && createPortal(
+                <div 
+                    className="mobile-bottom-sheet-overlay" 
+                    onClick={() => setShowDetailsModal(false)}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(9, 13, 20, 0.7)',
+                        backdropFilter: 'blur(12px)',
+                        WebkitBackdropFilter: 'blur(12px)',
+                        zIndex: 9999999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        animation: 'fadeIn 0.2s ease-out'
+                    }}
+                >
+                    <div 
+                        className="reactions-detail-modal"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="reactions-detail-header">
+                            <span className="reactions-detail-title">Message Reactions</span>
+                            <button className="reactions-detail-close" onClick={() => setShowDetailsModal(false)}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="reactions-detail-body">
+                            {message.reactions && message.reactions.map((r, i) => {
+                                const Icon = REACTIONS_MAP[r.emoji];
+                                const isSelf = r.userId === user?._id || r.userId?.toString() === user?._id;
+                                const displayUsername = isSelf ? "You" : (otherUser?.username || "User");
+                                const displayAvatar = isSelf ? user?.avatar : otherUser?.avatar;
+                                
+                                return (
+                                    <div key={i} className={`reaction-row-item ${isSelf ? "is-own" : ""}`}>
+                                        <div className="reaction-user-info">
+                                            <div className="reaction-user-avatar">
+                                                {displayAvatar ? (
+                                                    <img src={displayAvatar} alt={displayUsername} />
+                                                ) : (
+                                                    <span>{displayUsername.slice(0, 2).toUpperCase()}</span>
+                                                )}
+                                            </div>
+                                            <span className="reaction-user-name">@{displayUsername}</span>
+                                        </div>
+                                        <div 
+                                            className={`reaction-row-badge reaction-${r.emoji}`} 
+                                            style={{ cursor: isSelf ? 'pointer' : 'default' }} 
+                                            onClick={() => { 
+                                                if (isSelf) { 
+                                                    handleReact(r.emoji); 
+                                                    setShowDetailsModal(false); 
+                                                } 
+                                            }}
+                                            title={isSelf ? "Remove Reaction" : undefined}
+                                        >
+                                            {Icon && <Icon size={18} />}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>,
                 document.body
