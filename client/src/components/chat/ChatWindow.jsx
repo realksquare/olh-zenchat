@@ -921,54 +921,6 @@ const ChatWindow = ({ onBack }) => {
         }
     }, [isZenMode, socket, socket?.connected]);
 
-    useEffect(() => {
-        if (isZenMode && !isPeerOnline) {
-            if (offlineCountdownIntervalRef.current) return;
-            
-            let remaining = 30;
-            setOfflineCountdown(remaining);
-            
-            offlineCountdownIntervalRef.current = setInterval(() => {
-                remaining -= 1;
-                if (remaining > 0) {
-                    setOfflineCountdown(remaining);
-                } else {
-                    clearInterval(offlineCountdownIntervalRef.current);
-                    offlineCountdownIntervalRef.current = null;
-                    setOfflineCountdown(null);
-                    
-                    if (socket?.connected) {
-                        socket.emit("zen_exit_respond", { 
-                            chatId: activeChat._id, 
-                            responderId: user._id, 
-                            requesterId: otherUserId, 
-                            accepted: true 
-                        });
-                    }
-                    triggerCircularReveal(window.innerWidth / 2, window.innerHeight / 2, false);
-                    showZenToast("info", "ZenMode ended due to inactivity");
-                }
-            }, 1000);
-        } else {
-            if (offlineCountdownIntervalRef.current) {
-                clearInterval(offlineCountdownIntervalRef.current);
-                offlineCountdownIntervalRef.current = null;
-                
-                if (isZenMode && isPeerOnline && offlineCountdown !== null) {
-                    showZenToast("success", `${displayName || "User"} came back online`);
-                }
-            }
-            setOfflineCountdown(null);
-        }
-        
-        return () => {
-            if (offlineCountdownIntervalRef.current) {
-                clearInterval(offlineCountdownIntervalRef.current);
-                offlineCountdownIntervalRef.current = null;
-            }
-        };
-    }, [isZenMode, isPeerOnline, activeChat?._id, user?._id, otherUserId, socket, triggerCircularReveal, showZenToast, displayName, offlineCountdown]);
-
     const handleToggleDisappearing = async (mode) => {
         try {
             await axiosInstance.put(`/chats/${activeChat._id}/disappearing`, { mode });
@@ -1036,6 +988,54 @@ const ChatWindow = ({ onBack }) => {
         }
     );
     const displayName = isDeleted ? "(user_deleted)" : otherUser?.username;
+
+    useEffect(() => {
+        if (isZenMode && !isPeerOnline) {
+            if (offlineCountdownIntervalRef.current) return;
+            
+            let remaining = 30;
+            setOfflineCountdown(remaining);
+            
+            offlineCountdownIntervalRef.current = setInterval(() => {
+                remaining -= 1;
+                if (remaining > 0) {
+                    setOfflineCountdown(remaining);
+                } else {
+                    clearInterval(offlineCountdownIntervalRef.current);
+                    offlineCountdownIntervalRef.current = null;
+                    setOfflineCountdown(null);
+                    
+                    if (socket?.connected) {
+                        socket.emit("zen_exit_respond", { 
+                            chatId: activeChat._id, 
+                            responderId: user._id, 
+                            requesterId: otherUserId, 
+                            accepted: true 
+                        });
+                    }
+                    triggerCircularReveal(window.innerWidth / 2, window.innerHeight / 2, false);
+                    showZenToast("info", "ZenMode ended due to inactivity");
+                }
+            }, 1000);
+        } else {
+            if (offlineCountdownIntervalRef.current) {
+                clearInterval(offlineCountdownIntervalRef.current);
+                offlineCountdownIntervalRef.current = null;
+                
+                if (isZenMode && isPeerOnline && offlineCountdown !== null) {
+                    showZenToast("success", `${displayName || "User"} came back online`);
+                }
+            }
+            setOfflineCountdown(null);
+        }
+        
+        return () => {
+            if (offlineCountdownIntervalRef.current) {
+                clearInterval(offlineCountdownIntervalRef.current);
+                offlineCountdownIntervalRef.current = null;
+            }
+        };
+    }, [isZenMode, isPeerOnline, activeChat?._id, user?._id, otherUserId, socket, triggerCircularReveal, showZenToast, displayName, offlineCountdown]);
 
     useEffect(() => {
         if (!activeChat?._id) return;
