@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
+import { createPortal } from "react-dom";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
@@ -50,6 +51,14 @@ const Sidebar = ({ onChatSelect }) => {
     const [activeTab, setActiveTab] = useState("recents");
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [isVaultOpen, setIsVaultOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
     const { fetchChats } = useChatStore();
     const { fetchMoments } = useMomentStore();
     
@@ -596,31 +605,66 @@ const Sidebar = ({ onChatSelect }) => {
             />
 
             {showLogoutConfirm && (
-                <div className="modal-backdrop" style={{ display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1100 }}>
-                    <div className="modal-card" style={{ maxWidth: "380px", border: "1px solid rgba(255, 255, 255, 0.08)", background: "rgba(15, 23, 42, 0.9)", backdropFilter: "blur(20px)", padding: "24px", borderRadius: "16px", textAlign: "center" }}>
-                        <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#f8fafc", marginBottom: "12px" }}>Confirm Sign Out</h3>
-                        <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "24px", lineHeight: "1.5" }}>Are you sure you want to log out of ZenChat? You will need your credentials to sign back in.</p>
-                        <div style={{ display: "flex", gap: "12px" }}>
-                            <button
-                                className="btn"
-                                onClick={() => setShowLogoutConfirm(false)}
-                                style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#cbd5e1", cursor: "pointer" }}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                className="btn"
-                                onClick={() => {
-                                    setShowLogoutConfirm(false);
-                                    logout();
-                                }}
-                                style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "#ef4444", border: "none", color: "#fff", cursor: "pointer", fontWeight: "600" }}
-                            >
-                                Log Out
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                isMobile ? (
+                    createPortal(
+                        <div className="mobile-bottom-sheet-overlay" style={{ zIndex: 20000 }}>
+                            <div className="mobile-bottom-sheet" onClick={(e) => e.stopPropagation()} style={{ padding: "20px 20px 32px" }}>
+                                <div className="mobile-bottom-sheet-handle" />
+                                <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#f8fafc", marginBottom: "8px", textAlign: "center" }}>Confirm Sign Out</h3>
+                                <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "24px", lineHeight: "1.5", textAlign: "center" }}>Are you sure you want to log out of ZenChat? You will need your credentials to sign back in.</p>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
+                                    <button
+                                        className="btn"
+                                        onClick={() => {
+                                            setShowLogoutConfirm(false);
+                                            logout();
+                                        }}
+                                        style={{ width: "100%", padding: "12px", borderRadius: "12px", background: "#ef4444", border: "none", color: "#fff", cursor: "pointer", fontWeight: "600", fontSize: "0.95rem" }}
+                                    >
+                                        Log Out
+                                    </button>
+                                    <button
+                                        className="btn"
+                                        onClick={() => setShowLogoutConfirm(false)}
+                                        style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#cbd5e1", cursor: "pointer", fontSize: "0.95rem" }}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
+                    )
+                ) : (
+                    createPortal(
+                        <div className="modal-backdrop" style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.4)", zIndex: 20000 }}>
+                            <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "380px", border: "1px solid rgba(255, 255, 255, 0.08)", background: "rgba(15, 23, 42, 0.9)", backdropFilter: "blur(20px)", padding: "24px", borderRadius: "16px", textAlign: "center" }}>
+                                <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#f8fafc", marginBottom: "12px" }}>Confirm Sign Out</h3>
+                                <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "24px", lineHeight: "1.5" }}>Are you sure you want to log out of ZenChat? You will need your credentials to sign back in.</p>
+                                <div style={{ display: "flex", gap: "12px" }}>
+                                    <button
+                                        className="btn"
+                                        onClick={() => setShowLogoutConfirm(false)}
+                                        style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#cbd5e1", cursor: "pointer" }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        className="btn"
+                                        onClick={() => {
+                                            setShowLogoutConfirm(false);
+                                            logout();
+                                        }}
+                                        style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "#ef4444", border: "none", color: "#fff", cursor: "pointer", fontWeight: "600" }}
+                                    >
+                                        Log Out
+                                    </button>
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
+                    )
+                )
             )}
         </div>
     );
