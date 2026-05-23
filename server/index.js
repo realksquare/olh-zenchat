@@ -71,6 +71,7 @@ const PORT = process.env.PORT || 5000;
 
 connectDB().then(async () => {
     await User.updateMany({}, { $set: { isOnline: false } });
+    await User.updateMany({ mfaPreference: "phone" }, { $set: { mfaPreference: "email" } });
 
 
     server.listen(PORT, () => {

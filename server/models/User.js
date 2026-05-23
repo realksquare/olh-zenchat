@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema(
         },
         mfaPreference: {
             type: String,
-            enum: ["email", "none"],
+            enum: ["email", "phone", "none"],
             default: "none",
         },
         verificationSession: {
