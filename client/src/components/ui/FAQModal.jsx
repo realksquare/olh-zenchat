@@ -65,7 +65,7 @@ const FAQModal = ({ isOpen, onClose }) => {
                         ))}
                     </div>
                     <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', fontSize: '0.8rem', color: '#64748b', textAlign: 'center' }}>
-                        &copy; 2026 OLH ZenChat | V2.4 Stable
+                        &copy; 2026 OLH ZenChat | v1.0b Pre-release
                     </div>
                 </div>
             </div>

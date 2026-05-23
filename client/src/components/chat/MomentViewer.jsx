@@ -281,12 +281,14 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                 </div>
                                 {currentMoment.locationTag && (
                                     <div className="aura-header-location">
-                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginRight: '3px' }}>
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginRight: '4px' }}>
                                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                                             <circle cx="12" cy="10" r="3" />
                                         </svg>
                                         <span className="aura-header-location-text">
-                                            {currentMoment.locationTag}
+                                            <span className={currentMoment.locationTag.length > 15 ? "marquee-text" : ""}>
+                                                {currentMoment.locationTag}
+                                            </span>
                                         </span>
                                     </div>
                                 )}

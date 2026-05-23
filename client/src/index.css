@@ -4349,18 +4349,21 @@ select {
   color: #10b981;
   font-weight: 600;
   background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  padding: 3px 8px;
-  border-radius: 100px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 4px 8px;
+  border-radius: 6px;
   width: max-content;
-  max-width: 100%;
+  max-width: 140px;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .aura-header-location-text {
+  display: inline-block;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 140px;
+  max-width: 110px;
+  vertical-align: middle;
 }
 
 .aura-user-meta {
