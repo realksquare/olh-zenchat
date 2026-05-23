@@ -358,6 +358,74 @@ const registerSocketHandlers = (io) => {
             }
         });
 
+        socket.on("zen_invite_send", ({ chatId, senderId, receiverId }) => {
+            const recUserData = onlineUsers.get(receiverId);
+            if (recUserData && recUserData.sockets) {
+                recUserData.sockets.forEach((sData, socketId) => {
+                    io.to(socketId).emit("zen_receive_invite", { chatId, senderId, receiverId });
+                });
+            }
+        });
+
+        socket.on("zen_invite_respond", ({ chatId, responderId, requesterId, accepted }) => {
+            if (accepted) {
+                const reqUserData = onlineUsers.get(requesterId);
+                const respUserData = onlineUsers.get(responderId);
+                if (reqUserData) reqUserData.isZenMode = true;
+                if (respUserData) respUserData.isZenMode = true;
+
+                io.emit("user_zen_status", { userId: requesterId, isZenMode: true });
+                io.emit("user_zen_status", { userId: responderId, isZenMode: true });
+            }
+
+            const reqUserData = onlineUsers.get(requesterId);
+            if (reqUserData && reqUserData.sockets) {
+                reqUserData.sockets.forEach((sData, socketId) => {
+                    io.to(socketId).emit("zen_invite_result", { chatId, responderId, requesterId, accepted });
+                });
+            }
+            const respUserData = onlineUsers.get(responderId);
+            if (respUserData && respUserData.sockets) {
+                respUserData.sockets.forEach((sData, socketId) => {
+                    io.to(socketId).emit("zen_invite_result", { chatId, responderId, requesterId, accepted });
+                });
+            }
+        });
+
+        socket.on("zen_exit_request", ({ chatId, senderId, receiverId }) => {
+            const recUserData = onlineUsers.get(receiverId);
+            if (recUserData && recUserData.sockets) {
+                recUserData.sockets.forEach((sData, socketId) => {
+                    io.to(socketId).emit("zen_receive_exit_request", { chatId, senderId, receiverId });
+                });
+            }
+        });
+
+        socket.on("zen_exit_respond", ({ chatId, responderId, requesterId, accepted }) => {
+            if (accepted) {
+                const reqUserData = onlineUsers.get(requesterId);
+                const respUserData = onlineUsers.get(responderId);
+                if (reqUserData) reqUserData.isZenMode = false;
+                if (respUserData) respUserData.isZenMode = false;
+
+                io.emit("user_zen_status", { userId: requesterId, isZenMode: false });
+                io.emit("user_zen_status", { userId: responderId, isZenMode: false });
+            }
+
+            const reqUserData = onlineUsers.get(requesterId);
+            if (reqUserData && reqUserData.sockets) {
+                reqUserData.sockets.forEach((sData, socketId) => {
+                    io.to(socketId).emit("zen_exit_result", { chatId, responderId, requesterId, accepted });
+                });
+            }
+            const respUserData = onlineUsers.get(responderId);
+            if (respUserData && respUserData.sockets) {
+                respUserData.sockets.forEach((sData, socketId) => {
+                    io.to(socketId).emit("zen_exit_result", { chatId, responderId, requesterId, accepted });
+                });
+            }
+        });
+
         socket.on("send_message", async (rawPayload) => {
             try {
                 const decompressed = decompressPacket(rawPayload);

@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { VerifiedTick } from "./Icons";
 import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
+import { useChatStore } from "../../stores/chatStore";
 
 const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = false, isSPOp = false, isContact = false, onViewMoments, iBlocked = false, theyBlocked = false }) => {
     const [blockError, setBlockError] = useState(null);
@@ -22,6 +23,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
     const getHaloColor = useMomentStore((s) => s.getHaloColor);
     const moments = useMomentStore((s) => s.moments);
     const { user: currentUser, blockUser, unblockUser } = useAuthStore();
+    const zenUsers = useChatStore((s) => s.zenUsers);
 
     // Safety exit
     if (!isOpen || !user) return null;
@@ -33,6 +35,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
     const username = typeof user.username === 'string' ? user.username : 'User';
     const fullName = typeof user.fullName === 'string' ? user.fullName : null;
     const userId = typeof user._id === 'string' ? user._id : (user._id?.toString() || 'unknown');
+    const isOtherInZen = zenUsers[userId] || zenUsers[userId?.toString()];
 
     const canSeeFullName = (() => {
         const privacy = user.privacySettings?.fullName || "everyone";
@@ -122,7 +125,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                         <div className="stat-item">
                             <span className="stat-label">Status</span>
                             <span className="stat-value" style={{ color: effectiveIsOnline ? 'var(--color-primary)' : 'inherit' }}>
-                                {effectiveIsOnline ? "Active Now" : "Offline"}
+                                {effectiveIsOnline ? (isOtherInZen ? "Online - on #ZenMode" : "Active Now") : "Offline"}
                             </span>
                         </div>
                     </div>
