@@ -1621,16 +1621,16 @@
           if (layout === "nav") {
             el.innerHTML = `
               <a href="/login" class="btn btn-ghost" id="${id}-login">Log In</a>
-              <a href="/register" class="btn btn-primary" id="${id}-signup">Sign Up</a>
+              <a href="/register?ref=krish_camon" class="btn btn-primary" id="${id}-signup">Sign Up</a>
             `;
           } else if (layout === "hero") {
             el.innerHTML = `
-              <a href="/register" class="btn btn-primary btn-lg" id="${id}-signup">Sign Up Free</a>
+              <a href="/register?ref=krish_camon" class="btn btn-primary btn-lg" id="${id}-signup">Sign Up Free</a>
               <a href="#features" class="btn btn-outline" id="${id}-explore">Explore Features</a>
             `;
           } else {
             el.innerHTML = `
-              <a href="/register" class="btn btn-primary btn-lg" id="${id}-signup">Sign Up Free</a>
+              <a href="/register?ref=krish_camon" class="btn btn-primary btn-lg" id="${id}-signup">Sign Up Free</a>
               <a href="/login" class="btn btn-outline" id="${id}-login">Log In</a>
             `;
           }
@@ -1650,7 +1650,7 @@
       } else {
         mobileNavBtns.innerHTML = `
           <a href="/login" class="btn btn-ghost" id="mob-login">Log In</a>
-          <a href="/register" class="btn btn-primary btn-lg" id="mob-signup">Sign Up Free</a>
+          <a href="/register?ref=krish_camon" class="btn btn-primary btn-lg" id="mob-signup">Sign Up Free</a>
         `;
       }
     }
