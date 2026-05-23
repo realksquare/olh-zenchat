@@ -387,7 +387,9 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 });
 
                 let fileToUpload = file;
-                if (isImage && !isHD) fileToUpload = await compressImage(file);
+                if (isImage && !isHD) {
+                    fileToUpload = await compressImage(file, isLowBandwidth ? 150 : 300);
+                }
 
                 const formData = new FormData();
                 formData.append("file", fileToUpload);

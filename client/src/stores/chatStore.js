@@ -70,11 +70,18 @@ export const useChatStore = create(
                     return true;
                 }
 
-                // Browser Network API — only trust definitive slow types (2g / saveData)
+                // Browser Network API — check low-signal 4G/3G/2G and saveData/downlink
                 const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
                 if (conn) {
                     const type = conn.effectiveType || "";
-                    const definitelySlow = type === "2g" || conn.saveData === true;
+                    const rtt = conn.rtt || 0;
+                    const downlink = conn.downlink || Infinity;
+                    const definitelySlow = 
+                        type === "2g" || 
+                        type === "3g" || 
+                        conn.saveData === true || 
+                        rtt >= 400 || 
+                        downlink <= 1.5;
                     if (definitelySlow) {
                         if (get().isLowBandwidth !== true) set({ isLowBandwidth: true });
                         return true;
@@ -98,8 +105,8 @@ export const useChatStore = create(
 
                     if (res.ok) {
                         const rtt = performance.now() - start;
-                        // RTT threshold: 800 ms on a 5G/WiFi connection is very slow
-                        const isSlowPing = rtt > 800;
+                        // RTT threshold: > 400 ms client-to-server roundabout is slow
+                        const isSlowPing = rtt > 400;
 
                         // Hysteresis: increment/decrement a counter, toggle state only at ±2
                         const prev = get()._spOpConsecutive ?? 0;

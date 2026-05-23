@@ -12,6 +12,25 @@ import { decompressPacket } from "../utils/packetCompressor";
 
 
 
+const publicKeyCache = new Map();
+
+const getCachedPublicKey = async (userId) => {
+    if (!userId) return null;
+    const uidStr = userId.toString();
+    const cached = publicKeyCache.get(uidStr);
+    if (cached) return cached;
+    try {
+        const { data } = await axiosInstance.get(`/auth/users/${uidStr}/public-key`);
+        if (data?.publicKey) {
+            publicKeyCache.set(uidStr, data.publicKey);
+            return data.publicKey;
+        }
+    } catch (err) {
+        console.error(`[E2EE Cache] Failed to fetch public key for ${uidStr}:`, err);
+    }
+    return null;
+};
+
 const SocketContext = createContext(null);
 
 export const SocketProvider = ({ children }) => {
@@ -322,16 +341,16 @@ export const SocketProvider = ({ children }) => {
                         const otherParticipantId = otherParticipant?._id || otherParticipant;
 
                         if (otherParticipantId && currentUserId) {
-                            const [recRes, sndRes] = await Promise.all([
-                                axiosInstance.get(`/auth/users/${otherParticipantId}/public-key`),
-                                axiosInstance.get(`/auth/users/${currentUserId}/public-key`)
+                            const [recKey, sndKey] = await Promise.all([
+                                getCachedPublicKey(otherParticipantId),
+                                getCachedPublicKey(currentUserId)
                             ]);
 
-                            if (recRes.data?.publicKey && sndRes.data?.publicKey) {
+                            if (recKey && sndKey) {
                                 const encrypted = await encryptMessageContentForBoth(
                                     payload.content,
-                                    recRes.data.publicKey,
-                                    sndRes.data.publicKey
+                                    recKey,
+                                    sndKey
                                 );
                                 payload.content = encrypted.ciphertext;
                                 payload.encryptedSymmetricKey = JSON.stringify({
@@ -418,16 +437,16 @@ export const SocketProvider = ({ children }) => {
                 const otherParticipantId = otherParticipant?._id || otherParticipant;
 
                 if (otherParticipantId && currentUserId) {
-                    const [recRes, sndRes] = await Promise.all([
-                        axiosInstance.get(`/auth/users/${otherParticipantId}/public-key`),
-                        axiosInstance.get(`/auth/users/${currentUserId}/public-key`)
+                    const [recKey, sndKey] = await Promise.all([
+                        getCachedPublicKey(otherParticipantId),
+                        getCachedPublicKey(currentUserId)
                     ]);
 
-                    if (recRes.data?.publicKey && sndRes.data?.publicKey) {
+                    if (recKey && sndKey) {
                         const encrypted = await encryptMessageContentForBoth(
                             content,
-                            recRes.data.publicKey,
-                            sndRes.data.publicKey
+                            recKey,
+                            sndKey
                         );
                         payload.content = encrypted.ciphertext;
                         payload.encryptedSymmetricKey = JSON.stringify({
@@ -484,16 +503,16 @@ export const SocketProvider = ({ children }) => {
                     const otherParticipantId = otherParticipant?._id || otherParticipant;
 
                     if (otherParticipantId && currentUserId) {
-                        const [recRes, sndRes] = await Promise.all([
-                            axiosInstance.get(`/auth/users/${otherParticipantId}/public-key`),
-                            axiosInstance.get(`/auth/users/${currentUserId}/public-key`)
+                        const [recKey, sndKey] = await Promise.all([
+                            getCachedPublicKey(otherParticipantId),
+                            getCachedPublicKey(currentUserId)
                         ]);
 
-                        if (recRes.data?.publicKey && sndRes.data?.publicKey) {
+                        if (recKey && sndKey) {
                             const encrypted = await encryptMessageContentForBoth(
                                 newContent,
-                                recRes.data.publicKey,
-                                sndRes.data.publicKey
+                                recKey,
+                                sndKey
                             );
                             
                             payload.encryptedContent = encrypted.ciphertext;

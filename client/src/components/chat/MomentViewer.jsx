@@ -152,6 +152,26 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         if (videoRef.current) videoRef.current.muted = isMuted;
     }, [isMuted]);
 
+    const triggerUnlockPlay = () => {
+        if (audioRef.current && audioRef.current.paused && !isMuted) {
+            audioRef.current.play().catch(e => {});
+        }
+        if (videoRef.current && videoRef.current.paused && !isMuted) {
+            videoRef.current.play().catch(e => {});
+        }
+    };
+
+    useEffect(() => {
+        if (isOpen) {
+            window.addEventListener("click", triggerUnlockPlay);
+            window.addEventListener("touchstart", triggerUnlockPlay);
+        }
+        return () => {
+            window.removeEventListener("click", triggerUnlockPlay);
+            window.removeEventListener("touchstart", triggerUnlockPlay);
+        };
+    }, [currentIndex, isOpen, isMuted]);
+
     const handleNext = () => {
         if (currentIndex < moments.length - 1) {
             setCurrentIndex(currentIndex + 1);
@@ -190,7 +210,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const hasText = !!currentMoment.content;
     const isOwn = (user?._id || user) === currentUserId;
 
-    const bgStyle = currentMoment.music?.coverUrl ? {
+    const bgStyle = (currentMoment.music?.coverUrl && !hasMedia) ? {
         '--vibe-bg': `url(${currentMoment.music.coverUrl})`,
         background: `linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.4)), url(${currentMoment.music.coverUrl})`,
         backgroundSize: 'cover',
@@ -201,8 +221,8 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const isLongMetadata = songMetadata.length > 20;
 
     return createPortal(
-        <div className={`modal-overlay moments-aura-viewer-overlay ${isClosing ? 'fading-out' : ''}`}>
-            <div className="moments-aura-viewer-content" onClick={(e) => e.stopPropagation()} style={bgStyle}>
+        <div className={`modal-overlay moments-aura-viewer-overlay ${isClosing ? 'fading-out' : ''}`} onClick={triggerUnlockPlay} onTouchStart={triggerUnlockPlay}>
+            <div className="moments-aura-viewer-content" onClick={(e) => { e.stopPropagation(); triggerUnlockPlay(); }} onTouchStart={triggerUnlockPlay} style={bgStyle}>
                 {currentMoment.mediaUrl && (
                     <div 
                         className="aura-blur-backdrop" 

@@ -134,7 +134,7 @@ const NetworkToast = () => {
     if (prevLowBandwidth.current === null) {
       prevLowBandwidth.current = isLowBandwidth;
       if (isLowBandwidth) {
-        setToastMessage("SP-OP active - Unstable/slow internet connection detected.");
+        setToastMessage("Slow/unstable connection detected - #SP-OP mode activated");
         setToastIsLow(true);
         setToastVisible(true);
         timer.current = setTimeout(() => setToastVisible(false), 3000);
@@ -144,10 +144,10 @@ const NetworkToast = () => {
 
     clearTimeout(timer.current);
     if (isLowBandwidth) {
-      setToastMessage("SP-OP active - Unstable/slow internet connection detected.");
+      setToastMessage("Slow/unstable connection detected - #SP-OP mode activated");
       setToastIsLow(true);
     } else {
-      setToastMessage("Connection restored. Standard mode resumed.");
+      setToastMessage("Stable connection detected - #SP-OP mode deactivated");
       setToastIsLow(false);
     }
     setToastVisible(true);

@@ -57,7 +57,7 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
                         ))}
                     </div>
                     <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', fontSize: '0.8rem', color: '#64748b', textAlign: 'center' }}>
-                        Zero-Knowledge Security | ZenChat E2EE Protocol V1.0
+                        Zero-Knowledge Security | ZenChat E2EE Protocol v1.0b
                     </div>
                 </div>
             </div>
