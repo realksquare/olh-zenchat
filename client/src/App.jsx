@@ -783,6 +783,8 @@ const App = () => {
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
       {/* 2. PWA Exit Confirmation Overlay */}
       {showPwaExitConfirm && (
         <div className="mobile-bottom-sheet-overlay" style={{ zIndex: 99999999 }} onClick={() => setShowPwaExitConfirm(false)}>
@@ -797,7 +799,6 @@ const App = () => {
                 className="btn btn-primary"
                 onClick={() => {
                   setShowPwaExitConfirm(false);
-                  // On Android PWA, navigate to blank page then close
                   try {
                     window.location.replace("about:blank");
                   } catch (e) {
@@ -852,7 +853,6 @@ const App = () => {
           </div>
         </div>
       )}
-      </Routes>
     </>
   );
 };
