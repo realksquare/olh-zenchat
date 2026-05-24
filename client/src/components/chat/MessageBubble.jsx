@@ -152,12 +152,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const handleTouchStart = (e) => {
         if (!isMobile) return;
         
-        if (e.target.closest('.replied-message-preview') || 
-            e.target.closest('.message-media-wrap') || 
-            e.target.closest('.view-once-placeholder') ||
-            e.target.closest('.file-attachment-card') ||
-            e.target.closest('a') ||
-            e.target.closest('button')) {
+        if (e.target.closest('a') || e.target.closest('button')) {
             return;
         }
 
@@ -179,7 +174,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
             }
             setReactionsSheetOpen(true);
             preventClickRef.current = true;
-        }, 777);
+        }, 500);
     };
 
     const handleTouchMove = (e) => {
@@ -188,7 +183,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         const diffX = Math.abs(touch.clientX - touchStartRef.current.x);
         const diffY = Math.abs(touch.clientY - touchStartRef.current.y);
         
-        if (diffX > 10 || diffY > 10) {
+        if (diffX > 15 || diffY > 15) {
             if (longPressTimerRef.current) {
                 clearTimeout(longPressTimerRef.current);
                 longPressTimerRef.current = null;
@@ -339,16 +334,29 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
 
     useEffect(() => {
         if (!mobileDropdown) return;
+        
         const handleOutside = (e) => {
-            if (e.target.closest('.mobile-bottom-sheet')) {
+            if (e.target.closest('.mobile-bottom-sheet') || e.target.closest('.message-dropdown')) {
                 return;
             }
             if (outerRef.current && !outerRef.current.contains(e.target)) {
                 setMobileDropdown(false);
             }
         };
+
+        const handleScroll = () => {
+            setMobileDropdown(false);
+        };
+
+        document.addEventListener("mousedown", handleOutside);
         document.addEventListener("touchstart", handleOutside);
-        return () => document.removeEventListener("touchstart", handleOutside);
+        window.addEventListener("scroll", handleScroll, true);
+
+        return () => {
+            document.removeEventListener("mousedown", handleOutside);
+            document.removeEventListener("touchstart", handleOutside);
+            window.removeEventListener("scroll", handleScroll, true);
+        };
     }, [mobileDropdown]);
 
     const getThumbnailUrl = (url) => {
@@ -422,6 +430,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
                     onTouchCancel={handleTouchCancel}
+                    onContextMenu={(e) => { if (isMobile) e.preventDefault(); }}
                 >
                     {isViewOnce && isMe ? (
                         <div className={`view-once-placeholder ${isViewedByAnyone ? 'viewed' : ''}`}>
@@ -754,7 +763,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
 
                 {sortedReactions.length > 0 && (
                     <div 
-                        className={`bubble-reactions-capsule reactions-count-${message.reactions.length} ${userHasReacted ? "user-has-reacted" : ""}`}
+                        className={`bubble-reactions-capsule reactions-count-${message.reactions.length === 1 ? '1' : 'multi'} ${userHasReacted ? "user-has-reacted" : ""}`}
                         onClick={handleCapsuleClick}
                     >
                         {sortedReactions.map((r, i) => {
@@ -765,7 +774,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                             const itemClass = isSelf ? "is-own" : "is-peer";
                             return (
                                 <div key={i} className={`bubble-reaction-item ${itemClass} reaction-${r.emoji}`} title={`${name} reacted`}>
-                                    <Icon size={message.reactions.length === 1 ? 14 : 18} />
+                                    <Icon size={message.reactions.length === 1 ? 12 : 14} />
                                 </div>
                             );
                         })}

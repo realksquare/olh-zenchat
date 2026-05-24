@@ -6624,24 +6624,26 @@ select {
 
 /* Dynamic sizes based on number of reactions */
 .bubble-reactions-capsule.reactions-count-1 {
-  padding: 3px 7px;
-  min-width: 28px;
-  height: 24px;
-  bottom: -16px;
+  padding: 2px 5px;
+  min-width: 22px;
+  height: 20px;
+  bottom: -12px;
 }
 .bubble-reactions-capsule.reactions-count-1 .bubble-reaction-item {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
 }
-.bubble-reactions-capsule.reactions-count-2 {
-  padding: 4px 9px;
-  min-width: 52px;
-  height: 28px;
-  bottom: -16px;
-}
-.bubble-reactions-capsule.reactions-count-2 .bubble-reaction-item {
-  width: 24px;
+.bubble-reactions-capsule.reactions-count-2,
+.bubble-reactions-capsule.reactions-count-multi {
+  padding: 3px 7px;
+  min-width: 44px;
   height: 24px;
+  bottom: -13px;
+}
+.bubble-reactions-capsule.reactions-count-2 .bubble-reaction-item,
+.bubble-reactions-capsule.reactions-count-multi .bubble-reaction-item {
+  width: 18px;
+  height: 18px;
 }
 
 @keyframes reactionCapsulePopIn {
