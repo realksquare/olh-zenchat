@@ -212,6 +212,64 @@ const App = () => {
   const setShowExitConfirm = socketContext?.setShowExitConfirm;
 
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showPwaExitConfirm, setShowPwaExitConfirm] = useState(false);
+  const [needsPushSubscription, setNeedsPushSubscription] = useState(false);
+
+  useEffect(() => {
+    const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+    if (!isPWA) return;
+
+    window.history.pushState({ noExit: true }, "");
+
+    const handlePopState = (e) => {
+      if (!e.state || !e.state.noExit) {
+        setShowPwaExitConfirm(true);
+        window.history.pushState({ noExit: true }, "");
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (token) {
+      const isNewSignup = sessionStorage.getItem("showFAQOnLoad") === "1";
+      if (!isNewSignup) {
+        const hasPermission = typeof window.Notification !== 'undefined' && window.Notification.permission === "granted";
+        setNeedsPushSubscription(!hasPermission);
+      }
+    } else {
+      setNeedsPushSubscription(false);
+    }
+  }, [token]);
+
+  const handleSubscribePush = async () => {
+    try {
+      const fcmToken = await requestNotificationPermission();
+      if (fcmToken) {
+        const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+        await axiosInstance.put("/auth/me", {
+          fcmToken,
+          deviceType: isPWA ? "pwa" : "browser",
+          notificationsEnabled: true
+        });
+        setNeedsPushSubscription(false);
+      }
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to subscribe. Please try again or check browser settings.");
+    }
+  };
+
+  const handleExitApp = () => {
+    const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+    if (isPWA) {
+      window.close();
+    } else {
+      window.location.href = "about:blank";
+    }
+  };
 
   useEffect(() => {
     if (!mountedRef.current) {
@@ -248,12 +306,34 @@ const App = () => {
   }, [token, userId]);
 
     useEffect(() => {
-    checkAuth();
-        if (token) {
-            useChatStore.getState().initLocalData();
-            useChatStore.getState().fetchChats();
-            useMomentStore.getState().fetchMoments();
-        }
+        const initialize = async () => {
+            await checkAuth();
+            const currentToken = useAuthStore.getState().token;
+            if (currentToken) {
+                await useChatStore.getState().initLocalData();
+                await useChatStore.getState().fetchChats();
+                await useMomentStore.getState().fetchMoments();
+                
+                // Decrypt previews once E2EE keys are fully cached/ready
+                try {
+                    const { decryptMessageIfNeeded } = await import("./utils/e2eeHelper");
+                    const chats = useChatStore.getState().chats;
+                    let changed = false;
+                    await Promise.all(chats.map(async (chat) => {
+                        if (chat.lastMessage && chat.lastMessage.isEncrypted && !chat.lastMessage.decrypted) {
+                            await decryptMessageIfNeeded(chat.lastMessage);
+                            changed = true;
+                        }
+                    }));
+                    if (changed) {
+                        useChatStore.setState({ chats: [...chats] });
+                    }
+                } catch (e2eeErr) {
+                    console.error("Post-auth E2EE decryption failed:", e2eeErr);
+                }
+            }
+        };
+        initialize();
 
         const clearNotifications = async () => {
             try {
@@ -701,6 +781,70 @@ const App = () => {
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
+      {/* 2. PWA Exit Confirmation Overlay */}
+      {showPwaExitConfirm && (
+        <div className="mobile-bottom-sheet-overlay" style={{ zIndex: 99999999 }} onClick={() => setShowPwaExitConfirm(false)}>
+          <div className="mobile-bottom-sheet exit-pwa-sheet" onClick={(e) => e.stopPropagation()} style={{ padding: "20px 20px 32px" }}>
+            <div className="mobile-bottom-sheet-handle" />
+            <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#f8fafc", marginBottom: "8px", textAlign: "center" }}>Exit ZenChat?</h3>
+            <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "24px", lineHeight: "1.5", textAlign: "center" }}>
+              Are you sure you want to exit the application?
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  setShowPwaExitConfirm(false);
+                  window.close();
+                }}
+                style={{ width: "100%", padding: "12px", borderRadius: "12px", background: "#ef4444", border: "none", color: "#fff", cursor: "pointer", fontWeight: "600", fontSize: "0.95rem" }}
+              >
+                Exit App
+              </button>
+              <button
+                className="btn btn-outline"
+                onClick={() => setShowPwaExitConfirm(false)}
+                style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#cbd5e1", cursor: "pointer", fontSize: "0.95rem" }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Compulsory Push Notification Lock Overlay */}
+      {needsPushSubscription && (
+        <div className="compulsory-push-overlay">
+          <div className="compulsory-push-card">
+            <div className="compulsory-push-icon-pulse">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+            </div>
+            <h2 className="compulsory-push-title">Enable Notifications</h2>
+            <p className="compulsory-push-desc">
+              To guarantee real-time delivery of your secure end-to-end encrypted messages and maintain an active connection, push notifications are **mandatory** on ZenChat.
+            </p>
+            {typeof window.Notification !== 'undefined' && window.Notification.permission === 'denied' && (
+              <div className="compulsory-push-warning">
+                Notifications are currently blocked in your browser. Please reset notification settings in your browser address bar to continue using ZenChat.
+              </div>
+            )}
+            <div className="compulsory-push-buttons">
+              {typeof window.Notification !== 'undefined' && window.Notification.permission !== 'denied' && (
+                <button className="btn btn-primary compulsory-push-btn" onClick={handleSubscribePush}>
+                  Subscribe Now
+                </button>
+              )}
+              <button className="btn btn-outline compulsory-push-exit-btn" onClick={handleExitApp}>
+                Exit Site / PWA
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </Routes>
     </>
   );

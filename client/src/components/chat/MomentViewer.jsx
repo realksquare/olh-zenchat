@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
 import { formatDistanceToNow } from "date-fns";
+import { getAudioContext } from "../../utils/audio";
 
 const FILTER_STYLES = {
     none: {},
@@ -176,11 +177,22 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     }, [isMuted]);
 
     const triggerUnlockPlay = () => {
-        if (audioRef.current && audioRef.current.paused && !isMuted) {
-            audioRef.current.play().catch(e => {});
+        try {
+            const ctx = getAudioContext();
+            if (ctx && ctx.state === "suspended") {
+                ctx.resume().catch(() => {});
+            }
+        } catch (err) {}
+
+        if (audioRef.current && !isMuted) {
+            audioRef.current.play().catch(e => {
+                console.log("Audio play failed on unlock:", e);
+            });
         }
-        if (videoRef.current && videoRef.current.paused && !isMuted) {
-            videoRef.current.play().catch(e => {});
+        if (videoRef.current && !isMuted) {
+            videoRef.current.play().catch(e => {
+                console.log("Video play failed on unlock:", e);
+            });
         }
     };
 

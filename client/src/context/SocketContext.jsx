@@ -208,8 +208,10 @@ export const SocketProvider = ({ children }) => {
             useChatStore.getState().setPeerLowBandwidth(userId, isLowBandwidth);
         };
 
-        const handleMessageEdited = ({ message }) => {
-            useChatStore.getState().updateMessage(message.chatId, message);
+        const handleMessageEdited = async ({ message }) => {
+            const decompressed = decompressPacket(message);
+            await decryptMessageIfNeeded(decompressed);
+            useChatStore.getState().updateMessage(decompressed.chatId, decompressed);
         };
 
         const handleMessageReactionUpdated = ({ chatId, _id, reactions }) => {

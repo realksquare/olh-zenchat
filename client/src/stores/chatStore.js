@@ -508,18 +508,24 @@ export const useChatStore = create(
 
             updateMessage: (chatId, updatedMessage) => {
                 set((state) => {
-                    const updatedMessages = (state.messages[chatId] || []).map((msg) =>
-                        msg._id?.toString() === updatedMessage._id?.toString()
-                            ? { ...msg, ...updatedMessage }
-                            : msg
-                    );
+                    const updatedMessages = (state.messages[chatId] || []).map((msg) => {
+                        if (msg._id?.toString() === updatedMessage._id?.toString()) {
+                            const merged = { ...msg, ...updatedMessage };
+                            persistMessage({ ...merged, chatId: chatId?.toString() });
+                            return merged;
+                        }
+                        return msg;
+                    });
 
-                    const updatedChats = state.chats.map((chat) =>
-                        chat._id?.toString() === chatId?.toString() &&
-                            chat.lastMessage?._id?.toString() === updatedMessage._id?.toString()
-                            ? { ...chat, lastMessage: { ...chat.lastMessage, ...updatedMessage } }
-                            : chat
-                    );
+                    const updatedChats = state.chats.map((chat) => {
+                        if (chat._id?.toString() === chatId?.toString() &&
+                            chat.lastMessage?._id?.toString() === updatedMessage._id?.toString()) {
+                            const mergedChat = { ...chat, lastMessage: { ...chat.lastMessage, ...updatedMessage } };
+                            persistChat(mergedChat);
+                            return mergedChat;
+                        }
+                        return chat;
+                    });
 
                     let updatedActiveChat = state.activeChat;
                     if (

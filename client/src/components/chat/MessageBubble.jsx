@@ -121,6 +121,11 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const imgRef = useRef(null);
     const outerRef = useRef(null);
 
+    // Touch gesture state tracking
+    const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
+    const longPressTimerRef = useRef(null);
+    const preventClickRef = useRef(false);
+
     const isMobile = window.innerWidth <= 768;
     const shouldDelayLoad = isLowBandwidth && !isMe && !manualLoad;
     const status = message?.status ?? "sent";
@@ -131,6 +136,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const isShown = !needsLoading || isMediaLoaded;
 
     const handleMouseEnter = () => {
+        if (isMobile) return;
         if (reactionsTimeoutRef.current) {
             clearTimeout(reactionsTimeoutRef.current);
             reactionsTimeoutRef.current = null;
@@ -139,10 +145,93 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     };
 
     const handleMouseLeave = () => {
-        if (reactionsTimeoutRef.current) clearTimeout(reactionsTimeoutRef.current);
-        reactionsTimeoutRef.current = setTimeout(() => {
-            setShowReactionsPill(false);
-        }, 1000);
+        if (isMobile) return;
+        setShowReactionsPill(false);
+    };
+
+    const handleTouchStart = (e) => {
+        if (!isMobile) return;
+        
+        if (e.target.closest('.replied-message-preview') || 
+            e.target.closest('.message-media-wrap') || 
+            e.target.closest('.view-once-placeholder') ||
+            e.target.closest('.file-attachment-card') ||
+            e.target.closest('a') ||
+            e.target.closest('button')) {
+            return;
+        }
+
+        const touch = e.touches[0];
+        touchStartRef.current = {
+            x: touch.clientX,
+            y: touch.clientY,
+            time: Date.now()
+        };
+        preventClickRef.current = false;
+
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+        }
+
+        longPressTimerRef.current = setTimeout(() => {
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+            setReactionsSheetOpen(true);
+            preventClickRef.current = true;
+        }, 777);
+    };
+
+    const handleTouchMove = (e) => {
+        if (!isMobile) return;
+        const touch = e.touches[0];
+        const diffX = Math.abs(touch.clientX - touchStartRef.current.x);
+        const diffY = Math.abs(touch.clientY - touchStartRef.current.y);
+        
+        if (diffX > 10 || diffY > 10) {
+            if (longPressTimerRef.current) {
+                clearTimeout(longPressTimerRef.current);
+                longPressTimerRef.current = null;
+            }
+        }
+    };
+
+    const handleTouchEnd = (e) => {
+        if (!isMobile) return;
+        
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+
+        if (preventClickRef.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+
+        const touchDuration = Date.now() - touchStartRef.current.time;
+        if (touchDuration < 300) {
+            const now = Date.now();
+            if (now - lastTapRef.current < 300) {
+                if (tapTimeoutRef.current) {
+                    clearTimeout(tapTimeoutRef.current);
+                    tapTimeoutRef.current = null;
+                }
+                e.preventDefault();
+                e.stopPropagation();
+                setMobileDropdown(true);
+            } else {
+                lastTapRef.current = now;
+            }
+        }
+    };
+
+    const handleTouchCancel = () => {
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
     };
 
     const handleReact = (emojiKey) => {
@@ -152,6 +241,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     };
 
     const handleBubbleClick = (e) => {
+        if (isMobile) return;
         if (e.target.closest('.replied-message-preview') || 
             e.target.closest('.message-media-wrap') || 
             e.target.closest('.view-once-placeholder') ||
@@ -159,29 +249,11 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
             e.target.closest('a') ||
             e.target.closest('button')) {
             return;
-        }
-
-        if (isMobile) {
-            e.preventDefault();
-            e.stopPropagation();
-            const now = Date.now();
-            if (now - lastTapRef.current < 250) {
-                if (tapTimeoutRef.current) {
-                    clearTimeout(tapTimeoutRef.current);
-                    tapTimeoutRef.current = null;
-                }
-                setMobileDropdown(true);
-            } else {
-                lastTapRef.current = now;
-                tapTimeoutRef.current = setTimeout(() => {
-                    setReactionsSheetOpen(true);
-                    tapTimeoutRef.current = null;
-                }, 250);
-            }
         }
     };
 
     const handleBubbleDoubleClick = (e) => {
+        if (isMobile) return;
         if (e.target.closest('.replied-message-preview') || 
             e.target.closest('.message-media-wrap') || 
             e.target.closest('.view-once-placeholder') ||
@@ -190,11 +262,9 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
             e.target.closest('button')) {
             return;
         }
-        if (!isMobile) {
-            e.preventDefault();
-            e.stopPropagation();
-            setMobileDropdown(prev => !prev);
-        }
+        e.preventDefault();
+        e.stopPropagation();
+        setMobileDropdown(prev => !prev);
     };
 
     const handleCapsuleClick = (e) => {
@@ -348,6 +418,10 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                     className={`message-bubble ${isMe ? `mine status-${status === "read" ? "seen" : status}` : "theirs"} ${isViewOnce ? "view-once" : ""}`}
                     onClick={handleBubbleClick}
                     onDoubleClick={handleBubbleDoubleClick}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    onTouchCancel={handleTouchCancel}
                 >
                     {isViewOnce && isMe ? (
                         <div className={`view-once-placeholder ${isViewedByAnyone ? 'viewed' : ''}`}>
@@ -478,6 +552,8 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                       className="message-video" 
                                                       style={{ maxWidth: '100%', borderRadius: '8px' }} 
                                                       onLoadedData={() => setIsMediaLoaded(true)}
+                                                      controls
+                                                      playsInline
                                                   />
                                              ) : (
                                                  <div className="file-attachment-card" style={{
@@ -689,12 +765,12 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                             const itemClass = isSelf ? "is-own" : "is-peer";
                             return (
                                 <div key={i} className={`bubble-reaction-item ${itemClass} reaction-${r.emoji}`} title={`${name} reacted`}>
-                                    <Icon size={message.reactions.length === 1 ? 10 : 12} />
+                                    <Icon size={message.reactions.length === 1 ? 14 : 18} />
                                 </div>
                             );
                         })}
                         {message.reactions.length > 1 && (
-                            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', marginLeft: '1px' }}>
+                            <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', marginLeft: '2px' }}>
                                 {message.reactions.length}
                             </span>
                         )}

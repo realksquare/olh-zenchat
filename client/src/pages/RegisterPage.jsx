@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
+import { requestNotificationPermission } from "../utils/firebase";
+import axiosInstance from "../utils/axios";
 
 const validatePassword = (pw) => {
     if (pw.length < 7) return "At least 7 characters";
@@ -44,6 +46,25 @@ const RegisterPage = () => {
 
         const result = await register(form.username, form.email, form.password, refParam);
         if (result.success) {
+            // Friendly inline request on registration user gesture
+            try {
+                if (typeof window.Notification !== 'undefined') {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        const fcmToken = await requestNotificationPermission();
+                        if (fcmToken) {
+                            const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+                            await axiosInstance.put("/auth/me", {
+                                fcmToken,
+                                deviceType: isPWA ? "pwa" : "browser",
+                                notificationsEnabled: true
+                            });
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Push subscription during registration failed:", err);
+            }
             sessionStorage.setItem("showFAQOnLoad", "1");
             navigate("/");
         }
@@ -151,6 +172,30 @@ const RegisterPage = () => {
                         {pwError && !form.password && (
                             <span className="field-hint field-hint-error">{pwError}</span>
                         )}
+                    </div>
+
+                    <div className="signup-push-notice-box" style={{
+                        background: 'rgba(61, 165, 217, 0.08)',
+                        border: '1px solid rgba(61, 165, 217, 0.25)',
+                        borderRadius: '10px',
+                        padding: '12px',
+                        margin: '16px 0',
+                        fontSize: '0.8rem',
+                        color: '#94a3b8',
+                        lineHeight: '1.4',
+                        display: 'flex',
+                        gap: '10px',
+                        alignItems: 'flex-start',
+                        textAlign: 'left'
+                    }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3da5d9" strokeWidth="2.5" style={{ flexShrink: 0, marginTop: '2px' }}>
+                            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <div>
+                            <strong style={{ color: '#f8fafc', display: 'block', marginBottom: '3px' }}>Push Notifications Enabled</strong>
+                            By creating an account, you will be subscribed to push notifications on this browser to receive secure real-time message updates.
+                        </div>
                     </div>
 
                     <button type="submit" className="btn-primary" disabled={isLoading}>

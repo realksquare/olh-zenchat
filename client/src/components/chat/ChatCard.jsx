@@ -131,6 +131,16 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
             return visible[0] || null;
         })();
         if (!effectiveLastMsg) return { text: "No messages yet", isUnread: false };
+        
+        if (effectiveLastMsg.deletedForEveryone || effectiveLastMsg.deletedFor?.some(id => id === user?._id || id?.toString() === user?._id)) {
+            return { text: "This message was deleted", isUnread: false };
+        }
+        const messageAgeMs = Date.now() - new Date(effectiveLastMsg.createdAt).getTime();
+        const isGhostDeleted = !effectiveLastMsg.content && !effectiveLastMsg.mediaUrl && !effectiveLastMsg.music && effectiveLastMsg.type === "text" && !effectiveLastMsg.deletedForEveryone && messageAgeMs > 15000;
+        if (isGhostDeleted) {
+            return { text: "This message was deleted", isUnread: false };
+        }
+
         const { content, type, senderId } = effectiveLastMsg;
         const isMe = senderId?._id === user?._id || senderId === user?._id;
         if (type === "image") return { text: isMe ? "You sent an image" : "Sent an image", isUnread: false };
