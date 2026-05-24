@@ -4,6 +4,7 @@ const User = require("../models/User");
 const mongoose = require("mongoose");
 const { sendPushNotification } = require("../utils/firebase");
 const { decompressPacket, compressPacket } = require("../utils/packetCompressor");
+const { unpackMessage, isBinaryPacket } = require("../utils/binaryPacker");
 
 const onlineUsers = new Map();
 const disconnectTimeouts = new Map();
@@ -440,7 +441,8 @@ const registerSocketHandlers = (io) => {
 
         socket.on("send_message", async (rawPayload) => {
             try {
-                const decompressed = decompressPacket(rawPayload);
+                const unpacked = isBinaryPacket(rawPayload) ? unpackMessage(rawPayload) : rawPayload;
+                const decompressed = decompressPacket(unpacked);
                 const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth, isZenMessage } = decompressed;
 
                 const chat = await Chat.findById(chatId).populate("participants", "privacySettings contacts");

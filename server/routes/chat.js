@@ -345,4 +345,72 @@ router.put("/:chatId/disappearing", async (req, res) => {
     }
 });
 
+// REST Outbox Background Sync Fallback Endpoint
+router.post("/offline-sync", async (req, res) => {
+    try {
+        const { messages } = req.body;
+        if (!messages || !Array.isArray(messages)) {
+            return res.status(400).json({ message: "Invalid payload, array of messages required" });
+        }
+
+        const io = req.app.get("io");
+        const syncedMessages = [];
+
+        for (const msgPayload of messages) {
+            const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth, isZenMessage } = msgPayload;
+
+            const chat = await Chat.findById(chatId).populate("participants", "privacySettings contacts blockedUsers notificationsEnabled fcmTokens fcmToken");
+            if (!chat) continue;
+
+            const message = await Message.create({
+                chatId,
+                senderId: req.user._id,
+                content,
+                type: type || "text",
+                mediaUrl: mediaUrl || "",
+                replyTo: replyTo || null,
+                isViewOnce: isViewOnce || false,
+                cid: cid || null,
+                status: "sent",
+                disappearingMode: chat.disappearingMode || "off",
+                isEncrypted: isEncrypted || false,
+                encryptedSymmetricKey: encryptedSymmetricKey || "",
+                iv: iv || "",
+                isLowBandwidth: isLowBandwidth || false,
+                isZenMessage: isZenMessage || false
+            });
+
+            await Chat.findByIdAndUpdate(chatId, {
+                lastMessage: message._id,
+                updatedAt: new Date(),
+                deletedBy: [],
+            });
+
+            const populated = await Message.findById(message._id)
+                .populate("senderId", "username avatar createdAt")
+                .populate("replyTo");
+
+            const messagePayloadBase = {
+                ...populated.toObject(),
+                chatId: chatId.toString(),
+            };
+
+            syncedMessages.push(messagePayloadBase);
+
+            if (io) {
+                const participants = chat.participants;
+                participants.forEach((participant) => {
+                    const pIdStr = participant._id.toString();
+                    io.to(pIdStr).emit("receive_message", { message: messagePayloadBase });
+                });
+            }
+        }
+
+        res.json({ success: true, count: syncedMessages.length });
+    } catch (err) {
+        console.error("[REST Offline Sync] Failed:", err);
+        res.status(500).json({ message: "Server error during outbox sync" });
+    }
+});
+
 module.exports = router;

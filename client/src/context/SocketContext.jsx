@@ -8,7 +8,8 @@ import { enqueueOutbox, drainOutbox, drainPendingMedia } from "../db/zenDB";
 import { decryptMessageIfNeeded } from "../utils/e2eeHelper";
 import { encryptMessageContent, encryptMessageContentForBoth } from "../utils/crypto";
 import axiosInstance from "../utils/axios";
-import { decompressPacket } from "../utils/packetCompressor";
+import { decompressPacket, compressPacket } from "../utils/packetCompressor";
+import { packMessage, unpackMessage, isBinaryPacket, hexToBytes, bytesToHex } from "../utils/binaryPacker";
 
 
 
@@ -144,7 +145,8 @@ export const SocketProvider = ({ children }) => {
         };
 
         const handleReceiveMessage = async ({ message }) => {
-            const decompressed = decompressPacket(message);
+            const raw = isBinaryPacket(message) ? unpackMessage(message) : message;
+            const decompressed = decompressPacket(raw);
             // Decrypt transparently in background before saving/state updates
             await decryptMessageIfNeeded(decompressed);
 
@@ -209,7 +211,8 @@ export const SocketProvider = ({ children }) => {
         };
 
         const handleMessageEdited = async ({ message }) => {
-            const decompressed = decompressPacket(message);
+            const raw = isBinaryPacket(message) ? unpackMessage(message) : message;
+            const decompressed = decompressPacket(raw);
             await decryptMessageIfNeeded(decompressed);
             useChatStore.getState().updateMessage(decompressed.chatId, decompressed);
         };
@@ -552,10 +555,17 @@ export const SocketProvider = ({ children }) => {
 
     const isFlushingRef = useRef(false);
     const flushOutbox = useCallback(async () => {
-        if (!socketRef.current?.connected || isFlushingRef.current) return;
+        if (isFlushingRef.current) return;
+        
+        const hasInternet = typeof navigator !== "undefined" ? navigator.onLine : true;
+        if (!hasInternet) return;
+        
         isFlushingRef.current = true;
         try {
             const queued = await drainOutbox();
+            if (!queued || queued.length === 0) return;
+            
+            const processedQueue = [];
             for (const item of queued) {
                 const { id: _id, createdAt: _ts, ...payload } = item;
                 if (payload.content && payload.type === "text" && !payload.isEncrypted) {
@@ -590,7 +600,30 @@ export const SocketProvider = ({ children }) => {
                         console.error("[SocketContext] E2EE encryption-on-flush skipped/failed:", err);
                     }
                 }
-                socketRef.current.emit("send_message", payload);
+                processedQueue.push(payload);
+            }
+            
+            if (socketRef.current?.connected) {
+                for (const payload of processedQueue) {
+                    const binaryPayload = { ...payload };
+                    if (payload.isEncrypted) {
+                        binaryPayload.content = hexToBytes(payload.content);
+                        binaryPayload.iv = hexToBytes(payload.iv);
+                    }
+                    const compressed = compressPacket(binaryPayload);
+                    const packed = packMessage(compressed);
+                    socketRef.current.emit("send_message", packed);
+                }
+            } else {
+                try {
+                    const { data } = await axiosInstance.post("/chats/offline-sync", { messages: processedQueue });
+                    console.log("[SocketContext] REST offline outbox sync completed successfully:", data);
+                } catch (restErr) {
+                    console.error("[SocketContext] REST offline sync failed, re-queueing to outbox:", restErr);
+                    for (const payload of processedQueue) {
+                        await enqueueOutbox(payload);
+                    }
+                }
             }
         } finally {
             isFlushingRef.current = false;
@@ -688,9 +721,23 @@ export const SocketProvider = ({ children }) => {
         }
 
         if (socketRef.current?.connected) {
-            socketRef.current.emit("send_message", payload);
+            const binaryPayload = { ...payload };
+            if (payload.isEncrypted) {
+                binaryPayload.content = hexToBytes(payload.content);
+                binaryPayload.iv = hexToBytes(payload.iv);
+            }
+            const compressed = compressPacket(binaryPayload);
+            const packed = packMessage(compressed);
+            socketRef.current.emit("send_message", packed);
         } else {
             enqueueOutbox(payload);
+            try {
+                if ('serviceWorker' in navigator && 'SyncManager' in window) {
+                    navigator.serviceWorker.ready.then((registration) => {
+                        registration.sync.register('sync-zenchat-messages').catch(() => {});
+                    });
+                }
+            } catch (_) {}
         }
     }, []);
 

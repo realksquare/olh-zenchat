@@ -223,7 +223,12 @@ export const encryptMessageContent = async (plaintext, recipientPublicKeyJWK) =>
     return {
         ciphertext: bytesToHex(new Uint8Array(encryptedContent)),
         encryptedSymmetricKey: bytesToHex(new Uint8Array(encryptedSymmetricKey)),
-        iv: bytesToHex(iv)
+        iv: bytesToHex(iv),
+        
+        // Raw bytes for binary packing
+        ciphertextBytes: new Uint8Array(encryptedContent),
+        encryptedSymmetricKeyBytes: new Uint8Array(encryptedSymmetricKey),
+        ivBytes: iv
     };
 };
 
@@ -287,7 +292,13 @@ export const encryptMessageContentForBoth = async (plaintext, recipientPublicKey
         ciphertext: bytesToHex(new Uint8Array(encryptedContent)),
         encryptedSymmetricKeyRec: bytesToHex(new Uint8Array(encryptedSymmetricKeyRec)),
         encryptedSymmetricKeySnd: bytesToHex(new Uint8Array(encryptedSymmetricKeySnd)),
-        iv: bytesToHex(iv)
+        iv: bytesToHex(iv),
+        
+        // Raw bytes for binary packing
+        ciphertextBytes: new Uint8Array(encryptedContent),
+        encryptedSymmetricKeyRecBytes: new Uint8Array(encryptedSymmetricKeyRec),
+        encryptedSymmetricKeySndBytes: new Uint8Array(encryptedSymmetricKeySnd),
+        ivBytes: iv
     };
 };
 
@@ -296,11 +307,14 @@ export const encryptMessageContentForBoth = async (plaintext, recipientPublicKey
  * 1. Decrypts the raw ephemeral AES key using the user's RSA private key.
  * 2. Imports the symmetric key.
  * 3. Decrypts the ciphertext using the symmetric key and iv.
- * Returns the decrypted plaintext string.
+ * Accepts both Hex strings and raw Uint8Arrays for backwards compatibility.
  */
-export const decryptMessageContent = async (ciphertextHex, encryptedSymmetricKeyHex, ivHex, privateKey) => {
+export const decryptMessageContent = async (ciphertext, encryptedSymmetricKey, iv, privateKey) => {
     // 1. Decrypt the symmetric key using the user's RSA private key
-    const encryptedSymmetricKeyBytes = hexToBytes(encryptedSymmetricKeyHex);
+    const encryptedSymmetricKeyBytes = typeof encryptedSymmetricKey === "string"
+        ? hexToBytes(encryptedSymmetricKey)
+        : new Uint8Array(encryptedSymmetricKey);
+        
     const rawSymmetricKey = await window.crypto.subtle.decrypt(
         { name: "RSA-OAEP" },
         privateKey,
@@ -317,8 +331,14 @@ export const decryptMessageContent = async (ciphertextHex, encryptedSymmetricKey
     );
 
     // 3. Decrypt the ciphertext
-    const ciphertextBytes = hexToBytes(ciphertextHex);
-    const ivBytes = hexToBytes(ivHex);
+    const ciphertextBytes = typeof ciphertext === "string"
+        ? hexToBytes(ciphertext)
+        : new Uint8Array(ciphertext);
+        
+    const ivBytes = typeof iv === "string"
+        ? hexToBytes(iv)
+        : new Uint8Array(iv);
+
     const decryptedBytes = await window.crypto.subtle.decrypt(
         { name: "AES-GCM", iv: ivBytes },
         symmetricKey,

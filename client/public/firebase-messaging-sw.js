@@ -27,6 +27,30 @@ db.version(3).stores({
     settings: "key",
     outbox: "++id, chatId, createdAt",
 });
+db.version(4).stores({
+    chats: "_id, updatedAt, lastMessage._id",
+    messages: "_id, chatId, createdAt, senderId",
+    settings: "key",
+    outbox: "++id, chatId, createdAt",
+    keys: "key",
+});
+db.version(5).stores({
+    chats: "_id, updatedAt, lastMessage._id",
+    messages: "_id, chatId, createdAt, senderId",
+    settings: "key",
+    outbox: "++id, chatId, createdAt",
+    keys: "key",
+    vault: "id, name, type, size, date",
+});
+db.version(6).stores({
+    chats: "_id, updatedAt, lastMessage._id",
+    messages: "_id, chatId, createdAt, senderId",
+    settings: "key",
+    outbox: "++id, chatId, createdAt",
+    keys: "key",
+    vault: "id, name, type, size, date",
+    pendingMediaOutbox: "++id, chatId, createdAt",
+});
 
 try {
     firebase.initializeApp(firebaseConfig);
@@ -175,3 +199,43 @@ self.addEventListener('fetch', (event) => {
             .catch(() => caches.match(event.request).then((res) => res || caches.match('/') || new Response('Offline', { status: 503 })))
     );
 });
+
+// PWA Background Sync API Handler
+self.addEventListener('sync', (event) => {
+    if (event.tag === 'sync-zenchat-messages') {
+        event.waitUntil(flushOutboxInBackground());
+    }
+});
+
+async function flushOutboxInBackground() {
+    try {
+        const queued = await db.outbox.orderBy("createdAt").toArray();
+        if (!queued || queued.length === 0) return;
+
+        const tokenObj = await db.settings.get("token");
+        const apiUrlObj = await db.settings.get("apiUrl");
+        
+        if (!tokenObj?.value) return;
+        
+        const rawUrl = apiUrlObj?.value || "";
+        const baseUrl = rawUrl.replace(/\/$/, "");
+
+        const response = await fetch(`${baseUrl}/api/chats/offline-sync`, {
+            method: 'POST',
+            body: JSON.stringify({ messages: queued }),
+            headers: {
+                'Authorization': `Bearer ${tokenObj.value}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            console.log("[SW] Background sync completed successfully!");
+            await db.outbox.clear();
+        } else {
+            console.error("[SW] Background sync response not OK:", response.status);
+        }
+    } catch (err) {
+        console.error("[SW] Background sync failed:", err);
+    }
+}
