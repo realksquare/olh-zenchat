@@ -582,15 +582,16 @@ const registerSocketHandlers = (io) => {
                             }
 
                             let pushSuccess = false;
-                            for (const tkn of targetTokens) {
-                                const success = await sendPushNotification(offlineUser._id, tkn, title, body, {
+                            const sendPromises = targetTokens.map(tkn => 
+                                sendPushNotification(offlineUser._id, tkn, title, body, {
                                     chatId: chatId.toString(),
                                     messageId: message._id.toString(),
                                     type: 'new_message',
                                     isViewOnce: populated.isViewOnce ? "true" : "false"
-                                });
-                                if (success) pushSuccess = true;
-                            }
+                                })
+                            );
+                            const results = await Promise.all(sendPromises);
+                            if (results.some(success => success)) pushSuccess = true;
 
                             if (pushSuccess) {
                                 const currentMsg = await Message.findById(message._id);

@@ -6643,26 +6643,26 @@ select {
 
 /* Dynamic sizes based on number of reactions */
 .bubble-reactions-capsule.reactions-count-1 {
-  padding: 2px 5px;
-  min-width: 22px;
-  height: 20px;
-  bottom: -12px;
+  padding: 1px 4px;
+  min-width: 20px;
+  height: 18px;
+  bottom: -10px;
 }
 .bubble-reactions-capsule.reactions-count-1 .bubble-reaction-item {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 .bubble-reactions-capsule.reactions-count-2,
 .bubble-reactions-capsule.reactions-count-multi {
-  padding: 3px 7px;
-  min-width: 44px;
-  height: 24px;
-  bottom: -13px;
+  padding: 2px 6px;
+  min-width: 40px;
+  height: 22px;
+  bottom: -11px;
 }
 .bubble-reactions-capsule.reactions-count-2 .bubble-reaction-item,
 .bubble-reactions-capsule.reactions-count-multi .bubble-reaction-item {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 @keyframes reactionCapsulePopIn {
@@ -6674,8 +6674,8 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   transition: all 0.2s ease;
 }
 
@@ -6706,13 +6706,15 @@ select {
 /* 1. HEART PULSE */
 .reaction-option-btn.reaction-heart:hover svg,
 .bubble-reactions-capsule .reaction-heart svg {
-  animation: r-heartbeat 1s infinite ease-in-out;
+  animation: r-heartbeat 1.2s infinite ease-in-out;
 }
 @keyframes r-heartbeat {
-  0%, 100% { transform: scale(1); }
-  25% { transform: scale(1.18); }
-  45% { transform: scale(1.05); }
-  70% { transform: scale(1.25); }
+  0% { transform: scale(1); }
+  14% { transform: scale(1.12); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.12); }
+  70% { transform: scale(1); }
+  100% { transform: scale(1); }
 }
 
 /* 2. THUMBS UP thrust */
@@ -6722,19 +6724,32 @@ select {
 }
 @keyframes r-thumbsup {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  30% { transform: translateY(2px) rotate(-10deg); }
-  60% { transform: translateY(-4px) rotate(8deg); }
+  25% { transform: translateY(1.5px) rotate(-6deg); }
+  50% { transform: translateY(-3px) rotate(4deg); }
+  75% { transform: translateY(-0.5px) rotate(-1deg); }
 }
 
-/* 3. LAUGHING smile/wobble */
+/* 3. LAUGHING smile/wobble + tears dripping */
 .reaction-option-btn.reaction-laughing:hover svg,
 .bubble-reactions-capsule .reaction-laughing svg {
-  animation: r-laughing 1.2s infinite ease-in-out;
+  animation: r-laughing 1.4s infinite ease-in-out;
 }
 @keyframes r-laughing {
   0%, 100% { transform: rotate(0deg) scale(1); }
-  25% { transform: rotate(-8deg) scale(1.1); }
-  70% { transform: rotate(8deg) scale(1.1); }
+  25% { transform: rotate(-5deg) scale(1.12); }
+  50% { transform: rotate(0deg) scale(1); }
+  75% { transform: rotate(5deg) scale(1.12); }
+}
+
+.reaction-option-btn.reaction-laughing:hover .r-tear-drop,
+.bubble-reactions-capsule .reaction-laughing .r-tear-drop {
+  animation: r-tear-fall 1.4s infinite linear;
+}
+@keyframes r-tear-fall {
+  0% { transform: translateY(-2px) scale(0.5); opacity: 0; }
+  30% { transform: translateY(0px) scale(1); opacity: 1; }
+  80% { transform: translateY(4px) scale(0.8); opacity: 0.8; }
+  100% { transform: translateY(6px) scale(0.3); opacity: 0; }
 }
 
 /* 4. SAD tear slide */
@@ -6743,8 +6758,10 @@ select {
   animation: r-sad 1.5s infinite ease-in-out;
 }
 @keyframes r-sad {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(1.5px) rotate(-3deg); }
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(0.8px) rotate(-1.5deg); }
+  50% { transform: translateY(1.6px) rotate(0deg); }
+  75% { transform: translateY(0.8px) rotate(1.5deg); }
 }
 
 /* 5. ANGRY vibrate */
@@ -6753,11 +6770,12 @@ select {
   animation: r-angry 0.6s infinite linear;
 }
 @keyframes r-angry {
-  0%, 100% { transform: translate(0, 0) rotate(0); }
-  20% { transform: translate(-1px, 1px) rotate(-2deg); }
-  40% { transform: translate(1px, -1px) rotate(2deg); }
-  60% { transform: translate(-1px, -1px) rotate(-1deg); }
-  80% { transform: translate(1px, 1px) rotate(1deg); }
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  16% { transform: translate(-1px, 0.5px) rotate(-1.5deg); }
+  33% { transform: translate(1px, -0.5px) rotate(1.5deg); }
+  50% { transform: translate(-0.5px, -1px) rotate(-1deg); }
+  66% { transform: translate(0.5px, 1px) rotate(1deg); }
+  83% { transform: translate(-0.5px, 0.5px) rotate(-0.5deg); }
 }
 
 /* 6. HIFI spark/clap */
@@ -6767,8 +6785,9 @@ select {
 }
 @keyframes r-hifi {
   0%, 100% { transform: scale(1) rotate(0deg); }
-  35% { transform: scale(1.22) rotate(-8deg); }
-  70% { transform: scale(1.1) rotate(8deg); }
+  25% { transform: scale(1.18) rotate(-5deg); }
+  50% { transform: scale(1.04) rotate(0deg); }
+  75% { transform: scale(1.18) rotate(5deg); }
 }
 
 /* ── WhatsApp-Like Reaction Detail list sheets ── */
@@ -7010,4 +7029,28 @@ select {
 @keyframes slideUpPwa {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
+}
+
+/* ── Compulsory Push Overlay Solidification ── */
+.compulsory-push-overlay {
+  background: #090d14 !important;
+  opacity: 1 !important;
+}
+
+/* ── Text Selection Blocking & Overrides ── */
+.message-bubble {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+.message-text, .message-text * {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+body.reactions-sheet-open * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-touch-callout: none !important;
 }

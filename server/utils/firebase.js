@@ -40,6 +40,14 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
         stringData[k] = String(v);
     }
 
+    const clientUrl = (process.env.CLIENT_URL || "http://localhost:5173").replace(/\/$/, "");
+    let clickUrl = clientUrl;
+    if (data.url) {
+        clickUrl = data.url.startsWith('http') ? data.url : `${clientUrl}${data.url}`;
+    } else if (data.click_action) {
+        clickUrl = data.click_action.startsWith('http') ? data.click_action : `${clientUrl}${data.click_action}`;
+    }
+
     const message = {
         token: fcmToken,
         notification: {
@@ -52,12 +60,14 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
             notification: {
                 title: String(title),
                 body: String(body),
-                icon: "/favicon.svg",
-                badge: "/favicon.svg",
+                icon: `${clientUrl}/favicon.svg`,
+                badge: `${clientUrl}/favicon.svg`,
                 tag: "zenchat-notif",
                 renotify: true,
             },
-            fcm_options: {}
+            fcm_options: {
+                link: clickUrl
+            }
         },
         android: {
             priority: "high",
@@ -74,8 +84,17 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
         return true;
     } catch (error) {
         console.error(`[Push] FCM Send Error for token ${fcmToken.substring(0, 10)}...:`, error.message);
-        if (error.errorInfo?.code === 'messaging/registration-token-not-registered') {
-            console.log(`[Push] Token not registered. Cleaning up...`);
+        const errCode = error.errorInfo?.code || error.code || "";
+        const errMsg = error.message || "";
+        const isInvalidToken = 
+            errCode === 'messaging/registration-token-not-registered' ||
+            errCode === 'messaging/invalid-registration-token' ||
+            errCode === 'messaging/invalid-argument' ||
+            /invalid-argument|invalid.*token|not-registered/i.test(errMsg) ||
+            /invalid/i.test(errCode);
+
+        if (isInvalidToken) {
+            console.log(`[Push] Token not registered or invalid (${errCode || errMsg}). Cleaning up...`);
             if (userId) {
                 await User.findByIdAndUpdate(userId, { 
                     $pull: { fcmTokens: { token: fcmToken } } 

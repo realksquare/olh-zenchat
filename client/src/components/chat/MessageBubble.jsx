@@ -42,6 +42,10 @@ const LaughingReaction = ({ size = 20 }) => (
         <path d="M8 9.5 9.5 11 8 12.5" stroke="#1e293b" strokeWidth="2" />
         <path d="M16 9.5 14.5 11 16 12.5" stroke="#1e293b" strokeWidth="2" />
         <path d="M9 15a3 3 0 0 0 6 0H9z" fill="#1e293b" stroke="none" />
+        <g className="r-tear-drop" style={{ transformOrigin: 'center' }}>
+            <path d="M6 11c-.3.5-.5 1-.5 1.4a1 1 0 0 0 2 0c0-.4-.2-.9-.5-1.4a.1.1 0 0 0-.2 0z" fill="#3b82f6" stroke="#ffffff" strokeWidth="0.8" />
+            <path d="M18 11c-.3.5-.5 1-.5 1.4a1 1 0 0 0 2 0c0-.4-.2-.9-.5-1.4a.1.1 0 0 0-.2 0z" fill="#3b82f6" stroke="#ffffff" strokeWidth="0.8" />
+        </g>
     </svg>
 );
 
@@ -125,6 +129,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     useEffect(() => {
         if (reactionsSheetOpen) {
             document.body.classList.add('reactions-sheet-open');
+            window.getSelection()?.removeAllRanges();
         } else {
             document.body.classList.remove('reactions-sheet-open');
         }
@@ -179,6 +184,11 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         }
 
         longPressTimerRef.current = setTimeout(() => {
+            // If the user has active text selection, do not trigger the reaction sheet
+            const selectedText = window.getSelection()?.toString();
+            if (selectedText && selectedText.length > 0) {
+                return;
+            }
             // Clear any stray text selection that may have formed during the hold
             window.getSelection()?.removeAllRanges();
             if (navigator.vibrate) {
@@ -351,9 +361,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
             if (e.target.closest('.mobile-bottom-sheet') || e.target.closest('.message-dropdown')) {
                 return;
             }
-            if (outerRef.current && !outerRef.current.contains(e.target)) {
-                setMobileDropdown(false);
-            }
+            setMobileDropdown(false);
         };
 
         const handleScroll = () => {
@@ -363,11 +371,17 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         document.addEventListener("mousedown", handleOutside);
         document.addEventListener("touchstart", handleOutside);
         window.addEventListener("scroll", handleScroll, true);
+        document.addEventListener("scroll", handleScroll, true);
+        window.addEventListener("wheel", handleScroll, { passive: true });
+        window.addEventListener("touchmove", handleScroll, { passive: true });
 
         return () => {
             document.removeEventListener("mousedown", handleOutside);
             document.removeEventListener("touchstart", handleOutside);
             window.removeEventListener("scroll", handleScroll, true);
+            document.removeEventListener("scroll", handleScroll, true);
+            window.removeEventListener("wheel", handleScroll);
+            window.removeEventListener("touchmove", handleScroll);
         };
     }, [mobileDropdown]);
 
@@ -786,7 +800,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                             const itemClass = isSelf ? "is-own" : "is-peer";
                             return (
                                 <div key={i} className={`bubble-reaction-item ${itemClass} reaction-${r.emoji}`} title={`${name} reacted`}>
-                                    <Icon size={message.reactions.length === 1 ? 12 : 14} />
+                                    <Icon size={message.reactions.length === 1 ? 10 : 12} />
                                 </div>
                             );
                         })}

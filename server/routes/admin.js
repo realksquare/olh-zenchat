@@ -142,16 +142,24 @@ router.post("/push", authMiddleware, adminCheck, async (req, res) => {
 
         // Find all users who have at least one fcm token
         const users = await User.find({ "fcmTokens.0": { $exists: true } });
-        let sentCount = 0;
+        const promises = [];
         
         for (const u of users) {
             for (const t of u.fcmTokens) {
                 if (t.token) {
-                    await sendPushNotification(u._id, t.token, title, body);
-                    sentCount++;
+                    promises.push(
+                        sendPushNotification(u._id, t.token, title, body)
+                            .then(success => success ? 1 : 0)
+                            .catch(err => {
+                                console.error(`Error sending broadcast notification to user ${u._id}:`, err);
+                                return 0;
+                            })
+                    );
                 }
             }
         }
+        const results = await Promise.all(promises);
+        const sentCount = results.reduce((acc, curr) => acc + curr, 0);
         res.json({ message: "Push sent successfully", sentCount });
     } catch (err) {
         console.error("Broadcast push error:", err);
