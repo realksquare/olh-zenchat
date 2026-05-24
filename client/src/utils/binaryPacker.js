@@ -26,8 +26,14 @@ export const hexToBytes = (hex) => {
  * Checks if a buffer is a ZCBF binary packet.
  */
 export const isBinaryPacket = (buffer) => {
-    if (!buffer || buffer.byteLength < 4) return false;
-    const view = new Uint8Array(buffer.buffer || buffer);
+    if (!buffer) return false;
+    const isBufferOrView = buffer instanceof ArrayBuffer || ArrayBuffer.isView(buffer);
+    if (!isBufferOrView) return false;
+
+    const byteLen = buffer.byteLength;
+    if (byteLen < 4) return false;
+
+    const view = new Uint8Array(buffer.buffer || buffer, buffer.byteOffset || 0, byteLen);
     return view[0] === MAGIC[0] && view[1] === MAGIC[1] && view[2] === MAGIC[2] && view[3] === MAGIC[3];
 };
 
@@ -107,7 +113,8 @@ export const unpackMessage = (buffer) => {
     if (!isBinaryPacket(buffer)) return buffer;
 
     const decoder = new TextDecoder();
-    const view = new Uint8Array(buffer.buffer || buffer);
+    const byteLen = buffer.byteLength !== undefined ? buffer.byteLength : buffer.length;
+    const view = new Uint8Array(buffer.buffer || buffer, buffer.byteOffset || 0, byteLen);
     const obj = {};
     let offset = 4;
 
@@ -130,8 +137,8 @@ export const unpackMessage = (buffer) => {
             obj[key] = decoder.decode(strBytes);
             offset += len;
 
-            // Auto-de-serialize JSON objects if they start with standard JSON markers
-            if (obj[key].startsWith("{") && obj[key].endsWith("}")) {
+            // Auto-de-serialize JSON objects if they start with standard JSON markers (excluding key 'k' to prevent CastError)
+            if (key !== "k" && key !== "encryptedSymmetricKey" && obj[key].startsWith("{") && obj[key].endsWith("}")) {
                 try {
                     obj[key] = JSON.parse(obj[key]);
                 } catch (_) {}
