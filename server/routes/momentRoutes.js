@@ -168,4 +168,42 @@ router.delete("/:id", protect, async (req, res) => {
     }
 });
 
+router.post("/:id/like", protect, async (req, res) => {
+    try {
+        const moment = await Moment.findById(req.params.id);
+        if (!moment) return res.status(404).json({ message: "Moment not found" });
+
+        const userId = req.user._id.toString();
+        const ownerId = moment.userId.toString();
+
+        // Owner cannot like their own moment
+        if (userId === ownerId) {
+            return res.status(403).json({ message: "You cannot like your own moment" });
+        }
+
+        const alreadyLiked = moment.likes.some(id => id.toString() === userId);
+        const update = alreadyLiked
+            ? { $pull: { likes: req.user._id } }
+            : { $addToSet: { likes: req.user._id } };
+
+        const updated = await Moment.findByIdAndUpdate(req.params.id, update, { new: true })
+            .populate("userId", "username avatar fullName");
+
+        // Broadcast to owner + all their contacts so like count updates in real-time
+        const io = req.app.get("io");
+        if (io) {
+            const owner = await User.findById(ownerId).select("contacts");
+            const contactIds = (owner?.contacts || []).map(c => c.userId.toString());
+            const payload = { momentId: req.params.id, likes: updated.likes.map(id => id.toString()) };
+            io.to(ownerId).emit("moment_liked", payload);
+            contactIds.forEach(cid => io.to(cid).emit("moment_liked", payload));
+        }
+
+        res.json({ success: true, likes: updated.likes.map(id => id.toString()), liked: !alreadyLiked });
+    } catch (err) {
+        console.error("[moments] Like error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 module.exports = router;

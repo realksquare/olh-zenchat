@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo, useMemo } from "react";
+import { useState, useEffect, useRef, memo, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
@@ -23,6 +23,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const [isDeleting, setIsDeleting] = useState(false);
     const [showMusicInfo, setShowMusicInfo] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
+    const [likeLoading, setLikeLoading] = useState(false);
 
     const [totalDuration, setTotalDuration] = useState(10);
 
@@ -453,6 +454,48 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                         </div>
                     </div>
                 )}
+
+                {/* Like button — non-owners can like; owner sees count */}
+                {(() => {
+                    const likes = currentMoment.likes || [];
+                    const likeCount = likes.length;
+                    const hasLiked = likes.some(id => id?.toString() === currentUserId?.toString());
+                    return (
+                        <div
+                            className={`aura-like-pill ${isOwn ? 'aura-like-pill--owner' : ''}`}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {isOwn ? (
+                                /* Owner: read-only like count display */
+                                <>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill={likeCount > 0 ? "#f43f5e" : "none"} stroke={likeCount > 0 ? "#f43f5e" : "rgba(255,255,255,0.4)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                    </svg>
+                                    <span className="aura-like-count">{likeCount}</span>
+                                </>
+                            ) : (
+                                /* Viewer: toggleable like button */
+                                <button
+                                    className={`aura-like-btn ${hasLiked ? 'liked' : ''} ${likeLoading ? 'loading' : ''}`}
+                                    disabled={likeLoading}
+                                    onClick={async (e) => {
+                                        e.stopPropagation();
+                                        if (likeLoading) return;
+                                        setLikeLoading(true);
+                                        await useMomentStore.getState().likeMoment(currentMoment._id);
+                                        setLikeLoading(false);
+                                    }}
+                                    title={hasLiked ? "Unlike" : "Like"}
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill={hasLiked ? "#f43f5e" : "none"} stroke={hasLiked ? "#f43f5e" : "#fff"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="aura-heart-icon">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                    </svg>
+                                    {likeCount > 0 && <span className="aura-like-count">{likeCount}</span>}
+                                </button>
+                            )}
+                        </div>
+                    );
+                })()}
 
                 <div className="aura-viewer-footer-wrapper">
                     <div className="aura-viewer-footer">#moments. - powered by OLH ZenChat.</div>

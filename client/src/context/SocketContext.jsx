@@ -499,6 +499,9 @@ export const SocketProvider = ({ children }) => {
         socket.on("instant_messages_deleted", handleInstantMessagesDeleted);
         socket.on("new_moment", handleNewMoment);
         socket.on("moment_deleted", handleMomentDeleted);
+        socket.on("moment_liked", ({ momentId, likes }) => {
+            useMomentStore.getState().updateMomentLikes(momentId, likes);
+        });
         socket.on("zen_messages_cleared", ({ chatId }) => {
             useChatStore.getState().purgeZenMessages(chatId);
         });
@@ -531,6 +534,7 @@ export const SocketProvider = ({ children }) => {
             socket.off("instant_messages_deleted", handleInstantMessagesDeleted);
             socket.off("new_moment", handleNewMoment);
             socket.off("moment_deleted", handleMomentDeleted);
+            socket.off("moment_liked");
             socket.off("zen_messages_cleared");
             socket.off("user_blocked", handleUserBlocked);
             socket.off("user_unblocked", handleUserUnblocked);

@@ -110,4 +110,32 @@ export const useMomentStore = create((set, get) => ({
         );
         return unique.size;
     },
+
+    likeMoment: async (momentId) => {
+        try {
+            const res = await axiosInstance.post(`/moments/${momentId}/like`);
+            if (res.data?.likes !== undefined) {
+                set((state) => ({
+                    moments: state.moments.map(m =>
+                        m._id === momentId || m._id?.toString() === momentId
+                            ? { ...m, likes: res.data.likes }
+                            : m
+                    )
+                }));
+            }
+            return res.data;
+        } catch (err) {
+            return { success: false };
+        }
+    },
+
+    updateMomentLikes: (momentId, likes) => {
+        set((state) => ({
+            moments: state.moments.map(m =>
+                m._id === momentId || m._id?.toString() === momentId
+                    ? { ...m, likes }
+                    : m
+            )
+        }));
+    },
 }));
