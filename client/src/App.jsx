@@ -214,6 +214,7 @@ const App = () => {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showPwaExitConfirm, setShowPwaExitConfirm] = useState(false);
   const [needsPushSubscription, setNeedsPushSubscription] = useState(false);
+  const [showBlockedNotifModal, setShowBlockedNotifModal] = useState(false);
 
   useEffect(() => {
     const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
@@ -238,11 +239,21 @@ const App = () => {
     if (token) {
       const isNewSignup = sessionStorage.getItem("showFAQOnLoad") === "1";
       if (!isNewSignup) {
-        const hasPermission = typeof window.Notification !== 'undefined' && window.Notification.permission === "granted";
-        setNeedsPushSubscription(!hasPermission);
+        const permission = typeof window.Notification !== 'undefined' ? window.Notification.permission : 'granted';
+        if (permission === 'denied') {
+          setShowBlockedNotifModal(true);
+          setNeedsPushSubscription(false);
+        } else if (permission !== 'granted') {
+          setNeedsPushSubscription(true);
+          setShowBlockedNotifModal(false);
+        } else {
+          setNeedsPushSubscription(false);
+          setShowBlockedNotifModal(false);
+        }
       }
     } else {
       setNeedsPushSubscription(false);
+      setShowBlockedNotifModal(false);
     }
   }, [token]);
 
@@ -262,6 +273,19 @@ const App = () => {
       console.error(err);
       alert(err.message || "Failed to subscribe. Please try again or check browser settings.");
     }
+  };
+
+  const handleRecheckPermission = () => {
+    const permission = typeof window.Notification !== 'undefined' ? window.Notification.permission : 'granted';
+    if (permission === 'granted') {
+      setShowBlockedNotifModal(false);
+      setNeedsPushSubscription(false);
+      handleSubscribePush();
+    } else if (permission === 'default') {
+      setShowBlockedNotifModal(false);
+      setNeedsPushSubscription(true);
+    }
+    // If still denied, keep the modal open
   };
 
   const handleExitApp = () => {
@@ -846,6 +870,54 @@ const App = () => {
                   Subscribe Now
                 </button>
               )}
+              <button className="btn btn-outline compulsory-push-exit-btn" onClick={handleExitApp}>
+                Exit Site / PWA
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Notifications Blocked Modal */}
+      {showBlockedNotifModal && (
+        <div className="compulsory-push-overlay" style={{ alignItems: window.innerWidth <= 768 ? 'flex-end' : 'center', padding: window.innerWidth <= 768 ? 0 : '24px' }}>
+          <div
+            className="compulsory-push-card"
+            style={{
+              maxWidth: window.innerWidth <= 768 ? '100%' : '420px',
+              borderRadius: window.innerWidth <= 768 ? '24px 24px 0 0' : '24px',
+              padding: window.innerWidth <= 768 ? '28px 24px 40px' : '32px',
+              animation: window.innerWidth <= 768 ? 'slideUp 0.3s cubic-bezier(0.16,1,0.3,1)' : 'compulsoryCardScale 0.4s cubic-bezier(0.34,1.56,0.64,1)'
+            }}
+          >
+            {window.innerWidth <= 768 && (
+              <div style={{ width: '36px', height: '4px', background: 'rgba(255,255,255,0.15)', borderRadius: '2px', margin: '0 auto 20px' }} />
+            )}
+            <div className="compulsory-push-icon-pulse" style={{ background: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.25)' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+            <h2 className="compulsory-push-title">Notifications Blocked</h2>
+            <p className="compulsory-push-desc">
+              ZenChat requires push notifications for real-time message delivery. Your browser has blocked notifications for this site.
+            </p>
+            <div className="compulsory-push-warning" style={{ textAlign: 'left', marginBottom: '20px' }}>
+              <strong style={{ display: 'block', marginBottom: '6px', color: '#fca5a5' }}>How to unblock:</strong>
+              <span style={{ fontSize: '0.82rem', lineHeight: '1.7', color: '#fca5a5' }}>
+                Tap the lock icon or info icon in your browser address bar, find &quot;Notifications&quot;, and set it to &quot;Allow&quot;. Then tap the button below.
+              </span>
+            </div>
+            <div className="compulsory-push-buttons">
+              <button
+                className="btn btn-primary compulsory-push-btn"
+                onClick={handleRecheckPermission}
+                style={{ background: 'var(--color-primary)' }}
+              >
+                I have unblocked it - Continue
+              </button>
               <button className="btn btn-outline compulsory-push-exit-btn" onClick={handleExitApp}>
                 Exit Site / PWA
               </button>
