@@ -219,12 +219,14 @@ const App = () => {
     const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
     if (!isPWA) return;
 
-    window.history.pushState({ noExit: true }, "");
+    // Push a sentinel state so the first back-swipe fires popstate instead of leaving the app
+    window.history.pushState({ pwaGuard: true }, "");
 
-    const handlePopState = (e) => {
-      if (!e.state || !e.state.noExit) {
+    const handlePopState = () => {
+      // Only intercept when user is at the root route (trying to exit the PWA)
+      if (window.location.pathname === "/" || window.location.pathname === "") {
+        window.history.pushState({ pwaGuard: true }, "");
         setShowPwaExitConfirm(true);
-        window.history.pushState({ noExit: true }, "");
       }
     };
 
@@ -795,7 +797,12 @@ const App = () => {
                 className="btn btn-primary"
                 onClick={() => {
                   setShowPwaExitConfirm(false);
-                  window.close();
+                  // On Android PWA, navigate to blank page then close
+                  try {
+                    window.location.replace("about:blank");
+                  } catch (e) {
+                    window.close();
+                  }
                 }}
                 style={{ width: "100%", padding: "12px", borderRadius: "12px", background: "#ef4444", border: "none", color: "#fff", cursor: "pointer", fontWeight: "600", fontSize: "0.95rem" }}
               >

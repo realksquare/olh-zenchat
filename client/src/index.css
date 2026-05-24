@@ -5924,6 +5924,25 @@ select {
     pointer-events: all !important;
     transform: translateY(6px) !important;
   }
+
+  /* Disable text selection on message bubbles on touch devices to prevent selection interfering with long-press gesture */
+  .message-bubble {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Allow text selection only on the message text itself, not the whole bubble */
+  .message-bubble .message-text {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Lock all selection while the reactions sheet is open */
+  body.reactions-sheet-open {
+    -webkit-user-select: none;
+    user-select: none;
+  }
 }
 
 /* Custom media queries to resolve mobile layouts and spacing */

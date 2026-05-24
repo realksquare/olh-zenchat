@@ -121,6 +121,16 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const imgRef = useRef(null);
     const outerRef = useRef(null);
 
+    // Sync body class to lock text selection while reactions sheet is open
+    useEffect(() => {
+        if (reactionsSheetOpen) {
+            document.body.classList.add('reactions-sheet-open');
+        } else {
+            document.body.classList.remove('reactions-sheet-open');
+        }
+        return () => document.body.classList.remove('reactions-sheet-open');
+    }, [reactionsSheetOpen]);
+
     // Touch gesture state tracking
     const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
     const longPressTimerRef = useRef(null);
@@ -169,6 +179,8 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         }
 
         longPressTimerRef.current = setTimeout(() => {
+            // Clear any stray text selection that may have formed during the hold
+            window.getSelection()?.removeAllRanges();
             if (navigator.vibrate) {
                 navigator.vibrate(50);
             }
