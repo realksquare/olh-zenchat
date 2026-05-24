@@ -80,9 +80,7 @@ export const useChatStore = create(
                     const definitelySlow = 
                         type === "2g" || 
                         type === "3g" || 
-                        conn.saveData === true || 
-                        rtt >= 400 || 
-                        downlink <= 1.5;
+                        conn.saveData === true;
                     if (definitelySlow) {
                         if (get().isLowBandwidth !== true) set({ isLowBandwidth: true });
                         return true;
