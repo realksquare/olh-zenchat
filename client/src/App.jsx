@@ -830,11 +830,16 @@ const App = () => {
                 className="btn btn-primary"
                 onClick={() => {
                   setShowPwaExitConfirm(false);
-                  try {
-                    window.location.replace("about:blank");
-                  } catch (e) {
-                    window.close();
-                  }
+                  // For standalone PWA: window.close() closes the PWA window on Android/Chrome
+                  window.close();
+                  // Fallback: if close didn't work (some browsers), navigate back to beginning of history
+                  setTimeout(() => {
+                    try {
+                      if (window.history.length > 1) {
+                        window.history.go(1 - window.history.length);
+                      }
+                    } catch (_) {}
+                  }, 300);
                 }}
                 style={{ width: "100%", padding: "12px", borderRadius: "12px", background: "#ef4444", border: "none", color: "#fff", cursor: "pointer", fontWeight: "600", fontSize: "0.95rem" }}
               >

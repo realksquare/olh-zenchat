@@ -424,24 +424,26 @@ export const SocketProvider = ({ children }) => {
             window.location.href = "/login";
         };
 
+        const pendingOnlineReconcileRef = { current: null };
+
         socket.on("connect", async () => {
             setIsConnected(true);
             const chatStore = useChatStore.getState();
-            chatStore.clearOnlinePresence();
-            
+            // Don't wipe presence immediately — wait for online_users reconciliation
+            // so there's no flash of "everyone offline" during reconnect
+
             socket.emit("zen_mode_status", { isZenMode: chatStore.isZenMode });
-            
+
             const activeChat = chatStore.activeChat;
             const isLowBandwidth = chatStore.isLowBandwidth;
-            
+
             socket.emit("update_low_bandwidth", { chatId: activeChat?._id || "", isLowBandwidth });
-            
+
             if (activeChat?._id) {
                 socket.emit("join_chat", { chatId: activeChat._id, isLowBandwidth });
                 chatStore.fetchMessages(activeChat._id);
             }
             chatStore.fetchChats();
-            // Use flushOutbox so E2EE re-encryption is applied to queued messages
             setTimeout(() => {
                 flushOutboxRef.current?.();
                 flushMediaOutboxRef.current?.();
@@ -450,15 +452,33 @@ export const SocketProvider = ({ children }) => {
 
         socket.on("disconnect", () => {
             setIsConnected(false);
-            useChatStore.getState().clearOnlinePresence();
+            // Keep stale presence during the server's 5s grace period
+            // so users don't flash offline on slow device reloads
         });
 
         socket.on("online_users", ({ userIds }) => {
             if (Array.isArray(userIds)) {
+                // Mark confirmed-online users
                 userIds.forEach(id => {
                     useChatStore.getState().setUserOnline(id);
                     useChatStore.getState().updateParticipantStatus(id, true, null);
                 });
+                // Reconcile: mark anyone NOT in the list as offline
+                // (clears stale presence from before reconnect)
+                if (pendingOnlineReconcileRef.current) {
+                    clearTimeout(pendingOnlineReconcileRef.current);
+                }
+                pendingOnlineReconcileRef.current = setTimeout(() => {
+                    const store = useChatStore.getState();
+                    const knownOnline = store.onlineUsers;
+                    const confirmedSet = new Set(userIds.map(String));
+                    knownOnline.forEach(id => {
+                        if (!confirmedSet.has(String(id))) {
+                            store.setUserOffline(id);
+                            store.updateParticipantStatus(id, false, null);
+                        }
+                    });
+                }, 500);
             }
         });
 

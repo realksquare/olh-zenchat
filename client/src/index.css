@@ -3802,6 +3802,25 @@ select {
   }
 }
 
+@keyframes toast-slide-in-mobile {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-fade-out-mobile {
+  to {
+    transform: translateY(8px);
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
 .moments-aura-overlay {
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(12px) saturate(180%);
@@ -4996,7 +5015,7 @@ select {
 
 .aura-music-search-container {
   margin-top: 12px;
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   overflow: hidden;
@@ -5004,9 +5023,10 @@ select {
 
 .aura-music-search-inner {
   padding: 12px;
-  max-height: 300px;
+  max-height: min(300px, 40vh);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .music-search-header {
@@ -5240,13 +5260,20 @@ select {
 .label-with-play {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   color: #fff;
   font-size: 0.85rem;
   font-weight: 600;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.label-with-play > span {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .cropper-play-btn {
@@ -5960,6 +5987,8 @@ select {
     display: flex !important;
     justify-content: center !important;
     text-align: center !important;
+    /* Override the horizontal slide — use vertical fade so toast doesn't get cut off on left edge */
+    animation: toast-slide-in-mobile 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), toast-fade-out-mobile 0.4s 2.6s forwards !important;
   }
   
   .view-once-hint {
@@ -5975,6 +6004,112 @@ select {
     gap: 6px !important;
     border-radius: 16px !important;
     max-width: 95% !important;
+  }
+
+  /* Music section mobile layout fixes */
+  .aura-music-search-inner {
+    max-height: min(260px, 38vh) !important;
+  }
+
+  .music-track-item {
+    padding: 8px 6px;
+    gap: 8px;
+  }
+
+  .track-cover {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .track-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+  }
+
+  .track-name-scroll,
+  .track-artist-scroll {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .track-name-scroll span,
+  .track-artist-scroll span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    max-width: 100%;
+  }
+
+  .select-btn {
+    padding: 5px 10px;
+    font-size: 0.7rem;
+    flex-shrink: 0;
+  }
+
+  .aura-music-cropper {
+    padding: 12px;
+  }
+
+  .cropper-label {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .aura-duration-options {
+    width: 100%;
+    display: flex;
+    gap: 6px;
+  }
+}
+
+/* MomentCreator modal — mobile bottom sheet style */
+@media (max-width: 600px) {
+  .moments-aura-overlay {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .moments-aura-content {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: 92dvh !important;
+    border-radius: 28px 28px 0 0 !important;
+    animation: aura-pop-mobile 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  .moments-aura-header {
+    padding: 18px 20px !important;
+  }
+
+  .moments-aura-title {
+    font-size: 1.2rem !important;
+  }
+
+  .aura-input-section {
+    margin: 0 16px !important;
+  }
+
+  .aura-preview-container {
+    margin: 0 16px !important;
+  }
+
+  .aura-music-search-container {
+    margin-top: 8px;
+  }
+}
+
+@keyframes aura-pop-mobile {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 

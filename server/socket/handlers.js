@@ -156,7 +156,7 @@ const setUserActivePresence = async (io, userId, isActive) => {
                 await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
                 await broadcastUserStatus(userId, false, now, io);
                 await cleanupInstantMessages(userId, io);
-            }, 2000);
+            }, 5000);
             disconnectTimeouts.set(userId + "_inactive", timeout);
         }
     } else {
@@ -220,7 +220,7 @@ const registerSocketHandlers = (io) => {
                             }
                             broadcastUserStatus(userId, false, now, io);
                             await cleanupInstantMessages(userId, io);
-                        }, 2000);
+                        }, 5000);
                         disconnectTimeouts.set(userId, timeout);
                     } else {
                         // Re-evaluate if remaining sockets are active
@@ -233,7 +233,7 @@ const registerSocketHandlers = (io) => {
                                     broadcastUserStatus(userId, false, now, io);
                                     // Trigger instant message cleanup
                                     await cleanupInstantMessages(userId, io);
-                                }, 2000);
+                                }, 5000);
                                 disconnectTimeouts.set(userId + "_inactive", timeout);
                             }
                         }
@@ -354,6 +354,8 @@ const registerSocketHandlers = (io) => {
         socket.on("zen_session_clear", async ({ chatId, messageIds }) => {
             try {
                 if (!messageIds || messageIds.length === 0) return;
+                const chat = await Chat.findOne({ _id: chatId, participants: userId }).select("_id").lean();
+                if (!chat) return;
                 await Message.deleteMany({ _id: { $in: messageIds } });
                 io.to(chatId).emit("zen_messages_cleared", { chatId });
             } catch (err) {

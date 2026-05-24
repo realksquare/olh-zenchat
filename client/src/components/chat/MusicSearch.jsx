@@ -45,24 +45,24 @@ const MusicSearch = ({ onSelect, onClose, initialQuery = "" }) => {
                     ) : results.length > 0 ? (
                         results.map(track => (
                             <div key={track.id} className="music-track-item" onClick={() => onSelect(track)}>
-                                <img 
-                                    src={track.coverUrl || '/default-music.png'} 
-                                    alt="Cover" 
-                                    className={`track-cover ${track.source === 'Deezer' ? 'aura-deezer' : track.source === 'iTunes' ? 'aura-itunes' : ''}`} 
+                                <img
+                                    src={track.coverUrl || '/default-music.png'}
+                                    alt="Cover"
+                                    className={`track-cover ${track.source === 'Deezer' ? 'aura-deezer' : track.source === 'iTunes' ? 'aura-itunes' : ''}`}
                                 />
-                                <div className="track-info">
-                                    <div className="track-name-scroll">
-                                        <span className={track.title.length > 22 ? "marquee-text" : ""}>
+                                <div className="track-info" style={{ flexDirection: 'column', alignItems: 'flex-start', minWidth: 0 }}>
+                                    <div className="track-name-scroll" style={{ width: '100%', overflow: 'hidden' }}>
+                                        <span className={track.title.length > 22 ? "marquee-text" : ""} style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9' }}>
                                             {track.title}
                                         </span>
                                     </div>
-                                    <div className="track-artist-scroll">
-                                        <span className={track.artist.length > 26 ? "marquee-text" : ""}>
-                                            • {track.artist}
+                                    <div className="track-artist-scroll" style={{ width: '100%', overflow: 'hidden' }}>
+                                        <span className={track.artist.length > 26 ? "marquee-text" : ""} style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.75rem', color: '#94a3b8' }}>
+                                            {track.artist}
                                         </span>
                                     </div>
                                 </div>
-                                <button className="select-btn">Select</button>
+                                <button className="select-btn" onClick={(e) => { e.stopPropagation(); onSelect(track); }}>Select</button>
                             </div>
                         ))
                     ) : query.length >= 2 ? (
