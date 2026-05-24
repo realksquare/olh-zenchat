@@ -761,19 +761,25 @@ const ChatWindow = ({ onBack }) => {
     }, [isZenMode, triggerCircularReveal]);
 
     // ZenMode off: purge all ZenMode messages from server + store for both sides
-    const prevIsZenModeRef = useRef(isZenMode);
+    const socketRef = useRef(socket);
+    useEffect(() => { socketRef.current = socket; }, [socket]);
+
     useEffect(() => {
-        if (prevIsZenModeRef.current === true && isZenMode === false && activeChat?._id) {
-            const msgs = useChatStore.getState().messages[activeChat._id] || [];
-            const zenIds = msgs.filter(m => m.isZenMessage && m._id).map(m => m._id);
-            if (zenIds.length > 0 && socket?.connected) {
-                socket.emit("zen_session_clear", { chatId: activeChat._id, messageIds: zenIds });
+        const currentChatId = activeChat?._id;
+        const currentIsZenMode = isZenMode;
+        
+        return () => {
+            if (currentIsZenMode && currentChatId) {
+                const msgs = useChatStore.getState().messages[currentChatId] || [];
+                const zenIds = msgs.filter(m => m.isZenMessage && m._id).map(m => m._id);
+                if (zenIds.length > 0 && socketRef.current?.connected) {
+                    socketRef.current.emit("zen_session_clear", { chatId: currentChatId, messageIds: zenIds });
+                }
+                // Optimistic local purge immediately
+                useChatStore.getState().purgeZenMessages(currentChatId);
             }
-            // Optimistic local purge immediately
-            useChatStore.getState().purgeZenMessages(activeChat._id);
-        }
-        prevIsZenModeRef.current = isZenMode;
-    }, [isZenMode, activeChat?._id, socket]);
+        };
+    }, [isZenMode, activeChat?._id]);
 
     useEffect(() => {
         if (socket?.connected) {
@@ -1209,12 +1215,17 @@ const ChatWindow = ({ onBack }) => {
                     const prevDate = prevMsg ? new Date(prevMsg.createdAt).toLocaleDateString() : null;
                     const showDateDivider = msgDate !== prevDate;
 
-                    const indexFromEnd = messages.length - 1 - idx;
+                    const zenMessagesAfter = messages.slice(idx + 1).filter(m => m.isZenMessage).length;
+                    
                     let zenFadeClass = "";
                     if (isZenMode) {
-                        if (indexFromEnd === 2) zenFadeClass = "zen-fade-1";
-                        else if (indexFromEnd === 3) zenFadeClass = "zen-fade-2";
-                        else if (indexFromEnd >= 4) zenFadeClass = "zen-fade-3";
+                        if (!msg.isZenMessage) {
+                            zenFadeClass = "zen-fade-3";
+                        } else {
+                            if (zenMessagesAfter === 2) zenFadeClass = "zen-fade-1";
+                            else if (zenMessagesAfter === 3) zenFadeClass = "zen-fade-2";
+                            else if (zenMessagesAfter >= 4) zenFadeClass = "zen-fade-3";
+                        }
                     }
 
                     return (

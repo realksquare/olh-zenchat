@@ -227,7 +227,21 @@ const Sidebar = ({ onChatSelect }) => {
     const pinnedChats = useMemo(() => filteredChats.filter((c) => c.pinnedBy?.includes(user?._id)), [filteredChats, user?._id]);
     const unpinnedChats = useMemo(() => filteredChats.filter((c) => !c.pinnedBy?.includes(user?._id)), [filteredChats, user?._id]);
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
-    const isPwaInstalled = localStorage.getItem("zenchat_pwa_installed") === "true";
+    const [isPwaInstalled, setIsPwaInstalled] = useState(
+        () => localStorage.getItem("zenchat_pwa_installed") === "true"
+    );
+
+    useEffect(() => {
+        const handleStatusChanged = () => {
+            setIsPwaInstalled(localStorage.getItem("zenchat_pwa_installed") === "true");
+        };
+        window.addEventListener("pwa-installed-status-changed", handleStatusChanged);
+        window.addEventListener("storage", handleStatusChanged);
+        return () => {
+            window.removeEventListener("pwa-installed-status-changed", handleStatusChanged);
+            window.removeEventListener("storage", handleStatusChanged);
+        };
+    }, []);
 
     const handlePwaButtonClick = () => {
         if (isPwaInstalled) {

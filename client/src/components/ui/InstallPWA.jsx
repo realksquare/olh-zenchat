@@ -73,6 +73,15 @@ const InstallPWA = () => {
     }, []);
 
     useEffect(() => {
+        const handleAppInstalled = () => {
+            localStorage.setItem("zenchat_pwa_installed", "true");
+            window.dispatchEvent(new CustomEvent("pwa-installed-status-changed"));
+        };
+        window.addEventListener('appinstalled', handleAppInstalled);
+        return () => window.removeEventListener('appinstalled', handleAppInstalled);
+    }, []);
+
+    useEffect(() => {
         const handleOpenInstall = () => {
             setShowModal(true);
             setTimeout(() => {
@@ -106,18 +115,35 @@ const InstallPWA = () => {
             const { outcome } = await promptToUse.userChoice;
 
             if (outcome === 'accepted') {
-                setIsSuccess(true);
-                localStorage.setItem(PWA_DISMISS_KEY, Date.now().toString());
-                localStorage.setItem("zenchat_pwa_installed", "true");
-                setTimeout(() => setShowModal(false), 3000);
+                const fallbackTimeout = setTimeout(() => {
+                    setIsSuccess(true);
+                    setIsLoading(false);
+                    localStorage.setItem(PWA_DISMISS_KEY, Date.now().toString());
+                    localStorage.setItem("zenchat_pwa_installed", "true");
+                    window.dispatchEvent(new CustomEvent("pwa-installed-status-changed"));
+                    setTimeout(() => setShowModal(false), 3000);
+                }, 15000);
+
+                const onInstalled = () => {
+                    clearTimeout(fallbackTimeout);
+                    setIsSuccess(true);
+                    setIsLoading(false);
+                    localStorage.setItem(PWA_DISMISS_KEY, Date.now().toString());
+                    localStorage.setItem("zenchat_pwa_installed", "true");
+                    window.dispatchEvent(new CustomEvent("pwa-installed-status-changed"));
+                    setTimeout(() => setShowModal(false), 3000);
+                    window.removeEventListener('appinstalled', onInstalled);
+                };
+                window.addEventListener('appinstalled', onInstalled);
             } else {
                 handleDismiss();
+                setIsLoading(false);
             }
         } catch (err) {
             console.error("PWA Install failed", err);
             handleDismiss();
-        } finally {
             setIsLoading(false);
+        } finally {
             setDeferredPrompt(null);
             window.deferredPrompt = null;
         }
