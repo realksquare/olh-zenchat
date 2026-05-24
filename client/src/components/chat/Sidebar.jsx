@@ -457,74 +457,80 @@ const Sidebar = ({ onChatSelect }) => {
             <div
                 className="sidebar-chats"
                 ref={chatsRef}
-                style={{ 
-                    transform: pullY > 0 ? `translateY(${pullY}px)` : undefined, 
-                    transition: pullY === 0 ? 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)' : 'none' 
-                }}
             >
-                {isLoadingChats && filteredChats.length === 0 && (
-                    <div className="chats-loading">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="chat-card-skeleton">
-                                <div className="skeleton skeleton-avatar" />
-                                <div className="skeleton-lines">
-                                    <div className="skeleton skeleton-text" style={{ width: "60%" }} />
-                                    <div className="skeleton skeleton-text" style={{ width: "40%" }} />
+                <div
+                    style={{ 
+                        transform: pullY > 0 ? `translateY(${pullY}px)` : undefined, 
+                        transition: pullY === 0 ? 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1)' : 'none',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        minHeight: '100%'
+                    }}
+                >
+                    {isLoadingChats && filteredChats.length === 0 && (
+                        <div className="chats-loading">
+                            {[1, 2, 3].map((i) => (
+                                <div key={i} className="chat-card-skeleton">
+                                    <div className="skeleton skeleton-avatar" />
+                                    <div className="skeleton-lines">
+                                        <div className="skeleton skeleton-text" style={{ width: "60%" }} />
+                                        <div className="skeleton skeleton-text" style={{ width: "40%" }} />
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                            ))}
+                        </div>
+                    )}
 
-                {!isLoadingChats && filteredChats.length === 0 && (
-                    <div className="chats-empty">
-                        {activeTab === "contacts" ? (
-                            <>
-                                <p>No contacts yet</p>
-                                <span>Tag users as contacts from the three-dot menu on any chat</span>
-                            </>
-                        ) : (
-                            <>
-                                <p>No conversations yet</p>
-                                <span>Search for a user to start chatting</span>
-                            </>
-                        )}
-                    </div>
-                )}
+                    {!isLoadingChats && filteredChats.length === 0 && (
+                        <div className="chats-empty">
+                            {activeTab === "contacts" ? (
+                                <>
+                                    <p>No contacts yet</p>
+                                    <span>Tag users as contacts from the three-dot menu on any chat</span>
+                                </>
+                            ) : (
+                                <>
+                                    <p>No conversations yet</p>
+                                    <span>Search for a user to start chatting</span>
+                                </>
+                            )}
+                        </div>
+                    )}
 
-                {pinnedChats.length > 0 && (
-                    <div className="chats-section">
-                        <span className="chats-section-label">Pinned</span>
-                        {pinnedChats.map((chat) => (
-                            <ChatCard
-                                key={chat._id}
-                                chat={chat}
-                                isActive={activeChat?._id === chat._id}
-                                isPinned={true}
-                                currentUserId={user?._id}
-                                onSelect={() => handleSelectChat(chat)}
-                                onPin={() => togglePinChat(chat._id)}
-                            />
-                        ))}
-                    </div>
-                )}
+                    {pinnedChats.length > 0 && (
+                        <div className="chats-section">
+                            <span className="chats-section-label">Pinned</span>
+                            {pinnedChats.map((chat) => (
+                                <ChatCard
+                                    key={chat._id}
+                                    chat={chat}
+                                    isActive={activeChat?._id === chat._id}
+                                    isPinned={true}
+                                    currentUserId={user?._id}
+                                    onSelect={() => handleSelectChat(chat)}
+                                    onPin={() => togglePinChat(chat._id)}
+                                />
+                            ))}
+                        </div>
+                    )}
 
-                {unpinnedChats.length > 0 && (
-                    <div className="chats-section">
-                        {pinnedChats.length > 0 && <span className="chats-section-label">Recent</span>}
-                        {unpinnedChats.map((chat) => (
-                            <ChatCard
-                                key={chat._id}
-                                chat={chat}
-                                isActive={activeChat?._id === chat._id}
-                                isPinned={false}
-                                currentUserId={user?._id}
-                                onSelect={() => handleSelectChat(chat)}
-                                onPin={() => togglePinChat(chat._id)}
-                            />
-                        ))}
-                    </div>
-                )}
+                    {unpinnedChats.length > 0 && (
+                        <div className="chats-section">
+                            {pinnedChats.length > 0 && <span className="chats-section-label">Recent</span>}
+                            {unpinnedChats.map((chat) => (
+                                <ChatCard
+                                    key={chat._id}
+                                    chat={chat}
+                                    isActive={activeChat?._id === chat._id}
+                                    isPinned={false}
+                                    currentUserId={user?._id}
+                                    onSelect={() => handleSelectChat(chat)}
+                                    onPin={() => togglePinChat(chat._id)}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {isProfileOpen && (
