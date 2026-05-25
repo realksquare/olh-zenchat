@@ -203,6 +203,25 @@ const registerSocketHandlers = (io) => {
                 io.emit("user_zen_status", { userId, isZenMode });
             });
 
+            socket.on("update_active_time", async ({ additionalMinutes, contactId }) => {
+                try {
+                    const user = await User.findById(userId);
+                    if (!user) return;
+                    
+                    user.activeTimeMinutes = (user.activeTimeMinutes || 0) + additionalMinutes;
+                    if (contactId) {
+                        if (!user.perContactActiveTime) {
+                            user.perContactActiveTime = new Map();
+                        }
+                        const currentVal = user.perContactActiveTime.get(contactId) || 0;
+                        user.perContactActiveTime.set(contactId, currentVal + additionalMinutes);
+                    }
+                    await user.save();
+                } catch (err) {
+                    console.error("[Socket] Failed to update active time:", err);
+                }
+            });
+
             socket.on("disconnect", () => {
                 if (userData && userData.sockets.has(socket.id)) {
                     userData.sockets.delete(socket.id);

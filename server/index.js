@@ -64,6 +64,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/moments", require("./routes/momentRoutes"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/music", require("./routes/music"));
+app.use("/api/analytics", require("./routes/analytics"));
 
 registerSocketHandlers(io);
 

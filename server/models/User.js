@@ -145,6 +145,19 @@ const userSchema = new mongoose.Schema(
         hasSeenPurgeNotice: {
             type: Boolean,
             default: false
+        },
+        activeTimeMinutes: {
+            type: Number,
+            default: 0
+        },
+        perContactActiveTime: {
+            type: Map,
+            of: Number,
+            default: {}
+        },
+        purgedMessagesCount: {
+            type: Number,
+            default: 0
         }
     },
     { timestamps: true }

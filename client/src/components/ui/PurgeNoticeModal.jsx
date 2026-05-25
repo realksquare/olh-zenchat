@@ -7,14 +7,21 @@ import "./PurgeNoticeModal.css";
 const PurgeNoticeModal = () => {
     const user = useAuthStore((s) => s.user);
     const setUser = useAuthStore((s) => s.setUser);
+    const tempRecoveryKey = useAuthStore((s) => s.tempRecoveryKey);
     const [isVisible, setIsVisible] = useState(false);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
+        // Yield to RecoveryKeyModal
+        if (tempRecoveryKey) {
+            setIsVisible(false);
+            return;
+        }
+
         if (user && !user.hasSeenPurgeNotice) {
             setIsVisible(true);
         }
-    }, [user]);
+    }, [user, tempRecoveryKey]);
 
     if (!isVisible || !user) return null;
 

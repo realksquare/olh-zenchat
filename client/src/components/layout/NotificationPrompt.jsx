@@ -12,6 +12,8 @@ const NotificationPrompt = () => {
     const userId = user?._id;
     const fcmTokens = user?.fcmTokens;
 
+    const tempRecoveryKey = useAuthStore((s) => s.tempRecoveryKey);
+
     useEffect(() => {
         setDismissed(false);
     }, [userId]);
@@ -19,6 +21,12 @@ const NotificationPrompt = () => {
     useEffect(() => {
         if (!user) return;
         
+        // Yield to higher priority modals
+        if (tempRecoveryKey || !user.hasSeenPurgeNotice) {
+            setShow(false);
+            return;
+        }
+
         // Safety check for Notification API
         if (typeof window.Notification === 'undefined') return;
 
@@ -39,7 +47,7 @@ const NotificationPrompt = () => {
         const delay = isPWA ? 200 : 1500;
         const timer = setTimeout(() => setShow(true), delay);
         return () => clearTimeout(timer);
-    }, [userId, fcmTokens, dismissed]);
+    }, [userId, fcmTokens, dismissed, tempRecoveryKey, user?.hasSeenPurgeNotice]);
 
     const handleDismiss = () => {
         setDismissed(true);

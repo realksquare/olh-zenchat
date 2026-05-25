@@ -709,7 +709,50 @@ export const SocketProvider = ({ children }) => {
         return () => window.removeEventListener("online", handleOnline);
     }, [flushOutbox, flushMediaOutbox]);
 
+    // -- Active Time Tracker --
+    const activeTimeAccumulatorRef = useRef({ lastAction: 0, accumulatedSeconds: 0, contactId: null });
+    
+    const trackActiveTime = useCallback((chatId) => {
+        if (!chatId) return;
+        const now = Date.now();
+        const state = activeTimeAccumulatorRef.current;
+        
+        // Find contactId from chatId
+        let contactId = null;
+        const activeChat = useChatStore.getState().chats.find(c => c._id === chatId);
+        if (activeChat && !activeChat.isGroup) {
+            const currentUserId = useAuthStore.getState().user?._id;
+            const peer = activeChat.participants.find(p => (p._id || p) !== currentUserId);
+            contactId = peer?._id || peer;
+        }
+
+        // Prevent rapid firing (e.g. keypresses) - only count if > 1s since last action
+        if (now - state.lastAction > 1000) {
+            // If they are active continuously, just add 1 second (this is an approximation for "was active in this second")
+            // Actually, a better approach: if action is within 30s of last action, we consider the whole time as "active".
+            // But to avoid complex intervals, just adding a fixed "2 seconds" per action up to a max per minute works.
+            
+            // Simpler approach:
+            // Every action grants 5 seconds of "active time".
+            state.accumulatedSeconds += 5;
+            state.lastAction = now;
+            state.contactId = contactId;
+
+            if (state.accumulatedSeconds >= 60) {
+                if (socketRef.current?.connected) {
+                    socketRef.current.emit("update_active_time", {
+                        additionalMinutes: 1,
+                        contactId: state.contactId
+                    });
+                }
+                state.accumulatedSeconds = 0; // Reset
+            }
+        }
+    }, []);
+
     const sendMessage = useCallback(async (chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null, isZenMessage = false) => {
+        trackActiveTime(chatId);
+        
         const isLowBandwidth = useChatStore.getState().isLowBandwidth;
         let payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isLowBandwidth, isZenMessage };
 
@@ -766,13 +809,14 @@ export const SocketProvider = ({ children }) => {
                 }
             } catch (_) {}
         }
-    }, []);
+    }, [trackActiveTime]);
 
     const startTyping = useCallback((chatId, scramble) => {
+        trackActiveTime(chatId);
         if (socketRef.current?.connected) {
             socketRef.current.emit("typing_start", { chatId, scramble });
         }
-    }, []);
+    }, [trackActiveTime]);
 
     const stopTyping = useCallback((chatId) => {
         if (socketRef.current?.connected) {
