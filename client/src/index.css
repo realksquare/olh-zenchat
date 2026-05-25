@@ -1256,10 +1256,17 @@ select {
 
 .message-bubble.mine.status-seen,
 .message-bubble.mine.status-read {
-  background: #0b7f73;
+  background: #059669;
   
   color: #fff;
-  box-shadow: 0 4px 15px rgba(11, 127, 115, 0.2);
+  box-shadow: 0 4px 15px rgba(5, 150, 105, 0.25);
+}
+
+.message-bubble.mine.status-seen .message-text,
+.message-bubble.mine.status-read .message-text,
+.message-bubble.mine.status-delivered .message-text {
+  color: #ffffff;
+  font-weight: 500;
 }
 
 .message-text {
@@ -1280,6 +1287,12 @@ select {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.35);
   white-space: nowrap;
+}
+
+.message-bubble.mine.status-seen .message-time,
+.message-bubble.mine.status-read .message-time,
+.message-bubble.mine.status-delivered .message-time {
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .message-edited-label {

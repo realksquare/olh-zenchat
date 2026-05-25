@@ -231,6 +231,18 @@ const App = () => {
     window.history.pushState({ pwaGuard: true }, "");
 
     const handlePopState = () => {
+      // Allow proper exit if the flag is set
+      if (window.__isExitingPWA) return;
+
+      // If we are in a chat (activeChat is set), going back should just close the chat
+      const chatStore = useChatStore.getState();
+      if (chatStore.activeChat) {
+        chatStore.setActiveChat(null);
+        // Push state again so the next back swipe can be intercepted
+        window.history.pushState({ pwaGuard: true }, "");
+        return;
+      }
+
       // Only intercept when user is at the root route (trying to exit the PWA)
       if (window.location.pathname === "/" || window.location.pathname === "") {
         window.history.pushState({ pwaGuard: true }, "");
@@ -830,14 +842,16 @@ const App = () => {
                 className="btn btn-primary"
                 onClick={() => {
                   setShowPwaExitConfirm(false);
+                  window.__isExitingPWA = true;
                   // For standalone PWA: window.close() closes the PWA window on Android/Chrome
                   window.close();
-                  // Fallback: if close didn't work (some browsers), navigate back to beginning of history
+                  // Fallback: if close didn't work (some browsers), navigate back to exit
                   setTimeout(() => {
                     try {
-                      if (window.history.length > 1) {
-                        window.history.go(1 - window.history.length);
-                      }
+                      window.history.back();
+                      setTimeout(() => {
+                        if (window.history.length > 1) window.history.back();
+                      }, 100);
                     } catch (_) {}
                   }, 300);
                 }}
