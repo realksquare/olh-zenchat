@@ -273,6 +273,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const [toast, setToast] = useState(null);
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [gifPreviewUrl, setGifPreviewUrl] = useState("");
+    const [showAttachmentSheet, setShowAttachmentSheet] = useState(false);
     const { sendMessage, startTyping, stopTyping, editMessage } = useSocket();
 
     const showToast = (msg) => {
@@ -283,6 +284,11 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const updateMessage = useChatStore((s) => s.updateMessage);
     const userId = useAuthStore((s) => s.user?._id);
     const soundEnabled = useAuthStore((s) => s.soundEnabled);
+    const activeChat = useChatStore((s) => s.activeChat);
+    const allChats = useChatStore((s) => s.chats);
+    const messages = activeChat?._id === chatId ? activeChat.messages : (allChats.find(c => c._id === chatId)?.messages || []);
+    const isSendingMedia = messages.some(m => m.senderId === userId && m.status === 'sending' && (m.type === 'image' || m.type === 'video' || m.type === 'file'));
+    
     const textareaRef = useRef(null);
     const typingTimeoutRef = useRef(null);
     const isTypingRef = useRef(false);
@@ -700,10 +706,16 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             <div className="message-input-box">
                 <button
                     className="attachment-btn"
-                    onClick={() => setShowMediaPopup(true)}
-                    disabled={disabled || uploading || stagedFiles.length >= MAX_FILES}
+                    onClick={() => {
+                        if (window.innerWidth <= 768) {
+                            setShowAttachmentSheet(true);
+                        } else {
+                            setShowMediaPopup(true);
+                        }
+                    }}
+                    disabled={disabled || uploading || stagedFiles.length >= MAX_FILES || isSendingMedia}
                     title="Attach media"
-                    style={{ opacity: disabled ? 0.5 : 1 }}
+                    style={{ opacity: (disabled || isSendingMedia) ? 0.5 : 1, flexShrink: 0 }}
                 >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
@@ -820,6 +832,56 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     onSelect={handleGifSelect}
                     initialQuery={content.trim()}
                 />
+            )}
+
+            {showAttachmentSheet && (
+                <div className="modal-overlay" onClick={() => setShowAttachmentSheet(false)} style={{ zIndex: 10002, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                    <div className="attachment-sheet" onClick={e => e.stopPropagation()} style={{ background: 'var(--color-surface)', width: '100%', maxWidth: '500px', borderTopLeftRadius: '20px', borderTopRightRadius: '20px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ width: '40px', height: '4px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px', margin: '0 auto', marginBottom: '8px' }} />
+                        
+                        <label className="attachment-option" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', cursor: 'pointer' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '16px', fontWeight: '500', color: '#f1f5f9' }}>Gallery</div>
+                                <div style={{ fontSize: '12px', color: '#94a3b8' }}>Photos and Videos</div>
+                            </div>
+                            <input 
+                                type="file" 
+                                accept="image/*,video/*" 
+                                multiple
+                                style={{ display: 'none' }}
+                                onChange={(e) => {
+                                    setShowAttachmentSheet(false);
+                                    handleFilesSelected(Array.from(e.target.files));
+                                    e.target.value = null;
+                                }}
+                            />
+                        </label>
+                        
+                        <label className="attachment-option" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', cursor: 'pointer' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontSize: '16px', fontWeight: '500', color: '#f1f5f9' }}>Document</div>
+                                <div style={{ fontSize: '12px', color: '#94a3b8' }}>Files and Archives</div>
+                            </div>
+                            <input 
+                                type="file" 
+                                accept="*" 
+                                multiple
+                                style={{ display: 'none' }}
+                                onChange={(e) => {
+                                    setShowAttachmentSheet(false);
+                                    handleFilesSelected(Array.from(e.target.files));
+                                    e.target.value = null;
+                                }}
+                            />
+                        </label>
+                    </div>
+                </div>
             )}
         </div>
     );

@@ -114,6 +114,18 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         if (iBlocked) return { text: "You blocked this user", isUnread: false };
         if (theyBlocked) return { text: "This user blocked you", isUnread: false };
         if (isTyping) {
+            if (isSPOp) {
+                return { 
+                    text: (
+                        <div className="typing-indicator" style={{ display: 'inline-flex', padding: 0, margin: 0, background: 'transparent' }}>
+                            <div className="typing-dot" style={{ width: '4px', height: '4px', background: 'var(--color-primary)' }}></div>
+                            <div className="typing-dot" style={{ width: '4px', height: '4px', background: 'var(--color-primary)' }}></div>
+                            <div className="typing-dot" style={{ width: '4px', height: '4px', background: 'var(--color-primary)' }}></div>
+                        </div>
+                    ),
+                    isUnread: true 
+                };
+            }
             return { text: typeof typingScramble === "string" ? typingScramble : "typing...", isUnread: true };
         }
         if (hasUnread) {

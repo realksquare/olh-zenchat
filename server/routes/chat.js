@@ -50,7 +50,7 @@ router.get("/", async (req, res) => {
 
         const chatsWithUnread = await Promise.all(sortedChats.map(async (chat) => {
             let lm = chat.lastMessage;
-            if (lm && (lm.deletedForEveryone || (lm.deletedFor && lm.deletedFor.includes(req.user._id)))) {
+            if (!lm || (lm && (lm.deletedForEveryone || (lm.deletedFor && lm.deletedFor.includes(req.user._id))))) {
                 const realLast = await Message.findOne({
                     chatId: chat._id,
                     deletedForEveryone: { $ne: true },

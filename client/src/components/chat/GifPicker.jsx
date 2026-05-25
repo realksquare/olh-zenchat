@@ -9,15 +9,20 @@ const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
     const [type, setType] = useState("gifs"); // "gifs" or "stickers"
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
+    const loadingRef = useRef(false);
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
-    const LIMIT = 21;
+    const LIMIT = 12; // Fetch 12 at a time (4 rows of 3)
     const observerRef = useRef(null);
     const lastElementRef = useRef(null);
 
     const fetchGifs = useCallback(async (isNewSearch = false) => {
         if (!hasMore && !isNewSearch) return;
+        if (loadingRef.current) return;
+        
         setLoading(true);
+        loadingRef.current = true;
+        
         try {
             const currentOffset = isNewSearch ? 0 : offset;
             const endpoint = query.trim() 
@@ -45,6 +50,7 @@ const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
             console.error("Failed to fetch Giphy data:", error);
         } finally {
             setLoading(false);
+            loadingRef.current = false;
         }
     }, [query, type, offset, hasMore]);
 
