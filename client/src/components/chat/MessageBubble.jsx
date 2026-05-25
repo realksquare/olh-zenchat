@@ -119,6 +119,10 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const [isMediaLoaded, setIsMediaLoaded] = useState(false);
     const [manualLoad, setManualLoad] = useState(false);
     
+    // Swipe to reply state
+    const [swipeOffset, setSwipeOffset] = useState(0);
+    const [showReplyIcon, setShowReplyIcon] = useState(false);
+    
     const reactionsTimeoutRef = useRef(null);
     const lastTapRef = useRef(0);
     const tapTimeoutRef = useRef(null);
@@ -175,8 +179,11 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         touchStartRef.current = {
             x: touch.clientX,
             y: touch.clientY,
-            time: Date.now()
+            time: Date.now(),
+            validSwipe: false
         };
+        setSwipeOffset(0);
+        setShowReplyIcon(false);
         preventClickRef.current = false;
 
         if (longPressTimerRef.current) {
@@ -211,6 +218,16 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                 longPressTimerRef.current = null;
             }
         }
+
+        if (diffY < 30 && diffX > 10) {
+            const deltaX = touch.clientX - touchStartRef.current.x;
+            if ((isMe && deltaX < 0) || (!isMe && deltaX > 0)) {
+                const offset = isMe ? Math.max(deltaX, -80) : Math.min(deltaX, 80);
+                setSwipeOffset(offset);
+                setShowReplyIcon(Math.abs(offset) > 50);
+                touchStartRef.current.validSwipe = true;
+            }
+        }
     };
 
     const handleTouchEnd = (e) => {
@@ -219,6 +236,17 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         if (longPressTimerRef.current) {
             clearTimeout(longPressTimerRef.current);
             longPressTimerRef.current = null;
+        }
+
+        if (touchStartRef.current.validSwipe) {
+            if (showReplyIcon && canReply) {
+                const { setReplyTo } = useChatStore.getState();
+                setReplyTo(message);
+                if (navigator.vibrate) navigator.vibrate(50);
+            }
+            setSwipeOffset(0);
+            setShowReplyIcon(false);
+            return;
         }
 
         if (preventClickRef.current) {
@@ -249,6 +277,9 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
             clearTimeout(longPressTimerRef.current);
             longPressTimerRef.current = null;
         }
+        setSwipeOffset(0);
+        setShowReplyIcon(false);
+        preventClickRef.current = false;
     };
 
     const handleReact = (emojiKey) => {
@@ -442,11 +473,45 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
             )}
             {!isMe && !showAvatar && <div className="avatar-spacer" />}
 
+            {/* Swipe Reply Icon */}
+            {swipeOffset !== 0 && (
+                <div
+                    style={{
+                        position: 'absolute',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        [isMe ? 'right' : 'left']: isMe ? '16px' : (showAvatar ? '50px' : '16px'),
+                        opacity: showReplyIcon ? 1 : Math.min(Math.abs(swipeOffset) / 50, 0.5),
+                        transition: 'opacity 0.2s',
+                        color: 'var(--color-primary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'rgba(255,255,255,0.05)',
+                        borderRadius: '50%',
+                        width: '32px',
+                        height: '32px',
+                        pointerEvents: 'none'
+                    }}
+                >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 17 4 12 9 7" />
+                        <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                    </svg>
+                </div>
+            )}
+
             <div 
                 className="message-bubble-outer" 
                 ref={outerRef}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
+                style={{
+                    transform: `translateX(${swipeOffset}px)`,
+                    transition: swipeOffset === 0 ? 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
+                    position: 'relative',
+                    zIndex: 2
+                }}
             >
                 <div
                     className={`message-bubble ${isMe ? `mine status-${status === "read" ? "seen" : status}` : "theirs"} ${isViewOnce ? "view-once" : ""}`}

@@ -684,6 +684,13 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     value={content}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
+                    onFocus={() => {
+                        if (window.innerWidth <= 768) {
+                            setTimeout(() => {
+                                window.dispatchEvent(new Event("keyboard-open"));
+                            }, 300);
+                        }
+                    }}
                     disabled={disabled || uploading || (isViewOnce && !hasMedia)}
                     rows={1}
                     aria-label="Message input"

@@ -1176,6 +1176,7 @@ select {
 /* ── Message bubbles ──────────────────────────────────── */
 
 .message-row {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: var(--space-2);

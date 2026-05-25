@@ -612,6 +612,16 @@ const ChatWindow = ({ onBack }) => {
     const messagesEndRef = useRef(null);
     const isLoadingOlderRef = useRef(false);
 
+    useEffect(() => {
+        const handleKeyboardOpen = () => {
+            if (messagesEndRef.current) {
+                messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+            }
+        };
+        window.addEventListener("keyboard-open", handleKeyboardOpen);
+        return () => window.removeEventListener("keyboard-open", handleKeyboardOpen);
+    }, []);
+
     const [editingMessage, setEditingMessage] = useState(null);
     const [replyingTo, setReplyingTo] = useState(null);
     const [deletingMessage, setDeletingMessage] = useState(null);
