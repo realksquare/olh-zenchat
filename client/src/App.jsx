@@ -531,6 +531,14 @@ const App = () => {
                     onClick={() => {
                       clearZenTimers();
                       setZenWaitingState(null);
+                      if (socket && activeChat) {
+                        const otherParticipant = activeChat.participants?.find(p => {
+                          const pid = p?._id?.toString() || p?.toString();
+                          return pid && pid !== user?._id?.toString();
+                        });
+                        const otherParticipantId = otherParticipant?._id || otherParticipant;
+                        socket.emit("zen_exit_cancel", { receiverId: otherParticipantId?.toString() });
+                      }
                     }}
                   >
                     Cancel

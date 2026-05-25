@@ -700,7 +700,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                             )}
                             {message.isEdited && <span className="message-edited-label">(edited)</span>}
                             {message.isZenMessage && (
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.75, flexShrink: 0 }} title="Sent in ZenMode">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="zen-tag-icon" title="Sent in ZenMode">
                                     <circle cx="12" cy="12" r="10" />
                                     <text x="12" y="16" textAnchor="middle" fontSize="10" fontWeight="900" fill="var(--color-primary)" stroke="none" fontFamily="inherit">Z</text>
                                 </svg>

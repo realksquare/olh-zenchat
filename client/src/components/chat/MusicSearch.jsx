@@ -33,6 +33,11 @@ const MusicSearch = ({ onSelect, onClose, initialQuery = "" }) => {
                         placeholder="Search track (30s preview)..."
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
+                        onFocus={(e) => {
+                            setTimeout(() => {
+                                e.target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }, 300);
+                        }}
                         autoFocus
                     />
                     <button className="aura-remove-music search-close" onClick={onClose}>

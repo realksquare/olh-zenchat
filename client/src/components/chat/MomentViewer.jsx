@@ -149,10 +149,16 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         setTimeLeft(duration);
 
         if (currentMoment.music?.previewUrl) {
-            audioRef.current = new Audio(currentMoment.music.previewUrl);
-            audioRef.current.currentTime = currentMoment.music.startTime || 0;
-            audioRef.current.muted = isMuted;
-            audioRef.current.play().catch(e => {});
+            const audio = new Audio(currentMoment.music.previewUrl);
+            audio.muted = isMuted;
+            audio.addEventListener("loadedmetadata", () => {
+                if (currentMoment.music.startTime) {
+                    audio.currentTime = currentMoment.music.startTime;
+                }
+                audio.play().catch(e => console.log("Audio play failed:", e));
+            });
+            audio.load();
+            audioRef.current = audio;
         }
 
         const interval = setInterval(() => {

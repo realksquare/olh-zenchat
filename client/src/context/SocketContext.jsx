@@ -410,11 +410,8 @@ export const SocketProvider = ({ children }) => {
                 }
             } else {
                 if (userId === requesterId) {
-                    setZenWaitingState("refused");
+                    setZenWaitingState(null);
                     showZenToast("error", "User refused to end #ZenMode");
-                    setTimeout(() => {
-                        setZenWaitingState(null);
-                    }, 3000);
                 }
             }
         };
@@ -513,6 +510,11 @@ export const SocketProvider = ({ children }) => {
         socket.on("zen_invite_result", handleZenInviteResult);
         socket.on("zen_receive_exit_request", handleZenReceiveExitRequest);
         socket.on("zen_exit_result", handleZenExitResult);
+        socket.on("zen_exit_cancel_receive", () => {
+            clearZenTimers();
+            setIncomingZenExit(null);
+            setShowExitConfirm(false);
+        });
 
         return () => {
             socket.off("connect");
@@ -544,6 +546,7 @@ export const SocketProvider = ({ children }) => {
             socket.off("zen_invite_result", handleZenInviteResult);
             socket.off("zen_receive_exit_request", handleZenReceiveExitRequest);
             socket.off("zen_exit_result", handleZenExitResult);
+            socket.off("zen_exit_cancel_receive");
 
             socket.disconnect();
             socketRef.current = null;

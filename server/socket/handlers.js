@@ -441,6 +441,15 @@ const registerSocketHandlers = (io) => {
             }
         });
 
+        socket.on("zen_exit_cancel", ({ receiverId }) => {
+            const recUserData = onlineUsers.get(receiverId);
+            if (recUserData && recUserData.sockets) {
+                recUserData.sockets.forEach((sData, socketId) => {
+                    io.to(socketId).emit("zen_exit_cancel_receive");
+                });
+            }
+        });
+
         socket.on("send_message", async (rawPayload) => {
             try {
                 const unpacked = isBinaryPacket(rawPayload) ? unpackMessage(rawPayload) : rawPayload;

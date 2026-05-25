@@ -1295,6 +1295,24 @@ select {
   color: rgba(255, 255, 255, 0.75);
 }
 
+.zen-tag-icon {
+  opacity: 0.75;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.message-bubble.mine.status-seen .zen-tag-icon,
+.message-bubble.mine.status-read .zen-tag-icon,
+.message-bubble.mine.status-delivered .zen-tag-icon {
+  stroke: rgba(255, 255, 255, 0.85);
+}
+
+.message-bubble.mine.status-seen .zen-tag-icon text,
+.message-bubble.mine.status-read .zen-tag-icon text,
+.message-bubble.mine.status-delivered .zen-tag-icon text {
+  fill: rgba(255, 255, 255, 0.85);
+}
+
 .message-edited-label {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.3);
@@ -3905,6 +3923,8 @@ select {
   position: relative;
   transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   animation: aura-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 @keyframes aura-pop {
@@ -6192,9 +6212,10 @@ select {
   }
 
   .cropper-label {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
     gap: 8px;
+    width: 100%;
   }
 
   .aura-duration-options {
@@ -6237,6 +6258,10 @@ select {
 
   .aura-music-search-container {
     margin-top: 8px;
+  }
+
+  .aura-music-search-inner {
+    max-height: min(400px, 60vh);
   }
 }
 
