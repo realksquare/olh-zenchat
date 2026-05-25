@@ -6,7 +6,7 @@ import "./PurgeNoticeModal.css";
 
 const PurgeNoticeModal = () => {
     const user = useAuthStore((s) => s.user);
-    const setUser = useAuthStore((s) => s.setUser);
+    const updateUser = useAuthStore((s) => s.updateUser);
     const tempRecoveryKey = useAuthStore((s) => s.tempRecoveryKey);
     const [isVisible, setIsVisible] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -29,7 +29,7 @@ const PurgeNoticeModal = () => {
         setLoading(true);
         try {
             await axiosInstance.put("/auth/purge-notice");
-            setUser({ ...user, hasSeenPurgeNotice: true });
+            updateUser({ ...user, hasSeenPurgeNotice: true });
             setIsVisible(false);
         } catch (err) {
             console.error("Failed to acknowledge purge notice:", err);
