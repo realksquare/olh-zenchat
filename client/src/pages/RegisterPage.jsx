@@ -86,6 +86,14 @@ const RegisterPage = () => {
                 <h1 className="auth-title">Create account</h1>
                 <p className="auth-subtitle">Experience fast, safe, no-nonsense, and forever free messaging!</p>
 
+                <div style={{ background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.2)", borderRadius: "8px", padding: "12px", marginBottom: "20px", textAlign: "center" }}>
+                    <span style={{ fontSize: "0.85rem", color: "#a7f3d0", fontWeight: "600", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        New: 21-Day Text Auto-Purge active!
+                    </span>
+                    <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", marginTop: "4px" }}>Keeping your digital footprint light & meaningful.</p>
+                </div>
+
                 {error && (
                     <div className="auth-error" role="alert">
                         {error}

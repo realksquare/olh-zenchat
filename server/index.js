@@ -73,6 +73,8 @@ connectDB().then(async () => {
     await User.updateMany({}, { $set: { isOnline: false } });
     await User.updateMany({ mfaPreference: "phone" }, { $set: { mfaPreference: "email" } });
 
+    const { startCronJobs } = require("./utils/cronJobs");
+    startCronJobs();
 
     server.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);

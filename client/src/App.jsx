@@ -16,6 +16,7 @@ import { requestNotificationPermission } from "./utils/firebase";
 import axiosInstance from "./utils/axios";
 import NotificationPrompt from "./components/layout/NotificationPrompt";
 import SplashScreen from "./components/ui/SplashScreen";
+import PurgeNoticeModal from "./components/ui/PurgeNoticeModal";
 import { useSocket } from "./context/SocketContext";
 
 const ProtectedRoute = ({ children }) => {
@@ -487,6 +488,7 @@ const App = () => {
       <InstallPWA />
       <NotificationPrompt />
       <RecoveryKeyModal />
+      <PurgeNoticeModal />
 
       {/* 1. Global Zen Waiting Overlay */}
       {zenWaitingState && (() => {

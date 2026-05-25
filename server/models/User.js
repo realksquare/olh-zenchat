@@ -141,7 +141,11 @@ const userSchema = new mongoose.Schema(
                 userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
                 unblockedAt: { type: Date, default: Date.now }
             }
-        ]
+        ],
+        hasSeenPurgeNotice: {
+            type: Boolean,
+            default: false
+        }
     },
     { timestamps: true }
 );
@@ -200,7 +204,8 @@ userSchema.methods.toPrivateJSON = function () {
         encryptedPrivateKey: this.encryptedPrivateKey,
         encryptedPrivateKeyBackup: this.encryptedPrivateKeyBackup,
         cryptoSalt: this.cryptoSalt,
-        cryptoIv: this.cryptoIv
+        cryptoIv: this.cryptoIv,
+        hasSeenPurgeNotice: this.hasSeenPurgeNotice
     };
 };
 

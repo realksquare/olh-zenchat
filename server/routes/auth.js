@@ -960,5 +960,22 @@ router.post("/presence", authMiddleware, async (req, res) => {
         res.status(500).json({ message: "Server error", error: err.message });
     }
 });
+// @route   PUT /api/auth/purge-notice
+// @desc    Acknowledge the 21-day auto-purge notice
+// @access  Private
+router.put("/purge-notice", authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        user.hasSeenPurgeNotice = true;
+        await user.save();
+        
+        res.json({ success: true, message: "Purge notice acknowledged" });
+    } catch (err) {
+        console.error("[PurgeNotice] Error:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+});
 
 module.exports = router;
