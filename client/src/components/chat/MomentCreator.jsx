@@ -332,7 +332,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
     return createPortal(
         <>
             <div className="modal-overlay moments-aura-overlay" onClick={handleClose}>
-                <div className="moments-aura-content" onClick={(e) => e.stopPropagation()}>
+                <div className="moments-aura-content" onClick={(e) => e.stopPropagation()} style={{ userSelect: isUploading ? 'none' : 'auto', WebkitUserSelect: isUploading ? 'none' : 'auto' }}>
                     <div className="moments-aura-header">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             {creatorStep === "create" && (
