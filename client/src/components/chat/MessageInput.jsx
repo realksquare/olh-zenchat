@@ -7,6 +7,7 @@ import { playSendSound } from "../../utils/audio";
 import axiosInstance from "../../utils/axios";
 import axios from "axios";
 import { enqueuePendingMedia } from "../../db/zenDB";
+import GifPicker from "./GifPicker";
 
 const ACCEPTED_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const ACCEPTED_VIDEO = ["video/mp4", "video/quicktime", "video/webm", "video/mpeg", "video/x-msvideo"];
@@ -270,6 +271,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const [showMediaPopup, setShowMediaPopup] = useState(false);
     const [stagedFiles, setStagedFiles] = useState([]);
     const [toast, setToast] = useState(null);
+    const [showGifPicker, setShowGifPicker] = useState(false);
+    const [gifPreviewUrl, setGifPreviewUrl] = useState("");
     const { sendMessage, startTyping, stopTyping, editMessage } = useSocket();
 
     const showToast = (msg) => {
@@ -283,6 +286,59 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const textareaRef = useRef(null);
     const typingTimeoutRef = useRef(null);
     const isTypingRef = useRef(false);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(async () => {
+            if (!content.trim()) {
+                setGifPreviewUrl("");
+                return;
+            }
+            try {
+                const res = await axios.get("https://api.giphy.com/v1/gifs/search", {
+                    params: {
+                        api_key: import.meta.env.VITE_GIPHY_API_KEY || "pnshJZOMgBP3OVpZzo4TCXPf99zhNIQA",
+                        q: content.trim(),
+                        limit: 1,
+                        rating: "g"
+                    }
+                });
+                if (res.data.data.length > 0) {
+                    setGifPreviewUrl(res.data.data[0].images.fixed_height_small.url);
+                } else {
+                    setGifPreviewUrl("");
+                }
+            } catch (err) {
+                // ignore
+            }
+        }, 500);
+        return () => clearTimeout(timeoutId);
+    }, [content]);
+
+    const handleGifSelect = (url, type) => {
+        const tempId = `temp-${Date.now()}-${Math.random()}`;
+        const activeChat = useChatStore.getState().activeChat;
+        const isZen = useChatStore.getState().isZenMode;
+        
+        addMessage(chatId, {
+            _id: tempId,
+            cid: tempId,
+            chatId,
+            senderId: userId,
+            content: "",
+            type: type,
+            mediaUrl: url,
+            status: "sending",
+            createdAt: new Date().toISOString(),
+            disappearingMode: activeChat?.disappearingMode || "off",
+            isZenMessage: isZen
+        });
+        
+        sendMessage(chatId, "", type, url, replyingTo?._id, false, tempId, isZen);
+        if (soundEnabled) playSendSound();
+        setShowGifPicker(false);
+        onCancelReply();
+        // Do NOT clear content
+    };
 
     const adjustHeight = () => {
         const el = textareaRef.current;
@@ -670,32 +726,46 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     </button>
                 )}
 
-                <textarea
-                    ref={textareaRef}
-                    className="message-textarea"
-                    placeholder={
-                        disabled ? disabledPlaceholder :
-                            uploading ? "Uploading..." :
-                                hasMedia ? "Add a caption (optional)..." :
-                                    isViewOnce ? "Upload a file to send view-once media..." :
-                                        editingMessage ? "Edit your message..." :
-                                            "Type a message..."
-                    }
-                    value={content}
-                    onChange={handleChange}
-                    onKeyDown={handleKeyDown}
-                    onFocus={() => {
-                        if (window.innerWidth <= 768) {
-                            setTimeout(() => {
-                                window.dispatchEvent(new Event("keyboard-open"));
-                            }, 300);
+                <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+                    <textarea
+                        ref={textareaRef}
+                        className="message-textarea"
+                        placeholder={
+                            disabled ? disabledPlaceholder :
+                                uploading ? "Uploading..." :
+                                    hasMedia ? "Add a caption (optional)..." :
+                                        isViewOnce ? "Upload a file to send view-once media..." :
+                                            editingMessage ? "Edit your message..." :
+                                                "Type a message..."
                         }
-                    }}
-                    disabled={disabled || uploading || (isViewOnce && !hasMedia)}
-                    rows={1}
-                    aria-label="Message input"
-                    style={{ opacity: disabled ? 0.5 : 1, cursor: disabled ? 'not-allowed' : 'text' }}
-                />
+                        value={content}
+                        onChange={handleChange}
+                        onKeyDown={handleKeyDown}
+                        onFocus={() => {
+                            if (window.innerWidth <= 768) {
+                                setTimeout(() => {
+                                    window.dispatchEvent(new Event("keyboard-open"));
+                                }, 300);
+                            }
+                        }}
+                        disabled={disabled || uploading || (isViewOnce && !hasMedia)}
+                        rows={1}
+                        aria-label="Message input"
+                        style={{ opacity: disabled ? 0.5 : 1, cursor: disabled ? 'not-allowed' : 'text', paddingRight: '50px' }}
+                    />
+                    <button
+                        className="gif-preview-btn"
+                        onClick={() => setShowGifPicker(true)}
+                        disabled={disabled || uploading}
+                        title="Search GIFs and Stickers"
+                    >
+                        {gifPreviewUrl ? (
+                            <img src={gifPreviewUrl} alt="GIF preview" className="gif-preview-img" />
+                        ) : (
+                            <span>GIF</span>
+                        )}
+                    </button>
+                </div>
 
                 <button
                     className={`send-btn ${!sendDisabled ? "send-btn-active" : ""}`}
@@ -740,6 +810,14 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     onClose={() => setShowMediaPopup(false)}
                     onFilesSelected={handleFilesSelected}
                     showToast={showToast}
+                />
+            )}
+            
+            {showGifPicker && (
+                <GifPicker
+                    onClose={() => setShowGifPicker(false)}
+                    onSelect={handleGifSelect}
+                    initialQuery={content.trim()}
                 />
             )}
         </div>

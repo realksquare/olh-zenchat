@@ -514,7 +514,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                 }}
             >
                 <div
-                    className={`message-bubble ${isMe ? `mine status-${status === "read" ? "seen" : status}` : "theirs"} ${isViewOnce ? "view-once" : ""}`}
+                    className={`message-bubble ${isMe ? `mine status-${status === "read" ? "seen" : status}` : "theirs"} ${isViewOnce ? "view-once" : ""} ${message.type === 'sticker' ? "is-sticker" : ""}`}
                     onClick={handleBubbleClick}
                     onDoubleClick={handleBubbleDoubleClick}
                     onTouchStart={handleTouchStart}
@@ -570,7 +570,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                     )}
                                 </div>
                             )}
-                            {(message.type === "image" || message.type === "video" || message.type === "file") && message.mediaUrl && !isViewOnce && (
+                            {(message.type === "image" || message.type === "video" || message.type === "file" || message.type === "gif" || message.type === "sticker") && message.mediaUrl && !isViewOnce && (
                                 <div 
                                     className="message-media-wrap" 
                                     onClick={() => {
@@ -637,12 +637,12 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                          </div>
                                      ) : (
                                          <div className="message-media-wrap" style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
-                                             {message.type === "image" ? (
+                                             {message.type === "image" || message.type === "gif" || message.type === "sticker" ? (
                                                  <img 
                                                       ref={imgRef}
-                                                      src={getThumbnailUrl(message.mediaUrl)} 
-                                                      alt="Sent image" 
-                                                      className="message-image" 
+                                                      src={message.type === "image" ? getThumbnailUrl(message.mediaUrl) : message.mediaUrl} 
+                                                      alt={message.type} 
+                                                      className={message.type === "sticker" ? "message-sticker" : "message-image"} 
                                                       loading="lazy" 
                                                       onLoad={() => setIsMediaLoaded(true)}
                                                   />

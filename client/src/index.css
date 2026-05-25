@@ -7351,3 +7351,33 @@ body.reactions-sheet-open * {
   -webkit-user-select: none !important;
   -webkit-touch-callout: none !important;
 }
+  
+
+
+/* GIF & Sticker Integration */
+.gif-preview-btn { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.1); border: none; border-radius: 8px; color: #fff; font-size: 10px; font-weight: bold; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; overflow: hidden; }
+.gif-preview-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
+.gif-preview-img { width: 100%; height: 100%; object-fit: cover; }
+
+.gif-picker-overlay { display: flex; align-items: flex-end; justify-content: center; }
+@media(min-width: 768px) { .gif-picker-overlay { align-items: center; } }
+.gif-picker-modal { background: var(--color-surface); width: 100%; max-width: 400px; height: 60vh; border-radius: 20px 20px 0 0; display: flex; flexDirection: column; overflow: hidden; padding: 16px; border: 1px solid rgba(255,255,255,0.05); }
+@media(min-width: 768px) { .gif-picker-modal { height: 500px; border-radius: 20px; } }
+
+.gif-picker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.gif-tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 12px; }
+.gif-tab { padding: 6px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #94a3b8; background: transparent; border: none; cursor: pointer; transition: 0.2s; }
+.gif-tab.active { background: var(--color-primary); color: #fff; }
+
+.gif-search-container { display: flex; align-items: center; background: rgba(255,255,255,0.05); padding: 10px 16px; border-radius: 12px; margin-bottom: 16px; gap: 10px; }
+.gif-search-icon { color: #94a3b8; }
+.gif-search-input { background: transparent; border: none; color: #f1f5f9; outline: none; width: 100%; font-size: 14px; }
+
+.gif-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; overflow-y: auto; flex: 1; }
+.gif-grid-item { border-radius: 8px; overflow: hidden; cursor: pointer; aspect-ratio: 1; background: rgba(255,255,255,0.05); }
+.gif-grid-item img { width: 100%; height: 100%; object-fit: cover; }
+.gif-loading { grid-column: span 3; display: flex; justify-content: center; padding: 20px; }
+.gif-empty { grid-column: span 3; text-align: center; color: #94a3b8; padding: 20px; }
+
+.message-bubble.is-sticker { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
+.message-sticker { width: 120px; height: 120px; object-fit: contain; }
