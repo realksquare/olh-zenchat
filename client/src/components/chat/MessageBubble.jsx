@@ -239,13 +239,13 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         }
 
         if (touchStartRef.current.validSwipe) {
-            if (showReplyIcon && canReply) {
-                const { setReplyTo } = useChatStore.getState();
-                setReplyTo(message);
+            if (showReplyIcon && canReply && onEdit) {
+                onEdit({ action: "reply", ...message });
                 if (navigator.vibrate) navigator.vibrate(50);
             }
             setSwipeOffset(0);
             setShowReplyIcon(false);
+            touchStartRef.current.validSwipe = false;
             return;
         }
 
