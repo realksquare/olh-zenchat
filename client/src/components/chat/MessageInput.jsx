@@ -711,6 +711,19 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     {hasMedia && <span className="attachment-badge">{stagedFiles.length}</span>}
                 </button>
 
+                <button
+                    className="gif-preview-btn"
+                    onClick={() => setShowGifPicker(true)}
+                    disabled={disabled || uploading}
+                    title="Search GIFs and Stickers"
+                >
+                    {gifPreviewUrl ? (
+                        <img src={gifPreviewUrl} alt="GIF preview" className="gif-preview-img" />
+                    ) : (
+                        <span>GIF</span>
+                    )}
+                </button>
+
                 {showViewOnceBtn && (
                     <button
                         className={`view-once-btn ${isViewOnce ? "active" : ""}`}
@@ -751,20 +764,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                         disabled={disabled || uploading || (isViewOnce && !hasMedia)}
                         rows={1}
                         aria-label="Message input"
-                        style={{ opacity: disabled ? 0.5 : 1, cursor: disabled ? 'not-allowed' : 'text', paddingRight: '50px' }}
+                        style={{ opacity: disabled ? 0.5 : 1, cursor: disabled ? 'not-allowed' : 'text' }}
                     />
-                    <button
-                        className="gif-preview-btn"
-                        onClick={() => setShowGifPicker(true)}
-                        disabled={disabled || uploading}
-                        title="Search GIFs and Stickers"
-                    >
-                        {gifPreviewUrl ? (
-                            <img src={gifPreviewUrl} alt="GIF preview" className="gif-preview-img" />
-                        ) : (
-                            <span>GIF</span>
-                        )}
-                    </button>
                 </div>
 
                 <button

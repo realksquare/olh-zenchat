@@ -7355,13 +7355,13 @@ body.reactions-sheet-open * {
 
 
 /* GIF & Sticker Integration */
-.gif-preview-btn { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.1); border: none; border-radius: 8px; color: #fff; font-size: 10px; font-weight: bold; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; overflow: hidden; }
+.gif-preview-btn { background: rgba(255, 255, 255, 0.1); border: none; border-radius: 8px; color: #fff; font-size: 10px; font-weight: bold; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; overflow: hidden; margin-left: 8px; margin-right: 8px; flex-shrink: 0; }
 .gif-preview-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
 .gif-preview-img { width: 100%; height: 100%; object-fit: cover; }
 
 .gif-picker-overlay { display: flex; align-items: flex-end; justify-content: center; }
 @media(min-width: 768px) { .gif-picker-overlay { align-items: center; } }
-.gif-picker-modal { background: var(--color-surface); width: 100%; max-width: 400px; height: 60vh; border-radius: 20px 20px 0 0; display: flex; flexDirection: column; overflow: hidden; padding: 16px; border: 1px solid rgba(255,255,255,0.05); }
+.gif-picker-modal { background: var(--color-surface); width: 100%; max-width: 400px; height: 60vh; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; overflow: hidden; padding: 16px; border: 1px solid rgba(255,255,255,0.05); }
 @media(min-width: 768px) { .gif-picker-modal { height: 500px; border-radius: 20px; } }
 
 .gif-picker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
