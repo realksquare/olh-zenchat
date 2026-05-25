@@ -857,7 +857,7 @@ const ChatWindow = ({ onBack }) => {
         return msg?.senderId?._id?.toString() || msg?.senderId?.toString();
     }, [otherUserId, isDeleted, rawMessages, user?._id]);
 
-    const isContact = contacts.some(
+    const isContact = contacts?.some(
         c => {
             const uid = c.userId?._id?.toString() || c.userId?.toString();
             return uid === otherUserId || (inferredOtherUserId && uid === inferredOtherUserId);

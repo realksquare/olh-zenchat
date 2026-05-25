@@ -287,7 +287,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const activeChat = useChatStore((s) => s.activeChat);
     const allChats = useChatStore((s) => s.chats);
     const messages = activeChat?._id === chatId ? activeChat.messages : (allChats.find(c => c._id === chatId)?.messages || []);
-    const isSendingMedia = messages.some(m => m.senderId === userId && m.status === 'sending' && (m.type === 'image' || m.type === 'video' || m.type === 'file'));
+    const isSendingMedia = messages?.some(m => m.senderId === userId && m.status === 'sending' && (m.type === 'image' || m.type === 'video' || m.type === 'file'));
     
     const textareaRef = useRef(null);
     const typingTimeoutRef = useRef(null);
