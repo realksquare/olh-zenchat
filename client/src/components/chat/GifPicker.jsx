@@ -127,13 +127,13 @@ const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
                         const url = item.images.fixed_height.url;
                         if (results.length === index + 1) {
                             return (
-                                <div ref={lastElementRef} key={item.id} className="gif-grid-item" onClick={() => onSelect(url, type)}>
+                                <div ref={lastElementRef} key={item.id} className={`gif-grid-item ${type === "stickers" ? "is-sticker" : ""}`} onClick={() => onSelect(url, type)}>
                                     <img src={url} alt={item.title} loading="lazy" />
                                 </div>
                             );
                         } else {
                             return (
-                                <div key={item.id} className="gif-grid-item" onClick={() => onSelect(url, type)}>
+                                <div key={item.id} className={`gif-grid-item ${type === "stickers" ? "is-sticker" : ""}`} onClick={() => onSelect(url, type)}>
                                     <img src={url} alt={item.title} loading="lazy" />
                                 </div>
                             );

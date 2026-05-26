@@ -638,29 +638,36 @@ const Sidebar = ({ onChatSelect }) => {
                         <div className="mobile-bottom-sheet-handle" />
                         <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#f8fafc", marginBottom: "16px", textAlign: "center" }}>Menu</h3>
                         
-                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                             <button className="mobile-menu-btn" onClick={() => { setShowMobileMenu(false); setIsYourTimeOpen(true); }}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                 <span>Your Time on ZenChat</span>
                             </button>
+                            <div className="mobile-menu-divider" />
                             <button className="mobile-menu-btn" onClick={() => { setShowMobileMenu(false); setIsE2EEInfoOpen(true); }}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
                                 <span>E2EE Security Info</span>
                             </button>
+                            <div className="mobile-menu-divider" />
                             <button className="mobile-menu-btn" onClick={() => { setShowMobileMenu(false); window.location.href = "/intro"; }}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
                                 <span>ZenChat Home</span>
                             </button>
                             {!isStandalone && (
-                                <button className="mobile-menu-btn" onClick={() => { setShowMobileMenu(false); handlePwaButtonClick(); }}>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-                                    <span>{isPwaInstalled ? "Open App" : "Install App"}</span>
-                                </button>
+                                <>
+                                    <div className="mobile-menu-divider" />
+                                    <button className="mobile-menu-btn" onClick={() => { setShowMobileMenu(false); handlePwaButtonClick(); }}>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+                                        <span>{isPwaInstalled ? "Open App" : "Install App"}</span>
+                                    </button>
+                                </>
                             )}
+                            <div className="mobile-menu-divider" />
                             <button className="mobile-menu-btn" onClick={() => { setShowMobileMenu(false); setIsVaultOpen(true); }}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
                                 <span>ZenVault Local Safe</span>
                             </button>
+                            <div className="mobile-menu-divider" />
                             <button className="mobile-menu-btn" style={{ color: "#ef4444" }} onClick={() => { setShowMobileMenu(false); setShowLogoutConfirm(true); }}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
                                 <span>Sign out</span>

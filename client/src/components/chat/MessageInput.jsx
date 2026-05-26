@@ -751,7 +751,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     </button>
                 )}
 
-                <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+                <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
                     <textarea
                         ref={textareaRef}
                         className="message-textarea"

@@ -23,19 +23,41 @@ router.get("/my-time", authMiddleware, async (req, res) => {
         const activeTimeGlobal = user.activeTimeMinutes || 0;
         
         let activeTimePerContact = [];
+        const contactIdsWithTime = new Set();
+
         if (user.perContactActiveTime && user.perContactActiveTime.size > 0) {
             for (let [contactId, minutes] of user.perContactActiveTime.entries()) {
                 const contact = await User.findById(contactId).select("username avatar");
                 if (contact) {
+                    const cidStr = contactId.toString();
                     activeTimePerContact.push({
-                        contactId,
+                        contactId: cidStr,
                         username: contact.username,
                         avatar: contact.avatar,
                         minutes
                     });
+                    contactIdsWithTime.add(cidStr);
                 }
             }
         }
+
+        // Add all other contacts with 0 minutes so they appear in the dashboard filter dropdown
+        if (user.contacts && user.contacts.length > 0) {
+            for (let c of user.contacts) {
+                if (c.userId && c.userId._id) {
+                    const cidStr = c.userId._id.toString();
+                    if (!contactIdsWithTime.has(cidStr)) {
+                        activeTimePerContact.push({
+                            contactId: cidStr,
+                            username: c.userId.username,
+                            avatar: c.userId.avatar,
+                            minutes: 0
+                        });
+                    }
+                }
+            }
+        }
+
         activeTimePerContact.sort((a, b) => b.minutes - a.minutes);
 
         // --- 2. Moments Stats ---
