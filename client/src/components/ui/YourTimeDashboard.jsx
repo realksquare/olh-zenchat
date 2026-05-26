@@ -1,6 +1,102 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axiosInstance from "../../utils/axios";
 import { createPortal } from "react-dom";
+
+const ContactDropdown = ({ options, value, onChange }) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        const handler = (e) => {
+            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, []);
+
+    const selected = options.find(o => o.value === value) || options[0];
+
+    return (
+        <div ref={ref} style={{ position: "relative", minWidth: "140px" }}>
+            <button
+                onClick={() => setOpen(v => !v)}
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "8px",
+                    width: "100%",
+                    background: "rgba(255, 255, 255, 0.06)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "10px",
+                    color: "#e2e8f0",
+                    padding: "7px 12px",
+                    fontSize: "0.88rem",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    transition: "border-color 0.2s",
+                    whiteSpace: "nowrap",
+                    maxWidth: "180px",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis"
+                }}
+            >
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {selected?.label || "Global"}
+                </span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>
+                    <polyline points="6 9 12 15 18 9" />
+                </svg>
+            </button>
+
+            {open && (
+                <div style={{
+                    position: "absolute",
+                    top: "calc(100% + 6px)",
+                    right: 0,
+                    minWidth: "180px",
+                    maxWidth: "220px",
+                    background: "#1e293b",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "12px",
+                    padding: "6px",
+                    zIndex: 200,
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                    maxHeight: "220px",
+                    overflowY: "auto"
+                }}>
+                    {options.map(opt => (
+                        <button
+                            key={opt.value}
+                            onClick={() => { onChange(opt.value); setOpen(false); }}
+                            style={{
+                                display: "block",
+                                width: "100%",
+                                textAlign: "left",
+                                padding: "9px 12px",
+                                borderRadius: "8px",
+                                border: "none",
+                                background: opt.value === value ? "rgba(168, 85, 247, 0.15)" : "transparent",
+                                color: opt.value === value ? "#e9d5ff" : "#cbd5e1",
+                                fontSize: "0.88rem",
+                                fontWeight: opt.value === value ? "600" : "400",
+                                cursor: "pointer",
+                                transition: "background 0.15s",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis"
+                            }}
+                            onMouseEnter={e => { if (opt.value !== value) e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+                            onMouseLeave={e => { if (opt.value !== value) e.currentTarget.style.background = "transparent"; }}
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
 
 const YourTimeDashboard = ({ isOpen, onClose }) => {
     const [stats, setStats] = useState(null);
@@ -31,7 +127,12 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
         if (!stats) return null;
         const activeTime = stats.activeTime;
         const perContact = activeTime.perContact || [];
-        
+
+        const dropdownOptions = [
+            { value: "all", label: "Global" },
+            ...perContact.map(c => ({ value: c.contactId, label: c.username }))
+        ];
+
         let displayMinutes = activeTime.global;
         let displayName = "Global Active Chatting Time";
 
@@ -57,34 +158,21 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
                         </svg>
                         Active Chatting Time
                     </h3>
-                    <select 
-                        value={selectedContact} 
-                        onChange={(e) => setSelectedContact(e.target.value)}
-                        style={{
-                            background: "rgba(255, 255, 255, 0.05)",
-                            border: "1px solid rgba(255,255,255,0.1)",
-                            color: "#cbd5e1",
-                            padding: "6px 12px",
-                            borderRadius: "8px",
-                            outline: "none",
-                            fontSize: "0.9rem"
-                        }}
-                    >
-                        <option value="all">Global</option>
-                        {perContact.map(c => (
-                            <option key={c.contactId} value={c.contactId}>{c.username}</option>
-                        ))}
-                    </select>
+                    <ContactDropdown
+                        options={dropdownOptions}
+                        value={selectedContact}
+                        onChange={setSelectedContact}
+                    />
                 </div>
-                
+
                 <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "8px" }}>
                     <span style={{ fontSize: "2.5rem", fontWeight: "700", color: "#38bdf8", letterSpacing: "-1px" }}>
                         {hrs > 0 ? `${hrs}h ` : ""}{mins}m
                     </span>
-                    <span style={{ color: "#94a3b8", fontSize: "0.9rem" }}>{selectedContact === "all" ? "total time actively engaged" : `with ${displayName.replace('Chatting with ', '')}`}</span>
+                    <span style={{ color: "#94a3b8", fontSize: "0.9rem" }}>{selectedContact === "all" ? "total time actively engaged" : `with ${displayName.replace("Chatting with ", "")}`}</span>
                 </div>
                 <div style={{ padding: "10px 14px", background: "rgba(56, 189, 248, 0.08)", borderRadius: "10px", border: "1px solid rgba(56, 189, 248, 0.15)", color: "#7dd3fc", fontSize: "0.85rem", fontStyle: "italic" }}>
-                    "{selectedContact === "all" ? activeTime.tagline : 'Quality time spent building a connection.'}"
+                    "{selectedContact === "all" ? activeTime.tagline : "Quality time spent building a connection."}"
                 </div>
             </div>
         );
@@ -135,7 +223,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                     </svg>
-                    Data & Footprint Saved
+                    Data &amp; Footprint Saved
                 </h3>
                 <div style={{ display: "flex", alignItems: "baseline", gap: "6px", marginBottom: "8px" }}>
                     <span style={{ fontSize: "2rem", fontWeight: "700", color: "#22c55e", letterSpacing: "-1px" }}>
@@ -175,10 +263,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
                                 background: user.isMe ? "rgba(168, 85, 247, 0.1)" : "rgba(255, 255, 255, 0.02)",
                                 borderRadius: "12px", border: user.isMe ? "1px solid rgba(168, 85, 247, 0.3)" : "1px solid rgba(255, 255, 255, 0.05)"
                             }}>
-                                <div style={{ 
-                                    width: "24px", color: index < 3 ? "#a855f7" : "#64748b", 
-                                    fontWeight: "700", fontSize: "1rem" 
-                                }}>
+                                <div style={{ width: "24px", color: index < 3 ? "#a855f7" : "#64748b", fontWeight: "700", fontSize: "1rem" }}>
                                     #{index + 1}
                                 </div>
                                 <div className="avatar avatar-sm" style={{ margin: "0 12px" }}>
@@ -217,7 +302,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                 </div>
-                
+
                 <div style={{ padding: "24px", overflowY: "auto", flex: 1 }}>
                     {loading ? (
                         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "200px", color: "#64748b" }}>
@@ -225,10 +310,10 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
                             <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
                         </div>
                     ) : (
-                        <div style={{ 
-                            display: "grid", 
-                            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", 
-                            gap: "20px" 
+                        <div style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                            gap: "20px"
                         }}>
                             {renderActiveTime()}
                             {renderMoments()}
@@ -237,7 +322,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
                         </div>
                     )}
                 </div>
-                
+
                 <style>{`
                     .analytics-card {
                         background: rgba(255, 255, 255, 0.02);

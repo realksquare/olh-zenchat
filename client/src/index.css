@@ -7322,10 +7322,10 @@ select {
 .gif-search-icon { color: #94a3b8; }
 .gif-search-input { background: transparent; border: none; color: #f1f5f9; outline: none; width: 100%; font-size: 14px; }
 
-.gif-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; overflow-y: auto; flex: 1; padding: 4px; }
-.gif-grid-item { position: relative; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; cursor: pointer; background: rgba(255,255,255,0.05); display: block; }
-.gif-grid-item img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; display: block; }
-.gif-grid-item.is-sticker img { object-fit: contain; padding: 6px; }
+.gif-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; overflow-y: auto; flex: 1; padding: 2px; align-content: start; }
+.gif-grid-item { width: 100%; aspect-ratio: 1 / 1; border-radius: 8px; overflow: hidden; cursor: pointer; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; }
+.gif-grid-item img { width: 100%; height: 100%; object-fit: cover; display: block; flex-shrink: 0; }
+.gif-grid-item.is-sticker img { object-fit: contain; padding: 4px; }
 .gif-loading { grid-column: span 3; display: flex; justify-content: center; padding: 20px; }
 .gif-empty { grid-column: span 3; text-align: center; color: #94a3b8; padding: 20px; }
 
