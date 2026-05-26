@@ -129,8 +129,15 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
             return { text: typeof typingScramble === "string" ? typingScramble : "typing...", isUnread: true };
         }
         if (hasUnread) {
-            if (displayUnreadCount === 1 && liveChat.lastMessage?.content)
-                return { text: liveChat.lastMessage.content, isUnread: true };
+            const lm = liveChat.lastMessage;
+            if (displayUnreadCount === 1 && lm?.type === "gif") return { text: "Sent a GIF", isUnread: true };
+            if (displayUnreadCount === 1 && lm?.type === "sticker") return { text: "Sent a sticker", isUnread: true };
+            if (displayUnreadCount === 1 && lm?.type === "image") return { text: "Sent an image", isUnread: true };
+            if (displayUnreadCount === 1 && lm?.type === "video") return { text: "Sent a video", isUnread: true };
+            if (displayUnreadCount === 1 && lm?.type === "voice") return { text: "Sent a voice message", isUnread: true };
+            if (displayUnreadCount === 1 && lm?.type === "file") return { text: "Sent a file", isUnread: true };
+            if (displayUnreadCount === 1 && lm?.content)
+                return { text: lm.content, isUnread: true };
             if (displayUnreadCount <= 3)
                 return { text: `${displayUnreadCount} new ${displayUnreadCount === 1 ? "message" : "messages"}`, isUnread: true };
             return { text: "3+ new messages", isUnread: true };
@@ -157,6 +164,10 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         const isMe = senderId?._id === user?._id || senderId === user?._id;
         if (type === "image") return { text: isMe ? "You sent an image" : "Sent an image", isUnread: false };
         if (type === "video") return { text: isMe ? "You sent a video" : "Sent a video", isUnread: false };
+        if (type === "gif") return { text: isMe ? "You sent a GIF" : "Sent a GIF", isUnread: false };
+        if (type === "sticker") return { text: isMe ? "You sent a sticker" : "Sent a sticker", isUnread: false };
+        if (type === "voice") return { text: isMe ? "You sent a voice message" : "Sent a voice message", isUnread: false };
+        if (type === "file") return { text: isMe ? "You sent a file" : "Sent a file", isUnread: false };
         return { text: isMe ? `You: ${content}` : content, isUnread: false };
     };
     const preview = getPreview();

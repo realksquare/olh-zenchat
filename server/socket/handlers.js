@@ -496,6 +496,11 @@ const registerSocketHandlers = (io) => {
                     isZenMessage: isZenMessage || false
                 });
 
+                if (type === "gif" || type === "sticker") {
+                    console.log(`[GIF DEBUG] Saved message type=${message.type} mediaUrl=${message.mediaUrl} _id=${message._id}`);
+                }
+
+
                 await Chat.findByIdAndUpdate(chatId, {
                     lastMessage: message._id,
                     updatedAt: new Date(),

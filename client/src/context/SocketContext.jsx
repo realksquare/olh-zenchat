@@ -147,6 +147,12 @@ export const SocketProvider = ({ children }) => {
         const handleReceiveMessage = async ({ message }) => {
             const raw = isBinaryPacket(message) ? unpackMessage(message) : message;
             const decompressed = decompressPacket(raw);
+
+            if (decompressed.type === "gif" || decompressed.type === "sticker") {
+                console.log("[GIF DEBUG] receive_message raw keys:", Object.keys(raw));
+                console.log("[GIF DEBUG] decompressed type:", decompressed.type, "mediaUrl:", decompressed.mediaUrl, "chatId:", decompressed.chatId, "_id:", decompressed._id);
+            }
+
             // Decrypt transparently in background before saving/state updates
             await decryptMessageIfNeeded(decompressed);
 
@@ -160,6 +166,10 @@ export const SocketProvider = ({ children }) => {
 
             if (!existingChat) {
                 await useChatStore.getState().fetchChats();
+            }
+
+            if (decompressed.type === "gif" || decompressed.type === "sticker") {
+                console.log("[GIF DEBUG] addMessage chatId:", decompressed.chatId, "final mediaUrl:", decompressed.mediaUrl, "type:", decompressed.type);
             }
 
             useChatStore.getState().addMessage(decompressed.chatId, decompressed);
