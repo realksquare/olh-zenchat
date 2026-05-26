@@ -57,12 +57,12 @@ const MusicSearch = ({ onSelect, onClose, initialQuery = "" }) => {
                                 />
                                 <div className="track-info" style={{ flexDirection: 'column', alignItems: 'flex-start', minWidth: 0 }}>
                                     <div className="track-name-scroll" style={{ width: '100%', overflow: 'hidden' }}>
-                                        <span className={track.title.length > 22 ? "marquee-text" : ""} style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9' }}>
+                                        <span className={track.title.length > 22 ? "marquee-text" : ""} style={track.title.length > 22 ? { fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9' } : { display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9' }}>
                                             {track.title}
                                         </span>
                                     </div>
                                     <div className="track-artist-scroll" style={{ width: '100%', overflow: 'hidden' }}>
-                                        <span className={track.artist.length > 26 ? "marquee-text" : ""} style={{ display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.75rem', color: '#94a3b8' }}>
+                                        <span className={track.artist.length > 26 ? "marquee-text" : ""} style={track.artist.length > 26 ? { fontSize: '0.75rem', color: '#94a3b8' } : { display: 'block', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.75rem', color: '#94a3b8' }}>
                                             {track.artist}
                                         </span>
                                     </div>

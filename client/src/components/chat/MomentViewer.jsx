@@ -57,8 +57,9 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                 return;
             }
             const contentWidth = locationContentRef.current.scrollWidth;
-            const scrollDist = contentWidth - 190;
-            setLocMarqueeDist(scrollDist > 0 ? -scrollDist : 0);
+            const containerWidth = locationContentRef.current.parentElement.offsetWidth;
+            const scrollDist = contentWidth - containerWidth;
+            setLocMarqueeDist(scrollDist > 0 ? -(scrollDist + 10) : 0);
         };
         
         if (isOpen && currentMoment?.locationTag) {
