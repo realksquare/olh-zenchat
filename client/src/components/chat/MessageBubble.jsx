@@ -560,7 +560,15 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                 {repliedToMessage.senderId?._id === user?._id || repliedToMessage.senderId === user?._id ? "You" : (repliedToMessage.senderId?.username || otherUser?.username || "Someone")}
                                             </div>
                                             <div className="replied-content">
-                                                {repliedToMessage.content || (repliedToMessage.type === 'image' ? "📷 Image" : (repliedToMessage.type === 'video' ? "🎥 Video" : "Media"))}
+                                                {repliedToMessage.content || (
+                                                    repliedToMessage.type === 'image' ? 'Image' :
+                                                    repliedToMessage.type === 'gif' ? 'GIF' :
+                                                    repliedToMessage.type === 'sticker' ? 'Sticker' :
+                                                    repliedToMessage.type === 'video' ? 'Video' :
+                                                    repliedToMessage.type === 'voice' ? 'Voice message' :
+                                                    repliedToMessage.type === 'file' ? 'File' :
+                                                    'Media'
+                                                )}
                                             </div>
                                         </>
                                     ) : (
