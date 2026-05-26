@@ -122,32 +122,34 @@ const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
                     />
                 </div>
 
-                <div className="gif-grid">
-                    {results.map((item, index) => {
-                        const url = item.images.fixed_height.url;
-                        const msgType = type === "stickers" ? "sticker" : "gif";
-                        if (results.length === index + 1) {
-                            return (
-                                <div ref={lastElementRef} key={item.id} className={`gif-grid-item ${type === "stickers" ? "is-sticker" : ""}`} onClick={() => onSelect(url, msgType)}>
-                                    <img src={url} alt={item.title} loading="lazy" />
-                                </div>
-                            );
-                        } else {
-                            return (
-                                <div key={item.id} className={`gif-grid-item ${type === "stickers" ? "is-sticker" : ""}`} onClick={() => onSelect(url, msgType)}>
-                                    <img src={url} alt={item.title} loading="lazy" />
-                                </div>
-                            );
-                        }
-                    })}
-                    {loading && (
-                        <div className="gif-loading">
-                            <div className="loader-sm" />
-                        </div>
-                    )}
-                    {!loading && results.length === 0 && (
-                        <div className="gif-empty">No results found</div>
-                    )}
+                <div className="gif-scroll-wrap">
+                    <div className="gif-grid">
+                        {results.map((item, index) => {
+                            const url = item.images.fixed_height.url;
+                            const msgType = type === "stickers" ? "sticker" : "gif";
+                            if (results.length === index + 1) {
+                                return (
+                                    <div ref={lastElementRef} key={item.id} className={`gif-grid-item ${type === "stickers" ? "is-sticker" : ""}`} onClick={() => onSelect(url, msgType)}>
+                                        <img src={url} alt={item.title} loading="lazy" />
+                                    </div>
+                                );
+                            } else {
+                                return (
+                                    <div key={item.id} className={`gif-grid-item ${type === "stickers" ? "is-sticker" : ""}`} onClick={() => onSelect(url, msgType)}>
+                                        <img src={url} alt={item.title} loading="lazy" />
+                                    </div>
+                                );
+                            }
+                        })}
+                        {loading && (
+                            <div className="gif-loading">
+                                <div className="loader-sm" />
+                            </div>
+                        )}
+                        {!loading && results.length === 0 && (
+                            <div className="gif-empty">No results found</div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>,
