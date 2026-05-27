@@ -561,15 +561,14 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                 {repliedToMessage.senderId?._id === user?._id || repliedToMessage.senderId === user?._id ? "You" : (repliedToMessage.senderId?.username || otherUser?.username || "Someone")}
                                             </div>
                                             <div className="replied-content">
-                                                {repliedToMessage.content || (
+                                                {repliedToMessage.type === 'voice' ? `Voice message (${repliedToMessage.content})` : (repliedToMessage.content || (
                                                     repliedToMessage.type === 'image' ? 'Image' :
                                                     repliedToMessage.type === 'gif' ? 'GIF' :
                                                     repliedToMessage.type === 'sticker' ? 'Sticker' :
                                                     repliedToMessage.type === 'video' ? 'Video' :
-                                                    repliedToMessage.type === 'voice' ? 'Voice message' :
                                                     repliedToMessage.type === 'file' ? 'File' :
                                                     'Media'
-                                                )}
+                                                ))}
                                             </div>
                                         </>
                                     ) : (
@@ -752,7 +751,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                      )}
                                 </div>
                             )}
-                            {message.content && (
+                            {message.content && message.type !== "voice" && (
                                 <span className="message-text">
                                     <DecryptedText
                                         text={message.content}
@@ -817,7 +816,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                         )}
                         {isMe && canDelete && !isZenMode && (
                             <>
-                                {isWithinEditWindow && (
+                                {isWithinEditWindow && message.type !== "voice" && (
                                     <button
                                         className="message-dropdown-item"
                                         onMouseDown={(e) => { e.preventDefault(); setMobileDropdown(false); onEdit(message); }}
@@ -992,7 +991,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
 
                         {isMe && canDelete && !isZenMode && (
                             <>
-                                {isWithinEditWindow && (
+                                {isWithinEditWindow && message.type !== "voice" && (
                                     <button
                                         className="bottom-sheet-item"
                                         onClick={() => { setMobileDropdown(false); onEdit(message); }}

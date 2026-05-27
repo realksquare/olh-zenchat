@@ -192,6 +192,10 @@ export const SocketProvider = ({ children }) => {
             useChatStore.getState().setTypingUser(chatId, userId, isTyping, scramble);
         };
 
+        const handleVoiceRecordingStatus = ({ userId, chatId, isRecording }) => {
+            useChatStore.getState().setVoiceRecordingUser(chatId, userId, isRecording);
+        };
+
         const handleUserOnline = ({ userId }) => {
             useChatStore.getState().setUserOnline(userId);
             useChatStore.getState().updateParticipantStatus(userId, true, null);
@@ -483,6 +487,7 @@ export const SocketProvider = ({ children }) => {
         socket.on("message_delivered", handleMessageDelivered);
         socket.on("messages_read", handleMessagesRead);
         socket.on("typing_status", handleTypingStatus);
+        socket.on("voice_recording_status", handleVoiceRecordingStatus);
         socket.on("user_online", handleUserOnline);
         socket.on("user_offline", handleUserOffline);
         socket.on("user_zen_status", handleUserZenStatus);
@@ -540,6 +545,7 @@ export const SocketProvider = ({ children }) => {
             socket.off("message_delivered", handleMessageDelivered);
             socket.off("messages_read", handleMessagesRead);
             socket.off("typing_status", handleTypingStatus);
+            socket.off("voice_recording_status", handleVoiceRecordingStatus);
             socket.off("user_online", handleUserOnline);
             socket.off("user_offline", handleUserOffline);
             socket.off("user_zen_status", handleUserZenStatus);
@@ -703,7 +709,7 @@ export const SocketProvider = ({ children }) => {
                 const data = await res.json();
                 if (!data.secure_url) throw new Error("Upload failed");
 
-                const msgType = uploadType === "video" ? "video" : uploadType === "raw" ? (item.msgType || "file") : "image";
+                const msgType = item.msgType || (uploadType === "video" ? "video" : uploadType === "raw" ? "file" : "image");
                 socketRef.current.emit("send_message", {
                     chatId, content: textContent || "", type: msgType,
                     mediaUrl: data.secure_url, replyTo, isViewOnce,

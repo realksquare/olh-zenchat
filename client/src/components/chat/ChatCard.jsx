@@ -12,6 +12,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const user = useAuthStore((s) => s.user);
     const toggleContact = useAuthStore((s) => s.toggleContact);
     const typingUsers = useChatStore((s) => s.typingUsers);
+    const voiceRecordingUsers = useChatStore((s) => s.voiceRecordingUsers);
     const onlineUsers = useChatStore((s) => s.onlineUsers);
     const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
     const peerLowBandwidth = useChatStore((s) => s.peerLowBandwidth);
@@ -78,6 +79,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const chatTyping = typingUsers[liveChat._id];
     const isTyping = !!(chatTyping && otherUserId && chatTyping[otherUserId]);
     const typingScramble = isTyping ? chatTyping[otherUserId] : null;
+    const chatRecording = voiceRecordingUsers?.[liveChat._id];
+    const isVoiceRecording = !!(chatRecording && otherUserId && chatRecording[otherUserId]);
     const iBlocked = liveChat.blockStatus?.iBlocked;
     const theyBlocked = liveChat.blockStatus?.theyBlocked;
     const isBlocked = iBlocked || theyBlocked;
@@ -113,6 +116,17 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const getPreview = () => {
         if (iBlocked) return { text: "You blocked this user", isUnread: false };
         if (theyBlocked) return { text: "This user blocked you", isUnread: false };
+        if (isVoiceRecording) {
+            return {
+                text: (
+                    <span className="voice-recording-card-preview">
+                        <span className="voice-rec-dot-sm" aria-hidden="true" />
+                        Recording voice message…
+                    </span>
+                ),
+                isUnread: true
+            };
+        }
         if (isTyping) {
             if (isSPOp) {
                 return { 

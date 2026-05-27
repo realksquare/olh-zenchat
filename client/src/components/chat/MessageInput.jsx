@@ -276,7 +276,9 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const [gifPreviewUrl, setGifPreviewUrl] = useState("");
     const [showAttachmentSheet, setShowAttachmentSheet] = useState(false);
     const [isVoiceMode, setIsVoiceMode] = useState(false);
-    const { sendMessage, startTyping, stopTyping, editMessage } = useSocket();
+    // True while VoiceRecorder is in recording or preview mode — hides the text input row
+    const [voiceActive, setVoiceActive] = useState(false);
+    const { sendMessage, startTyping, stopTyping, editMessage, socket } = useSocket();
 
     const showToast = (msg) => {
         setToast(msg);
@@ -555,14 +557,24 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             isZenMessage: isZen
         });
 
-        const file = new File([blob], `voice-${Date.now()}.webm`, { type: blob.type });
+        let extension = "webm";
+        if (blob.type.includes("mp4")) {
+            extension = "mp4";
+        } else if (blob.type.includes("ogg")) {
+            extension = "ogg";
+        } else if (blob.type.includes("wav")) {
+            extension = "wav";
+        } else if (blob.type.includes("aac") || blob.type.includes("m4a")) {
+            extension = "m4a";
+        }
+        const file = new File([blob], `voice-${Date.now()}.${extension}`, { type: blob.type });
         const formData = new FormData();
         formData.append("file", file);
         formData.append("upload_preset", "ml_default");
 
         try {
             const res = await axios.post(
-                "https://api.cloudinary.com/v1_1/du4nvei7j/raw/upload",
+                "https://api.cloudinary.com/v1_1/du4nvei7j/video/upload",
                 formData
             );
             const downloadURL = res.data.secure_url;
@@ -579,7 +591,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                         base64,
                         fileName: file.name,
                         fileType: file.type,
-                        uploadType: "raw",
+                        uploadType: "video",
                         msgType: "voice",
                         waveform: waveformBase64,
                         chatId,
@@ -786,6 +798,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             )}
 
             <div className="message-input-box">
+                {!voiceActive && (<>
                 <button
                     className="attachment-btn"
                     onClick={() => {
@@ -817,8 +830,9 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                         <span>GIF</span>
                     )}
                 </button>
+                </>)}
 
-                {showViewOnceBtn && (
+                {!voiceActive && showViewOnceBtn && (
                     <button
                         className={`view-once-btn ${isViewOnce ? "active" : ""}`}
                         onClick={() => setIsViewOnce(!isViewOnce)}
@@ -833,7 +847,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     </button>
                 )}
 
-                <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
+                {!voiceActive && <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
                     <textarea
                         ref={textareaRef}
                         className="message-textarea"
@@ -860,8 +874,9 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                         aria-label="Message input"
                         style={{ opacity: disabled ? 0.5 : 1, cursor: disabled ? 'not-allowed' : 'text' }}
                     />
-                </div>
+                </div>}
 
+                {!voiceActive && (content.trim() || hasMedia || editingMessage) && (
                 <button
                     className={`send-btn ${!sendDisabled ? "send-btn-active" : ""}`}
                     onClick={handleSend}
@@ -881,14 +896,26 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                         </svg>
                     )}
                 </button>
+                )}
 
-                {/* Mic button — visible only when no text typed and no files staged and not editing */}
+                {/* Mic button / recorder — visible only when no text typed and no files staged and not editing */}
                 {!content.trim() && !hasMedia && !editingMessage && !disabled && (
                     <VoiceRecorder
+                        key={chatId}
                         chatId={chatId}
                         isMobile={window.innerWidth <= 768}
                         onSend={uploadAndSendVoice}
-                        onCancel={() => setIsVoiceMode(false)}
+                        onCancel={() => { setIsVoiceMode(false); setVoiceActive(false); }}
+                        onModeChange={(m) => {
+                            const active = m !== "idle";
+                            setVoiceActive(active);
+                            setIsVoiceMode(active);
+                            if (m === "recording") {
+                                socket?.emit?.("voice_recording_start", { chatId });
+                            } else {
+                                socket?.emit?.("voice_recording_stop", { chatId });
+                            }
+                        }}
                     />
                 )}
             </div>

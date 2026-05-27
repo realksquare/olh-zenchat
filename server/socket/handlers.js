@@ -867,6 +867,41 @@ const registerSocketHandlers = (io) => {
                 });
         });
 
+        // Voice recording indicators — simple relay, no privacy check needed
+        socket.on("voice_recording_start", async ({ chatId }) => {
+            try {
+                const chat = await Chat.findById(chatId);
+                if (!chat) return;
+                chat.participants
+                    .filter(p => p.toString() !== userId)
+                    .forEach(participantId => {
+                        const userData = onlineUsers.get(participantId.toString());
+                        if (userData?.sockets) {
+                            userData.sockets.forEach((sData, sId) => {
+                                io.to(sId).emit("voice_recording_status", { userId, chatId, isRecording: true });
+                            });
+                        }
+                    });
+            } catch (_) {}
+        });
+
+        socket.on("voice_recording_stop", async ({ chatId }) => {
+            try {
+                const chat = await Chat.findById(chatId);
+                if (!chat) return;
+                chat.participants
+                    .filter(p => p.toString() !== userId)
+                    .forEach(participantId => {
+                        const userData = onlineUsers.get(participantId.toString());
+                        if (userData?.sockets) {
+                            userData.sockets.forEach((sData, sId) => {
+                                io.to(sId).emit("voice_recording_status", { userId, chatId, isRecording: false });
+                            });
+                        }
+                    });
+            } catch (_) {}
+        });
+
         socket.on("message_read", async ({ chatId }) => {
             try {
                 const senderIdCriteria = { $ne: new mongoose.Types.ObjectId(userId) };

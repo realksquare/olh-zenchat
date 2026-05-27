@@ -12,6 +12,7 @@ export const useChatStore = create(
             activeChat: null,
             messages: {},
             typingUsers: {},
+            voiceRecordingUsers: {},
             onlineUsers: new Set(),
             zenUsers: {},
             unreadCounts: {},
@@ -789,6 +790,18 @@ export const useChatStore = create(
                         delete chatTyping[userId];
                     }
                     return { typingUsers: { ...state.typingUsers, [chatId]: chatTyping } };
+                });
+            },
+
+            setVoiceRecordingUser: (chatId, userId, isRecording) => {
+                set((state) => {
+                    const chatRecording = { ...(state.voiceRecordingUsers[chatId] || {}) };
+                    if (isRecording) {
+                        chatRecording[userId] = true;
+                    } else {
+                        delete chatRecording[userId];
+                    }
+                    return { voiceRecordingUsers: { ...state.voiceRecordingUsers, [chatId]: chatRecording } };
                 });
             },
 

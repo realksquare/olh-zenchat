@@ -532,7 +532,8 @@ const ChatWindow = ({ onBack }) => {
     const contacts = useAuthStore((s) => s.user?.contacts || EMPTY_CONTACTS);
     const {
         activeChat, fetchMessages, fetchOlderMessages, isLoadingMessages, isLoadingOlderMessages,
-        typingUsers, markChatAsRead, onlineUsers, hasMoreMessages, isLowBandwidth, peerLowBandwidth, isOffline,
+        typingUsers, voiceRecordingUsers,
+        markChatAsRead, onlineUsers, hasMoreMessages, isLowBandwidth, peerLowBandwidth, isOffline,
         isZenMode, toggleZenMode, setZenModeState, zenUsers
     } = useChatStore(useShallow((s) => ({
         activeChat: s.activeChat,
@@ -541,6 +542,7 @@ const ChatWindow = ({ onBack }) => {
         isLoadingMessages: s.isLoadingMessages,
         isLoadingOlderMessages: s.isLoadingOlderMessages,
         typingUsers: s.typingUsers,
+        voiceRecordingUsers: s.voiceRecordingUsers,
         markChatAsRead: s.markChatAsRead,
         onlineUsers: s.onlineUsers,
         hasMoreMessages: s.hasMoreMessages,
@@ -838,6 +840,12 @@ const ChatWindow = ({ onBack }) => {
     }, [otherUserId, hasActiveMoment]);
 
     const isTyping = !!typingScramble;
+
+    const isVoiceRecording = useMemo(() => {
+        if (!activeChat || !otherUserId) return false;
+        const chatRec = voiceRecordingUsers?.[activeChat._id];
+        return !!(chatRec && chatRec[otherUserId]);
+    }, [voiceRecordingUsers, activeChat?._id, otherUserId]);
 
     const isOtherUserLowBandwidth = useMemo(() => {
         if (otherUserId && peerLowBandwidth[otherUserId] === true) return true;
@@ -1273,6 +1281,12 @@ const ChatWindow = ({ onBack }) => {
                     );
                 })}
 
+                {isVoiceRecording && !isTyping && (
+                    <div className="voice-recording-indicator">
+                        <span className="voice-rec-dot" aria-hidden="true" />
+                        <span>Recording voice message…</span>
+                    </div>
+                )}
                 {isTyping && <TypingIndicator scramble={isSPOpActive ? "" : (typeof typingScramble === "string" ? typingScramble : "")} />}
                 <div ref={messagesEndRef} />
             </div>
