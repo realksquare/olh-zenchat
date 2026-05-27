@@ -214,15 +214,7 @@ const App = () => {
 
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showPwaExitConfirm, setShowPwaExitConfirm] = useState(false);
-  const [needsPushSubscription, setNeedsPushSubscription] = useState(false);
   const [showBlockedNotifModal, setShowBlockedNotifModal] = useState(false);
-  const [dismissedThisSession, setDismissedThisSession] = useState(false);
-
-  useEffect(() => {
-    if (!token) {
-      setDismissedThisSession(false);
-    }
-  }, [token]);
 
   useEffect(() => {
     const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
@@ -262,17 +254,11 @@ const App = () => {
         const permission = typeof window.Notification !== 'undefined' ? window.Notification.permission : 'granted';
         if (permission === 'denied') {
           setShowBlockedNotifModal(true);
-          setNeedsPushSubscription(false);
-        } else if (permission !== 'granted') {
-          setNeedsPushSubscription(true);
-          setShowBlockedNotifModal(false);
         } else {
-          setNeedsPushSubscription(false);
           setShowBlockedNotifModal(false);
         }
       }
     } else {
-      setNeedsPushSubscription(false);
       setShowBlockedNotifModal(false);
     }
   }, [token]);
@@ -282,12 +268,15 @@ const App = () => {
       const fcmToken = await requestNotificationPermission();
       if (fcmToken) {
         const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-        await axiosInstance.put("/auth/me", {
+        const { data } = await axiosInstance.put("/auth/me", {
           fcmToken,
           deviceType: isPWA ? "pwa" : "browser",
           notificationsEnabled: true
         });
-        setNeedsPushSubscription(false);
+        if (data?.user) {
+          useAuthStore.getState().updateUser(data.user);
+          localStorage.setItem("zenchat_user", JSON.stringify(data.user));
+        }
       }
     } catch (err) {
       console.error(err);
@@ -299,11 +288,9 @@ const App = () => {
     const permission = typeof window.Notification !== 'undefined' ? window.Notification.permission : 'granted';
     if (permission === 'granted') {
       setShowBlockedNotifModal(false);
-      setNeedsPushSubscription(false);
       handleSubscribePush();
     } else if (permission === 'default') {
       setShowBlockedNotifModal(false);
-      setNeedsPushSubscription(true);
     }
     // If still denied, keep the modal open
   };
@@ -430,16 +417,32 @@ const App = () => {
             }
         };
 
+        const checkNotificationBlocked = () => {
+            if (token) {
+                const isNewSignup = sessionStorage.getItem("showFAQOnLoad") === "1";
+                if (!isNewSignup) {
+                    const permission = typeof window.Notification !== 'undefined' ? window.Notification.permission : 'granted';
+                    if (permission === 'denied') {
+                        setShowBlockedNotifModal(true);
+                    } else {
+                        setShowBlockedNotifModal(false);
+                    }
+                }
+            }
+        };
+
         const handleVisibilityChange = () => {
             updatePresence();
             if (document.visibilityState === "visible") {
                 clearNotifications();
+                checkNotificationBlocked();
             }
         };
 
         const handleFocus = () => {
             updatePresence();
             clearNotifications();
+            checkNotificationBlocked();
         };
 
         const handleBlur = () => {
@@ -898,49 +901,6 @@ const App = () => {
         </div>
       )}
 
-      {/* 3. Compulsory Push Notification Lock Overlay */}
-      {needsPushSubscription && !dismissedThisSession && (
-        <div className="compulsory-push-overlay" style={{ alignItems: window.innerWidth <= 768 ? 'flex-end' : 'center', padding: window.innerWidth <= 768 ? 0 : '24px' }}>
-          <div
-            className="compulsory-push-card"
-            style={{
-              maxWidth: window.innerWidth <= 768 ? '100%' : '420px',
-              borderRadius: window.innerWidth <= 768 ? '24px 24px 0 0' : '24px',
-              padding: window.innerWidth <= 768 ? '28px 24px 40px' : '32px',
-              animation: window.innerWidth <= 768 ? 'slideUp 0.3s cubic-bezier(0.16,1,0.3,1)' : 'compulsoryCardScale 0.4s cubic-bezier(0.34,1.56,0.64,1)'
-            }}
-          >
-            {window.innerWidth <= 768 && (
-              <div style={{ width: '36px', height: '4px', background: 'rgba(255,255,255,0.15)', borderRadius: '2px', margin: '0 auto 20px' }} />
-            )}
-            <div className="compulsory-push-icon-pulse">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              </svg>
-            </div>
-            <h2 className="compulsory-push-title">Enable Notifications</h2>
-            <p className="compulsory-push-desc">
-              To guarantee real-time delivery of your secure end-to-end encrypted messages and maintain an active connection, push notifications are **mandatory** on ZenChat.
-            </p>
-            {typeof window.Notification !== 'undefined' && window.Notification.permission === 'denied' && (
-              <div className="compulsory-push-warning">
-                Notifications are currently blocked in your browser. Please reset notification settings in your browser address bar to continue using ZenChat.
-              </div>
-            )}
-            <div className="compulsory-push-buttons">
-              {typeof window.Notification !== 'undefined' && window.Notification.permission !== 'denied' && (
-                <button className="btn btn-primary compulsory-push-btn" onClick={handleSubscribePush}>
-                  Subscribe Now
-                </button>
-              )}
-              <button className="btn btn-outline compulsory-push-exit-btn" onClick={() => setDismissedThisSession(true)}>
-                Later
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 4. Notifications Blocked Modal */}
       {showBlockedNotifModal && (

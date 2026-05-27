@@ -19,6 +19,43 @@ const NotificationPrompt = () => {
     }, [userId]);
 
     useEffect(() => {
+        if (!userId) return;
+
+        const checkAndPrompt = () => {
+            if (typeof window.Notification === 'undefined') return;
+            if (window.Notification.permission === "denied") return;
+
+            const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+            const deviceType = isPWA ? "pwa" : "browser";
+            const isSubscribed = window.Notification.permission === "granted" &&
+                user?.fcmTokens?.some(t => t.deviceType === deviceType);
+
+            if (!isSubscribed) {
+                setDismissed(false);
+                setShow(true);
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                checkAndPrompt();
+            }
+        };
+
+        const handleFocus = () => {
+            checkAndPrompt();
+        };
+
+        window.addEventListener("focus", handleFocus);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+
+        return () => {
+            window.removeEventListener("focus", handleFocus);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, [userId, user?.fcmTokens]);
+
+    useEffect(() => {
         if (!user) return;
         
         // Yield to higher priority modals
@@ -40,6 +77,30 @@ const NotificationPrompt = () => {
             user?.fcmTokens?.some(t => t.deviceType === deviceType);
 
         if (isSubscribed) return;
+
+        // Silent registration if permission already granted
+        if (window.Notification.permission === "granted") {
+            const silentSubscribe = async () => {
+                try {
+                    const token = await requestNotificationPermission();
+                    if (token) {
+                        const { data } = await axiosInstance.put("/auth/me", {
+                            fcmToken: token,
+                            deviceType,
+                            notificationsEnabled: true
+                        });
+                        if (data?.user) {
+                            useAuthStore.getState().updateUser(data.user);
+                            localStorage.setItem("zenchat_user", JSON.stringify(data.user));
+                        }
+                    }
+                } catch (err) {
+                    console.error("Silent notification subscription failed", err);
+                }
+            };
+            silentSubscribe();
+            return;
+        }
 
         // Use local component state so it re-prompts on each reload/new session/login
         if (dismissed) return;
