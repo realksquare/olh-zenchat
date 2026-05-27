@@ -171,8 +171,13 @@ export const SocketProvider = ({ children }) => {
                 decompressed.senderId?._id?.toString() === currentUserId?.toString();
 
             if (activeChat?._id?.toString() === decompressed.chatId?.toString() && !isFromMe) {
-                socketRef.current?.emit("message_read", { chatId: decompressed.chatId });
-                useChatStore.getState().markChatAsRead(decompressed.chatId);
+                const isClientActive = typeof document !== 'undefined' &&
+                    document.visibilityState === "visible" &&
+                    (window.innerWidth <= 768 ? true : document.hasFocus());
+                if (isClientActive) {
+                    socketRef.current?.emit("message_read", { chatId: decompressed.chatId });
+                    useChatStore.getState().markChatAsRead(decompressed.chatId);
+                }
             }
             if (!isFromMe) {
                 const { soundEnabled } = useAuthStore.getState();

@@ -306,7 +306,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             try {
                 const res = await axios.get("https://api.giphy.com/v1/gifs/search", {
                     params: {
-                        api_key: import.meta.env.VITE_GIPHY_API_KEY || "pnshJZOMgBP3OVpZzo4TCXPf99zhNIQA",
+                        api_key: (import.meta.env.VITE_GIPHY_API_KEY || "").trim() || "pnshJZOMgBP3OVpZzo4TCXPf99zhNIQA",
                         q: content.trim(),
                         limit: 1,
                         rating: "g"

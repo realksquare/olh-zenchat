@@ -7482,8 +7482,29 @@ select {
   align-items: center;
   gap: 8px;
   padding: 4px 2px;
-  min-width: 180px;
-  max-width: 260px;
+  min-width: 120px;
+  max-width: 280px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.voice-waveform-canvas {
+  display: block;
+  height: 32px;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.voice-bubble-duration {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.65);
+  white-space: nowrap;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .voice-play-btn {

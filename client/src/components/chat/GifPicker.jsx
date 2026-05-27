@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { createPortal } from "react-dom";
 
-const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY || "pnshJZOMgBP3OVpZzo4TCXPf99zhNIQA";
+const GIPHY_API_KEY = (import.meta.env.VITE_GIPHY_API_KEY || "").trim() || "pnshJZOMgBP3OVpZzo4TCXPf99zhNIQA";
 
 const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
     const [query, setQuery] = useState(initialQuery);

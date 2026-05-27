@@ -287,6 +287,9 @@ const VoiceMessageBubble = ({ message }) => {
                 style={{ cursor: audioError ? "default" : "pointer" }}
                 aria-label="Voice message waveform"
             />
+            <span className="voice-bubble-duration">
+                ({formatTime(currentTime)}/{formatTime(duration)})
+            </span>
         </div>
     );
 };

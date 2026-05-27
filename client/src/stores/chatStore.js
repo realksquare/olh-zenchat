@@ -482,8 +482,11 @@ export const useChatStore = create(
                         };
                     }
 
+                    const isClientActive = typeof document !== 'undefined' &&
+                        document.visibilityState === "visible" &&
+                        (window.innerWidth <= 768 ? true : document.hasFocus());
                     const updatedUnreadCounts = { ...state.unreadCounts };
-                    if (!isFromMe && !isActiveChat && existingIndex === -1) {
+                    if (!isFromMe && (!isActiveChat || !isClientActive) && existingIndex === -1) {
                         updatedUnreadCounts[chatId] = (state.unreadCounts[chatId] || 0) + 1;
                     }
 
