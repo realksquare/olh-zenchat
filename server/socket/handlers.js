@@ -580,7 +580,7 @@ const registerSocketHandlers = (io) => {
                             });
 
                             const unreadCount = unreadMessages.length;
-                            const hasMedia = unreadMessages.some(m => m.type === 'image' || m.type === 'video');
+                            const hasMedia = unreadMessages.some(m => ['image', 'video', 'gif', 'sticker', 'audio', 'voice'].includes(m.type));
                             const hasText = unreadMessages.some(m => m.type === 'text');
 
                             const notifSenderName = senderIsContact ? `${senderName} ✨` : senderName;
@@ -934,4 +934,5 @@ const registerSocketHandlers = (io) => {
 
 registerSocketHandlers.registerSocketHandlers = registerSocketHandlers;
 registerSocketHandlers.setUserActivePresence = setUserActivePresence;
+registerSocketHandlers.onlineUsers = onlineUsers;
 module.exports = registerSocketHandlers;

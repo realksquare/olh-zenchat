@@ -4,6 +4,7 @@ const Moment = require("../models/Moment");
 const User = require("../models/User");
 const protect = require("../middleware/auth");
 const { sendPushNotification } = require("../utils/firebase");
+const { onlineUsers } = require("../socket/handlers");
 
 router.post("/", protect, async (req, res) => {
     try {
@@ -50,21 +51,23 @@ router.post("/", protect, async (req, res) => {
         contactIds.forEach(async (cid) => {
             io.to(cid).emit("new_moment", populated);
 
-            // Send Push Notif to contacts
-            try {
-                console.log(`[moments] Sending push to ${cid}. Title: "${notificationTitle}", Body: "${notificationBody}"`);
-                const contact = await User.findById(cid).select("fcmTokens");
-                if (contact && contact.fcmTokens?.length > 0) {
-                    contact.fcmTokens.forEach(t => {
-                        sendPushNotification(cid, t.token, notificationTitle, notificationBody, {
-                            icon: user.avatar || "/logo192.png",
-                            click_action: "https://olh-zenchat.vercel.app/?tab=moments",
-                            tag: `moment-upload-${user._id.toString()}`
+            // Send Push Notif to contacts if they are offline
+            if (!onlineUsers.has(cid.toString())) {
+                try {
+                    console.log(`[moments] Sending push to ${cid}. Title: "${notificationTitle}", Body: "${notificationBody}"`);
+                    const contact = await User.findById(cid).select("fcmTokens");
+                    if (contact && contact.fcmTokens?.length > 0) {
+                        contact.fcmTokens.forEach(t => {
+                            sendPushNotification(cid, t.token, notificationTitle, notificationBody, {
+                                icon: user.avatar || "/logo192.png",
+                                click_action: "https://olh-zenchat.vercel.app/?tab=moments",
+                                tag: `moment-upload-${user._id.toString()}`
+                            });
                         });
-                    });
+                    }
+                } catch (err) {
+                    console.error(`[moments] Notif error for contact ${cid}:`, err);
                 }
-            } catch (err) {
-                console.error(`[moments] Notif error for contact ${cid}:`, err);
             }
         });
 
@@ -197,6 +200,27 @@ router.post("/:id/like", protect, async (req, res) => {
             const payload = { momentId: req.params.id, likes: updated.likes.map(id => id.toString()) };
             io.to(ownerId).emit("moment_liked", payload);
             contactIds.forEach(cid => io.to(cid).emit("moment_liked", payload));
+        }
+
+        // Send Push Notif to the moment owner if they are offline and a new like was added
+        if (!alreadyLiked && !onlineUsers.has(ownerId)) {
+            try {
+                const liker = await User.findById(req.user._id).select("username avatar");
+                const ownerUser = await User.findById(ownerId).select("fcmTokens");
+                if (ownerUser && ownerUser.fcmTokens?.length > 0) {
+                    const notificationTitle = `${liker.username} liked your #moment.!`;
+                    const notificationBody = ""; 
+                    ownerUser.fcmTokens.forEach(t => {
+                        sendPushNotification(ownerId, t.token, notificationTitle, notificationBody, {
+                            icon: liker.avatar || "/logo192.png",
+                            click_action: "https://olh-zenchat.vercel.app/?tab=moments",
+                            tag: `moment-like-${req.params.id}`
+                        });
+                    });
+                }
+            } catch (err) {
+                console.error(`[moments] Like push error for owner ${ownerId}:`, err);
+            }
         }
 
         res.json({ success: true, likes: updated.likes.map(id => id.toString()), liked: !alreadyLiked });
