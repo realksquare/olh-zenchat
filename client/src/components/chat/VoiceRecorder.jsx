@@ -391,10 +391,14 @@ const VoiceRecorder = ({ onSend, onCancel, isMobile, onModeChange }) => {
         };
     }, [startRecording, stopRecording]);
 
+
     // ── Mobile: touch hold + swipe-to-lock ───────────────────────────────────
     const handlePointerDown = useCallback((e) => {
         if (!isMobile || modeRef.current === "preview") return;
         e.preventDefault();
+        try {
+            e.currentTarget.setPointerCapture(e.pointerId);
+        } catch (_) {}
         holdStartRef.current = Date.now();
         isHoldModeRef.current = true;
         touchStartYRef.current = e.clientY ?? e.touches?.[0]?.clientY;
@@ -409,34 +413,41 @@ const VoiceRecorder = ({ onSend, onCancel, isMobile, onModeChange }) => {
             // Swipe up → lock into click mode
             isHoldModeRef.current = false;
             setIsLocked(true);
+            isLockedRef.current = true;
         }
     }, [isMobile]);
 
-    const handlePointerUp = useCallback(() => {
+    const handlePointerUp = useCallback((e) => {
         if (!isMobile || !isHoldModeRef.current || isLockedRef.current) return;
         isHoldModeRef.current = false;
-        if (modeRef.current !== "recording") {
-            pendingStopRef.current = "discard";
-            return;
-        }
-        const actualTime = startTimeRef.current ? Date.now() - startTimeRef.current : 0;
-        if (actualTime < MIN_HOLD_MS) {
-            stopRecording("discard");
+        try {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+        } catch (_) {}
+
+        const pressDuration = holdStartRef.current ? Date.now() - holdStartRef.current : 0;
+        if (pressDuration < MIN_HOLD_MS) {
+            // It was a tap! Lock it so it keeps recording
+            setIsLocked(true);
+            isLockedRef.current = true;
         } else {
-            stopRecording("send");
+            // It was a hold! Stop and send
+            if (modeRef.current === "recording") {
+                stopRecording("send");
+            } else {
+                pendingStopRef.current = "send";
+            }
         }
     }, [isMobile, stopRecording]);
 
-    // ── Desktop click-to-start + locked mobile stop ───────────────────────────
+    // ── Desktop click-to-start + mobile stop ───────────────────────────
     const handleMicClick = useCallback(() => {
-        if (isMobile && isHoldModeRef.current) return; // handled by pointer events
         if (modeRef.current === "idle") {
             isHoldModeRef.current = false;
             startRecording();
-        } else if (modeRef.current === "recording" && (isLockedRef.current || !isMobile)) {
+        } else if (modeRef.current === "recording") {
             stopRecording("preview");
         }
-    }, [isMobile, startRecording, stopRecording]);
+    }, [startRecording, stopRecording]);
 
     // ── Preview actions ────────────────────────────────────────────────────────
     const handleSend = useCallback(() => {
