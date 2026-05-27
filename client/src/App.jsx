@@ -351,6 +351,23 @@ const App = () => {
     }
   }, [token, userId]);
 
+  // Listen for OPEN_CHAT from SW (notification quick-reply deep-link when app is running)
+  useEffect(() => {
+    const handler = (event) => {
+      if (event.data?.type === "OPEN_CHAT" && event.data.chatId) {
+        window.dispatchEvent(new CustomEvent("sw-open-chat", { detail: { chatId: event.data.chatId } }));
+      }
+    };
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", handler);
+    }
+    return () => {
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.removeEventListener("message", handler);
+      }
+    };
+  }, []);
+
     useEffect(() => {
         const initialize = async () => {
             await checkAuth();

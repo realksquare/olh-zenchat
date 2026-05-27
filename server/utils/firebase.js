@@ -48,6 +48,21 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
         clickUrl = data.click_action.startsWith('http') ? data.click_action : `${clientUrl}${data.click_action}`;
     }
 
+    const webpushNotif = {
+        title: String(title),
+        body: String(body),
+        icon: `${clientUrl}/favicon.svg`,
+        badge: `${clientUrl}/favicon.svg`,
+        tag: stringData.tag || "zenchat-notif",
+        renotify: true,
+    };
+
+    // Add quick-reply action button only for text messages (not moments/media)
+    if (stringData.type === "new_message" && stringData.chatId) {
+        webpushNotif.actions = [{ action: "reply", title: "Open & Reply" }];
+        webpushNotif.data = { chatId: stringData.chatId };
+    }
+
     const message = {
         token: fcmToken,
         notification: {
@@ -57,14 +72,7 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
         data: stringData,
         webpush: {
             headers: { Urgency: "high" },
-            notification: {
-                title: String(title),
-                body: String(body),
-                icon: `${clientUrl}/favicon.svg`,
-                badge: `${clientUrl}/favicon.svg`,
-                tag: "zenchat-notif",
-                renotify: true,
-            },
+            notification: webpushNotif,
             fcm_options: {
                 link: clickUrl
             }

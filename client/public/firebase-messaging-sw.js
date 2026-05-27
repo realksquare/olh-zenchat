@@ -117,19 +117,30 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
+
+    // Extract chatId from notification data (set for text message notifications)
+    const chatId = event.notification.data?.chatId || event.notification.data?.url?.split('chatId=')[1]?.split('&')[0];
+    const targetUrl = chatId
+        ? `/?chatId=${encodeURIComponent(chatId)}&focus=1`
+        : (event.notification.data?.url || '/');
+
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
             if (clientList.length > 0) {
-                let client = clientList[0];
-                for (let i = 0; i < clientList.length; i++) {
-                    if (clientList[i].focused) client = clientList[i];
+                // Find a focused client, otherwise pick the first one
+                const client = clientList.find(c => c.focused) || clientList[0];
+                // Post message so the running app can navigate to the correct chat
+                if (chatId) {
+                    client.postMessage({ type: 'OPEN_CHAT', chatId });
                 }
                 return client.focus();
             }
-            return clients.openWindow(event.notification.data?.url || '/');
+            // App not open — open a new window with chatId in URL
+            return clients.openWindow(targetUrl);
         })
     );
 });
+
 
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'CLEAR_NOTIFICATIONS') {

@@ -473,7 +473,7 @@ const registerSocketHandlers = (io) => {
             try {
                 const unpacked = isBinaryPacket(rawPayload) ? unpackMessage(rawPayload) : rawPayload;
                 const decompressed = decompressPacket(unpacked);
-                const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth, isZenMessage } = decompressed;
+                const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth, isZenMessage, waveform } = decompressed;
 
                 const chat = await Chat.findById(chatId).populate("participants", "privacySettings contacts");
                 if (!chat) return;
@@ -493,7 +493,8 @@ const registerSocketHandlers = (io) => {
                     encryptedSymmetricKey: encryptedSymmetricKey || "",
                     iv: iv || "",
                     isLowBandwidth: isLowBandwidth || false,
-                    isZenMessage: isZenMessage || false
+                    isZenMessage: isZenMessage || false,
+                    waveform: waveform || ""
                 });
 
                 await Chat.findByIdAndUpdate(chatId, {

@@ -223,3 +223,13 @@ export const stopZenIntroAudio = () => {
         console.error("Failed to stop Zen intro audio:", e);
     }
 };
+
+// Soft ascending blip — confirms voice recording started
+export const playVoiceStartTone = () => {
+    playTone({ startFreq: 500, endFreq: 800, duration: 0.08, type: "sine", volume: 0.05 });
+};
+
+// Soft descending blip — confirms voice recording stopped / sent
+export const playVoiceStopTone = () => {
+    playTone({ startFreq: 600, endFreq: 300, duration: 0.08, type: "sine", volume: 0.05 });
+};

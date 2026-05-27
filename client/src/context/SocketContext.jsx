@@ -703,11 +703,11 @@ export const SocketProvider = ({ children }) => {
                 const data = await res.json();
                 if (!data.secure_url) throw new Error("Upload failed");
 
-                const msgType = uploadType === "video" ? "video" : uploadType === "raw" ? "file" : "image";
+                const msgType = uploadType === "video" ? "video" : uploadType === "raw" ? (item.msgType || "file") : "image";
                 socketRef.current.emit("send_message", {
                     chatId, content: textContent || "", type: msgType,
                     mediaUrl: data.secure_url, replyTo, isViewOnce,
-                    cid, isLowBandwidth, isZenMessage
+                    cid, isLowBandwidth, isZenMessage, waveform: item.waveform || ""
                 });
             } catch (err) {
                 console.error("[SocketContext] flushMediaOutbox item failed:", err);
@@ -767,11 +767,11 @@ export const SocketProvider = ({ children }) => {
         }
     }, []);
 
-    const sendMessage = useCallback(async (chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null, isZenMessage = false) => {
+    const sendMessage = useCallback(async (chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null, isZenMessage = false, waveform = "") => {
         trackActiveTime(chatId);
         
         const isLowBandwidth = useChatStore.getState().isLowBandwidth;
-        let payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isLowBandwidth, isZenMessage };
+        let payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isLowBandwidth, isZenMessage, waveform };
 
         // Transparent E2EE Message Encryption
         if (content && type === "text") {

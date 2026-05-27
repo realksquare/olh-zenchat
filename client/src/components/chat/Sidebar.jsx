@@ -202,6 +202,21 @@ const Sidebar = ({ onChatSelect }) => {
         onChatSelect();
     };
 
+    // Handle notification deep-link: open chat when user taps "Open & Reply" on a push notification
+    useEffect(() => {
+        const handler = (e) => {
+            const { chatId } = e.detail || {};
+            if (!chatId) return;
+            const chat = useChatStore.getState().chats.find(c => c._id === chatId);
+            if (chat) {
+                setActiveChat(chat);
+                onChatSelect();
+            }
+        };
+        window.addEventListener("sw-open-chat", handler);
+        return () => window.removeEventListener("sw-open-chat", handler);
+    }, [onChatSelect, setActiveChat]);
+
     const handleInviteClick = () => {
         setIsInviteOpen(true);
     };

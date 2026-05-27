@@ -4,6 +4,7 @@ import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import { useSocket } from "../../context/SocketContext";
 import DecryptedText from "./DecryptedText";
+import VoiceMessageBubble from "./VoiceMessageBubble";
 
 const HeartReaction = ({ size = 20 }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="reaction-heart" style={{ filter: "drop-shadow(0 2px 6px rgba(239, 68, 68, 0.45))" }}>
@@ -577,6 +578,9 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                         </div>
                                     )}
                                 </div>
+                            )}
+                            {message.type === "voice" && message.mediaUrl && (
+                                <VoiceMessageBubble message={message} />
                             )}
                             {(message.type === "image" || message.type === "video" || message.type === "file" || message.type === "gif" || message.type === "sticker") && message.mediaUrl && !isViewOnce && (
                                 <div 

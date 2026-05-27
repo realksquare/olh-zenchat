@@ -8,6 +8,7 @@ import axiosInstance from "../../utils/axios";
 import axios from "axios";
 import { enqueuePendingMedia } from "../../db/zenDB";
 import GifPicker from "./GifPicker";
+import VoiceRecorder from "./VoiceRecorder";
 
 const ACCEPTED_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const ACCEPTED_VIDEO = ["video/mp4", "video/quicktime", "video/webm", "video/mpeg", "video/x-msvideo"];
@@ -274,6 +275,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [gifPreviewUrl, setGifPreviewUrl] = useState("");
     const [showAttachmentSheet, setShowAttachmentSheet] = useState(false);
+    const [isVoiceMode, setIsVoiceMode] = useState(false);
     const { sendMessage, startTyping, stopTyping, editMessage } = useSocket();
 
     const showToast = (msg) => {
@@ -287,7 +289,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const activeChat = useChatStore((s) => s.activeChat);
     const allChats = useChatStore((s) => s.chats);
     const messages = activeChat?._id === chatId ? activeChat.messages : (allChats.find(c => c._id === chatId)?.messages || []);
-    const isSendingMedia = messages?.some(m => m.senderId === userId && m.status === 'sending' && (m.type === 'image' || m.type === 'video' || m.type === 'file'));
+    const isSendingMedia = messages?.some(m => m.senderId === userId && m.status === 'sending' && ['image', 'video', 'file', 'voice'].includes(m.type));
     
     const textareaRef = useRef(null);
     const typingTimeoutRef = useRef(null);
@@ -521,6 +523,85 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
         }
     };
 
+    const formatDuration = (secs) => {
+        const m = Math.floor(secs / 60);
+        const s = Math.floor(secs % 60);
+        return `${m}:${s.toString().padStart(2, "0")}`;
+    };
+
+    const uploadAndSendVoice = async (blob, durationSecs, waveformBase64) => {
+        if (!blob) return;
+        setIsVoiceMode(false);
+        setUploading(true);
+
+        const tempId = `temp-${Date.now()}-${Math.random()}`;
+        const activeChat = useChatStore.getState().activeChat;
+        const isZen = useChatStore.getState().isZenMode;
+        const durationStr = formatDuration(durationSecs);
+
+        addMessage(chatId, {
+            _id: tempId,
+            cid: tempId,
+            chatId,
+            senderId: userId,
+            content: durationStr,
+            type: "voice",
+            mediaUrl: URL.createObjectURL(blob),
+            waveform: waveformBase64,
+            status: "sending",
+            replyTo: replyingTo?._id || null,
+            createdAt: new Date().toISOString(),
+            disappearingMode: activeChat?.disappearingMode || "off",
+            isZenMessage: isZen
+        });
+
+        const file = new File([blob], `voice-${Date.now()}.webm`, { type: blob.type });
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "ml_default");
+
+        try {
+            const res = await axios.post(
+                "https://api.cloudinary.com/v1_1/du4nvei7j/raw/upload",
+                formData
+            );
+            const downloadURL = res.data.secure_url;
+            const isZenMessage = useChatStore.getState().isZenMode;
+            sendMessage(chatId, durationStr, "voice", downloadURL, replyingTo?._id, false, tempId, isZenMessage, waveformBase64);
+        } catch (uploadErr) {
+            console.warn("[MessageInput] Voice upload failed, queuing for retry:", uploadErr?.message);
+            updateMessage(chatId, { _id: tempId, status: "pending" });
+            try {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const base64 = e.target.result.split(",")[1];
+                    await enqueuePendingMedia({
+                        base64,
+                        fileName: file.name,
+                        fileType: file.type,
+                        uploadType: "raw",
+                        msgType: "voice",
+                        waveform: waveformBase64,
+                        chatId,
+                        textContent: durationStr,
+                        replyTo: replyingTo?._id,
+                        isViewOnce: false,
+                        cid: tempId,
+                        isZenMessage: isZen,
+                        isLowBandwidth: false
+                    });
+                };
+                reader.readAsDataURL(file);
+            } catch (qErr) {
+                console.error("[MessageInput] Failed to queue voice for retry:", qErr);
+            }
+        } finally {
+            setUploading(false);
+            if (soundEnabled) playSendSound();
+            onCancelReply();
+        }
+    };
+
     const handleSend = async () => {
         const filteredContent = filterOffensive(content.trim());
 
@@ -688,7 +769,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                         <div className="reply-to-text">
                             {replyingTo.type === "image" ? "Image" :
                                 replyingTo.type === "video" ? "Video" :
-                                    replyingTo.content}
+                                    replyingTo.type === "voice" ? "Voice message" :
+                                        replyingTo.content}
                         </div>
                     </div>
                     <button className="reply-cancel-btn" onClick={onCancelReply}>
@@ -799,12 +881,22 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                         </svg>
                     )}
                 </button>
+
+                {/* Mic button — visible only when no text typed and no files staged and not editing */}
+                {!content.trim() && !hasMedia && !editingMessage && !disabled && (
+                    <VoiceRecorder
+                        chatId={chatId}
+                        isMobile={window.innerWidth <= 768}
+                        onSend={uploadAndSendVoice}
+                        onCancel={() => setIsVoiceMode(false)}
+                    />
+                )}
             </div>
 
             <div className="input-hint-row">
                 <span className="input-hint desktop-only">
-                    Enter to send - Shift+Enter for new line
-                    {editingMessage ? " - Esc to cancel" : ""}
+                    Enter to send · Shift+Enter for new line{!content.trim() && !hasMedia ? " · Space: hold to record" : ""}
+                    {editingMessage ? " · Esc to cancel" : ""}
                 </span>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     {isViewOnce && (

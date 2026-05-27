@@ -113,7 +113,11 @@ const messageSchema = new mongoose.Schema(
                     required: true,
                 },
             }
-        ]
+        ],
+        waveform: {
+            type: String,
+            default: ""
+        }
     },
     { timestamps: true }
 );
