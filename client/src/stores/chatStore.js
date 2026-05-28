@@ -256,9 +256,14 @@ export const useChatStore = create(
 
                     // Update the chat's lastMessage to the latest surviving message
                     const latest = [...nextMsgs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
-                    const nextChats = state.chats.map(c =>
-                        c._id === chatId ? { ...c, lastMessage: latest || null } : c
-                    );
+                    const nextChats = state.chats.map(c => {
+                        if (c._id === chatId) {
+                            const updatedChat = { ...c, lastMessage: latest || null };
+                            persistChat(updatedChat);
+                            return updatedChat;
+                        }
+                        return c;
+                    });
                     const nextActive = state.activeChat?._id === chatId
                         ? { ...state.activeChat, lastMessage: latest || null }
                         : state.activeChat;
@@ -555,6 +560,18 @@ export const useChatStore = create(
                     const updatedMessages = (state.messages[chatId] || []).map((msg) => {
                         const mId = (msg._id || msg.cid)?.toString();
                         if (mId !== messageId?.toString()) return msg;
+                        
+                        // Sync deletion to IndexedDB
+                        if (deleteFor === "self" || msg.status === 'sending' || !msg._id) {
+                            db.messages.delete(msg._id).catch(() => {});
+                        } else if (deleteFor === "everyone") {
+                            if (msg.disappearingMode && msg.disappearingMode !== "off") {
+                                db.messages.delete(msg._id).catch(() => {});
+                            } else {
+                                db.messages.put({ ...msg, deletedForEveryone: true, content: "", mediaUrl: "" }).catch(() => {});
+                            }
+                        }
+
                         // For 'delete for self' or local/ghost messages: fully remove
                         if (deleteFor === "self" || msg.status === 'sending' || !msg._id) return null;
                         // For 'delete for everyone': silently remove disappearing messages, tombstone regular ones
@@ -589,7 +606,9 @@ export const useChatStore = create(
                     const updatedChats = state.chats.map((chat) => {
                         if (chat._id?.toString() !== chatId?.toString()) return chat;
                         if (isLastMessage) {
-                            return { ...chat, lastMessage: newLastMessage };
+                            const updatedChat = { ...chat, lastMessage: newLastMessage };
+                            persistChat(updatedChat);
+                            return updatedChat;
                         }
                         return chat;
                     });
@@ -809,17 +828,19 @@ export const useChatStore = create(
             },
 
             setUserOnline: (userId) => {
+                if (!userId) return;
                 set((state) => {
                     const updated = new Set(state.onlineUsers);
-                    updated.add(userId);
+                    updated.add(userId.toString());
                     return { onlineUsers: updated };
                 });
             },
 
             setUserOffline: (userId) => {
+                if (!userId) return;
                 set((state) => {
                     const updated = new Set(state.onlineUsers);
-                    updated.delete(userId);
+                    updated.delete(userId.toString());
                     return { onlineUsers: updated };
                 });
             },
@@ -833,6 +854,9 @@ export const useChatStore = create(
             },
 
             removeChat: (chatId) => {
+                // Delete from IndexedDB
+                db.chats.delete(chatId).catch(() => {});
+                db.messages.where("chatId").equals(chatId).delete().catch(() => {});
                 set((state) => ({
                     chats: state.chats.filter((c) => c._id?.toString() !== chatId?.toString()),
                     activeChat: state.activeChat?._id?.toString() === chatId?.toString() ? null : state.activeChat,
@@ -865,6 +889,9 @@ export const useChatStore = create(
             deleteChatForUser: async (chatId) => {
                 try {
                     await axiosInstance.delete(`/chats/${chatId}`);
+                    // Delete from IndexedDB
+                    db.chats.delete(chatId).catch(() => {});
+                    db.messages.where("chatId").equals(chatId).delete().catch(() => {});
                     set((state) => ({
                         chats: state.chats.filter((c) => c._id !== chatId),
                         activeChat: state.activeChat?._id === chatId ? null : state.activeChat,
