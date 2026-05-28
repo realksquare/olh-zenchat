@@ -47,59 +47,6 @@ const cleanupInstantMessages = async (uid, io) => {
     }
 };
 
-const sendOnlineUsersToUser = async (userId, io, targetSocket = null) => {
-    try {
-        const visibleOnlineUserIds = [];
-        for (const [otherId, otherData] of onlineUsers.entries()) {
-            if (otherId === userId.toString()) continue;
-
-            const otherUser = await User.findById(otherId).select("privacySettings contacts blockedUsers");
-            if (!otherUser) continue;
-
-            // Check blocking
-            const me = await User.findById(userId).select("blockedUsers");
-            const theyBlockedMe = otherUser?.blockedUsers?.some(u => u.userId.toString() === userId.toString());
-            const iBlockedThem = me?.blockedUsers?.some(u => u.userId.toString() === otherId.toString());
-            if (theyBlockedMe || iBlockedThem) {
-                continue;
-            }
-
-            const privacy = otherUser.privacySettings?.onlineStatus || "everyone";
-            let canSee = false;
-
-            if (privacy === "everyone") {
-                canSee = true;
-            } else if (privacy === "nobody") {
-                canSee = false;
-            } else {
-                const isContact = otherUser.contacts?.some(c =>
-                    c.userId.toString() === userId.toString() &&
-                    (privacy === "contacts" || c.tag === privacy)
-                );
-                if (isContact) canSee = true;
-            }
-
-            if (canSee) {
-                visibleOnlineUserIds.push(otherId);
-                const recipient = targetSocket || io.to(userId.toString());
-                if (otherData?.isZenMode) {
-                    recipient.emit("user_zen_status", { userId: otherId, isZenMode: true });
-                }
-                const isOtherLowBandwidth = otherData && otherData.sockets
-                    ? Array.from(otherData.sockets.values()).some(s => s.isLowBandwidth)
-                    : false;
-                if (isOtherLowBandwidth) {
-                    recipient.emit("peer_low_bandwidth", { userId: otherId, isLowBandwidth: true });
-                }
-            }
-        }
-        const recipient = targetSocket || io.to(userId.toString());
-        recipient.emit("online_users", { userIds: visibleOnlineUserIds });
-    } catch (err) {
-        console.error("Error sending online users to user:", err);
-    }
-};
-
 const broadcastUserStatus = async (uid, isOnline, lastSeen = null, io) => {
     try {
         const user = await User.findById(uid).select("privacySettings contacts blockedUsers");
@@ -187,7 +134,6 @@ const setUserActivePresence = async (io, userId, isActive) => {
         } else {
             await User.findByIdAndUpdate(userId, { isOnline: true });
             await broadcastUserStatus(userId, true, null, io);
-            await sendOnlineUsersToUser(userId, io);
         }
         return;
     }
@@ -220,7 +166,6 @@ const setUserActivePresence = async (io, userId, isActive) => {
         }
         await User.findByIdAndUpdate(userId, { isOnline: true });
         await broadcastUserStatus(userId, true, null, io);
-        await sendOnlineUsersToUser(userId, io);
     }
 };
 
@@ -378,7 +323,50 @@ const registerSocketHandlers = (io) => {
                         });
                     }
 
-                    await sendOnlineUsersToUser(userId, io, socket);
+                    const visibleOnlineUserIds = [];
+                    for (const [otherId, otherData] of onlineUsers.entries()) {
+                        if (otherId === userId) continue;
+
+                        const otherUser = await User.findById(otherId).select("privacySettings contacts blockedUsers");
+                        if (!otherUser) continue;
+
+                        // Check blocking
+                        const me = await User.findById(userId).select("blockedUsers");
+                        const theyBlockedMe = otherUser?.blockedUsers?.some(u => u.userId.toString() === userId.toString());
+                        const iBlockedThem = me?.blockedUsers?.some(u => u.userId.toString() === otherId.toString());
+                        if (theyBlockedMe || iBlockedThem) {
+                            continue;
+                        }
+
+                        const privacy = otherUser.privacySettings?.onlineStatus || "everyone";
+                        let canSee = false;
+
+                        if (privacy === "everyone") {
+                            canSee = true;
+                        } else if (privacy === "nobody") {
+                            canSee = false;
+                        } else {
+                            const isContact = otherUser.contacts?.some(c =>
+                                c.userId.toString() === userId &&
+                                (privacy === "contacts" || c.tag === privacy)
+                            );
+                            if (isContact) canSee = true;
+                        }
+
+                        if (canSee) {
+                            visibleOnlineUserIds.push(otherId);
+                            if (otherData?.isZenMode) {
+                                socket.emit("user_zen_status", { userId: otherId, isZenMode: true });
+                            }
+                            const isOtherLowBandwidth = otherData && otherData.sockets
+                                ? Array.from(otherData.sockets.values()).some(s => s.isLowBandwidth)
+                                : false;
+                            if (isOtherLowBandwidth) {
+                                socket.emit("peer_low_bandwidth", { userId: otherId, isLowBandwidth: true });
+                            }
+                        }
+                    }
+                    socket.emit("online_users", { userIds: visibleOnlineUserIds });
 
                 } catch (err) {
                     console.error("Error in connection async block:", err);

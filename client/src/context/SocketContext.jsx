@@ -37,6 +37,7 @@ const SocketContext = createContext(null);
 export const SocketProvider = ({ children }) => {
     const socketRef = useRef(null);
     const [isConnected, setIsConnected] = useState(false);
+    const pendingOnlineReconcileRef = useRef(null);
     const userId = useAuthStore((state) => state.user?._id);
     const token = useAuthStore((state) => state.token);
 
@@ -430,7 +431,7 @@ export const SocketProvider = ({ children }) => {
             window.location.href = "/login";
         };
 
-        const pendingOnlineReconcileRef = { current: null };
+
 
         socket.on("connect", async () => {
             setIsConnected(true);
