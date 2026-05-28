@@ -470,17 +470,33 @@ export const useChatStore = create(
                         message.senderId?._id?.toString() === currentUserId?.toString();
                     const isActiveChat = state.activeChat?._id?.toString() === chatId?.toString();
 
-                    const updatedChats = state.chats
-                        .map((chat) => {
-                            if (chat._id?.toString() !== chatId?.toString()) return chat;
-                            const currentUpdatedAt = chat.updatedAt ? new Date(chat.updatedAt) : new Date(0);
-                            const msgDate = new Date(message.createdAt);
-                            if (msgDate >= currentUpdatedAt) {
-                                return { ...chat, lastMessage: { ...message }, updatedAt: message.createdAt };
-                            }
-                            return chat;
-                        })
-                        .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                    const chatExistsInList = state.chats.some(
+                        c => c._id?.toString() === chatId?.toString()
+                    );
+
+                    let updatedChats;
+                    if (!chatExistsInList && state.activeChat?._id?.toString() === chatId?.toString()) {
+                        // First message to a chat that isn't in the sidebar yet — add it now
+                        const newChatEntry = {
+                            ...state.activeChat,
+                            lastMessage: { ...message },
+                            updatedAt: message.createdAt,
+                        };
+                        updatedChats = [newChatEntry, ...state.chats];
+                        persistChat({ ...newChatEntry, unreadCount: 0 });
+                    } else {
+                        updatedChats = state.chats
+                            .map((chat) => {
+                                if (chat._id?.toString() !== chatId?.toString()) return chat;
+                                const currentUpdatedAt = chat.updatedAt ? new Date(chat.updatedAt) : new Date(0);
+                                const msgDate = new Date(message.createdAt);
+                                if (msgDate >= currentUpdatedAt) {
+                                    return { ...chat, lastMessage: { ...message }, updatedAt: message.createdAt };
+                                }
+                                return chat;
+                            })
+                            .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                    }
 
                     let updatedActiveChat = state.activeChat;
                     if (isActiveChat) {

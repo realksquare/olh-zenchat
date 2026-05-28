@@ -187,9 +187,18 @@ const Sidebar = ({ onChatSelect }) => {
     const handleSelectUser = async (userId) => {
         try {
             const { data } = await axiosInstance.post("/chats", { userId });
-            addChat(data.chat);
-            const freshChat = useChatStore.getState().chats.find((c) => c._id === data.chat._id) || data.chat;
-            setActiveChat(freshChat);
+            // Don't eagerly add to sidebar — only open the chat window.
+            // The chatcard appears in the sidebar only after a message is actually sent.
+            // Check if this chat already exists in the list (e.g. it was an active convo)
+            const alreadyInList = useChatStore.getState().chats.find(
+                (c) => c._id === data.chat._id
+            );
+            if (alreadyInList) {
+                // Just refresh it with fresh data (cleared lastMessage, restored deletedBy)
+                useChatStore.getState().updateChat(data.chat._id, data.chat);
+            }
+            // Set it as the active chat (opens the window) but don't push to sidebar yet
+            useChatStore.getState().setActiveChat(data.chat);
             setSearch("");
             setSearchResults([]);
             onChatSelect();

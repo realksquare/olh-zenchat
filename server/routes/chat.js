@@ -84,7 +84,11 @@ router.get("/", async (req, res) => {
             };
         }));
 
-        res.json({ chats: chatsWithUnread });
+        // Filter out completely empty chats (no messages visible to the user)
+        // These are ghost sessions from users who opened a chat window but never sent a message
+        const nonEmptyChats = chatsWithUnread.filter(c => c.lastMessage != null);
+
+        res.json({ chats: nonEmptyChats });
     } catch (err) {
         console.error("Fetch chats error:", err);
         res.status(500).json({ message: "Server error" });
@@ -111,15 +115,43 @@ router.post("/", async (req, res) => {
         const existingChat = await Chat.findOne({
             isGroup: false,
             participants: { $all: [req.user._id, userId] },
-        })
-            .populate("participants", "username avatar isOnline lastSeen isVerified")
-            .populate({
-                path: "lastMessage",
-                populate: { path: "senderId", select: "username" },
-            });
+        });
 
         if (existingChat) {
-            return res.json({ chat: existingChat });
+            const wasDeletedByMe = existingChat.deletedBy?.some(
+                d => d.toString() === req.user._id.toString()
+            );
+            if (wasDeletedByMe) {
+                // Restore the chat: remove current user from deletedBy, clear lastMessage
+                await Chat.findByIdAndUpdate(existingChat._id, {
+                    $pull: { deletedBy: req.user._id },
+                    $set: { lastMessage: null }
+                });
+            }
+            // Re-fetch fully populated (fresh data, no stale deletedBy or lastMessage)
+            const freshChat = await Chat.findById(existingChat._id)
+                .populate("participants", "username avatar isOnline lastSeen isVerified")
+                .populate({
+                    path: "lastMessage",
+                    populate: { path: "senderId", select: "username" },
+                });
+
+            let blockStatus = null;
+            if (!freshChat.isGroup) {
+                const otherParticipant = freshChat.participants.find(p => p._id.toString() !== req.user._id.toString());
+                const otherParticipantId = otherParticipant?._id || otherParticipant;
+                if (otherParticipantId) {
+                    const me = await User.findById(req.user._id);
+                    const other = await User.findById(otherParticipantId);
+                    blockStatus = {
+                        iBlocked: !!(me?.blockedUsers?.some(u => u.userId.toString() === otherParticipantId.toString())),
+                        theyBlocked: !!(other?.blockedUsers?.some(u => u.userId.toString() === req.user._id.toString()))
+                    };
+                }
+            }
+            const freshObj = freshChat.toObject();
+            freshObj.blockStatus = blockStatus;
+            return res.json({ chat: freshObj });
         }
 
         const newChat = await Chat.create({
