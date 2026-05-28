@@ -229,8 +229,21 @@ const registerSocketHandlers = (io) => {
 
                     if (userData.sockets.size === 0) {
                         const timeout = setTimeout(async () => {
+                            const checkData = onlineUsers.get(userId);
+                            if (checkData && checkData.sockets.size > 0) {
+                                disconnectTimeouts.delete(userId);
+                                return;
+                            }
+
                             const now = new Date();
                             await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
+                            
+                            const recheckData = onlineUsers.get(userId);
+                            if (recheckData && recheckData.sockets.size > 0) {
+                                disconnectTimeouts.delete(userId);
+                                return;
+                            }
+
                             onlineUsers.delete(userId);
                             disconnectTimeouts.delete(userId);
                             if (disconnectTimeouts.has(userId + "_inactive")) {
@@ -247,11 +260,24 @@ const registerSocketHandlers = (io) => {
                         if (!isAnyActive) {
                             if (!disconnectTimeouts.has(userId + "_inactive")) {
                                 const timeout = setTimeout(async () => {
+                                    const checkData = onlineUsers.get(userId);
+                                    if (checkData && Array.from(checkData.sockets.values()).some(s => s.isActive)) {
+                                        disconnectTimeouts.delete(userId + "_inactive");
+                                        return;
+                                    }
+                                    
                                     const now = new Date();
                                     await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
+                                    
+                                    const recheckData = onlineUsers.get(userId);
+                                    if (recheckData && Array.from(recheckData.sockets.values()).some(s => s.isActive)) {
+                                        disconnectTimeouts.delete(userId + "_inactive");
+                                        return;
+                                    }
+
                                     broadcastUserStatus(userId, false, now, io);
-                                    // Trigger instant message cleanup
                                     await cleanupInstantMessages(userId, io);
+                                    disconnectTimeouts.delete(userId + "_inactive");
                                 }, 5000);
                                 disconnectTimeouts.set(userId + "_inactive", timeout);
                             }

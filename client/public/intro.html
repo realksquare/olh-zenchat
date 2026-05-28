@@ -500,6 +500,17 @@
 
     /* ── Section ── */
     section { position: relative; z-index: 1; }
+    section:not(:last-of-type)::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      max-width: 300px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent);
+    }
     .section-header {
       text-align: center;
       margin-bottom: 64px;
@@ -533,8 +544,6 @@
       border-radius: var(--radius-lg);
       padding: 30px 26px;
       transition: border-color 300ms ease, box-shadow 300ms ease, transform 300ms var(--ease);
-      opacity: 0;
-      transform: translateY(22px);
       position: relative;
       overflow: hidden;
     }
@@ -552,11 +561,6 @@
       border-color: var(--primary-border);
       transform: translateY(-4px);
       box-shadow: 0 18px 40px rgba(0,0,0,0.3);
-    }
-    .feature-card.visible {
-      opacity: 1;
-      transform: translateY(0);
-      transition: opacity 600ms var(--ease), transform 600ms var(--ease), border-color 300ms ease, box-shadow 300ms ease;
     }
     .feature-icon {
       width: 46px; height: 46px;
@@ -606,11 +610,8 @@
     .step {
       text-align: center;
       padding: 0 28px;
-      opacity: 0;
-      transform: translateY(18px);
       transition: all 550ms var(--ease);
     }
-    .step.visible { opacity: 1; transform: translateY(0); }
     .step-num {
       width: 76px; height: 76px;
       border-radius: 50%;
@@ -645,8 +646,6 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 30px 28px;
-      opacity: 0;
-      transform: translateY(22px);
       transition: all 600ms var(--ease);
     }
     .compare-card.zenchat-card {
@@ -654,7 +653,6 @@
       border-color: var(--primary-border);
       grid-column: 1 / -1;
     }
-    .compare-card.visible { opacity: 1; transform: translateY(0); }
     .compare-card-header {
       display: flex;
       align-items: center;
@@ -1002,8 +1000,6 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 28px 24px;
-      opacity: 0;
-      transform: translateY(20px);
       transition: all 600ms var(--ease);
       position: relative;
       overflow: hidden;
@@ -1019,10 +1015,6 @@
     .roadmap-card.color-purple::before { background: linear-gradient(to right, var(--accent), #a5b4fc); }
     .roadmap-card.color-gold::before { background: linear-gradient(to right, #eab308, #fbbf24); }
     .roadmap-card:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-4px); box-shadow: 0 16px 36px rgba(0,0,0,0.3); }
-    .roadmap-card.visible { opacity: 1; transform: translateY(0); }
-    .roadmap-card:nth-child(1){transition-delay:0ms}
-    .roadmap-card:nth-child(2){transition-delay:100ms}
-    .roadmap-card:nth-child(3){transition-delay:200ms}
     .roadmap-eta {
       display: inline-flex;
       align-items: center;
@@ -1170,14 +1162,6 @@
       border-color: var(--accent);
       box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
     }
-
-    /* ── Scroll reveal ── */
-    .reveal {
-      opacity: 0;
-      transform: translateY(24px);
-      transition: opacity 700ms var(--ease), transform 700ms var(--ease);
-    }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
 
     /* ── Stagger delays ── */
     .feature-card:nth-child(1){transition-delay:0ms}
@@ -1945,11 +1929,11 @@
           if (layout === "nav") {
             el.innerHTML = `
               <a href="/login" class="btn btn-ghost" id="${id}-login">Log In</a>
-              <a href="/register?ref=krish_camon" class="btn btn-primary" id="${id}-signup">Sign Up</a>
+              <a href="/register?ref=krish" class="btn btn-primary" id="${id}-signup">Sign Up</a>
             `;
           } else if (layout === "hero") {
             el.innerHTML = `
-              <a href="/register?ref=krish_camon" class="btn btn-primary btn-lg" id="${id}-signup">Sign Up Free</a>
+              <a href="/register?ref=krish" class="btn btn-primary btn-lg" id="${id}-signup">Sign Up Free</a>
               <a href="#features" class="btn btn-outline" id="${id}-explore">Explore Features</a>
             `;
           } else if (layout === "mobile-header") {
@@ -1961,7 +1945,7 @@
                   <line x1="15" y1="12" x2="3" y2="12"></line>
                 </svg>
               </a>
-              <a href="/register?ref=krish_camon" class="mobile-icon-btn btn-signup-icon" id="${id}-signup" title="Sign Up">
+              <a href="/register?ref=krish" class="mobile-icon-btn btn-signup-icon" id="${id}-signup" title="Sign Up">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                   <circle cx="8.5" cy="7" r="4"></circle>
@@ -1972,7 +1956,7 @@
             `;
           } else {
             el.innerHTML = `
-              <a href="/register?ref=krish_camon" class="btn btn-primary btn-lg" id="${id}-signup">Sign Up Free</a>
+              <a href="/register?ref=krish" class="btn btn-primary btn-lg" id="${id}-signup">Sign Up Free</a>
               <a href="/login" class="btn btn-outline" id="${id}-login">Log In</a>
             `;
           }
@@ -2005,18 +1989,6 @@
       }
     });
     mobileNav.querySelectorAll("a").forEach(a => a.addEventListener("click", () => mobileNav.classList.remove("open")));
-
-    // ── IntersectionObserver scroll reveal ──
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("visible");
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.1, rootMargin: "0px 0px -36px 0px" });
-
-    document.querySelectorAll(".reveal, .feature-card, .step, .compare-card, .roadmap-card").forEach(el => observer.observe(el));
 
     // ── Navbar on scroll ──
     const nav = document.getElementById("navbar");

@@ -808,28 +808,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 </div>
             </div>
             {toast && (
-                <div 
-                    className="aura-toast"
-                    style={{
-                        position: 'fixed',
-                        bottom: '24px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        background: 'rgba(15, 23, 42, 0.9)',
-                        backdropFilter: 'blur(8px)',
-                        padding: '10px 20px',
-                        borderRadius: '20px',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        color: '#f1f5f9',
-                        fontSize: '0.8rem',
-                        fontWeight: '600',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
-                        zIndex: 9999999,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                    }}
-                >
+                <div className="zen-toast zen-toast-info">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                     {toast}
                 </div>
             )}
