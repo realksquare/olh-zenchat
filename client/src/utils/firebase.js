@@ -43,13 +43,15 @@ export const requestNotificationPermission = async () => {
             
             let registration;
             try {
-                registration = await navigator.serviceWorker.getRegistration();
-                if (!registration) {
-                    registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                // Ensure a SW is registered — if none exists yet, register the FCM SW.
+                // navigator.serviceWorker.ready resolves with the active SW registration once ready.
+                const existing = await navigator.serviceWorker.getRegistration('/');
+                if (!existing) {
+                    await navigator.serviceWorker.register('/firebase-messaging-sw.js');
                 }
-                await Promise.race([
+                registration = await Promise.race([
                     navigator.serviceWorker.ready,
-                    new Promise((_, reject) => setTimeout(() => reject(new Error("Service Worker timeout")), 5000))
+                    new Promise((_, reject) => setTimeout(() => reject(new Error("Service Worker timeout")), 8000))
                 ]);
             } catch (swErr) {
                 console.error("Service worker registration failed:", swErr);
