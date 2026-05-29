@@ -57,7 +57,12 @@ router.post("/", protect, async (req, res) => {
                     console.log(`[moments] Sending push to ${cid}. Title: "${notificationTitle}", Body: "${notificationBody}"`);
                     const contact = await User.findById(cid).select("fcmTokens");
                     if (contact && contact.fcmTokens?.length > 0) {
-                        contact.fcmTokens.forEach(t => {
+                        const tokens = contact.fcmTokens;
+                        const pwaTokens = tokens.filter(t => t.deviceType === "pwa");
+                        const browserTokens = tokens.filter(t => t.deviceType === "browser");
+                        const targetTokens = pwaTokens.length > 0 ? pwaTokens : browserTokens;
+
+                        targetTokens.forEach(t => {
                             sendPushNotification(cid, t.token, notificationTitle, notificationBody, {
                                 icon: user.avatar || "/logo192.png",
                                 click_action: "https://olh-zenchat.vercel.app/?tab=moments",
@@ -210,7 +215,12 @@ router.post("/:id/like", protect, async (req, res) => {
                 if (ownerUser && ownerUser.fcmTokens?.length > 0) {
                     const notificationTitle = `${liker.username} liked your #moment.!`;
                     const notificationBody = ""; 
-                    ownerUser.fcmTokens.forEach(t => {
+                    const tokens = ownerUser.fcmTokens;
+                    const pwaTokens = tokens.filter(t => t.deviceType === "pwa");
+                    const browserTokens = tokens.filter(t => t.deviceType === "browser");
+                    const targetTokens = pwaTokens.length > 0 ? pwaTokens : browserTokens;
+
+                    targetTokens.forEach(t => {
                         sendPushNotification(ownerId, t.token, notificationTitle, notificationBody, {
                             icon: liker.avatar || "/logo192.png",
                             click_action: "https://olh-zenchat.vercel.app/?tab=moments",

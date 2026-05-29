@@ -5,6 +5,7 @@ import { useChatStore } from "../../stores/chatStore";
 import { useSocket } from "../../context/SocketContext";
 import DecryptedText from "./DecryptedText";
 import VoiceMessageBubble from "./VoiceMessageBubble";
+import DocViewerModal from "../ui/DocViewerModal";
 
 const HeartReaction = ({ size = 20 }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="reaction-heart" style={{ filter: "drop-shadow(0 2px 6px rgba(239, 68, 68, 0.45))" }}>
@@ -119,6 +120,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [isMediaLoaded, setIsMediaLoaded] = useState(false);
     const [manualLoad, setManualLoad] = useState(false);
+    const [docViewerState, setDocViewerState] = useState({ open: false, url: "", name: "" });
     
     // Swipe to reply state
     const [swipeOffset, setSwipeOffset] = useState(0);
@@ -667,16 +669,25 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                       playsInline
                                                   />
                                              ) : (
-                                                 <div className="file-attachment-card" style={{
-                                                     background: 'rgba(255,255,255,0.05)',
-                                                     border: '1px solid rgba(255,255,255,0.08)',
-                                                     borderRadius: '12px',
-                                                     padding: '12px 16px',
-                                                     display: 'flex',
-                                                     alignItems: 'center',
-                                                     gap: '12px',
-                                                     minWidth: '180px'
-                                                 }}>
+                                                 <div 
+                                                     className="file-attachment-card" 
+                                                     onClick={() => setDocViewerState({
+                                                         open: true,
+                                                         url: message.mediaUrl,
+                                                         name: message.content || "Document"
+                                                     })}
+                                                     style={{
+                                                         background: 'rgba(255,255,255,0.05)',
+                                                         border: '1px solid rgba(255,255,255,0.08)',
+                                                         borderRadius: '12px',
+                                                         padding: '12px 16px',
+                                                         display: 'flex',
+                                                         alignItems: 'center',
+                                                         gap: '12px',
+                                                         minWidth: '180px',
+                                                         cursor: 'pointer'
+                                                     }}
+                                                 >
                                                      <div className="file-icon" style={{
                                                          background: 'rgba(59, 130, 246, 0.15)',
                                                          color: '#3b82f6',
@@ -699,20 +710,48 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                              Attachment
                                                          </div>
                                                      </div>
-                                                     <a
-                                                         href={message.mediaUrl}
-                                                         target="_blank"
-                                                         rel="noopener noreferrer"
-                                                         download
-                                                         onClick={(e) => e.stopPropagation()}
-                                                         style={{ color: '#94a3b8', padding: '4px', borderRadius: '6px', transition: 'all 0.2s' }}
+                                                     <button
+                                                         onClick={async (e) => {
+                                                             e.stopPropagation();
+                                                             try {
+                                                                 const res = await fetch(message.mediaUrl);
+                                                                 const blob = await res.blob();
+                                                                 const blobUrl = window.URL.createObjectURL(blob);
+                                                                 const a = document.createElement('a');
+                                                                 a.href = blobUrl;
+                                                                 a.download = message.content || "Document";
+                                                                 document.body.appendChild(a);
+                                                                 a.click();
+                                                                 a.remove();
+                                                                 window.URL.revokeObjectURL(blobUrl);
+                                                             } catch (err) {
+                                                                 console.error("CORS download failed:", err);
+                                                                 const a = document.createElement('a');
+                                                                 a.href = message.mediaUrl;
+                                                                 a.download = message.content || "Document";
+                                                                 a.target = "_blank";
+                                                                 a.click();
+                                                             }
+                                                         }}
+                                                         style={{ 
+                                                             background: 'none',
+                                                             border: 'none',
+                                                             color: '#94a3b8', 
+                                                             padding: '4px', 
+                                                             borderRadius: '6px', 
+                                                             transition: 'all 0.2s',
+                                                             cursor: 'pointer',
+                                                             display: 'flex',
+                                                             alignItems: 'center',
+                                                             justifyContent: 'center'
+                                                         }}
                                                          onMouseEnter={e => e.currentTarget.style.color = '#fff'}
                                                          onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
                                                      >
                                                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
                                                          </svg>
-                                                     </a>
+                                                     </button>
                                                  </div>
                                              )}
                                              
@@ -1185,6 +1224,14 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                     </div>
                 </div>,
                 document.body
+            )}
+
+            {docViewerState.open && (
+                <DocViewerModal
+                    url={docViewerState.url}
+                    fileName={docViewerState.name}
+                    onClose={() => setDocViewerState({ open: false, url: "", name: "" })}
+                />
             )}
         </div>
     );

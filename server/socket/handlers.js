@@ -252,7 +252,7 @@ const registerSocketHandlers = (io) => {
                             }
                             broadcastUserStatus(userId, false, now, io);
                             await cleanupInstantMessages(userId, io);
-                        }, 5000);
+                        }, 12000);
                         disconnectTimeouts.set(userId, timeout);
                     } else {
                         // Re-evaluate if remaining sockets are active
