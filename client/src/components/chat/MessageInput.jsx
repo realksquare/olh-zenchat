@@ -298,6 +298,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const isTypingRef = useRef(false);
 
     useEffect(() => {
+        const controller = new AbortController();
         const timeoutId = setTimeout(async () => {
             if (!content.trim()) {
                 setGifPreviewUrl("");
@@ -310,18 +311,21 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                         q: content.trim(),
                         limit: 1,
                         rating: "g"
-                    }
+                    },
+                    signal: controller.signal
                 });
-                if (res.data.data.length > 0) {
+                if (res.data?.data?.length > 0) {
                     setGifPreviewUrl(res.data.data[0].images.fixed_height_small.url);
                 } else {
                     setGifPreviewUrl("");
                 }
             } catch (err) {
-                // ignore
+                if (!axios.isCancel(err)) {
+                    setGifPreviewUrl("");
+                }
             }
         }, 500);
-        return () => clearTimeout(timeoutId);
+        return () => { clearTimeout(timeoutId); controller.abort(); };
     }, [content]);
 
     const handleGifSelect = (url, type) => {
