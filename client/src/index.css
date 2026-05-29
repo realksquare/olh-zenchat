@@ -4899,11 +4899,12 @@ select {
 .aura-user-meta-container {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 4px;
   flex: 1;
-  min-width: 0; /* Allow shrinking so right-side buttons are never pushed off-screen */
+  min-width: 0;
   overflow: hidden;
+  width: 100%;
 }
 
 .avatar-with-countdown {
