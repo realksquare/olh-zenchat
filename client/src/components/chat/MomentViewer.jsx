@@ -34,14 +34,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const locationContentRef = useRef(null);
     const [locMarqueeDist, setLocMarqueeDist] = useState(0);
 
-    const timeContainerRef = useRef(null);
-    const timeContentRef = useRef(null);
-    const [timeMarqueeDist, setTimeMarqueeDist] = useState(0);
-
-    const musicContainerRef = useRef(null);
-    const musicContentRef = useRef(null);
-    const [musicMarqueeDist, setMusicMarqueeDist] = useState(0);
-
     // Make the viewer reactive by pulling the latest moments for this user
     const allMoments = useMomentStore((s) => s.moments);
     const currentUserId = useAuthStore((s) => s.user?._id);
@@ -77,46 +69,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             setLocMarqueeDist(0);
         }
     }, [currentMoment?.locationTag, currentIndex, isOpen]);
-
-    useEffect(() => {
-        const measure = () => {
-            if (!timeContainerRef.current || !timeContentRef.current) {
-                setTimeMarqueeDist(0);
-                return;
-            }
-            const contentWidth = timeContentRef.current.scrollWidth;
-            const containerWidth = timeContentRef.current.parentElement.offsetWidth;
-            const scrollDist = contentWidth - containerWidth;
-            setTimeMarqueeDist(scrollDist > 0 ? -(scrollDist + 10) : 0);
-        };
-        
-        if (isOpen && !showMusicInfo) {
-            const timer = setTimeout(measure, 150);
-            return () => clearTimeout(timer);
-        } else {
-            setTimeMarqueeDist(0);
-        }
-    }, [currentIndex, isOpen, showMusicInfo]);
-
-    useEffect(() => {
-        const measure = () => {
-            if (!musicContainerRef.current || !musicContentRef.current) {
-                setMusicMarqueeDist(0);
-                return;
-            }
-            const contentWidth = musicContentRef.current.scrollWidth;
-            const containerWidth = musicContentRef.current.parentElement.offsetWidth;
-            const scrollDist = contentWidth - containerWidth;
-            setMusicMarqueeDist(scrollDist > 0 ? -(scrollDist + 10) : 0);
-        };
-        
-        if (isOpen && showMusicInfo && currentMoment?.music) {
-            const timer = setTimeout(measure, 150);
-            return () => clearTimeout(timer);
-        } else {
-            setMusicMarqueeDist(0);
-        }
-    }, [currentIndex, isOpen, showMusicInfo, currentMoment?.music]);
 
     // Handle array shrinking (deletion)
     useEffect(() => {
@@ -359,24 +311,20 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                     </span>
                                 </div>
                                 <div className="aura-metadata-wrapper">
-                                    <div className={`aura-time ${showMusicInfo ? 'fade-out' : 'fade-in'}`} ref={timeContainerRef}>
-                                        <span 
-                                            ref={timeContentRef}
-                                            className={timeMarqueeDist < 0 ? "marquee-bidirectional" : ""}
-                                            style={timeMarqueeDist < 0 ? { "--marquee-dist": `${timeMarqueeDist}px` } : {}}
-                                        >
-                                            {formatDistanceToNow(new Date(currentMoment.createdAt), { addSuffix: true })}
-                                        </span>
-                                    </div>
+                                    <span className={`aura-time ${showMusicInfo ? 'fade-out' : 'fade-in'}`}>
+                                        {(() => {
+                                            const diff = Math.floor((Date.now() - new Date(currentMoment.createdAt).getTime()) / 1000);
+                                            if (diff < 60) return 'Just now';
+                                            if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+                                            if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+                                            return `${Math.floor(diff/86400)}d ago`;
+                                        })()}
+                                    </span>
                                     {currentMoment.music && (
-                                        <div className={`aura-music-line ${showMusicInfo ? 'fade-in' : 'fade-out'}`} ref={musicContainerRef}>
-                                            <span 
-                                                ref={musicContentRef}
-                                                className={musicMarqueeDist < 0 ? "marquee-bidirectional" : ""}
-                                                style={musicMarqueeDist < 0 ? { "--marquee-dist": `${musicMarqueeDist}px` } : {}}
-                                            >
+                                        <div className={`aura-music-line ${showMusicInfo ? 'fade-in' : 'fade-out'}`}>
+                                            <div className={isLongMetadata ? "marquee-text" : ""}>
                                                 {songMetadata}
-                                            </span>
+                                            </div>
                                         </div>
                                     )}
                                 </div>

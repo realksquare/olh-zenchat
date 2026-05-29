@@ -530,7 +530,7 @@ export const SocketProvider = ({ children }) => {
         // Page Visibility: emit set_active_status when tab/app goes to background or returns
         const handleVisibilityChange = () => {
             if (!socketRef.current?.connected) return;
-            const isActive = document.visibilityState === "visible" && document.hasFocus();
+            const isActive = document.visibilityState === "visible";
             socketRef.current.emit("set_active_status", { isActive });
         };
 
@@ -539,27 +539,12 @@ export const SocketProvider = ({ children }) => {
             socketRef.current.emit("set_active_status", { isActive: false });
         };
 
-        const handleFocus = () => {
-            if (!socketRef.current?.connected) return;
-            const isActive = document.visibilityState === "visible" && document.hasFocus();
-            socketRef.current.emit("set_active_status", { isActive });
-        };
-
-        const handleBlur = () => {
-            if (!socketRef.current?.connected) return;
-            socketRef.current.emit("set_active_status", { isActive: false });
-        };
-
         document.addEventListener("visibilitychange", handleVisibilityChange);
         window.addEventListener("pagehide", handlePageHide);
-        window.addEventListener("focus", handleFocus);
-        window.addEventListener("blur", handleBlur);
 
         return () => {
             document.removeEventListener("visibilitychange", handleVisibilityChange);
             window.removeEventListener("pagehide", handlePageHide);
-            window.removeEventListener("focus", handleFocus);
-            window.removeEventListener("blur", handleBlur);
             socket.off("connect");
             socket.off("disconnect");
             socket.off("receive_message", handleReceiveMessage);

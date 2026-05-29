@@ -122,7 +122,7 @@ const broadcastUserLowBandwidth = async (uid, isLowBandwidth, io) => {
     }
 };
 
-const setUserActivePresence = async (io, userId, isActive) => {
+const setUserActivePresence = async (io, userId, isActive, socketId = null) => {
     if (!userId) return;
 
     if (!onlineUsers.has(userId)) {
@@ -140,18 +140,30 @@ const setUserActivePresence = async (io, userId, isActive) => {
 
     const userData = onlineUsers.get(userId);
     if (userData && userData.sockets) {
-        userData.sockets.forEach((sData) => {
-            sData.isActive = isActive;
-        });
+        if (socketId && userData.sockets.has(socketId)) {
+            userData.sockets.get(socketId).isActive = isActive;
+        } else if (!socketId) {
+            userData.sockets.forEach((sData) => {
+                sData.isActive = isActive;
+            });
+        }
     }
 
     const isAnyActive = userData && userData.sockets 
         ? Array.from(userData.sockets.values()).some(s => s.isActive)
         : false;
 
-    if (!isAnyActive || !isActive) {
+    if (!isAnyActive) {
         if (!disconnectTimeouts.has(userId + "_inactive")) {
             const timeout = setTimeout(async () => {
+                const checkData = onlineUsers.get(userId);
+                const stillAnyActive = checkData && checkData.sockets 
+                    ? Array.from(checkData.sockets.values()).some(s => s.isActive)
+                    : false;
+                if (stillAnyActive) {
+                    disconnectTimeouts.delete(userId + "_inactive");
+                    return;
+                }
                 const now = new Date();
                 await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen: now });
                 await broadcastUserStatus(userId, false, now, io);
@@ -193,7 +205,7 @@ const registerSocketHandlers = (io) => {
             }
 
             socket.on("set_active_status", ({ isActive }) => {
-                setUserActivePresence(io, userId, isActive);
+                setUserActivePresence(io, userId, isActive, socket.id);
             });
 
             socket.on("zen_mode_status", ({ isZenMode }) => {
@@ -252,7 +264,7 @@ const registerSocketHandlers = (io) => {
                             }
                             broadcastUserStatus(userId, false, now, io);
                             await cleanupInstantMessages(userId, io);
-                        }, 12000);
+                        }, 5000);
                         disconnectTimeouts.set(userId, timeout);
                     } else {
                         // Re-evaluate if remaining sockets are active

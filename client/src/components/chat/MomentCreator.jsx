@@ -677,7 +677,11 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                                     )}
                                                 </button>
-                                                <span className="cropper-title-text">{music.title} • {music.artist}</span>
+                                                <span className="cropper-title-text" style={{ textOverflow: 'clip' }}>
+                                                    <div className={(music.title + music.artist).length > 25 ? "marquee-bidirectional" : ""} style={{ display: 'inline-block' }}>
+                                                        {(music.title + ' • ' + music.artist).replace(/\.\.\.$/, '')}
+                                                    </div>
+                                                </span>
                                                 <button className="aura-remove-music" onClick={() => { setMusic(null); setIsPlaying(false); }}>
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                                                 </button>
