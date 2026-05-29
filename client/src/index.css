@@ -4451,7 +4451,7 @@ select {
 }
 
 .aura-header-location {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   margin-top: 2px;
   font-size: 0.7rem;
@@ -4461,8 +4461,7 @@ select {
   border: 1px solid rgba(16, 185, 129, 0.25);
   padding: 4px 8px;
   border-radius: 6px;
-  width: max-content;
-  max-width: 220px;
+  max-width: 100%;
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -4471,8 +4470,10 @@ select {
   display: inline-block;
   white-space: nowrap;
   overflow: hidden;
-  max-width: 190px;
+  max-width: 100%;
   vertical-align: middle;
+  flex: 1;
+  min-width: 0;
 }
 
 .aura-header-location-content {
@@ -4484,13 +4485,16 @@ select {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 0; 
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
 }
 
 .aura-user-info {
   min-width: 0;
   overflow: hidden;
+  flex: 1;
+  max-width: 100%;
 }
 
 .aura-user-title-row {
@@ -4524,7 +4528,7 @@ select {
   position: relative;
   height: 18px;
   min-width: 60px;
-  max-width: 220px;
+  max-width: 100%;
   overflow: hidden;
 }
 
@@ -4542,7 +4546,8 @@ select {
   color: var(--color-primary);
   font-weight: 600;
   overflow: hidden;
-  max-width: 220px;
+  max-width: 100%;
+  width: 100%;
 }
 
 .marquee-text {
