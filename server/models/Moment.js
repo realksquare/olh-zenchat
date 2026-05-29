@@ -21,6 +21,8 @@ const momentSchema = new mongoose.Schema(
             default: "",
         },
         music: {
+            trackId: String,
+            source: String,
             title: String,
             artist: String,
             previewUrl: String,

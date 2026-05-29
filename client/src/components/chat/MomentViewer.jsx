@@ -4,7 +4,7 @@ import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
 import { formatDistanceToNow } from "date-fns";
 import { getAudioContext } from "../../utils/audio";
-import { getProxyAudioUrl } from "../../utils/musicProxy";
+import axiosInstance from "../../utils/axios";
 
 const FILTER_STYLES = {
     none: {},
@@ -150,33 +150,58 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         setTotalDuration(duration);
         setTimeLeft(duration);
 
-        if (currentMoment.music?.previewUrl) {
-            const previewUrl = currentMoment.music.previewUrl;
+        if (currentMoment.music?.trackId || currentMoment.music?.previewUrl) {
+            let cancelled = false;
             const startTime = currentMoment.music.startTime || 0;
-            const proxiedUrl = getProxyAudioUrl(previewUrl);
-            const audio = new Audio(proxiedUrl);
-            audio.muted = isMuted;
-            audio.preload = 'auto';
-            // Set seek position when metadata is ready (don't call play from here — blocked on mobile)
-            audio.addEventListener("loadedmetadata", () => {
-                if (startTime) audio.currentTime = startTime;
-            });
-            audio.addEventListener("error", (e) => {
-                console.warn("Moment audio load error:", e.target?.error?.message || e);
-            });
-            audio.load();
-            audioRef.current = audio;
-            // Attempt immediate play - works on desktop, silently fails on mobile (retried by triggerUnlockPlay)
-            audio.play().catch(() => {});
+
+            const setupAudio = async () => {
+                let playUrl = currentMoment.music.previewUrl || null;
+
+                // Try to get a fresh URL via trackId (more reliable than a possibly-expired stored URL)
+                if (currentMoment.music.trackId) {
+                    try {
+                        const res = await axiosInstance.get(`/music/preview?id=${encodeURIComponent(currentMoment.music.trackId)}`);
+                        if (res.data?.previewUrl) playUrl = res.data.previewUrl;
+                    } catch {
+                        // Fall back to stored previewUrl
+                    }
+                }
+
+                if (cancelled || !playUrl) return;
+
+                const audio = new Audio(playUrl);
+                audio.muted = isMuted;
+                audio.preload = 'auto';
+                audio.addEventListener("loadedmetadata", () => {
+                    if (startTime) audio.currentTime = startTime;
+                });
+                audio.addEventListener("error", (e) => {
+                    console.warn("Moment audio load error:", e.target?.error?.message || e);
+                });
+                audio.load();
+                audioRef.current = audio;
+                audio.play().catch(() => {});
+            };
+
+            setupAudio();
+
+            const interval = setInterval(() => {
+                setTimeLeft(prev => {
+                    if (prev <= 1) { clearInterval(interval); handleNext(); return 0; }
+                    return prev - 1;
+                });
+            }, 1000);
+
+            return () => {
+                cancelled = true;
+                clearInterval(interval);
+                stopAudio();
+            };
         }
 
         const interval = setInterval(() => {
             setTimeLeft(prev => {
-                if (prev <= 1) {
-                    clearInterval(interval);
-                    handleNext();
-                    return 0;
-                }
+                if (prev <= 1) { clearInterval(interval); handleNext(); return 0; }
                 return prev - 1;
             });
         }, 1000);
@@ -195,30 +220,15 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const triggerUnlockPlay = () => {
         try {
             const ctx = getAudioContext();
-            if (ctx && ctx.state === "suspended") {
-                ctx.resume().catch(() => {});
-            }
+            if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
         } catch (err) {}
 
         if (!isMuted) {
-            if (audioRef.current) {
-                // If the audio element errored out, recreate it fresh
-                if (audioRef.current.error && currentMoment?.music?.previewUrl) {
-                    const newAudio = new Audio(getProxyAudioUrl(currentMoment.music.previewUrl));
-                    newAudio.muted = false;
-                    if (currentMoment.music?.startTime) newAudio.currentTime = currentMoment.music.startTime;
-                    audioRef.current = newAudio;
-                }
-                if (!audioRef.current.error) {
-                    audioRef.current.play().catch(e => {
-                        console.log("Audio play failed on unlock:", e);
-                    });
-                }
+            if (audioRef.current && !audioRef.current.error) {
+                audioRef.current.play().catch(() => {});
             }
             if (videoRef.current) {
-                videoRef.current.play().catch(e => {
-                    console.log("Video play failed on unlock:", e);
-                });
+                videoRef.current.play().catch(() => {});
             }
         }
     };

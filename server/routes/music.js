@@ -108,70 +108,41 @@ router.get("/search", protect, async (req, res) => {
     }
 });
 
-// @route   GET /api/music/proxy?url=...
-// Proxies Deezer/iTunes CDN audio to bypass browser CORS restrictions
-router.get("/proxy", async (req, res) => {
-    const { url } = req.query;
-    if (!url) return res.status(400).end();
+// @route   GET /api/music/preview?id=deezer-123456
+// Fetches a fresh preview URL from Deezer/iTunes API by track ID (server-side, avoids CDN CORS/IP blocks)
+router.get("/preview", protect, async (req, res) => {
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ error: "id required" });
 
-    // Allowlist only known music preview CDN domains
-    const ALLOWED_DOMAINS = [
-        'dzcdn.net',
-        'itunes.apple.com',
-        'music.apple.com',
-        'mzstatic.com',
-        'audio-ssl.itunes.apple.com'
-    ];
-    let parsedUrl;
-    try {
-        parsedUrl = new URL(url);
-        const hostname = parsedUrl.hostname;
-        const allowed = ALLOWED_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
-        if (!allowed) return res.status(403).end();
-    } catch {
-        return res.status(400).end();
+    if (id.startsWith("deezer-")) {
+        const trackId = id.replace("deezer-", "");
+        try {
+            const resp = await fetch(`https://api.deezer.com/track/${trackId}`);
+            const data = await resp.json();
+            if (data?.preview) return res.json({ previewUrl: data.preview });
+            return res.status(404).json({ error: "No preview available" });
+        } catch (err) {
+            console.error("Deezer preview fetch error:", err.message);
+            return res.status(500).json({ error: "Failed to fetch preview" });
+        }
     }
 
-    try {
-        const headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120',
-            'Accept': 'audio/mpeg, audio/*, */*',
-            'Referer': 'https://www.deezer.com/',
-        };
-        if (req.headers.range) headers['Range'] = req.headers.range;
-
-        const upstream = await fetch(url, { headers });
-
-        if (!upstream.ok && upstream.status !== 206) {
-            return res.status(upstream.status).end();
+    if (id.startsWith("itunes-")) {
+        const trackId = id.replace("itunes-", "");
+        try {
+            const resp = await fetch(`https://itunes.apple.com/lookup?id=${trackId}&media=music`);
+            const data = await resp.json();
+            const url = data?.results?.[0]?.previewUrl;
+            if (url) return res.json({ previewUrl: url });
+            return res.status(404).json({ error: "No preview available" });
+        } catch (err) {
+            console.error("iTunes preview fetch error:", err.message);
+            return res.status(500).json({ error: "Failed to fetch preview" });
         }
-
-        res.status(upstream.status);
-        res.setHeader('Content-Type', upstream.headers.get('content-type') || 'audio/mpeg');
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Cache-Control', 'public, max-age=3600');
-        res.setHeader('Accept-Ranges', 'bytes');
-
-        const contentLength = upstream.headers.get('content-length');
-        if (contentLength) res.setHeader('Content-Length', contentLength);
-
-        const contentRange = upstream.headers.get('content-range');
-        if (contentRange) res.setHeader('Content-Range', contentRange);
-
-        // Stream the audio
-        const { Readable } = require('stream');
-        if (upstream.body && upstream.body.getReader) {
-            const nodeStream = Readable.fromWeb(upstream.body);
-            nodeStream.pipe(res);
-            nodeStream.on('error', () => { if (!res.headersSent) res.status(500).end(); });
-        } else {
-            const buffer = await upstream.arrayBuffer();
-            res.send(Buffer.from(buffer));
-        }
-    } catch (err) {
-        console.error("Music proxy error:", err.message);
-        if (!res.headersSent) res.status(500).end();
     }
+
+    // Fallback: search by title+artist if no known source
+    return res.status(400).json({ error: "Unknown track source" });
 });
 
 module.exports = router;

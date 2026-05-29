@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, memo } from "react";
 import { createPortal } from "react-dom";
 import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
-import { getProxyAudioUrl } from "../../utils/musicProxy";
 import MusicSearch from "./MusicSearch";
 import axios from "axios";
 
@@ -112,10 +111,10 @@ const MomentCreator = ({ isOpen, onClose }) => {
     useEffect(() => {
         if (isOpen && music && music.previewUrl) {
             if (!audioRef.current) {
-                audioRef.current = new Audio(getProxyAudioUrl(music.previewUrl));
+                audioRef.current = new Audio(music.previewUrl);
                 audioRef.current.loop = true;
-            } else if (audioRef.current.src !== getProxyAudioUrl(music.previewUrl)) {
-                audioRef.current.src = getProxyAudioUrl(music.previewUrl);
+            } else if (audioRef.current.src !== music.previewUrl) {
+                audioRef.current.src = music.previewUrl;
             }
 
             if (isPlaying) {
@@ -279,7 +278,16 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 filter: !isText ? activeFilter : "none",
                 locationTag: (!isText && showLocationPill) ? locationText : "",
                 disappearAfterHours: disappearHours,
-                music: music ? { ...music, duration, startTime } : null
+                music: music ? {
+                    trackId: music.id || null,
+                    source: music.source || null,
+                    title: music.title,
+                    artist: music.artist,
+                    previewUrl: music.previewUrl,
+                    coverUrl: music.coverUrl,
+                    duration,
+                    startTime
+                } : null
             };
 
             await createMoment(momentPayload);
