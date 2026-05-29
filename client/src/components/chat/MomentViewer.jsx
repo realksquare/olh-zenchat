@@ -150,20 +150,33 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         setTotalDuration(duration);
         setTimeLeft(duration);
 
-        if (currentMoment.music?.trackId || currentMoment.music?.previewUrl) {
+        if (currentMoment.music?.trackId || currentMoment.music?.previewUrl || currentMoment.music?.title) {
             let cancelled = false;
             const startTime = currentMoment.music.startTime || 0;
 
             const setupAudio = async () => {
-                let playUrl = currentMoment.music.previewUrl || null;
+                let playUrl = currentMoment.music.previewUrl
+                    ? currentMoment.music.previewUrl.replace(/^http:\/\//i, 'https://')
+                    : null;
 
-                // Try to get a fresh URL via trackId (more reliable than a possibly-expired stored URL)
+                // 1. Try fresh URL by trackId (most reliable)
                 if (currentMoment.music.trackId) {
                     try {
                         const res = await axiosInstance.get(`/music/preview?id=${encodeURIComponent(currentMoment.music.trackId)}`);
                         if (res.data?.previewUrl) playUrl = res.data.previewUrl;
                     } catch {
-                        // Fall back to stored previewUrl
+                        // Fall through to next strategy
+                    }
+                }
+
+                // 2. If still no fresh URL (old moment, no trackId), search by title+artist
+                if (!playUrl && currentMoment.music.title) {
+                    const q = [currentMoment.music.title, currentMoment.music.artist].filter(Boolean).join(' ');
+                    try {
+                        const res = await axiosInstance.get(`/music/preview?q=${encodeURIComponent(q)}`);
+                        if (res.data?.previewUrl) playUrl = res.data.previewUrl;
+                    } catch {
+                        // Audio unavailable — no preview found
                     }
                 }
 

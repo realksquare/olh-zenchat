@@ -108,41 +108,64 @@ router.get("/search", protect, async (req, res) => {
     }
 });
 
-// @route   GET /api/music/preview?id=deezer-123456
-// Fetches a fresh preview URL from Deezer/iTunes API by track ID (server-side, avoids CDN CORS/IP blocks)
+// @route   GET /api/music/preview?id=deezer-123456   (by track ID)
+// @route   GET /api/music/preview?q=title+artist      (search fallback for old moments)
+// Fetches a fresh preview URL from Deezer/iTunes API server-side
 router.get("/preview", protect, async (req, res) => {
-    const { id } = req.query;
-    if (!id) return res.status(400).json({ error: "id required" });
+    const { id, q } = req.query;
 
-    if (id.startsWith("deezer-")) {
-        const trackId = id.replace("deezer-", "");
-        try {
-            const resp = await fetch(`https://api.deezer.com/track/${trackId}`);
-            const data = await resp.json();
-            if (data?.preview) return res.json({ previewUrl: data.preview });
-            return res.status(404).json({ error: "No preview available" });
-        } catch (err) {
-            console.error("Deezer preview fetch error:", err.message);
-            return res.status(500).json({ error: "Failed to fetch preview" });
+    // --- By track ID ---
+    if (id) {
+        if (id.startsWith("deezer-")) {
+            const trackId = id.replace("deezer-", "");
+            try {
+                const resp = await fetch(`https://api.deezer.com/track/${trackId}`);
+                const data = await resp.json();
+                if (data?.preview) return res.json({ previewUrl: data.preview });
+            } catch (err) {
+                console.error("Deezer preview fetch error:", err.message);
+            }
+        }
+
+        if (id.startsWith("itunes-")) {
+            const trackId = id.replace("itunes-", "");
+            try {
+                const resp = await fetch(`https://itunes.apple.com/lookup?id=${trackId}&media=music`);
+                const data = await resp.json();
+                const url = data?.results?.[0]?.previewUrl;
+                if (url) return res.json({ previewUrl: url });
+            } catch (err) {
+                console.error("iTunes preview fetch error:", err.message);
+            }
         }
     }
 
-    if (id.startsWith("itunes-")) {
-        const trackId = id.replace("itunes-", "");
+    // --- Search fallback (by title+artist, for old moments without trackId) ---
+    if (q) {
         try {
-            const resp = await fetch(`https://itunes.apple.com/lookup?id=${trackId}&media=music`);
-            const data = await resp.json();
-            const url = data?.results?.[0]?.previewUrl;
-            if (url) return res.json({ previewUrl: url });
-            return res.status(404).json({ error: "No preview available" });
+            const [deezerResp, itunesResp] = await Promise.allSettled([
+                fetch(`https://api.deezer.com/search?q=${encodeURIComponent(q)}&limit=1`),
+                fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&limit=1`)
+            ]);
+
+            if (deezerResp.status === "fulfilled" && deezerResp.value.ok) {
+                const data = await deezerResp.value.json();
+                const url = data?.data?.[0]?.preview;
+                if (url) return res.json({ previewUrl: url });
+            }
+
+            if (itunesResp.status === "fulfilled" && itunesResp.value.ok) {
+                const data = await itunesResp.value.json();
+                const url = data?.results?.[0]?.previewUrl;
+                if (url) return res.json({ previewUrl: url });
+            }
         } catch (err) {
-            console.error("iTunes preview fetch error:", err.message);
-            return res.status(500).json({ error: "Failed to fetch preview" });
+            console.error("Music search fallback error:", err.message);
         }
+        return res.status(404).json({ error: "No preview found" });
     }
 
-    // Fallback: search by title+artist if no known source
-    return res.status(400).json({ error: "Unknown track source" });
+    return res.status(400).json({ error: "Provide id or q param" });
 });
 
 module.exports = router;
