@@ -150,16 +150,22 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         setTimeLeft(duration);
 
         if (currentMoment.music?.previewUrl) {
-            const audio = new Audio(currentMoment.music.previewUrl);
+            const previewUrl = currentMoment.music.previewUrl;
+            const startTime = currentMoment.music.startTime || 0;
+            const audio = new Audio(previewUrl);
             audio.muted = isMuted;
+            audio.preload = 'auto';
+            // Set seek position when metadata is ready (don't call play from here — blocked on mobile)
             audio.addEventListener("loadedmetadata", () => {
-                if (currentMoment.music.startTime) {
-                    audio.currentTime = currentMoment.music.startTime;
-                }
-                audio.play().catch(e => console.log("Audio play failed:", e));
+                if (startTime) audio.currentTime = startTime;
+            });
+            audio.addEventListener("error", (e) => {
+                console.warn("Moment audio load error:", e.target?.error?.message || e);
             });
             audio.load();
             audioRef.current = audio;
+            // Attempt immediate play - works on desktop, silently fails on mobile (retried by triggerUnlockPlay)
+            audio.play().catch(() => {});
         }
 
         const interval = setInterval(() => {
@@ -192,15 +198,26 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             }
         } catch (err) {}
 
-        if (audioRef.current && !isMuted) {
-            audioRef.current.play().catch(e => {
-                console.log("Audio play failed on unlock:", e);
-            });
-        }
-        if (videoRef.current && !isMuted) {
-            videoRef.current.play().catch(e => {
-                console.log("Video play failed on unlock:", e);
-            });
+        if (!isMuted) {
+            if (audioRef.current) {
+                // If the audio element errored out, recreate it fresh
+                if (audioRef.current.error && currentMoment?.music?.previewUrl) {
+                    const newAudio = new Audio(currentMoment.music.previewUrl);
+                    newAudio.muted = false;
+                    if (currentMoment.music?.startTime) newAudio.currentTime = currentMoment.music.startTime;
+                    audioRef.current = newAudio;
+                }
+                if (!audioRef.current.error) {
+                    audioRef.current.play().catch(e => {
+                        console.log("Audio play failed on unlock:", e);
+                    });
+                }
+            }
+            if (videoRef.current) {
+                videoRef.current.play().catch(e => {
+                    console.log("Video play failed on unlock:", e);
+                });
+            }
         }
     };
 
