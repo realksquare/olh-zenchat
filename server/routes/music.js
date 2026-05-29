@@ -108,4 +108,70 @@ router.get("/search", protect, async (req, res) => {
     }
 });
 
+// @route   GET /api/music/proxy?url=...
+// Proxies Deezer/iTunes CDN audio to bypass browser CORS restrictions
+router.get("/proxy", async (req, res) => {
+    const { url } = req.query;
+    if (!url) return res.status(400).end();
+
+    // Allowlist only known music preview CDN domains
+    const ALLOWED_DOMAINS = [
+        'dzcdn.net',
+        'itunes.apple.com',
+        'music.apple.com',
+        'mzstatic.com',
+        'audio-ssl.itunes.apple.com'
+    ];
+    let parsedUrl;
+    try {
+        parsedUrl = new URL(url);
+        const hostname = parsedUrl.hostname;
+        const allowed = ALLOWED_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+        if (!allowed) return res.status(403).end();
+    } catch {
+        return res.status(400).end();
+    }
+
+    try {
+        const headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120',
+            'Accept': 'audio/mpeg, audio/*, */*',
+            'Referer': 'https://www.deezer.com/',
+        };
+        if (req.headers.range) headers['Range'] = req.headers.range;
+
+        const upstream = await fetch(url, { headers });
+
+        if (!upstream.ok && upstream.status !== 206) {
+            return res.status(upstream.status).end();
+        }
+
+        res.status(upstream.status);
+        res.setHeader('Content-Type', upstream.headers.get('content-type') || 'audio/mpeg');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+        res.setHeader('Accept-Ranges', 'bytes');
+
+        const contentLength = upstream.headers.get('content-length');
+        if (contentLength) res.setHeader('Content-Length', contentLength);
+
+        const contentRange = upstream.headers.get('content-range');
+        if (contentRange) res.setHeader('Content-Range', contentRange);
+
+        // Stream the audio
+        const { Readable } = require('stream');
+        if (upstream.body && upstream.body.getReader) {
+            const nodeStream = Readable.fromWeb(upstream.body);
+            nodeStream.pipe(res);
+            nodeStream.on('error', () => { if (!res.headersSent) res.status(500).end(); });
+        } else {
+            const buffer = await upstream.arrayBuffer();
+            res.send(Buffer.from(buffer));
+        }
+    } catch (err) {
+        console.error("Music proxy error:", err.message);
+        if (!res.headersSent) res.status(500).end();
+    }
+});
+
 module.exports = router;

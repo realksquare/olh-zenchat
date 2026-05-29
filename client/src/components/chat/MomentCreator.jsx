@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, memo } from "react";
 import { createPortal } from "react-dom";
 import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
+import { getProxyAudioUrl } from "../../utils/musicProxy";
 import MusicSearch from "./MusicSearch";
 import axios from "axios";
 
@@ -111,10 +112,10 @@ const MomentCreator = ({ isOpen, onClose }) => {
     useEffect(() => {
         if (isOpen && music && music.previewUrl) {
             if (!audioRef.current) {
-                audioRef.current = new Audio(music.previewUrl);
+                audioRef.current = new Audio(getProxyAudioUrl(music.previewUrl));
                 audioRef.current.loop = true;
-            } else if (audioRef.current.src !== music.previewUrl) {
-                audioRef.current.src = music.previewUrl;
+            } else if (audioRef.current.src !== getProxyAudioUrl(music.previewUrl)) {
+                audioRef.current.src = getProxyAudioUrl(music.previewUrl);
             }
 
             if (isPlaying) {

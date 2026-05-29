@@ -4,6 +4,7 @@ import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
 import { formatDistanceToNow } from "date-fns";
 import { getAudioContext } from "../../utils/audio";
+import { getProxyAudioUrl } from "../../utils/musicProxy";
 
 const FILTER_STYLES = {
     none: {},
@@ -152,7 +153,8 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         if (currentMoment.music?.previewUrl) {
             const previewUrl = currentMoment.music.previewUrl;
             const startTime = currentMoment.music.startTime || 0;
-            const audio = new Audio(previewUrl);
+            const proxiedUrl = getProxyAudioUrl(previewUrl);
+            const audio = new Audio(proxiedUrl);
             audio.muted = isMuted;
             audio.preload = 'auto';
             // Set seek position when metadata is ready (don't call play from here — blocked on mobile)
@@ -202,7 +204,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             if (audioRef.current) {
                 // If the audio element errored out, recreate it fresh
                 if (audioRef.current.error && currentMoment?.music?.previewUrl) {
-                    const newAudio = new Audio(currentMoment.music.previewUrl);
+                    const newAudio = new Audio(getProxyAudioUrl(currentMoment.music.previewUrl));
                     newAudio.muted = false;
                     if (currentMoment.music?.startTime) newAudio.currentTime = currentMoment.music.startTime;
                     audioRef.current = newAudio;
