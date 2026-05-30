@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import axiosInstance from "../../utils/axios";
+import { getFavMedia, getRecentMedia, addFavMedia, removeFavMedia, addRecentMedia } from "../../utils/mediaStorage";
 
 const LIMIT = 12;
 const MAX_RETRIES = 2;
@@ -86,6 +87,17 @@ const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
         setHasMore(true);
         setError(null);
 
+        if (type === "recents") {
+            setResults(getRecentMedia());
+            setHasMore(false);
+            return;
+        }
+        if (type === "favs") {
+            setResults(getFavMedia());
+            setHasMore(false);
+            return;
+        }
+
         const timeoutId = setTimeout(() => {
             fetchGifs(true, 0);
         }, 350);
@@ -119,23 +131,54 @@ const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
         fetchGifs(true, 0);
     };
 
+    const handleSelect = (url, msgType) => {
+        addRecentMedia({ id: url, title: 'Recent', type: msgType, images: { fixed_height: { url } } });
+        onSelect(url, msgType);
+    };
+
+    const toggleFav = (item, msgType, e) => {
+        if (e) e.stopPropagation();
+        const url = item.images?.fixed_height?.url;
+        if (!url) return;
+        
+        const favs = getFavMedia();
+        if (favs.some(f => f.images?.fixed_height?.url === url)) {
+            removeFavMedia(url);
+            if (type === "favs") setResults(getFavMedia());
+        } else {
+            addFavMedia({ id: item.id || url, title: item.title || 'Fav', type: msgType, images: { fixed_height: { url } } });
+            if (type === "favs") setResults(getFavMedia());
+        }
+    };
+
+    const handleItemInteraction = (e, item, msgType) => {
+        const url = item.images?.fixed_height?.url;
+        if (!url) return;
+        
+        const now = Date.now();
+        const lastTap = e.currentTarget.dataset.lastTap ? parseInt(e.currentTarget.dataset.lastTap) : 0;
+        
+        if (now - lastTap < 300) {
+            clearTimeout(e.currentTarget.selectTimeout);
+            e.currentTarget.dataset.lastTap = 0;
+            toggleFav(item, msgType);
+        } else {
+            e.currentTarget.dataset.lastTap = now;
+            e.currentTarget.selectTimeout = setTimeout(() => {
+                handleSelect(url, msgType);
+            }, 300);
+        }
+    };
+
     return createPortal(
         <div className="modal-overlay gif-picker-overlay" onClick={onClose} style={{ zIndex: 10002 }}>
             <div className="gif-picker-modal" onClick={(e) => e.stopPropagation()}>
                 <div className="gif-picker-header">
                     <div className="gif-tabs">
-                        <button
-                            className={`gif-tab ${type === "gifs" ? "active" : ""}`}
-                            onClick={() => setType("gifs")}
-                        >
-                            GIFs
-                        </button>
-                        <button
-                            className={`gif-tab ${type === "stickers" ? "active" : ""}`}
-                            onClick={() => setType("stickers")}
-                        >
-                            Stickers
-                        </button>
+                        <button className={`gif-tab ${type === "gifs" ? "active" : ""}`} onClick={() => setType("gifs")}>GIFs</button>
+                        <button className={`gif-tab ${type === "stickers" ? "active" : ""}`} onClick={() => setType("stickers")}>Stickers</button>
+                        <button className={`gif-tab ${type === "recents" ? "active" : ""}`} onClick={() => setType("recents")}>Recents</button>
+                        <button className={`gif-tab ${type === "favs" ? "active" : ""}`} onClick={() => setType("favs")}>Favs</button>
                     </div>
                     <button className="aura-close-btn" onClick={onClose}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -144,35 +187,48 @@ const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
                     </button>
                 </div>
 
-                <div className="gif-search-container">
-                    <svg className="gif-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                    </svg>
-                    <input
-                        type="text"
-                        className="gif-search-input"
-                        placeholder={`Search ${type}...`}
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        autoFocus
-                    />
-                </div>
+                {type !== "recents" && type !== "favs" && (
+                    <div className="gif-search-container">
+                        <svg className="gif-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <input
+                            type="text"
+                            className="gif-search-input"
+                            placeholder={`Search ${type}...`}
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            autoFocus
+                        />
+                    </div>
+                )}
 
                 <div className="gif-scroll-wrap">
                     <div className="gif-grid">
                         {results.map((item, index) => {
                             const url = item.images?.fixed_height?.url;
                             if (!url) return null;
-                            const msgType = type === "stickers" ? "sticker" : "gif";
+                            const msgType = item.type || (type === "stickers" ? "sticker" : "gif");
                             const isLast = index === results.length - 1;
+                            const isFav = getFavMedia().some(f => f.images?.fixed_height?.url === url);
                             return (
                                 <div
                                     ref={isLast ? lastElementRef : null}
-                                    key={item.id}
-                                    className={`gif-grid-item ${type === "stickers" ? "is-sticker" : ""}`}
-                                    onClick={() => onSelect(url, msgType)}
+                                    key={`${item.id}-${index}`}
+                                    className={`gif-grid-item ${msgType === "sticker" ? "is-sticker" : ""}`}
+                                    onClick={(e) => handleItemInteraction(e, item, msgType)}
+                                    style={{ position: 'relative' }}
                                 >
                                     <img src={url} alt={item.title} loading="lazy" />
+                                    <button 
+                                        className={`gif-fav-btn ${isFav ? 'active' : ''}`}
+                                        onClick={(e) => toggleFav(item, msgType, e)}
+                                        title={isFav ? "Remove from Favs" : "Add to Favs"}
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill={isFav ? "#eab308" : "none"} stroke={isFav ? "#eab308" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                        </svg>
+                                    </button>
                                 </div>
                             );
                         })}

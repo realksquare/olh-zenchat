@@ -155,44 +155,55 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             const startTime = currentMoment.music.startTime || 0;
 
             const setupAudio = async () => {
-                let playUrl = null;
+                let cancelled = false;
 
-                // 1. Fresh URL by trackId — most reliable
-                if (currentMoment.music.trackId) {
-                    try {
-                        const res = await axiosInstance.get(`/music/preview?id=${encodeURIComponent(currentMoment.music.trackId)}`);
-                        if (res.data?.previewUrl) playUrl = res.data.previewUrl;
-                    } catch {}
+                const playUrl = (url) => {
+                    const audio = new Audio(url);
+                    audio.muted = isMuted;
+                    audio.preload = 'auto';
+                    audio.addEventListener("loadedmetadata", () => {
+                        if (startTime) audio.currentTime = startTime;
+                    });
+                    
+                    audio.addEventListener("error", async (e) => {
+                        console.warn("Moment audio load error:", e.target?.error?.message || e);
+                        // If it fails, fallback to fetching a fresh URL
+                        if (!cancelled && url === currentMoment.music.previewUrl) {
+                            await fetchAndPlay();
+                        }
+                    });
+
+                    audio.load();
+                    audioRef.current = audio;
+                    audio.play().catch(() => {});
+                };
+
+                const fetchAndPlay = async () => {
+                    let freshUrl = null;
+                    if (currentMoment.music.trackId) {
+                        try {
+                            const res = await axiosInstance.get(`/music/preview?id=${encodeURIComponent(currentMoment.music.trackId)}`);
+                            if (res.data?.previewUrl) freshUrl = res.data.previewUrl;
+                        } catch {}
+                    }
+                    if (!freshUrl && currentMoment.music.title) {
+                        const q = [currentMoment.music.title, currentMoment.music.artist].filter(Boolean).join(' ');
+                        try {
+                            const res = await axiosInstance.get(`/music/preview?q=${encodeURIComponent(q)}`);
+                            if (res.data?.previewUrl) freshUrl = res.data.previewUrl;
+                        } catch {}
+                    }
+                    if (freshUrl && !cancelled) {
+                        playUrl(freshUrl);
+                    }
+                };
+
+                if (currentMoment.music.previewUrl) {
+                    const cachedUrl = currentMoment.music.previewUrl.replace(/^http:\/\//i, 'https://');
+                    playUrl(cachedUrl);
+                } else {
+                    await fetchAndPlay();
                 }
-
-                // 2. No trackId (old moment): search by title+artist to get a fresh CDN URL
-                if (!playUrl && currentMoment.music.title) {
-                    const q = [currentMoment.music.title, currentMoment.music.artist].filter(Boolean).join(' ');
-                    try {
-                        const res = await axiosInstance.get(`/music/preview?q=${encodeURIComponent(q)}`);
-                        if (res.data?.previewUrl) playUrl = res.data.previewUrl;
-                    } catch {}
-                }
-
-                // 3. Last resort — stored URL (may be stale, upgrade http→https at minimum)
-                if (!playUrl && currentMoment.music.previewUrl) {
-                    playUrl = currentMoment.music.previewUrl.replace(/^http:\/\//i, 'https://');
-                }
-
-                if (cancelled || !playUrl) return;
-
-                const audio = new Audio(playUrl);
-                audio.muted = isMuted;
-                audio.preload = 'auto';
-                audio.addEventListener("loadedmetadata", () => {
-                    if (startTime) audio.currentTime = startTime;
-                });
-                audio.addEventListener("error", (e) => {
-                    console.warn("Moment audio load error:", e.target?.error?.message || e);
-                });
-                audio.load();
-                audioRef.current = audio;
-                audio.play().catch(() => {});
             };
 
             setupAudio();

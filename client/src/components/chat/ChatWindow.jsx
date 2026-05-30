@@ -17,6 +17,8 @@ import DocViewerModal from "../ui/DocViewerModal";
 import MomentViewer from "./MomentViewer";
 import axiosInstance from "../../utils/axios";
 import { startZenIntroAudio, stopZenIntroAudio, setRecordingDestination, getAudioContext } from "../../utils/audio";
+import ForwardModal from "./ForwardModal";
+import { addFavMedia } from "../../utils/mediaStorage";
 
 const EMPTY_MESSAGES = [];
 const EMPTY_CONTACTS = [];
@@ -640,6 +642,7 @@ const ChatWindow = ({ onBack }) => {
     const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
     const [selectedMessageIds, setSelectedMessageIds] = useState(new Set());
     const [showForwardModal, setShowForwardModal] = useState(false);
+    const [showActualForwardModal, setShowActualForwardModal] = useState(false);
 
     // Toast state
     const [localToast, setLocalToast] = useState(null);
@@ -860,6 +863,7 @@ const ChatWindow = ({ onBack }) => {
         setIsMultiSelectMode(false);
         setSelectedMessageIds(new Set());
         setShowForwardModal(false);
+        setShowActualForwardModal(false);
     };
 
 
@@ -1477,6 +1481,24 @@ const ChatWindow = ({ onBack }) => {
                 />
             )}
 
+            {showActualForwardModal && (
+                <ForwardModal 
+                    onClose={() => setShowActualForwardModal(false)}
+                    onForward={async (targetChatIds) => {
+                        const { forwardMessages } = useChatStore.getState();
+                        setShowActualForwardModal(false);
+                        handleExitMultiSelect();
+                        const selectedMsgArray = Array.from(selectedMessageIds);
+                        const success = await forwardMessages(selectedMsgArray, targetChatIds);
+                        if (success) {
+                            showToast('Messages forwarded', 'success');
+                        } else {
+                            showToast('Failed to forward', 'error');
+                        }
+                    }}
+                />
+            )}
+
             {/* Cinematic overlay commented out — preserved for future use
             {cinematicPhase && (
                 <div className={`zen-cinematic-overlay phase-${cinematicPhase}`}>
@@ -1536,8 +1558,7 @@ const ChatWindow = ({ onBack }) => {
                                     onClick={async () => {
                                         if (tooMany) { showToast('Max 5 messages per forward', 'error'); return; }
                                         setShowForwardModal(false);
-                                        handleExitMultiSelect();
-                                        showToast('Forwarding not yet implemented — coming soon!', 'info');
+                                        setShowActualForwardModal(true);
                                     }}
                                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: tooMany ? '#64748b' : '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: tooMany ? 'not-allowed' : 'pointer', transition: 'background 0.15s' }}
                                     onTouchStart={e => !tooMany && (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
@@ -1555,6 +1576,9 @@ const ChatWindow = ({ onBack }) => {
                                         const { toggleStarMessage } = useChatStore.getState();
                                         for (const msg of selectedMsgs) {
                                             if (msg._id) toggleStarMessage(msg._id, activeChat._id);
+                                            if (msg.type === 'gif' || msg.type === 'sticker') {
+                                                addFavMedia({ id: msg.mediaUrl, title: 'Fav', type: msg.type, images: { fixed_height: { url: msg.mediaUrl } } });
+                                            }
                                         }
                                         setShowForwardModal(false);
                                         handleExitMultiSelect();

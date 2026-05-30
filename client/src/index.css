@@ -1181,17 +1181,19 @@ select {
   align-items: flex-start;
   gap: var(--space-2);
   margin-bottom: var(--space-1);
-  max-width: 65%;
+  width: 100%;
+}
+
+.message-row:hover {
+  z-index: 10;
 }
 
 .message-row.mine {
   flex-direction: row-reverse;
-  align-self: flex-end;
 }
 
 .message-row.theirs {
   flex-direction: row;
-  align-self: flex-start;
 }
 
 .avatar-spacer {
@@ -1204,7 +1206,7 @@ select {
   display: inline-flex;
   flex-direction: column;
   align-items: flex-end;
-  width: 100%;
+  max-width: 65%;
 }
 
 .message-bubble {
@@ -7640,8 +7642,10 @@ select {
   [class*="-sheet"] {
     width: 95vw !important;
     max-width: 95vw !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
     box-sizing: border-box !important;
   }
 }
+
+.gif-fav-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.5); border: none; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; opacity: 0; transition: opacity 0.2s; }
+.gif-grid-item:hover .gif-fav-btn, .gif-fav-btn.active { opacity: 1; }
+.gif-fav-btn:hover { background: rgba(0,0,0,0.8); }

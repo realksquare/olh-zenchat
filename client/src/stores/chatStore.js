@@ -790,6 +790,19 @@ export const useChatStore = create(
                 });
             },
 
+            forwardMessages: async (messageIds, targetChatIds) => {
+                try {
+                    await axiosInstance.post("/messages/bulk/forward", {
+                        messageIds,
+                        targetChatIds
+                    });
+                    return true;
+                } catch (error) {
+                    console.error("Failed to forward messages:", error);
+                    return false;
+                }
+            },
+
             updateParticipantStatus: (userId, isOnline, lastSeen) => {
                 set((state) => {
                     const updatedChats = state.chats.map((chat) => ({
