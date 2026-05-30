@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState, useMemo, memo, useCallback } from "react";
+import { createPortal } from "react-dom";
+import toast from "react-hot-toast";
+
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
@@ -634,6 +637,11 @@ const ChatWindow = ({ onBack }) => {
     const [activeViewerMoments, setActiveViewerMoments] = useState(null);
     const [showDisappearingMenu, setShowDisappearingMenu] = useState(false);
 
+    // Multi-select state
+    const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
+    const [selectedMessageIds, setSelectedMessageIds] = useState(new Set());
+    const [showForwardModal, setShowForwardModal] = useState(false);
+
     const [offlineCountdown, setOfflineCountdown] = useState(null);
     const offlineCountdownIntervalRef = useRef(null);
 
@@ -814,10 +822,38 @@ const ChatWindow = ({ onBack }) => {
         if (msg.action === "reply") {
             setReplyingTo(msg);
             setEditingMessage(null);
+        } else if (msg.action === "select") {
+            // Enter multi-select and toggle this message's selection
+            setIsMultiSelectMode(true);
+            setSelectedMessageIds(prev => {
+                const next = new Set(prev);
+                const id = msg._id;
+                if (next.has(id)) next.delete(id); else next.add(id);
+                return next;
+            });
+        } else if (msg.action === "forward") {
+            // Forward a single message: enter select mode with this message pre-selected
+            setIsMultiSelectMode(true);
+            setSelectedMessageIds(new Set([msg._id]));
+            setShowForwardModal(true);
         } else {
             setEditingMessage(msg);
             setReplyingTo(null);
         }
+    };
+
+    const handleToggleSelect = (msgId) => {
+        setSelectedMessageIds(prev => {
+            const next = new Set(prev);
+            if (next.has(msgId)) next.delete(msgId); else next.add(msgId);
+            return next;
+        });
+    };
+
+    const handleExitMultiSelect = () => {
+        setIsMultiSelectMode(false);
+        setSelectedMessageIds(new Set());
+        setShowForwardModal(false);
     };
 
 
@@ -1028,16 +1064,15 @@ const ChatWindow = ({ onBack }) => {
     const statusText = useMemo(() => {
         if (!otherUser) return "";
         if (isOffline || activeChat?.blockStatus?.iBlocked || activeChat?.blockStatus?.theyBlocked) return "Offline";
-        const isCurrentlyOnline = otherUser.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString());
         const isOtherInZen = zenUsers[otherUser._id] || zenUsers[otherUser._id?.toString()];
-        if (isCurrentlyOnline) {
+        if (isPeerOnline) {
             return isOtherInZen ? "Online - on #ZenMode" : "Online";
         }
         if (otherUser.lastSeen) {
             return `Last seen ${formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true })}`;
         }
         return "Offline";
-    }, [otherUser, onlineUsers, tick, isOffline, activeChat?.blockStatus?.iBlocked, activeChat?.blockStatus?.theyBlocked, zenUsers]);
+    }, [otherUser, isPeerOnline, tick, isOffline, activeChat?.blockStatus?.iBlocked, activeChat?.blockStatus?.theyBlocked, zenUsers]);
 
     const getStatusText = () => statusText;
 
@@ -1089,7 +1124,7 @@ const ChatWindow = ({ onBack }) => {
                             <span>{otherUser?.username?.slice(0, 2).toUpperCase()}</span>
                         )}
                     </div>
-                    {!isOffline && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked && (otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString())) && (
+                    {isPeerOnline && (
                         <OnlineDot isSPOp={isOtherUserLowBandwidth} />
                     )}
                 </div>
@@ -1108,7 +1143,7 @@ const ChatWindow = ({ onBack }) => {
                         </span>
                         {otherUser?.isVerified && <span style={{ flexShrink: 0, display: 'flex' }}><VerifiedTick /></span>}
                     </span>
-                    <span className={`chat-header-status ${(!isOffline && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked && (otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString()))) ? "status-online" : ""}`}>
+                    <span className={`chat-header-status ${isPeerOnline ? "status-online" : ""}`}>
                         {getStatusText()}
                     </span>
                 </div>
@@ -1266,7 +1301,11 @@ const ChatWindow = ({ onBack }) => {
                                 canDelete={!msg.deletedForEveryone && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked}
                                 canReply={!msg.deletedForEveryone && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked}
                                 zenFadeClass={zenFadeClass}
+                                isMultiSelectMode={isMultiSelectMode}
+                                isSelected={selectedMessageIds.has(msg._id)}
+                                onSelect={handleToggleSelect}
                                 onMediaClick={(url, type, isViewOnce) => {
+                                    if (isMultiSelectMode) return;
                                     if (type === "file") {
                                         setSelectedDoc({ url, fileName: msg.content || "document" });
                                     } else {
@@ -1327,21 +1366,47 @@ const ChatWindow = ({ onBack }) => {
                 </div>
             )}
 
-            <MessageInput
-                chatId={activeChat._id}
-                editingMessage={editingMessage}
-                replyingTo={replyingTo}
-                onCancelEdit={() => setEditingMessage(null)}
-                onCancelReply={() => setReplyingTo(null)}
-                disabled={isDeleted || showOnlyStarred || activeChat?.blockStatus?.iBlocked || activeChat?.blockStatus?.theyBlocked}
-                disabledPlaceholder={
-                    isDeleted ? "Account deleted..." :
-                    showOnlyStarred ? "Sending disabled in Fav mode..." :
-                    activeChat?.blockStatus?.iBlocked ? "You have blocked this user" :
-                    activeChat?.blockStatus?.theyBlocked ? "You have been blocked by this user" :
-                    "Sending disabled..."
-                }
-            />
+            {isMultiSelectMode ? (
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: '12px',
+                    padding: '12px 16px',
+                    background: 'rgba(16, 22, 32, 0.95)',
+                    borderTop: '1px solid rgba(255,255,255,0.07)',
+                    backdropFilter: 'blur(12px)',
+                    animation: 'slideUp 0.2s ease-out'
+                }}>
+                    <button onClick={handleExitMultiSelect} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', borderRadius: '10px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
+                        Cancel
+                    </button>
+                    <span style={{ flex: 1, textAlign: 'center', fontSize: '0.9rem', color: '#8b949e', fontWeight: 600 }}>
+                        {selectedMessageIds.size} selected
+                    </span>
+                    <button
+                        onClick={() => setShowForwardModal(true)}
+                        disabled={selectedMessageIds.size === 0}
+                        style={{ background: selectedMessageIds.size > 0 ? 'var(--color-primary)' : 'rgba(255,255,255,0.06)', border: 'none', color: selectedMessageIds.size > 0 ? '#fff' : '#64748b', borderRadius: '10px', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700, cursor: selectedMessageIds.size > 0 ? 'pointer' : 'default', transition: 'all 0.2s' }}
+                    >
+                        Confirm Selection
+                    </button>
+                </div>
+            ) : (
+                <MessageInput
+                    chatId={activeChat._id}
+                    editingMessage={editingMessage}
+                    replyingTo={replyingTo}
+                    onCancelEdit={() => setEditingMessage(null)}
+                    onCancelReply={() => setReplyingTo(null)}
+                    disabled={isDeleted || showOnlyStarred || activeChat?.blockStatus?.iBlocked || activeChat?.blockStatus?.theyBlocked}
+                    disabledPlaceholder={
+                        isDeleted ? "Account deleted..." :
+                        showOnlyStarred ? "Sending disabled in Fav mode..." :
+                        activeChat?.blockStatus?.iBlocked ? "You have blocked this user" :
+                        activeChat?.blockStatus?.theyBlocked ? "You have been blocked by this user" :
+                        "Sending disabled..."
+                    }
+                />
+            )}
+
 
             {deletingMessage && (
                 <div className="delete-modal-overlay">
@@ -1369,7 +1434,7 @@ const ChatWindow = ({ onBack }) => {
                 isOpen={showUserCard}
                 onClose={() => setShowUserCard(false)}
                 user={otherUser}
-                isOnline={!isOffline && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked && (otherUser?.isOnline || onlineUsers.has(otherUser?._id) || onlineUsers.has(otherUser?._id?.toString()))}
+                isOnline={isPeerOnline}
                 isSPOp={isOtherUserLowBandwidth}
                 hasMoments={hasMoments}
                 isContact={isContact}
@@ -1426,6 +1491,124 @@ const ChatWindow = ({ onBack }) => {
                 />
             )}
 
+
+            {/* ── BulkActionSheet: shown when user taps "Confirm Selection" ── */}
+            {showForwardModal && isMultiSelectMode && (() => {
+                const selectedMsgs = messages.filter(m => selectedMessageIds.has(m._id));
+                const allMine = selectedMsgs.every(m => m.senderId?._id === user?._id || m.senderId === user?._id);
+                const tooMany = selectedMsgs.length > 5;
+                return createPortal(
+                    <div
+                        onClick={() => setShowForwardModal(false)}
+                        style={{ position: 'fixed', inset: 0, background: 'rgba(9,13,20,0.75)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', zIndex: 9999999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', animation: 'fadeIn 0.2s ease-out' }}
+                    >
+                        <div
+                            onClick={e => e.stopPropagation()}
+                            style={{ width: '100%', maxWidth: '500px', background: 'linear-gradient(180deg, #1a2030 0%, #161b22 100%)', borderTop: '1px solid rgba(255,255,255,0.07)', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', padding: '0 0 env(safe-area-inset-bottom, 28px)', boxShadow: '0 -12px 48px rgba(0,0,0,0.6)', animation: 'slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                        >
+                            {/* Drag handle */}
+                            <div style={{ width: '36px', height: '4px', background: 'rgba(255,255,255,0.15)', borderRadius: '2px', margin: '14px auto 0' }} />
+
+                            <div style={{ padding: '16px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
+                                    {selectedMsgs.length} message{selectedMsgs.length !== 1 ? 's' : ''} selected
+                                </span>
+                                {tooMany && (
+                                    <span style={{ fontSize: '0.75rem', color: '#f59e0b', fontWeight: 600 }}>Max 5 per share</span>
+                                )}
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', padding: '4px 0 8px' }}>
+                                {/* Forward */}
+                                <button
+                                    onClick={async () => {
+                                        if (tooMany) { toast.error('Max 5 messages per forward'); return; }
+                                        setShowForwardModal(false);
+                                        handleExitMultiSelect();
+                                        toast.info('Forwarding not yet implemented — coming soon!');
+                                    }}
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: tooMany ? '#64748b' : '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: tooMany ? 'not-allowed' : 'pointer', transition: 'background 0.15s' }}
+                                    onTouchStart={e => !tooMany && (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+                                    onTouchEnd={e => (e.currentTarget.style.background = 'transparent')}
+                                >
+                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="15 10 20 15 15 20" /><path d="M4 4v7a4 4 0 0 0 4 4h12" />
+                                    </svg>
+                                    <span>Forward selected <span style={{ opacity: 0.55, fontSize: '0.8rem' }}>(max 5 per share)</span></span>
+                                </button>
+
+                                {/* Mark as Fav */}
+                                <button
+                                    onClick={async () => {
+                                        const { toggleStarMessage } = useChatStore.getState();
+                                        for (const msg of selectedMsgs) {
+                                            if (msg._id) toggleStarMessage(msg._id, activeChat._id);
+                                        }
+                                        setShowForwardModal(false);
+                                        handleExitMultiSelect();
+                                        toast.success(`${selectedMsgs.length} message${selectedMsgs.length !== 1 ? 's' : ''} marked as Fav`);
+                                    }}
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
+                                    onTouchStart={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+                                    onTouchEnd={e => (e.currentTarget.style.background = 'transparent')}
+                                >
+                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                    </svg>
+                                    <span>Mark selected as Fav</span>
+                                </button>
+
+                                {/* Delete for Me */}
+                                <button
+                                    onClick={() => {
+                                        selectedMsgs.forEach(msg => {
+                                            const msgId = msg._id || msg.cid;
+                                            useChatStore.getState().deleteMessage(activeChat._id, msgId, 'me');
+                                            if (msg._id) deleteMessage(activeChat._id, msgId, 'me');
+                                        });
+                                        setShowForwardModal(false);
+                                        handleExitMultiSelect();
+                                        toast.success('Deleted for you');
+                                    }}
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: '#f87171', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
+                                    onTouchStart={e => (e.currentTarget.style.background = 'rgba(248,113,113,0.07)')}
+                                    onTouchEnd={e => (e.currentTarget.style.background = 'transparent')}
+                                >
+                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                    </svg>
+                                    <span>Delete selected for me</span>
+                                </button>
+
+                                {/* Delete for Everyone — only if all selected are mine */}
+                                {allMine && (
+                                    <button
+                                        onClick={() => {
+                                            selectedMsgs.forEach(msg => {
+                                                const msgId = msg._id || msg.cid;
+                                                useChatStore.getState().deleteMessage(activeChat._id, msgId, 'everyone');
+                                                if (msg._id) deleteMessage(activeChat._id, msgId, 'everyone');
+                                            });
+                                            setShowForwardModal(false);
+                                            handleExitMultiSelect();
+                                            toast.success('Deleted for everyone');
+                                        }}
+                                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: '#f85149', fontSize: '0.93rem', fontWeight: 600, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
+                                        onTouchStart={e => (e.currentTarget.style.background = 'rgba(248,81,73,0.07)')}
+                                        onTouchEnd={e => (e.currentTarget.style.background = 'transparent')}
+                                    >
+                                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
+                                        </svg>
+                                        <span>Delete selected for everyone</span>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>,
+                    document.body
+                );
+            })()}
 
         </div>
     );

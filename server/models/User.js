@@ -158,6 +158,20 @@ const userSchema = new mongoose.Schema(
         purgedMessagesCount: {
             type: Number,
             default: 0
+        },
+        recentMedia: {
+            type: [{
+                url: { type: String, required: true },
+                mediaType: { type: String, enum: ["gif", "sticker"], default: "gif" }
+            }],
+            default: []
+        },
+        favoriteMedia: {
+            type: [{
+                url: { type: String, required: true },
+                mediaType: { type: String, enum: ["gif", "sticker"], default: "gif" }
+            }],
+            default: []
         }
     },
     { timestamps: true }

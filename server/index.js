@@ -64,7 +64,10 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/moments", require("./routes/momentRoutes"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/music", require("./routes/music"));
+app.use("/api/giphy", require("./routes/giphy"));
 app.use("/api/analytics", require("./routes/analytics"));
+app.use("/api/messages/bulk", require("./routes/bulkMessage"));
+app.use("/api/user-media", require("./routes/userMedia"));
 
 registerSocketHandlers(io);
 

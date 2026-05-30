@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import axios from "axios";
 import { createPortal } from "react-dom";
+import axiosInstance from "../../utils/axios";
 
-const GIPHY_API_KEY = (import.meta.env.VITE_GIPHY_API_KEY || "").trim() || "pnshJZOMgBP3OVpZzo4TCXPf99zhNIQA";
 const LIMIT = 12;
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 2;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -17,8 +16,8 @@ const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
 
-    const abortRef = useRef(null);      // AbortController for in-flight request
-    const loadingRef = useRef(false);   // Guard against concurrent scroll fetches
+    const abortRef = useRef(null);
+    const loadingRef = useRef(false);
     const observerRef = useRef(null);
     const lastElementRef = useRef(null);
 
@@ -26,7 +25,6 @@ const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
         if (!isNewSearch && loadingRef.current) return;
         if (!isNewSearch && !hasMore) return;
 
-        // Cancel previous in-flight request on new search
         if (isNewSearch && abortRef.current) {
             abortRef.current.abort();
         }
@@ -38,11 +36,10 @@ const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
         loadingRef.current = true;
 
         const endpoint = query.trim()
-            ? `https://api.giphy.com/v1/${type}/search`
-            : `https://api.giphy.com/v1/${type}/trending`;
+            ? `/giphy/${type}/search`
+            : `/giphy/${type}/trending`;
 
         const params = {
-            api_key: GIPHY_API_KEY,
             limit: LIMIT,
             offset: currentOffset,
             rating: "g",
@@ -53,8 +50,8 @@ const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
         for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
             if (signal.aborted) break;
             try {
-                if (attempt > 0) await sleep(300 * Math.pow(2, attempt - 1)); // exponential backoff
-                const res = await axios.get(endpoint, { params, signal });
+                if (attempt > 0) await sleep(400 * attempt);
+                const res = await axiosInstance.get(endpoint, { params, signal });
                 if (signal.aborted) break;
 
                 const newResults = res.data?.data ?? [];
@@ -65,11 +62,11 @@ const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
                 setOffset(nextOffset);
                 setHasMore(newResults.length === LIMIT && totalCount > nextOffset);
                 lastErr = null;
-                break; // success
+                break;
             } catch (err) {
-                if (axios.isCancel(err) || signal.aborted) break;
+                if (err?.code === "ERR_CANCELED" || signal.aborted) break;
                 lastErr = err;
-                console.warn(`Giphy fetch attempt ${attempt + 1} failed:`, err.message);
+                console.warn(`[GifPicker] Fetch attempt ${attempt + 1} failed:`, err.message);
             }
         }
 

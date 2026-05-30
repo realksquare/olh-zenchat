@@ -117,6 +117,10 @@ const messageSchema = new mongoose.Schema(
         waveform: {
             type: String,
             default: ""
+        },
+        isForwarded: {
+            type: Boolean,
+            default: false
         }
     },
     { timestamps: true }
