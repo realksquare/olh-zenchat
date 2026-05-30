@@ -6073,7 +6073,7 @@ select {
     font-size: 0.88rem !important;
   }
   
-  .message-row {
+  .message-bubble-outer {
     max-width: 75% !important;
   }
   

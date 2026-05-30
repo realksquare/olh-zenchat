@@ -233,3 +233,5 @@ export const playVoiceStartTone = () => {
 export const playVoiceStopTone = () => {
     playTone({ startFreq: 600, endFreq: 300, duration: 0.08, type: "sine", volume: 0.05 });
 };
+
+// Force Vite cache invalidation

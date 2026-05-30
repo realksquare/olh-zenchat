@@ -80,7 +80,8 @@ const ForwardModal = ({ onClose, onForward }) => {
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

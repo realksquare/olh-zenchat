@@ -1,5 +1,4 @@
 import axios from "axios";
-import { useChatStore } from "../stores/chatStore";
 
 const baseURL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : "/api";
 
@@ -28,7 +27,9 @@ axiosInstance.interceptors.response.use(
         if (startTime) {
             const duration = new Date() - startTime;
             if (duration > 2000) {
-                useChatStore.getState().setLowBandwidth(true);
+                import("../stores/chatStore").then(module => {
+                    module.useChatStore.getState().setLowBandwidth(true);
+                });
             }
         }
         return response;
@@ -38,7 +39,9 @@ axiosInstance.interceptors.response.use(
         if (startTime) {
             const duration = new Date() - startTime;
             if (duration > 2000 || error.code === "ECONNABORTED") {
-                useChatStore.getState().setLowBandwidth(true);
+                import("../stores/chatStore").then(module => {
+                    module.useChatStore.getState().setLowBandwidth(true);
+                });
             }
         }
         const isAuthRoute = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/auth/register');
