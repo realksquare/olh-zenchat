@@ -155,29 +155,28 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             const startTime = currentMoment.music.startTime || 0;
 
             const setupAudio = async () => {
-                let playUrl = currentMoment.music.previewUrl
-                    ? currentMoment.music.previewUrl.replace(/^http:\/\//i, 'https://')
-                    : null;
+                let playUrl = null;
 
-                // 1. Try fresh URL by trackId (most reliable)
+                // 1. Fresh URL by trackId — most reliable
                 if (currentMoment.music.trackId) {
                     try {
                         const res = await axiosInstance.get(`/music/preview?id=${encodeURIComponent(currentMoment.music.trackId)}`);
                         if (res.data?.previewUrl) playUrl = res.data.previewUrl;
-                    } catch {
-                        // Fall through to next strategy
-                    }
+                    } catch {}
                 }
 
-                // 2. If still no fresh URL (old moment, no trackId), search by title+artist
+                // 2. No trackId (old moment): search by title+artist to get a fresh CDN URL
                 if (!playUrl && currentMoment.music.title) {
                     const q = [currentMoment.music.title, currentMoment.music.artist].filter(Boolean).join(' ');
                     try {
                         const res = await axiosInstance.get(`/music/preview?q=${encodeURIComponent(q)}`);
                         if (res.data?.previewUrl) playUrl = res.data.previewUrl;
-                    } catch {
-                        // Audio unavailable — no preview found
-                    }
+                    } catch {}
+                }
+
+                // 3. Last resort — stored URL (may be stale, upgrade http→https at minimum)
+                if (!playUrl && currentMoment.music.previewUrl) {
+                    playUrl = currentMoment.music.previewUrl.replace(/^http:\/\//i, 'https://');
                 }
 
                 if (cancelled || !playUrl) return;
