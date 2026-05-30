@@ -1,10 +1,22 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useChatStore } from '../../stores/chatStore';
+import { useAuthStore } from '../../stores/authStore';
 
 const ForwardModal = ({ onClose, onForward }) => {
     const { chats } = useChatStore();
+    const user = useAuthStore((s) => s.user);
     const [selectedChats, setSelectedChats] = useState([]);
+
+    // Filter out chats where the current user is talking to themselves
+    const forwardableChats = chats.filter(chat => {
+        if (chat.isGroup) return true;
+        const otherId = chat.participants?.find(p => {
+            const pid = p?._id?.toString() || p?.toString();
+            return pid && pid !== user?._id?.toString();
+        });
+        return !!otherId;
+    });
 
     const toggleSelect = (chatId) => {
         setSelectedChats(prev => {
@@ -27,7 +39,7 @@ const ForwardModal = ({ onClose, onForward }) => {
                     <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>Select up to 3 chats</p>
                 </div>
                 <div style={{ maxHeight: '50vh', overflowY: 'auto', padding: '10px' }}>
-                    {chats.map(chat => {
+                    {forwardableChats.map(chat => {
                         const isSelected = selectedChats.includes(chat._id);
                         return (
                             <div 
@@ -62,7 +74,7 @@ const ForwardModal = ({ onClose, onForward }) => {
                             </div>
                         );
                     })}
-                    {chats.length === 0 && <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>No recent chats found.</div>}
+                    {forwardableChats.length === 0 && <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>No chats to forward to.</div>}
                 </div>
                 <div style={{ padding: '16px', display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                     <button 

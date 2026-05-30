@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import axiosInstance from "../../utils/axios";
 import { getFavMedia, getRecentMedia, addFavMedia, removeFavMedia, addRecentMedia } from "../../utils/mediaStorage";
 
-const LIMIT = 12;
+const LIMIT = 6;
 const MAX_RETRIES = 2;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

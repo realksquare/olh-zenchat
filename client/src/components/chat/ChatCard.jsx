@@ -129,17 +129,10 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         }
         if (isTyping) {
             if (isSPOp) {
-                return { 
-                    text: (
-                        <div className="typing-indicator" style={{ display: 'inline-flex', padding: 0, margin: 0, background: 'transparent' }}>
-                            <div className="typing-dot" style={{ width: '4px', height: '4px', background: 'var(--color-primary)' }}></div>
-                            <div className="typing-dot" style={{ width: '4px', height: '4px', background: 'var(--color-primary)' }}></div>
-                            <div className="typing-dot" style={{ width: '4px', height: '4px', background: 'var(--color-primary)' }}></div>
-                        </div>
-                    ),
-                    isUnread: true 
-                };
+                // SP-OP: wave dots shown inside ChatWindow, sidebar shows plain "typing..."
+                return { text: "typing...", isUnread: true };
             }
+            // Normal mode: show scramble/hacker text to match ChatWindow
             return { text: typeof typingScramble === "string" ? typingScramble : "typing...", isUnread: true };
         }
         if (hasUnread) {

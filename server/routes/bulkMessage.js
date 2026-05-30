@@ -8,11 +8,11 @@ const router = express.Router();
 router.use(authMiddleware);
 
 // POST /api/messages/bulk/forward
-// Body: { messageIds: [], targetChatIds: [] }
+// Body: { messageIds: [], targetChatIds: [], messageContents: {} }
 // Max 5 messages, max 3 chats
 router.post("/forward", async (req, res) => {
     try {
-        const { messageIds, targetChatIds } = req.body;
+        const { messageIds, targetChatIds, messageContents = {} } = req.body;
         if (!Array.isArray(messageIds) || !Array.isArray(targetChatIds)) {
             return res.status(400).json({ message: "messageIds and targetChatIds must be arrays" });
         }
@@ -32,7 +32,7 @@ router.post("/forward", async (req, res) => {
             return res.status(403).json({ message: "Access denied to one or more target chats" });
         }
 
-        // Fetch the original messages
+        // Fetch the original messages (for type/mediaUrl fallback)
         const originals = await Message.find({ _id: { $in: messageIds } })
             .populate("senderId", "username avatar");
 
@@ -41,12 +41,18 @@ router.post("/forward", async (req, res) => {
 
         for (const chat of targetChats) {
             for (const orig of originals) {
+                // Prefer client-provided plaintext content to avoid E2EE hash passthrough
+                const clientData = messageContents[orig._id.toString()] || {};
+                const content = clientData.content !== undefined ? clientData.content : (orig.content || "");
+                const type = clientData.type || orig.type || "text";
+                const mediaUrl = clientData.mediaUrl !== undefined ? clientData.mediaUrl : (orig.mediaUrl || "");
+
                 const newMsg = await Message.create({
                     chatId: chat._id,
                     senderId: req.user._id,
-                    content: orig.content || "",
-                    type: orig.type || "text",
-                    mediaUrl: orig.mediaUrl || "",
+                    content,
+                    type,
+                    mediaUrl,
                     isForwarded: true,
                     disappearingMode: chat.disappearingMode || "off",
                 });

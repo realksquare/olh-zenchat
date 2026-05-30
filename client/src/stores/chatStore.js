@@ -792,9 +792,23 @@ export const useChatStore = create(
 
             forwardMessages: async (messageIds, targetChatIds) => {
                 try {
+                    // Build message content map so server can use plaintext (avoids E2EE hash issue)
+                    const allMessages = Object.values(useChatStore.getState().messages).flat();
+                    const messageContents = {};
+                    for (const id of messageIds) {
+                        const msg = allMessages.find(m => m._id === id);
+                        if (msg) {
+                            messageContents[id] = {
+                                content: msg.content || "",
+                                type: msg.type || "text",
+                                mediaUrl: msg.mediaUrl || "",
+                            };
+                        }
+                    }
                     await axiosInstance.post("/messages/bulk/forward", {
                         messageIds,
-                        targetChatIds
+                        targetChatIds,
+                        messageContents
                     });
                     return true;
                 } catch (error) {
@@ -802,6 +816,7 @@ export const useChatStore = create(
                     return false;
                 }
             },
+
 
             updateParticipantStatus: (userId, isOnline, lastSeen) => {
                 set((state) => {
