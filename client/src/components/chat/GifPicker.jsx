@@ -61,7 +61,8 @@ const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
                 setResults((prev) => (isNewSearch ? newResults : [...prev, ...newResults]));
                 const nextOffset = currentOffset + LIMIT;
                 setOffset(nextOffset);
-                setHasMore(newResults.length === LIMIT && totalCount > nextOffset);
+                // Hard-cap online queries to 6 items — never load more pages
+                setHasMore(false);
                 lastErr = null;
                 break;
             } catch (err) {

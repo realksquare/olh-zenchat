@@ -7316,7 +7316,8 @@ select {
 .gif-picker-modal { background: var(--color-surface); width: 100%; max-width: 400px; height: 60vh; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; overflow: hidden; padding: 16px; border: 1px solid rgba(255,255,255,0.05); }
 @media(min-width: 768px) { .gif-picker-modal { height: 500px; border-radius: 20px; } }
 
-.gif-picker-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.gif-picker-header { display: flex; justify-content: center; align-items: center; position: relative; margin-bottom: 12px; width: 100%; }
+.gif-picker-header .aura-close-btn { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
 .gif-tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 12px; }
 .gif-tab { padding: 6px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #94a3b8; background: transparent; border: none; cursor: pointer; transition: 0.2s; }
 .gif-tab.active { background: var(--color-primary); color: #fff; }
@@ -7633,16 +7634,37 @@ select {
 /* Global Mobile Modal Width Fix */
 @media (max-width: 768px) {
   .modal-overlay .modal-content,
-  .bottom-sheet,
   .reaction-modal,
-  .gif-picker-modal,
   .invite-modal,
   .zc-confirm-modal,
-  [class*="-modal"] > [class*="-content"],
-  [class*="-sheet"] {
+  [class*="-modal"] > [class*="-content"] {
     width: 95vw !important;
     max-width: 95vw !important;
     box-sizing: border-box !important;
+  }
+  /* Bottom sheets and gif picker go full edge-to-edge */
+  .bottom-sheet,
+  .gif-picker-modal,
+  [class*="-sheet"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 24px 24px 0 0 !important;
+    margin-bottom: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+  /* Mobile gif tab sizing */
+  .gif-tabs {
+    width: calc(100% - 44px);
+    gap: 4px;
+    padding: 3px;
+  }
+  .gif-tab {
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+    flex: 1;
+    text-align: center;
   }
 }
 

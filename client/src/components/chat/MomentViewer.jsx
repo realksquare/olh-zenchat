@@ -563,7 +563,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                 })()}
 
                 <div className="aura-viewer-footer-wrapper">
-                    <div className="aura-viewer-footer">#moments. - powered by OLH ZenChat.</div>
+                    <div className="aura-viewer-footer">#Moments - powered by OLH ZenChat.</div>
                 </div>
             </div>
         </div>,

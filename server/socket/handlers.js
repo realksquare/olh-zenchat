@@ -844,50 +844,26 @@ const registerSocketHandlers = (io) => {
         });
 
         socket.on("typing_start", async ({ chatId, scramble }) => {
-            const chat = await Chat.findById(chatId).populate("participants", "privacySettings contacts");
+            const chat = await Chat.findById(chatId).select("participants").lean();
             if (!chat) return;
 
-            const sender = await User.findById(userId).select("privacySettings contacts");
-            if (!sender) return;
-
-            const senderPrivacy = sender.privacySettings?.typingIndicator || "everyone";
-
-            const allows = (userA, userBId, privacy) => {
-                if (privacy === "everyone") return true;
-                if (privacy === "nobody") return false;
-                if (!userA || !userA.contacts) return false;
-                return userA.contacts.some(c => {
-                    if (!c || !c.userId) return false;
-                    const cIdStr = c.userId._id ? c.userId._id.toString() : c.userId.toString();
-                    return cIdStr === userBId.toString();
-                });
-            };
-
-            await Promise.all(chat.participants
-                .filter(p => p._id.toString() !== userId)
-                .map(async (recipient) => {
-                    const recipientId = recipient._id.toString();
+            chat.participants
+                .filter(p => p.toString() !== userId)
+                .forEach(participant => {
+                    const recipientId = participant._id?.toString() || participant.toString();
                     const userData = onlineUsers.get(recipientId);
 
                     if (userData && userData.sockets) {
-                        const recUser = await User.findById(recipientId).select("privacySettings contacts");
-                        if (recUser) {
-                            const recipientPrivacy = recUser.privacySettings?.typingIndicator || "everyone";
-                            const senderAllowsRecipient = allows(sender, recipientId, senderPrivacy);
-                            const recipientAllowsSender = allows(recUser, userId, recipientPrivacy);
-                            const mutualConsent = senderAllowsRecipient && recipientAllowsSender;
-
-                            userData.sockets.forEach((sData, sId) => {
-                                io.to(sId).emit("typing_status", {
-                                    userId,
-                                    chatId,
-                                    isTyping: true,
-                                    scramble: mutualConsent ? scramble : null
-                                });
+                        userData.sockets.forEach((sData, sId) => {
+                            io.to(sId).emit("typing_status", {
+                                userId,
+                                chatId,
+                                isTyping: true,
+                                scramble: scramble
                             });
-                        }
+                        });
                     }
-                }));
+                });
         });
 
         socket.on("typing_stop", async ({ chatId }) => {

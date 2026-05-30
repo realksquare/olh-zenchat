@@ -156,7 +156,6 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
 
     // Touch gesture state tracking
     const touchStartRef = useRef({ x: 0, y: 0, time: 0 });
-    const longPressTimerRef = useRef(null);
     const preventClickRef = useRef(false);
 
     const isMobile = window.innerWidth <= 768;
@@ -199,25 +198,6 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         setSwipeOffset(0);
         setShowReplyIcon(false);
         preventClickRef.current = false;
-
-        if (longPressTimerRef.current) {
-            clearTimeout(longPressTimerRef.current);
-        }
-
-        longPressTimerRef.current = setTimeout(() => {
-            // If the user has active text selection, do not trigger the unified sheet
-            const selectedText = window.getSelection()?.toString();
-            if (selectedText && selectedText.length > 0) {
-                return;
-            }
-            window.getSelection()?.removeAllRanges();
-            if (navigator.vibrate) {
-                navigator.vibrate(50);
-            }
-            // Open unified bottom sheet (reactions + actions)
-            setMobileSheet(true);
-            preventClickRef.current = true;
-        }, 500);
     };
 
     const handleTouchMove = (e) => {
@@ -227,10 +207,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         const diffY = Math.abs(touch.clientY - touchStartRef.current.y);
         
         if (diffX > 15 || diffY > 15) {
-            if (longPressTimerRef.current) {
-                clearTimeout(longPressTimerRef.current);
-                longPressTimerRef.current = null;
-            }
+            // Movement detected - cancel any pending actions
         }
 
         if (diffY < 30 && diffX > 10) {
@@ -246,11 +223,6 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
 
     const handleTouchEnd = (e) => {
         if (!isMobile) return;
-        
-        if (longPressTimerRef.current) {
-            clearTimeout(longPressTimerRef.current);
-            longPressTimerRef.current = null;
-        }
 
         if (touchStartRef.current.validSwipe) {
             if (showReplyIcon && canReply && onEdit) {
@@ -273,14 +245,15 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         if (touchDuration < 300) {
             const now = Date.now();
             if (now - lastTapRef.current < 300) {
-                // Double-tap: enter multi-select mode
+                // Double-tap: open options bottom sheet
                 if (tapTimeoutRef.current) {
                     clearTimeout(tapTimeoutRef.current);
                     tapTimeoutRef.current = null;
                 }
                 e.preventDefault();
                 e.stopPropagation();
-                if (onEdit) onEdit({ action: 'select', ...message });
+                if (navigator.vibrate) navigator.vibrate(50);
+                setMobileSheet(true);
             } else {
                 lastTapRef.current = now;
             }
@@ -288,10 +261,6 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     };
 
     const handleTouchCancel = () => {
-        if (longPressTimerRef.current) {
-            clearTimeout(longPressTimerRef.current);
-            longPressTimerRef.current = null;
-        }
         setSwipeOffset(0);
         setShowReplyIcon(false);
         preventClickRef.current = false;
@@ -415,16 +384,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         return () => document.removeEventListener("visibilitychange", handleVisibility);
     }, []);
 
-    useEffect(() => {
-        if (!mobileSheet) return;
-        const handleScroll = () => setMobileSheet(false);
-        window.addEventListener("scroll", handleScroll, true);
-        window.addEventListener("touchmove", handleScroll, { passive: true });
-        return () => {
-            window.removeEventListener("scroll", handleScroll, true);
-            window.removeEventListener("touchmove", handleScroll);
-        };
-    }, [mobileSheet]);
+
 
 
     const getThumbnailUrl = (url) => {
@@ -787,7 +747,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                 <span className="message-text">
                                     <DecryptedText
                                         text={message.content}
-                                        animate={isNew && !isMe && message.canSeeScramble && !isLowBandwidth && !message.isLowBandwidth}
+                                        animate={isNew && !isMe && !isLowBandwidth && !message.isLowBandwidth}
                                     />
                                 </span>
                             )}

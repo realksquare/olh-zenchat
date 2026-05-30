@@ -133,7 +133,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                     <div className="user-card-actions" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
                         {hasMoments && userMomentsCount > 0 && !iBlocked && !theyBlocked && (
                             <button className="btn btn-primary btn-full moments-btn" onClick={onViewMoments}>
-                                View {userMomentsCount} {userMomentsCount === 1 ? '#moment.' : '#moments.'}
+                                View {userMomentsCount} {userMomentsCount === 1 ? '#Moment' : '#Moments'}
                             </button>
                         )}
                         {userId !== currentUser?._id && (
