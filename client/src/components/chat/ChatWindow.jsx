@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, useMemo, memo, useCallback } from "react";
 import { createPortal } from "react-dom";
-import toast from "react-hot-toast";
 
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "../../stores/authStore";
@@ -641,6 +640,13 @@ const ChatWindow = ({ onBack }) => {
     const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
     const [selectedMessageIds, setSelectedMessageIds] = useState(new Set());
     const [showForwardModal, setShowForwardModal] = useState(false);
+
+    // Toast state
+    const [localToast, setLocalToast] = useState(null);
+    const showToast = useCallback((msg, type = 'info') => {
+        setLocalToast({ msg, type });
+        setTimeout(() => setLocalToast(null), 3000);
+    }, []);
 
     const [offlineCountdown, setOfflineCountdown] = useState(null);
     const offlineCountdownIntervalRef = useRef(null);
@@ -1492,6 +1498,12 @@ const ChatWindow = ({ onBack }) => {
             )}
 
 
+            {localToast && (
+                <div className={`zen-toast zen-toast-${localToast.type}`} style={{ zIndex: 10001, bottom: '80px' }}>
+                    {localToast.msg}
+                </div>
+            )}
+
             {/* ── BulkActionSheet: shown when user taps "Confirm Selection" ── */}
             {showForwardModal && isMultiSelectMode && (() => {
                 const selectedMsgs = messages.filter(m => selectedMessageIds.has(m._id));
@@ -1522,10 +1534,10 @@ const ChatWindow = ({ onBack }) => {
                                 {/* Forward */}
                                 <button
                                     onClick={async () => {
-                                        if (tooMany) { toast.error('Max 5 messages per forward'); return; }
+                                        if (tooMany) { showToast('Max 5 messages per forward', 'error'); return; }
                                         setShowForwardModal(false);
                                         handleExitMultiSelect();
-                                        toast.info('Forwarding not yet implemented — coming soon!');
+                                        showToast('Forwarding not yet implemented — coming soon!', 'info');
                                     }}
                                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: tooMany ? '#64748b' : '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: tooMany ? 'not-allowed' : 'pointer', transition: 'background 0.15s' }}
                                     onTouchStart={e => !tooMany && (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
@@ -1546,7 +1558,7 @@ const ChatWindow = ({ onBack }) => {
                                         }
                                         setShowForwardModal(false);
                                         handleExitMultiSelect();
-                                        toast.success(`${selectedMsgs.length} message${selectedMsgs.length !== 1 ? 's' : ''} marked as Fav`);
+                                        showToast(`${selectedMsgs.length} message${selectedMsgs.length !== 1 ? 's' : ''} marked as Fav`, 'success');
                                     }}
                                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
                                     onTouchStart={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
@@ -1568,7 +1580,7 @@ const ChatWindow = ({ onBack }) => {
                                         });
                                         setShowForwardModal(false);
                                         handleExitMultiSelect();
-                                        toast.success('Deleted for you');
+                                        showToast('Deleted for you', 'success');
                                     }}
                                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: '#f87171', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
                                     onTouchStart={e => (e.currentTarget.style.background = 'rgba(248,113,113,0.07)')}
@@ -1591,7 +1603,7 @@ const ChatWindow = ({ onBack }) => {
                                             });
                                             setShowForwardModal(false);
                                             handleExitMultiSelect();
-                                            toast.success('Deleted for everyone');
+                                            showToast('Deleted for everyone', 'success');
                                         }}
                                         style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: '#f85149', fontSize: '0.93rem', fontWeight: 600, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
                                         onTouchStart={e => (e.currentTarget.style.background = 'rgba(248,81,73,0.07)')}
