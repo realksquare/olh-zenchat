@@ -1,5 +1,4 @@
 const express = require("express");
-const axios = require("axios");
 const authMiddleware = require("../middleware/auth");
 
 const router = express.Router();
@@ -58,17 +57,24 @@ const giphyProxy = async (endpoint, params, res) => {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
         const api_key = getNextKey();
         try {
-            const response = await axios.get(`https://api.giphy.com/v1/${endpoint}`, {
-                params: { ...params, api_key },
-                timeout: 6000,
+            const queryParams = new URLSearchParams({ ...params, api_key });
+            const response = await fetch(`https://api.giphy.com/v1/${endpoint}?${queryParams.toString()}`, {
+                signal: AbortSignal.timeout(6000)
             });
-            const data = response.data;
+            
+            if (!response.ok) {
+                const error = new Error(`HTTP error! status: ${response.status}`);
+                error.status = response.status;
+                throw error;
+            }
+
+            const data = await response.json();
             const ttl = params.q ? CACHE_TTL_SEARCH : CACHE_TTL_TRENDING;
             setCache(cacheKey, data, ttl);
             return res.json(data);
         } catch (err) {
             lastErr = err;
-            if (err.response?.status === 429) {
+            if (err.status === 429) {
                 // Rate limited - try next key
                 console.warn(`[Giphy] Key ${attempt + 1}/${maxAttempts} hit 429, rotating...`);
                 continue;
@@ -78,7 +84,7 @@ const giphyProxy = async (endpoint, params, res) => {
     }
 
     console.error("[Giphy] All keys failed or non-429 error:", lastErr?.message);
-    res.status(lastErr?.response?.status || 502).json({ error: "Giphy fetch failed", message: lastErr?.message });
+    res.status(lastErr?.status || 502).json({ error: "Giphy fetch failed", message: lastErr?.message });
 };
 
 // GET /api/giphy/gifs/trending  or  /api/giphy/stickers/trending
