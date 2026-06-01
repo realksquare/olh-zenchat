@@ -4,7 +4,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-com
 
 importScripts('https://unpkg.com/dexie@4.0.8/dist/dexie.js');
 
-const CACHE_NAME = 'zenchat-v2.0';
+const CACHE_NAME = 'zenchat-v2.1';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDuPbl1-IEdxnDctJgELm_VAQoSrLvWEM8",
