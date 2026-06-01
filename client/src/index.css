@@ -7645,7 +7645,7 @@ select {
   /* Bottom sheets and gif picker go full edge-to-edge */
   .bottom-sheet,
   .gif-picker-modal,
-  [class*="-sheet"] {
+  [class*="-sheet"]:not([class*="-overlay"]) {
     width: 100% !important;
     max-width: 100% !important;
     border-radius: 24px 24px 0 0 !important;
@@ -7656,7 +7656,7 @@ select {
   }
   /* Mobile gif tab sizing */
   .gif-tabs {
-    width: calc(100% - 44px);
+    width: calc(100% - 90px);
     gap: 4px;
     padding: 3px;
   }
