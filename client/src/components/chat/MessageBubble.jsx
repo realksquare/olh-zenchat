@@ -710,6 +710,9 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                       alignItems: 'center',
                                                       gap: '12px',
                                                       minWidth: '180px',
+                                                      maxWidth: '100%',
+                                                      width: '100%',
+                                                      boxSizing: 'border-box',
                                                       cursor: 'pointer'
                                                   }} onClick={(e) => {
                                                       e.stopPropagation();
