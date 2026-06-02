@@ -907,9 +907,6 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                             boxSizing: 'border-box'
                         }}
                     >
-                        {/* Drag handle */}
-                        <div style={{ width: '36px', height: '4px', background: 'rgba(255,255,255,0.15)', borderRadius: '2px', margin: '14px auto 0' }} />
-
                         {/* Reactions row */}
                         <div style={{
                             display: 'flex', justifyContent: 'space-evenly', alignItems: 'center',

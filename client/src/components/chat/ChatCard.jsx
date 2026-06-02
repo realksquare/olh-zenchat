@@ -367,7 +367,6 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
             {isMobile && showMenu && createPortal(
                 <div className="mobile-bottom-sheet-overlay" onClick={(e) => { e.stopPropagation(); setShowMenu(false); }}>
                     <div className="mobile-bottom-sheet" onClick={(e) => e.stopPropagation()}>
-                        <div className="mobile-bottom-sheet-handle" />
                         <div className="mobile-bottom-sheet-header">
                             <h3>Chat Options</h3>
                         </div>

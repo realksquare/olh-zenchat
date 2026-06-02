@@ -881,7 +881,6 @@ const App = () => {
       {showPwaExitConfirm && (
         <div className="mobile-bottom-sheet-overlay" style={{ zIndex: 99999999 }} onClick={() => setShowPwaExitConfirm(false)}>
           <div className="mobile-bottom-sheet exit-pwa-sheet" onClick={(e) => e.stopPropagation()} style={{ padding: "20px 0 32px" }}>
-            <div className="mobile-bottom-sheet-handle" />
             <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#f8fafc", marginBottom: "8px", textAlign: "center", padding: "0 20px" }}>Exit ZenChat?</h3>
             <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "24px", lineHeight: "1.5", textAlign: "center", padding: "0 20px" }}>
               Are you sure you want to exit the application?
@@ -933,9 +932,6 @@ const App = () => {
               animation: window.innerWidth <= 768 ? 'slideUp 0.3s cubic-bezier(0.16,1,0.3,1)' : 'compulsoryCardScale 0.4s cubic-bezier(0.34,1.56,0.64,1)'
             }}
           >
-            {window.innerWidth <= 768 && (
-              <div style={{ width: '36px', height: '4px', background: 'rgba(255,255,255,0.15)', borderRadius: '2px', margin: '0 auto 20px' }} />
-            )}
             <div className="compulsory-push-icon-pulse" style={{ background: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.25)' }}>
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" />

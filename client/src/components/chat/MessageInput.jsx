@@ -961,8 +961,6 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             {showAttachmentSheet && (
                 <div className="modal-overlay" onClick={() => setShowAttachmentSheet(false)} style={{ zIndex: 10002, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
                     <div className="attachment-sheet" onClick={e => e.stopPropagation()} style={{ background: 'var(--color-surface)', width: '100%', maxWidth: '500px', borderTopLeftRadius: '20px', borderTopRightRadius: '20px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div style={{ width: '40px', height: '4px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px', margin: '0 auto', marginBottom: '8px' }} />
-                        
                         <label className="attachment-option" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', cursor: 'pointer' }}>
                             <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>

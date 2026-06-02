@@ -137,8 +137,6 @@ const CustomSelect = ({ value, onChange, options, isMobile }) => {
                             overflow: 'hidden'
                         }}
                     >
-                        <div style={{ width: '36px', height: '4px', background: 'rgba(255,255,255,0.15)', borderRadius: '2px', margin: '14px auto 10px' }} />
-
                         <div style={{ padding: "10px 20px 10px", fontSize: "0.95rem", fontWeight: 600, color: "#fff" }}>
                             Select Option
                         </div>

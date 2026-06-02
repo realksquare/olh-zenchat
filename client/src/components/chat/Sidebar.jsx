@@ -603,7 +603,6 @@ const Sidebar = ({ onChatSelect }) => {
             {showMobileMenu && createPortal(
                 <div className={isMobile ? "mobile-bottom-sheet-overlay" : "modal-backdrop"} style={{ display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.4)", zIndex: 20000 }} onClick={() => setShowMobileMenu(false)}>
                     <div className={isMobile ? "mobile-bottom-sheet" : "modal-card"} onClick={(e) => e.stopPropagation()} style={isMobile ? { padding: "20px 0 32px" } : { maxWidth: "340px", border: "1px solid rgba(255, 255, 255, 0.08)", background: "rgba(15, 23, 42, 0.9)", backdropFilter: "blur(20px)", padding: "24px", borderRadius: "16px", width: "100%" }}>
-                        {isMobile && <div className="mobile-bottom-sheet-handle" />}
                         <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#f8fafc", marginBottom: "16px", textAlign: "center", padding: isMobile ? "0 20px" : "0" }}>Menu</h3>
                         
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px", padding: isMobile ? "0 20px" : "0" }}>
@@ -646,7 +645,6 @@ const Sidebar = ({ onChatSelect }) => {
                     createPortal(
                         <div className="mobile-bottom-sheet-overlay" style={{ zIndex: 20000 }}>
                             <div className="mobile-bottom-sheet" onClick={(e) => e.stopPropagation()} style={{ padding: "20px 0 32px" }}>
-                                <div className="mobile-bottom-sheet-handle" />
                                 <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#f8fafc", marginBottom: "8px", textAlign: "center", padding: "0 20px" }}>Confirm Sign Out</h3>
                                 <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "24px", lineHeight: "1.5", textAlign: "center", padding: "0 20px" }}>Are you sure you want to log out of ZenChat? You will need your credentials to sign back in.</p>
                                 <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%", padding: "0 20px", boxSizing: "border-box" }}>

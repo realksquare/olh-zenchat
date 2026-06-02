@@ -57,7 +57,6 @@ const FAQModal = ({ isOpen, onClose }) => {
         return createPortal(
             <div className="mobile-bottom-sheet-overlay" style={{ zIndex: 2000 }}>
                 <div className="mobile-bottom-sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: '82vh', display: 'flex', flexDirection: 'column', gap: '0', padding: '16px 0 24px' }}>
-                    <div className="mobile-bottom-sheet-handle" />
                     <div className="mobile-bottom-sheet-header" style={{ marginBottom: '14px', paddingBottom: '0', paddingLeft: '20px', paddingRight: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff', margin: 0 }}>ZenChat FAQ</h3>
                         <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }} aria-label="Close FAQ">
