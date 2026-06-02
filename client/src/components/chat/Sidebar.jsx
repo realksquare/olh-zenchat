@@ -522,6 +522,10 @@ const Sidebar = ({ onChatSelect }) => {
                         </div>
                     )}
 
+                    {pinnedChats.length > 0 && unpinnedChats.length > 0 && (
+                        <div className="chats-section-divider" />
+                    )}
+
                     {unpinnedChats.length > 0 && (
                         <div className="chats-section">
                             {pinnedChats.length > 0 && <span className="chats-section-label">Recent</span>}
