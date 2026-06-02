@@ -898,7 +898,6 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                         style={{
                             width: '100%',
                             background: 'linear-gradient(180deg, #1a2030 0%, #161b22 100%)',
-                            borderTop: '1px solid rgba(255,255,255,0.07)',
                             borderTopLeftRadius: '24px',
                             borderTopRightRadius: '24px',
                             padding: '0 0 env(safe-area-inset-bottom, 24px)',

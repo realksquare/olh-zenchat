@@ -1572,7 +1572,7 @@ const ChatWindow = ({ onBack }) => {
                     >
                         <div
                             onClick={e => e.stopPropagation()}
-                            style={{ width: '100%', maxWidth: '500px', background: 'linear-gradient(180deg, #1a2030 0%, #161b22 100%)', borderTop: '1px solid rgba(255,255,255,0.07)', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', padding: '0 0 env(safe-area-inset-bottom, 28px)', boxShadow: '0 -12px 48px rgba(0,0,0,0.6)', animation: 'slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                            style={{ width: '100%', maxWidth: '500px', background: 'linear-gradient(180deg, #1a2030 0%, #161b22 100%)', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', padding: '0 0 env(safe-area-inset-bottom, 28px)', boxShadow: '0 -12px 48px rgba(0,0,0,0.6)', animation: 'slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1)' }}
                         >
                             {/* Drag handle */}
                             <div style={{ width: '36px', height: '4px', background: 'rgba(255,255,255,0.15)', borderRadius: '2px', margin: '14px auto 0' }} />
