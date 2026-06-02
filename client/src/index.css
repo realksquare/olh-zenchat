@@ -185,24 +185,13 @@ select {
 .auth-page {
   min-height: 100dvh;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: var(--space-4);
+  justify-content: flex-start;
+  padding: var(--space-8) var(--space-4);
   background-color: #0e1117;
-}
-
-@media (max-width: 768px) {
-  .auth-page {
-    position: fixed;
-    inset: 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: var(--space-8) var(--space-4) var(--space-12);
-  }
+  overflow-y: auto;
+  width: 100%;
 }
 
 .auth-card {
@@ -212,6 +201,18 @@ select {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-xl);
   padding: var(--space-8);
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+@media (max-width: 480px) {
+  .auth-page {
+    padding: var(--space-4) var(--space-3);
+  }
+  .auth-card {
+    padding: var(--space-6) var(--space-4);
+    border-radius: var(--radius-lg);
+  }
 }
 
 .auth-brand {
