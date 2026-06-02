@@ -76,6 +76,12 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        bio: {
+            type: String,
+            default: "",
+            maxlength: 87,
+            trim: true
+        },
         contacts: [
             {
                 userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -90,8 +96,7 @@ const userSchema = new mongoose.Schema(
         privacySettings: {
             onlineStatus: { type: String, enum: ["everyone", "contacts", "family", "close_circle", "nobody"], default: "everyone" },
             fullName: { type: String, enum: ["everyone", "contacts", "family", "close_circle", "nobody"], default: "everyone" },
-            avatar: { type: String, enum: ["everyone", "contacts", "nobody"], default: "everyone" },
-            typingIndicator: { type: String, enum: ["everyone", "contacts", "nobody"], default: "everyone" }
+            avatar: { type: String, enum: ["everyone", "contacts", "nobody"], default: "everyone" }
         },
         role: {
             type: String,
@@ -206,6 +211,7 @@ userSchema.methods.toPublicJSON = function () {
         username: this.username,
         avatar: this.avatar,
         fullName: this.fullName,
+        bio: this.bio,
         isOnline: this.isOnline,
         lastSeen: this.lastSeen,
         role: this.role,
@@ -224,6 +230,7 @@ userSchema.methods.toPrivateJSON = function () {
         mfaPreference: this.mfaPreference,
         avatar: this.avatar,
         fullName: this.fullName,
+        bio: this.bio,
         isOnline: this.isOnline,
         lastSeen: this.lastSeen,
         notificationsEnabled: this.notificationsEnabled,
@@ -250,6 +257,7 @@ userSchema.methods.toParticipantJSON = function () {
         _id: this._id,
         username: this.username,
         avatar: this.avatar,
+        bio: this.bio,
         isOnline: this.isOnline,
         role: this.role,
         isVerified: this.isVerified

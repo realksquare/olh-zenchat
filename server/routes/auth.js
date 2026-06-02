@@ -511,6 +511,10 @@ router.put(
                 user.fullName = req.body.fullName;
             }
 
+            if (req.body.bio !== undefined) {
+                user.bio = req.body.bio;
+            }
+
             if (req.body.phoneNumber !== undefined) {
                 const newPhone = req.body.phoneNumber ? req.body.phoneNumber.trim() : "";
                 if (newPhone && newPhone !== user.phoneNumber) {

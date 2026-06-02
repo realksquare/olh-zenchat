@@ -6,6 +6,20 @@ import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 
+const mysteryQuotes = [
+    "Status: Classified",
+    "Maybe online... Or not?",
+    "Nobody knows the presence...",
+    "Selectively visible"
+];
+
+const getMysteryQuote = (userId) => {
+    if (!userId) return mysteryQuotes[0];
+    const hash = Array.from(userId).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const epoch12h = Math.floor(Date.now() / (12 * 60 * 60 * 1000));
+    return mysteryQuotes[(hash + epoch12h) % mysteryQuotes.length];
+};
+
 const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = false, isSPOp = false, isContact = false, onViewMoments, iBlocked = false, theyBlocked = false }) => {
     const [blockError, setBlockError] = useState(null);
     const [showConfirmBlock, setShowConfirmBlock] = useState(false);
@@ -28,8 +42,8 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
     // Safety exit
     if (!isOpen || !user) return null;
 
-    // Force offline if blocked relationship exists
-    const effectiveIsOnline = isOnline && !iBlocked && !theyBlocked;
+    // Force offline if blocked relationship exists or presence is hidden
+    const effectiveIsOnline = isOnline && !iBlocked && !theyBlocked && !user.presenceHidden;
 
     // Extremely defensive metadata extraction
     const username = typeof user.username === 'string' ? user.username : 'User';
@@ -115,6 +129,11 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                         {canSeeFullName && fullName && (
                             <p className="user-card-fullname">{fullName}</p>
                         )}
+                        {user.bio && (
+                            <p className="user-card-bio" style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', marginTop: '8px', textAlign: 'center', maxWidth: '80%', fontStyle: 'italic', wordBreak: 'break-word' }}>
+                                "{user.bio}"
+                            </p>
+                        )}
                     </div>
 
                     <div className="user-card-stats">
@@ -124,8 +143,10 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                         </div>
                         <div className="stat-item">
                             <span className="stat-label">Status</span>
-                            <span className="stat-value" style={{ color: effectiveIsOnline ? 'var(--color-primary)' : 'inherit' }}>
-                                {effectiveIsOnline ? (isOtherInZen ? "Online - on #ZenMode" : "Active Now") : "Offline"}
+                            <span className="stat-value" style={{ color: effectiveIsOnline ? 'var(--color-primary)' : (user.presenceHidden && !iBlocked && !theyBlocked ? 'inherit' : 'inherit') }}>
+                                {iBlocked || theyBlocked ? "Offline" : 
+                                    user.presenceHidden ? getMysteryQuote(userId) :
+                                    effectiveIsOnline ? (isOtherInZen ? "Online - on #ZenMode" : "Active Now") : "Offline"}
                             </span>
                         </div>
                     </div>

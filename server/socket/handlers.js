@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const { sendPushNotification } = require("../utils/firebase");
 const { decompressPacket, compressPacket } = require("../utils/packetCompressor");
 const { unpackMessage, isBinaryPacket } = require("../utils/binaryPacker");
+const { canSeePresence } = require("../utils/privacyHelper");
 
 const onlineUsers = new Map();
 const disconnectTimeouts = new Map();
@@ -65,16 +66,8 @@ const broadcastUserStatus = async (uid, isOnline, lastSeen = null, io) => {
             }
 
             let canSee = false;
-            if (privacy === "everyone") {
-                canSee = true;
-            } else if (privacy === "nobody") {
-                canSee = false;
-            } else {
-                const isContact = user.contacts?.some(c =>
-                    c.userId.toString() === targetId &&
-                    (privacy === "contacts" || c.tag === privacy)
-                );
-                if (isContact) canSee = true;
+            if (targetUser) {
+                canSee = canSeePresence(user, targetUser);
             }
 
             if (canSee) {
@@ -342,27 +335,16 @@ const registerSocketHandlers = (io) => {
                         const otherUser = await User.findById(otherId).select("privacySettings contacts blockedUsers");
                         if (!otherUser) continue;
 
-                        // Check blocking
-                        const me = await User.findById(userId).select("blockedUsers");
+                        const me = await User.findById(userId).select("privacySettings contacts blockedUsers");
                         const theyBlockedMe = otherUser?.blockedUsers?.some(u => u.userId.toString() === userId.toString());
                         const iBlockedThem = me?.blockedUsers?.some(u => u.userId.toString() === otherId.toString());
                         if (theyBlockedMe || iBlockedThem) {
                             continue;
                         }
 
-                        const privacy = otherUser.privacySettings?.onlineStatus || "everyone";
                         let canSee = false;
-
-                        if (privacy === "everyone") {
-                            canSee = true;
-                        } else if (privacy === "nobody") {
-                            canSee = false;
-                        } else {
-                            const isContact = otherUser.contacts?.some(c =>
-                                c.userId.toString() === userId &&
-                                (privacy === "contacts" || c.tag === privacy)
-                            );
-                            if (isContact) canSee = true;
+                        if (me) {
+                            canSee = canSeePresence(otherUser, me);
                         }
 
                         if (canSee) {

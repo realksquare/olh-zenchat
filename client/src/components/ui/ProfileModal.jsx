@@ -24,7 +24,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [onlineVisibility, setOnlineVisibility] = useState(user?.privacySettings?.onlineStatus || "everyone");
     const [nameVisibility, setNameVisibility] = useState(user?.privacySettings?.fullName || "everyone");
     const [avatarVisibility, setAvatarVisibility] = useState(user?.privacySettings?.avatar || "everyone");
-    const [typingVisibility, setTypingVisibility] = useState(user?.privacySettings?.typingIndicator || "everyone");
+    const [bio, setBio] = useState(user?.bio || "");
     const [toast, setToast] = useState(null);
     const [isSubscribing, setIsSubscribing] = useState(false);
     const [imageError, setImageError] = useState(false);
@@ -95,8 +95,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setAvatarPreview(user.avatar || "");
             setOnlineVisibility(user.privacySettings?.onlineStatus || "everyone");
             setNameVisibility(user.privacySettings?.fullName || "everyone");
-            setTypingVisibility(user.privacySettings?.typingIndicator || "everyone");
             setAvatarVisibility(user.privacySettings?.avatar || "everyone");
+            setBio(user.bio || "");
             setAvatarFile(null);
             setToast(null);
             setIsSubscribing(false);
@@ -181,6 +181,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         const formData = new FormData();
         if (username !== user.username) formData.append("username", username);
         if (fullName !== user.fullName) formData.append("fullName", fullName);
+        if (bio !== user.bio) formData.append("bio", bio);
         if (email !== user.email) formData.append("email", email);
         if (password) formData.append("password", password);
         if (avatarFile) {
@@ -194,8 +195,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         const privacySettings = { 
             onlineStatus: onlineVisibility, 
             fullName: nameVisibility,
-            avatar: avatarVisibility,
-            typingIndicator: typingVisibility 
+            avatar: avatarVisibility
         };
         formData.append("privacySettings", JSON.stringify(privacySettings));
         const res = await updateProfile(formData);
@@ -488,6 +488,30 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                     </div>
 
                     <div className="form-group">
+                        <label>Bio</label>
+                        <textarea
+                            value={bio}
+                            onChange={(e) => setBio(e.target.value)}
+                            placeholder="A little bit about yourself... (max 87 characters)"
+                            maxLength={87}
+                            style={{ 
+                                width: '100%', 
+                                padding: '10px 12px', 
+                                background: 'rgba(0, 0, 0, 0.2)', 
+                                border: '1px solid rgba(255, 255, 255, 0.1)', 
+                                borderRadius: '8px',
+                                color: 'white',
+                                minHeight: '60px',
+                                resize: 'none',
+                                fontSize: '0.9rem'
+                            }}
+                        />
+                        <span style={{ fontSize: "0.75rem", color: bio.length === 87 ? "#ef4444" : "#64748b", textAlign: "right", display: "block", marginTop: "4px" }}>
+                            {bio.length}/87
+                        </span>
+                    </div>
+
+                    <div className="form-group">
                         <label>Email</label>
                         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
                     </div>
@@ -537,17 +561,6 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                     <option value="nobody">Nobody</option>
                                 </select>
                             </div>
-                        </div>
-                        <div className="form-group" style={{ marginTop: "1rem" }}>
-                            <label>Scrambled Typing Preview</label>
-                            <select value={typingVisibility} onChange={(e) => setTypingVisibility(e.target.value)}>
-                                <option value="everyone">Everyone</option>
-                                <option value="contacts">Contacts Only</option>
-                                <option value="nobody">Nobody</option>
-                            </select>
-                            <span style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "4px", display: "block", lineHeight: "1.2" }}>
-                                Only if both sender and receiver have set the same visibility level, scrambled preview is rendered. Otherwise, standard indicators are used.
-                            </span>
                         </div>
                     </div>
 

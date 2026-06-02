@@ -84,7 +84,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const iBlocked = liveChat.blockStatus?.iBlocked;
     const theyBlocked = liveChat.blockStatus?.theyBlocked;
     const isBlocked = iBlocked || theyBlocked;
-    const isOnline = !isBlocked && !isOffline && (otherUser?.isOnline || (otherUserId && onlineUsers.has(otherUserId.toString())));
+    const isOnline = !isBlocked && !isOffline && !otherUser?.presenceHidden && (otherUser?.isOnline || (otherUserId && onlineUsers.has(otherUserId.toString())));
     const isSPOp = isOnline && peerLowBandwidth[otherUserId] === true;
     const hasMoments = !isBlocked && !!(otherUserId && hasActiveMoment(otherUserId.toString()));
     const isContact = !!(user?.contacts?.some(c => {

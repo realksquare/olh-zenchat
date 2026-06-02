@@ -4,6 +4,7 @@ const Chat = require("../models/Chat");
 const User = require("../models/User");
 const Message = require("../models/Message");
 const authMiddleware = require("../middleware/auth");
+const { sanitizeChatParticipants } = require("../utils/privacyHelper");
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ router.get("/", async (req, res) => {
             participants: req.user._id,
             deletedBy: { $ne: req.user._id }
         })
-            .populate("participants", "username avatar isOnline lastSeen isVerified createdAt")
+            .populate("participants", "username avatar bio isOnline lastSeen isVerified createdAt privacySettings contacts")
             .populate({
                 path: "lastMessage",
                 populate: { path: "senderId", select: "username" },
@@ -48,6 +49,8 @@ router.get("/", async (req, res) => {
             unreadMap[u._id.toString()] = u.count;
         });
 
+        const me = await User.findById(req.user._id);
+
         const chatsWithUnread = await Promise.all(sortedChats.map(async (chat) => {
             let lm = chat.lastMessage;
             if (!lm || (lm && (lm.deletedForEveryone || (lm.deletedFor && lm.deletedFor.includes(req.user._id))))) {
@@ -75,13 +78,13 @@ router.get("/", async (req, res) => {
                     };
                 }
             }
-
-            return {
+            let rawChat = {
                 ...chat.toObject(),
                 lastMessage: lm,
                 unreadCount: unreadMap[chat._id.toString()] || 0,
                 blockStatus
             };
+            return sanitizeChatParticipants(rawChat, me);
         }));
 
         // Filter out completely empty chats (no messages visible to the user)
@@ -130,7 +133,7 @@ router.post("/", async (req, res) => {
             }
             // Re-fetch fully populated (fresh data, no stale deletedBy or lastMessage)
             const freshChat = await Chat.findById(existingChat._id)
-                .populate("participants", "username avatar isOnline lastSeen isVerified")
+                .populate("participants", "username avatar bio isOnline lastSeen isVerified privacySettings contacts")
                 .populate({
                     path: "lastMessage",
                     populate: { path: "senderId", select: "username" },
@@ -151,7 +154,7 @@ router.post("/", async (req, res) => {
             }
             const freshObj = freshChat.toObject();
             freshObj.blockStatus = blockStatus;
-            return res.json({ chat: freshObj });
+            return res.json({ chat: sanitizeChatParticipants(freshObj, await User.findById(req.user._id)) });
         }
 
         const newChat = await Chat.create({
@@ -160,7 +163,7 @@ router.post("/", async (req, res) => {
         });
 
         const populated = await Chat.findById(newChat._id)
-            .populate("participants", "username avatar isOnline lastSeen isVerified createdAt")
+            .populate("participants", "username avatar bio isOnline lastSeen isVerified createdAt privacySettings contacts")
             .populate({
                 path: "lastMessage",
                 populate: { path: "senderId", select: "username" },
@@ -186,13 +189,14 @@ router.post("/", async (req, res) => {
 
         const populatedObj = populated.toObject();
         populatedObj.blockStatus = blockStatus;
+        const sanitizedChat = sanitizeChatParticipants(populatedObj, await User.findById(req.user._id));
 
         const io = req.app.get("io");
         if (io) {
-            io.to(userId).emit("new_chat", { chat: populatedObj });
+            io.to(userId).emit("new_chat", { chat: sanitizedChat });
         }
 
-        res.status(201).json({ chat: populatedObj });
+        res.status(201).json({ chat: sanitizedChat });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }
@@ -210,10 +214,13 @@ router.get("/users", async (req, res) => {
             _id: { $ne: req.user._id },
             username: { $regex: search.trim(), $options: "i" },
         })
-            .select("username avatar isOnline lastSeen isVerified")
+            .select("username avatar bio isOnline lastSeen isVerified privacySettings contacts")
             .limit(10);
 
-        res.json({ users });
+        const { sanitizeUserList } = require("../utils/privacyHelper");
+        const me = await User.findById(req.user._id);
+
+        res.json({ users: sanitizeUserList(users, me) });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }
@@ -225,7 +232,7 @@ router.get("/:chatId", async (req, res) => {
             _id: req.params.chatId,
             participants: req.user._id,
         })
-            .populate("participants", "username avatar isOnline lastSeen isVerified createdAt")
+            .populate("participants", "username avatar bio isOnline lastSeen isVerified createdAt privacySettings contacts")
             .populate({
                 path: "lastMessage",
                 populate: { path: "senderId", select: "username" },
@@ -254,10 +261,10 @@ router.get("/:chatId", async (req, res) => {
         }
 
         res.json({ 
-            chat: {
+            chat: sanitizeChatParticipants({
                 ...chat.toObject(),
                 blockStatus
-            }
+            }, await User.findById(req.user._id))
         });
     } catch (err) {
         res.status(500).json({ message: "Server error" });

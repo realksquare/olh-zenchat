@@ -23,6 +23,20 @@ import { addFavMedia } from "../../utils/mediaStorage";
 const EMPTY_MESSAGES = [];
 const EMPTY_CONTACTS = [];
 
+const mysteryQuotes = [
+    "Status: Classified",
+    "Maybe online... Or not?",
+    "Nobody knows the presence...",
+    "Selectively visible"
+];
+
+const getMysteryQuote = (userId) => {
+    if (!userId) return mysteryQuotes[0];
+    const hash = Array.from(userId.toString()).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const epoch12h = Math.floor(Date.now() / (12 * 60 * 60 * 1000));
+    return mysteryQuotes[(hash + epoch12h) % mysteryQuotes.length];
+};
+
 const OnlineDot = memo(({ isSPOp }) => {
     const [tooltip, setTooltip] = useState(null);
     const dotRef = useRef(null);
@@ -587,6 +601,7 @@ const ChatWindow = ({ onBack }) => {
 
     const isPeerOnline = useMemo(() => {
         if (!otherUser) return false;
+        if (otherUser.presenceHidden) return false;
         return !isOffline && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked && 
                (otherUser.isOnline || onlineUsers.has(otherUser._id) || onlineUsers.has(otherUser._id?.toString()));
     }, [otherUser, isOffline, activeChat?.blockStatus?.iBlocked, activeChat?.blockStatus?.theyBlocked, onlineUsers]);
@@ -1092,6 +1107,7 @@ const ChatWindow = ({ onBack }) => {
     const statusText = useMemo(() => {
         if (!otherUser) return "";
         if (isOffline || activeChat?.blockStatus?.iBlocked || activeChat?.blockStatus?.theyBlocked) return "Offline";
+        if (otherUser.presenceHidden) return getMysteryQuote(otherUser._id);
         const isOtherInZen = zenUsers[otherUser._id] || zenUsers[otherUser._id?.toString()];
         if (isPeerOnline) {
             return isOtherInZen ? "Online - on #ZenMode" : "Online";
