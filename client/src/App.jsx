@@ -880,13 +880,13 @@ const App = () => {
       {/* 2. PWA Exit Confirmation Overlay */}
       {showPwaExitConfirm && (
         <div className="mobile-bottom-sheet-overlay" style={{ zIndex: 99999999 }} onClick={() => setShowPwaExitConfirm(false)}>
-          <div className="mobile-bottom-sheet exit-pwa-sheet" onClick={(e) => e.stopPropagation()} style={{ padding: "20px 20px 32px" }}>
+          <div className="mobile-bottom-sheet exit-pwa-sheet" onClick={(e) => e.stopPropagation()} style={{ padding: "20px 0 32px" }}>
             <div className="mobile-bottom-sheet-handle" />
-            <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#f8fafc", marginBottom: "8px", textAlign: "center" }}>Exit ZenChat?</h3>
-            <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "24px", lineHeight: "1.5", textAlign: "center" }}>
+            <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#f8fafc", marginBottom: "8px", textAlign: "center", padding: "0 20px" }}>Exit ZenChat?</h3>
+            <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "24px", lineHeight: "1.5", textAlign: "center", padding: "0 20px" }}>
               Are you sure you want to exit the application?
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%", padding: "0 20px", boxSizing: "border-box" }}>
               <button
                 className="btn btn-primary"
                 onClick={() => {
