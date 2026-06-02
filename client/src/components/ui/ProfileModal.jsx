@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
@@ -9,6 +9,182 @@ import { db } from "../../db/zenDB";
 import { generateRecoveryKey, rotateUserRecoveryKey, setupE2EEForUser } from "../../utils/e2eeHelper";
 
 // Phone parser and country codes removed in favor of Email 2FA
+
+const VISIBILITY_OPTIONS = [
+    { value: "everyone", label: "Everyone" },
+    { value: "contacts", label: "Contacts Only" },
+    { value: "nobody", label: "Nobody" }
+];
+
+const CustomSelect = ({ value, onChange, options, isMobile }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        if (isMobile) return;
+        const handleClickOutside = (event) => {
+            if (containerRef.current && !containerRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [isMobile]);
+
+    const selectedOption = options.find(o => o.value === value) || options[0];
+
+    const handleSelect = (val) => {
+        onChange(val);
+        setIsOpen(false);
+    };
+
+    return (
+        <div ref={containerRef} style={{ position: "relative", width: "100%" }}>
+            <div
+                onClick={() => setIsOpen(!isOpen)}
+                style={{
+                    width: "100%",
+                    background: "#0e1117",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    borderRadius: "8px",
+                    padding: "10px 14px",
+                    fontSize: "0.85rem",
+                    color: "#e2e8f0",
+                    outline: "none",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    boxSizing: "border-box",
+                    height: "40px"
+                }}
+            >
+                <span>{selectedOption.label}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: "transform 0.2s", transform: isOpen ? "rotate(180deg)" : "rotate(0)" }}>
+                    <polyline points="6 9 12 15 18 9" />
+                </svg>
+            </div>
+
+            {!isMobile && isOpen && (
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "calc(100% + 4px)",
+                        left: 0,
+                        width: "100%",
+                        background: "#161b22",
+                        border: "1px solid rgba(255, 255, 255, 0.08)",
+                        borderRadius: "8px",
+                        boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+                        zIndex: 1000,
+                        overflow: "hidden",
+                        display: "flex",
+                        flexDirection: "column",
+                    }}
+                >
+                    {options.map((opt) => (
+                        <div
+                            key={opt.value}
+                            onClick={() => handleSelect(opt.value)}
+                            style={{
+                                padding: "10px 14px",
+                                fontSize: "0.85rem",
+                                color: opt.value === value ? "var(--color-primary)" : "#c9d1d9",
+                                background: opt.value === value ? "rgba(255, 255, 255, 0.04)" : "transparent",
+                                cursor: "pointer",
+                                transition: "background 0.15s",
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = opt.value === value ? "rgba(255, 255, 255, 0.04)" : "transparent";
+                            }}
+                        >
+                            {opt.label}
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {isMobile && isOpen && createPortal(
+                <div
+                    className="mobile-bottom-sheet-overlay"
+                    onClick={() => setIsOpen(false)}
+                    style={{
+                        position: 'fixed', inset: 0,
+                        background: 'rgba(9, 13, 20, 0.72)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        zIndex: 9999999,
+                        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                        animation: 'fadeIn 0.2s ease-out'
+                    }}
+                >
+                    <div
+                        className="mobile-bottom-sheet"
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                            width: '100%',
+                            background: 'linear-gradient(180deg, #1a2030 0%, #161b22 100%)',
+                            borderTop: '1px solid rgba(255,255,255,0.07)',
+                            borderTopLeftRadius: '24px',
+                            borderTopRightRadius: '24px',
+                            padding: '0 0 env(safe-area-inset-bottom, 24px)',
+                            boxShadow: '0 -12px 48px rgba(0,0,0,0.6)',
+                            display: 'flex', flexDirection: 'column',
+                            animation: 'slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
+                            boxSizing: 'border-box',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <div style={{ width: '36px', height: '4px', background: 'rgba(255,255,255,0.15)', borderRadius: '2px', margin: '14px auto 10px' }} />
+
+                        <div style={{ padding: "10px 20px 14px", fontSize: "0.95rem", fontWeight: 600, color: "#fff", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                            Select Option
+                        </div>
+
+                        <div className="mobile-sheet-actions" style={{ display: 'flex', flexDirection: 'column', padding: '8px 0 16px' }}>
+                            {options.map((opt) => (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    className="bottom-sheet-item"
+                                    onClick={() => handleSelect(opt.value)}
+                                    style={{
+                                        width: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        gap: '14px',
+                                        padding: '14px 20px',
+                                        background: 'transparent',
+                                        border: 'none',
+                                        borderRadius: 0,
+                                        color: opt.value === value ? "var(--color-primary)" : '#c9d1d9',
+                                        fontSize: '0.93rem',
+                                        fontWeight: 500,
+                                        textAlign: 'left',
+                                        cursor: 'pointer',
+                                        transition: 'background 0.15s'
+                                    }}
+                                >
+                                    <span>{opt.label}</span>
+                                    {opt.value === value && (
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--color-primary)" }}>
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+        </div>
+    );
+};
 
 const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const { user, updateProfile, isLoading, soundEnabled, toggleSound, unblockUser } = useAuthStore();
@@ -41,6 +217,13 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [otpSent, setOtpSent] = useState(false);
     const [expiryTimeLeft, setExpiryTimeLeft] = useState(300); // 5 minutes countdown
     const [resendLockTimeLeft, setResendLockTimeLeft] = useState(0); // 1 minute rate-limit
+
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     useEffect(() => {
         let timer = null;
@@ -204,6 +387,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setTimeout(() => {
                 onSave?.();
                 onClose();
+                window.location.reload();
             }, 1000);
         } else {
             showToast(res.message);
@@ -419,6 +603,23 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const isSubscribedInBrowser = typeof window.Notification !== 'undefined' && window.Notification.permission === "granted" && 
                                    user?.fcmTokens?.some(t => t.deviceType === currentDeviceType);
 
+    const hasChanges = useMemo(() => {
+        if (!user) return false;
+        const norm = (val) => val === undefined || val === null ? "" : String(val).trim();
+        const usernameChanged = norm(username) !== norm(user.username);
+        const fullNameChanged = norm(fullName) !== norm(user.fullName);
+        const bioChanged = norm(bio) !== norm(user.bio);
+        const emailChanged = norm(email) !== norm(user.email);
+        const passwordChanged = password.length > 0;
+        const avatarChanged = avatarFile !== null || norm(avatarPreview) !== norm(user.avatar);
+        const onlineVisibilityChanged = norm(onlineVisibility) !== norm(user.privacySettings?.onlineStatus || "everyone");
+        const nameVisibilityChanged = norm(nameVisibility) !== norm(user.privacySettings?.fullName || "everyone");
+        const avatarVisibilityChanged = norm(avatarVisibility) !== norm(user.privacySettings?.avatar || "everyone");
+        const twoFaChanged = (is2faEnabled !== (user.is2faEnabled || false));
+
+        return usernameChanged || fullNameChanged || bioChanged || emailChanged || passwordChanged || avatarChanged || onlineVisibilityChanged || nameVisibilityChanged || avatarVisibilityChanged || twoFaChanged;
+    }, [username, fullName, bio, email, password, avatarFile, avatarPreview, onlineVisibility, nameVisibility, avatarVisibility, is2faEnabled, user]);
+
     return createPortal(
         <div className="modal-overlay moments-aura-overlay" style={{ zIndex: 10000 }}>
             {toast && <div className="aura-toast" style={{ zIndex: 10001, bottom: '20px' }}>{toast}</div>}
@@ -539,27 +740,30 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                         <div className="form-row" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "1rem" }}>
                             <div className="form-group">
                                 <label>Online Status</label>
-                                <select value={onlineVisibility} onChange={(e) => setOnlineVisibility(e.target.value)}>
-                                    <option value="everyone">Everyone</option>
-                                    <option value="contacts">Contacts Only</option>
-                                    <option value="nobody">Nobody</option>
-                                </select>
+                                <CustomSelect
+                                    value={onlineVisibility}
+                                    onChange={setOnlineVisibility}
+                                    options={VISIBILITY_OPTIONS}
+                                    isMobile={isMobile}
+                                />
                             </div>
                             <div className="form-group">
                                 <label>Full Name</label>
-                                <select value={nameVisibility} onChange={(e) => setNameVisibility(e.target.value)}>
-                                    <option value="everyone">Everyone</option>
-                                    <option value="contacts">Contacts Only</option>
-                                    <option value="nobody">Nobody</option>
-                                </select>
+                                <CustomSelect
+                                    value={nameVisibility}
+                                    onChange={setNameVisibility}
+                                    options={VISIBILITY_OPTIONS}
+                                    isMobile={isMobile}
+                                />
                             </div>
                             <div className="form-group">
                                 <label>Avatar Visibility</label>
-                                <select value={avatarVisibility} onChange={(e) => setAvatarVisibility(e.target.value)}>
-                                    <option value="everyone">Everyone</option>
-                                    <option value="contacts">Contacts Only</option>
-                                    <option value="nobody">Nobody</option>
-                                </select>
+                                <CustomSelect
+                                    value={avatarVisibility}
+                                    onChange={setAvatarVisibility}
+                                    options={VISIBILITY_OPTIONS}
+                                    isMobile={isMobile}
+                                />
                             </div>
                         </div>
                     </div>
@@ -1079,7 +1283,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                         {/* recaptcha container removed */}
                     </div>
 
-                    <button type="submit" className="btn btn-primary" disabled={isLoading} style={{ width: "100%", marginTop: "1rem", padding: "12px" }}>
+                    <button type="submit" className="btn btn-primary" disabled={isLoading || !hasChanges} style={{ width: "100%", marginTop: "1rem", padding: "12px", opacity: (!hasChanges || isLoading) ? 0.6 : 1, cursor: (!hasChanges || isLoading) ? "not-allowed" : "pointer" }}>
                         {isLoading ? "Saving..." : "Save Changes"}
                     </button>
                 </form>

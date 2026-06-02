@@ -17,9 +17,11 @@
 const isContact = (user, contactIdStr) => {
   if (!user || !user.contacts) return false;
   return user.contacts.some(c => {
-    // Handle both populated contacts and ObjectIds
-    const id = c._id ? c._id.toString() : c.toString();
-    return id === contactIdStr;
+    if (!c) return false;
+    const contactUserId = c.userId ? (c.userId._id ? c.userId._id.toString() : c.userId.toString()) : null;
+    if (contactUserId) return contactUserId === contactIdStr;
+    const directId = c._id ? c._id.toString() : c.toString();
+    return directId === contactIdStr;
   });
 };
 

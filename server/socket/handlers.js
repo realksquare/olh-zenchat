@@ -58,7 +58,7 @@ const broadcastUserStatus = async (uid, isOnline, lastSeen = null, io) => {
         for (const [targetId, targetData] of onlineUsers.entries()) {
             if (targetId === uid) continue;
 
-            const targetUser = await User.findById(targetId).select("blockedUsers");
+            const targetUser = await User.findById(targetId).select("privacySettings contacts blockedUsers");
             const theyBlockedUs = targetUser?.blockedUsers?.some(u => u.userId.toString() === uid.toString());
             const weBlockedThem = user?.blockedUsers?.some(u => u.userId.toString() === targetId.toString());
             if (theyBlockedUs || weBlockedThem) {
