@@ -106,11 +106,56 @@ const REACTIONS_MAP = {
     hifi: HifiReaction
 };
 
+const getFileName = (url, content) => {
+    if (!url) return content || "Document";
+    try {
+        const decoded = decodeURIComponent(url);
+        const parts = decoded.split('/');
+        const filename = parts[parts.length - 1];
+        const hasExtension = (str) => /\.[a-zA-Z0-9]{2,5}$/.test(str);
+        if (content && hasExtension(content)) {
+            return content;
+        }
+        return filename || content || "Document";
+    } catch (e) {
+        return content || "Document";
+    }
+};
+
+const triggerDownload = async (e, mediaUrl, content, senderUsername) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+        const fileName = getFileName(mediaUrl, content);
+        const dotIndex = fileName.lastIndexOf('.');
+        const baseName = dotIndex !== -1 ? fileName.slice(0, dotIndex) : fileName;
+        const extension = dotIndex !== -1 ? fileName.slice(dotIndex) : '';
+        const downloadName = `${baseName}_${senderUsername}_zenchat${extension}`;
+
+        const response = await fetch(mediaUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = downloadName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+        console.error("Download failed:", err);
+        window.open(mediaUrl, "_blank");
+    }
+};
+
 const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick, canDelete = true, canReply = true, zenFadeClass = "", isSelected = false, isMultiSelectMode = false, onSelect }) => {
     const user = useAuthStore((s) => s.user);
     const { toggleStarMessage, markViewOnceAsViewed } = useChatStore.getState();
     const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
     const isZenMode = useChatStore((s) => s.isZenMode);
+    
+    const senderUsername = isMe ? (user?.username || "user") : (otherUser?.username || "user");
     
     // Unified bottom sheet (mobile): shows reactions + actions
     const [mobileSheet, setMobileSheet] = useState(false);
@@ -580,7 +625,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                         }
                                     }} 
                                     onDoubleClick={(e) => e.stopPropagation()} 
-                                    style={{ cursor: 'pointer' }}
+                                    style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}
                                 >
                                      {shouldDelayLoad ? (
                                          <div 
@@ -593,7 +638,8 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                  background: 'rgba(15, 23, 42, 0.65)',
                                                  backdropFilter: 'blur(8px)',
                                                  borderRadius: '8px',
-                                                 width: '240px',
+                                                 width: '100%',
+                                                 maxWidth: '240px',
                                                  height: '160px',
                                                  border: '1px dashed rgba(255,255,255,0.15)',
                                                  gap: '8px',
@@ -635,7 +681,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                              </div>
                                          </div>
                                      ) : (
-                                         <div className="message-media-wrap" style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+                                         <div className="message-media-wrap" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                                              {message.type === "image" || message.type === "gif" || message.type === "sticker" ? (
                                                  <img 
                                                       ref={imgRef}
@@ -649,63 +695,60 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                  <video 
                                                       src={message.mediaUrl} 
                                                       className="message-video" 
-                                                      style={{ maxWidth: '100%', borderRadius: '8px' }} 
+                                                      style={{ maxWidth: '100%', borderRadius: '8px', margin: '0 auto', display: 'block' }} 
                                                       onLoadedData={() => setIsMediaLoaded(true)}
                                                       controls
                                                       playsInline
                                                   />
                                              ) : (
-                                                 <div className="file-attachment-card" style={{
-                                                     background: 'rgba(255,255,255,0.05)',
-                                                     border: '1px solid rgba(255,255,255,0.08)',
-                                                     borderRadius: '12px',
-                                                     padding: '12px 16px',
-                                                     display: 'flex',
-                                                     alignItems: 'center',
-                                                     gap: '12px',
-                                                     minWidth: '180px',
-                                                     cursor: 'pointer'
-                                                 }} onClick={(e) => {
-                                                     e.stopPropagation();
-                                                     onMediaClick(message.mediaUrl, 'file', false);
-                                                 }}>
-                                                     <div className="file-icon" style={{
-                                                         background: 'rgba(59, 130, 246, 0.15)',
-                                                         color: '#3b82f6',
-                                                         width: '36px',
-                                                         height: '36px',
-                                                         borderRadius: '10px',
-                                                         display: 'flex',
-                                                         alignItems: 'center',
-                                                         justifyContent: 'center'
-                                                     }}>
-                                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
-                                                         </svg>
-                                                     </div>
-                                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                                         <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                             {message.content || "Document"}
-                                                         </div>
-                                                         <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-                                                             Attachment
-                                                         </div>
-                                                     </div>
-                                                    <a
-                                                        href={message.mediaUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        download={message.content || 'document'}
-                                                        onClick={(e) => e.stopPropagation()}
-                                                        style={{ color: '#94a3b8', padding: '4px', borderRadius: '6px', transition: 'all 0.2s' }}
-                                                         onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-                                                         onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
+                                                  <div className="file-attachment-card" style={{
+                                                      background: 'rgba(0, 0, 0, 0.3)',
+                                                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                      borderRadius: '12px',
+                                                      padding: '12px 16px',
+                                                      display: 'flex',
+                                                      alignItems: 'center',
+                                                      gap: '12px',
+                                                      minWidth: '180px',
+                                                      cursor: 'pointer'
+                                                  }} onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      onMediaClick(message.mediaUrl, 'file', false);
+                                                  }}>
+                                                      <div className="file-icon" style={{
+                                                          background: 'rgba(59, 130, 246, 0.15)',
+                                                          color: '#3b82f6',
+                                                          width: '36px',
+                                                          height: '36px',
+                                                          borderRadius: '10px',
+                                                          display: 'flex',
+                                                          alignItems: 'center',
+                                                          justifyContent: 'center'
+                                                      }}>
+                                                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+                                                          </svg>
+                                                      </div>
+                                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                                          <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                              {getFileName(message.mediaUrl, message.content)}
+                                                          </div>
+                                                          <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
+                                                              {getFileName(message.mediaUrl, message.content).split('.').pop()?.toUpperCase() || 'FILE'} File
+                                                          </div>
+                                                      </div>
+                                                     <a
+                                                         href={message.mediaUrl}
+                                                         onClick={(e) => triggerDownload(e, message.mediaUrl, message.content, senderUsername)}
+                                                         style={{ color: '#94a3b8', padding: '4px', borderRadius: '6px', transition: 'all 0.2s', cursor: 'pointer' }}
+                                                          onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                                                          onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
                                                      >
                                                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
                                                          </svg>
                                                      </a>
-                                                 </div>
+                                                  </div>
                                              )}
                                              
                                              {status === "sending" && (message.type === "image" || message.type === "video") && (
@@ -895,7 +938,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                         </div>
 
                         {/* Action list */}
-                        <div style={{ display: 'flex', flexDirection: 'column', padding: '8px 0 16px' }}>
+                        <div className="mobile-sheet-actions" style={{ display: 'flex', flexDirection: 'column', padding: '8px 0 16px' }}>
                             {!isZenMode && (
                                 <button className="bottom-sheet-item" onClick={() => { setMobileSheet(false); toggleStarMessage(message._id, message.chatId); }}
                                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', borderRadius: 0, color: '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}

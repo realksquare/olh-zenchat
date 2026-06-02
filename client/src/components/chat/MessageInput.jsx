@@ -454,12 +454,13 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 const activeChat = useChatStore.getState().activeChat;
                 const isZen = useChatStore.getState().isZenMode;
                 const isLowBandwidth = useChatStore.getState().isLowBandwidth;
+                const msgContent = files.length === 1 ? (textContent || (isDoc ? file.name : "")) : (isDoc ? file.name : "");
                 addMessage(chatId, {
                     _id: tempId,
                     cid: tempId,
                     chatId,
                     senderId: userId,
-                    content: files.length === 1 ? textContent : (isDoc ? file.name : ""),
+                    content: msgContent,
                     type: msgType,
                     mediaUrl: URL.createObjectURL(file),
                     status: "sending",
@@ -492,7 +493,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     );
                     const downloadURL = res.data.secure_url;
                     const isZenMessage = useChatStore.getState().isZenMode;
-                    sendMessage(chatId, files.length === 1 ? textContent : (isDoc ? file.name : ""), msgType, downloadURL, replyToId, isViewOnceVal, tempId, isZenMessage);
+                    sendMessage(chatId, msgContent, msgType, downloadURL, replyToId, isViewOnceVal, tempId, isZenMessage);
                 } catch (uploadErr) {
                     console.warn("[MessageInput] Upload failed, queuing for retry:", uploadErr?.message);
                     updateMessage(chatId, { _id: tempId, status: "pending" });
@@ -507,7 +508,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                                 fileType: fileToUpload.type,
                                 uploadType,
                                 chatId,
-                                textContent: files.length === 1 ? textContent : (isDoc ? file.name : ""),
+                                textContent: msgContent,
                                 replyTo: replyToId,
                                 isViewOnce: isViewOnceVal,
                                 cid: tempId,
