@@ -2217,7 +2217,6 @@ select {
 .mobile-bottom-sheet {
   background: rgba(15, 23, 42, 0.96);
   backdrop-filter: blur(20px) saturate(180%);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
   width: 100%;
   border-radius: 24px 24px 0 0;
   padding: 16px 0 32px;
@@ -7688,13 +7687,14 @@ select {
   }
   /* Mobile gif tab sizing */
   .gif-tabs {
-    width: calc(100% - 90px);
-    gap: 4px;
-    padding: 3px;
+    width: calc(100% - 80px) !important;
+    gap: 3px !important;
+    padding: 2px !important;
+    margin: 0 auto !important;
   }
   .gif-tab {
-    padding: 6px 8px !important;
-    font-size: 12px !important;
+    padding: 5px 6px !important;
+    font-size: 11px !important;
     flex: 1;
     text-align: center;
   }

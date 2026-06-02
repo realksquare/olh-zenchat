@@ -127,7 +127,6 @@ const CustomSelect = ({ value, onChange, options, isMobile }) => {
                         style={{
                             width: '100%',
                             background: 'linear-gradient(180deg, #1a2030 0%, #161b22 100%)',
-                            borderTop: '1px solid rgba(255,255,255,0.07)',
                             borderTopLeftRadius: '24px',
                             borderTopRightRadius: '24px',
                             padding: '0 0 env(safe-area-inset-bottom, 24px)',
@@ -140,7 +139,7 @@ const CustomSelect = ({ value, onChange, options, isMobile }) => {
                     >
                         <div style={{ width: '36px', height: '4px', background: 'rgba(255,255,255,0.15)', borderRadius: '2px', margin: '14px auto 10px' }} />
 
-                        <div style={{ padding: "10px 20px 14px", fontSize: "0.95rem", fontWeight: 600, color: "#fff", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                        <div style={{ padding: "10px 20px 10px", fontSize: "0.95rem", fontWeight: 600, color: "#fff" }}>
                             Select Option
                         </div>
 
