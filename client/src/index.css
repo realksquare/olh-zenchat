@@ -191,6 +191,20 @@ select {
   background-color: #0e1117;
 }
 
+@media (max-width: 768px) {
+  .auth-page {
+    position: fixed;
+    inset: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: var(--space-8) var(--space-4) var(--space-12);
+  }
+}
+
 .auth-card {
   width: 100%;
   max-width: 400px;
