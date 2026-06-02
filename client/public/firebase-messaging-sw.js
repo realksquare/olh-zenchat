@@ -4,7 +4,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-com
 
 importScripts('https://unpkg.com/dexie@4.0.8/dist/dexie.js');
 
-const CACHE_NAME = 'zenchat-v2.1';
+const CACHE_NAME = 'zenchat-v2.2';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDuPbl1-IEdxnDctJgELm_VAQoSrLvWEM8",
@@ -79,26 +79,80 @@ try {
             }
         }
 
-        let title = payload.notification?.title || 'New Message';
-        let body = payload.notification?.body || '';
+        let newTitle = payload.notification?.title || 'New Message';
+        let newBody = payload.notification?.body || '';
 
         if (payload.data?.isViewOnce === "true") {
-            body = "Image - Sent a view-once media";
+            newBody = "Image - Sent a view-once media";
+        }
+
+        const notifications = await self.registration.getNotifications({ tag: 'zenchat-notif' });
+        
+        if (notifications.length > 0) {
+            let senders = new Set([newTitle]);
+            let existingBodies = [];
+            let totalMessages = 1;
+            
+            notifications.forEach(n => {
+                if (n.data?.senderName) {
+                    senders.add(n.data.senderName);
+                } else if (n.title !== 'ZenChat') {
+                    senders.add(n.title);
+                }
+                
+                if (n.data?.messages) {
+                    existingBodies = existingBodies.concat(n.data.messages);
+                } else if (n.title !== 'ZenChat') {
+                    existingBodies.push(n.body);
+                }
+                
+                totalMessages += (n.data?.msgCount || 1);
+                n.close();
+            });
+
+            existingBodies.push(newBody);
+            
+            let finalTitle, finalBody;
+            if (senders.size === 1) {
+                finalTitle = Array.from(senders)[0];
+                finalBody = existingBodies.slice(-4).join('\n');
+            } else {
+                finalTitle = 'ZenChat';
+                finalBody = `${totalMessages} new messages from ${senders.size} chats`;
+            }
+            
+            return self.registration.showNotification(finalTitle, {
+                body: finalBody,
+                icon: '/favicon.svg',
+                badge: '/favicon.svg',
+                tag: 'zenchat-notif',
+                renotify: true,
+                silent: false,
+                data: {
+                    url: '/',
+                    senderName: senders.size === 1 ? finalTitle : null,
+                    messages: senders.size === 1 ? existingBodies : [],
+                    msgCount: totalMessages
+                }
+            });
         }
 
         const notificationOptions = {
-            body: body,
+            body: newBody,
             icon: '/favicon.svg',
             badge: '/favicon.svg',
             tag: 'zenchat-notif',
             renotify: true,
             silent: false,
             data: {
-                url: payload.fcmOptions?.link || payload.data?.url || '/'
+                url: payload.fcmOptions?.link || payload.data?.url || '/',
+                senderName: newTitle,
+                messages: [newBody],
+                msgCount: 1
             }
         };
 
-        return self.registration.showNotification(title, notificationOptions);
+        return self.registration.showNotification(newTitle, notificationOptions);
     });
 } catch (e) {
     console.log(e);

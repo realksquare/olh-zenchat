@@ -2905,6 +2905,12 @@ select {
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
 }
 
+.unread-scroll-count {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #121820; /* Dark for contrast against blue primary background */
+  letter-spacing: 0.5px;
+}
 
 .loading-overlay {
   position: fixed;
@@ -7671,3 +7677,19 @@ select {
 .gif-fav-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.5); border: none; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; opacity: 0; transition: opacity 0.2s; }
 .gif-grid-item:hover .gif-fav-btn, .gif-fav-btn.active { opacity: 1; }
 .gif-fav-btn:hover { background: rgba(0,0,0,0.8); }
+
+/* ── UI Contrast / Brightness Adjustments ───────────────────────────── */
+.message-time,
+.chat-card-time,
+.chat-card-preview,
+.sidebar-profile-btn {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.sidebar-profile-btn.logout {
+  color: #f87171 !important; /* Keep the bright red for logout */
+}
+
+.sidebar-profile-btn:hover {
+  color: #ffffff !important;
+}

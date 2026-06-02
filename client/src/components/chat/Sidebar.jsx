@@ -46,7 +46,8 @@ const Sidebar = ({ onChatSelect }) => {
     const [pwaPrompt, setPwaPrompt] = useState(window.deferredPrompt || null);
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [isMomentCreatorOpen, setIsMomentCreatorOpen] = useState(false);
-    const [activeViewerMoments, setActiveViewerMoments] = useState(null);
+    const activeViewerMoments = useMomentStore((s) => s.activeViewerMoments);
+    const setActiveViewerMoments = useMomentStore((s) => s.setActiveViewerMoments);
     const [activeTab, setActiveTab] = useState("recents");
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [isVaultOpen, setIsVaultOpen] = useState(false);

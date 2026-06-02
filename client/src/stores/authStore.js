@@ -295,7 +295,21 @@ export const useAuthStore = create(
         }
     },
 
-        updateUser: (updatedUser) => {
+    syncTimezone: async (timezone) => {
+        try {
+            const token = localStorage.getItem(TOKEN_KEY);
+            if (!token) return;
+            const { data } = await axiosInstance.put("/auth/me", { timezone }, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+            set({ user: data.user });
+        } catch (err) {
+            console.error("Failed to sync timezone:", err);
+        }
+    },
+
+    updateUser: (updatedUser) => {
             set({ user: updatedUser });
         },
 

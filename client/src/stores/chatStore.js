@@ -663,7 +663,9 @@ export const useChatStore = create(
                     const updatedMessages = chatMessages.map((msg) => {
                         if (msg._id?.toString() === messageId?.toString()) {
                             if (msg.status === "read" && status === "delivered") return msg;
-                            return { ...msg, status };
+                            const newMsg = { ...msg, status };
+                            persistMessage({ ...newMsg, chatId: chatId?.toString() });
+                            return newMsg;
                         }
                         return msg;
                     });
@@ -703,7 +705,9 @@ export const useChatStore = create(
                         const isFromMe = msg.senderId?.toString() === currentUserId?.toString() ||
                             msg.senderId?._id?.toString() === currentUserId?.toString();
                         if (!isFromMe && msg.status !== "read") {
-                            return { ...msg, status: "read" };
+                            const newMsg = { ...msg, status: "read" };
+                            persistMessage({ ...newMsg, chatId: chatId?.toString() });
+                            return newMsg;
                         }
                         return msg;
                     });
@@ -751,7 +755,9 @@ export const useChatStore = create(
                         const isFromMe = msg.senderId?.toString() === currentUserId?.toString() ||
                             msg.senderId?._id?.toString() === currentUserId?.toString();
                         if (isFromMe && msg.status !== "read") {
-                            return { ...msg, status: "read" };
+                            const newMsg = { ...msg, status: "read" };
+                            persistMessage({ ...newMsg, chatId: chatId?.toString() });
+                            return newMsg;
                         }
                         return msg;
                     });

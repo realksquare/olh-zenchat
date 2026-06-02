@@ -446,11 +446,15 @@ router.put(
         }
 
         try {
-            const { username, email, password, notificationsEnabled, fcmToken } = req.body;
+            const { username, email, password, notificationsEnabled, fcmToken, timezone } = req.body;
             const user = await User.findById(req.user._id);
 
             if (!user) {
                 return res.status(404).json({ message: "User not found" });
+            }
+
+            if (timezone) {
+                user.timezone = timezone;
             }
 
             if (email && email !== user.email) {

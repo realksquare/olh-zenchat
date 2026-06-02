@@ -38,53 +38,80 @@ const startCronJobs = () => {
     
     console.log("[Cron] Auto-Purge job scheduled to run daily at midnight.");
 
-    // Daily Digest at 8 PM (20:00 server time)
-    cron.schedule('0 20 * * *', async () => {
+    // Hourly check for Daily Digest at 8 PM local time
+    cron.schedule('0 * * * *', async () => {
         try {
-            console.log("[Cron] Running 8 PM Daily Digest job...");
-            const usersWithTokens = await User.find({ "fcmTokens.0": { $exists: true } }).lean();
+            console.log("[Cron] Checking Daily Digest for users at 8 PM local time...");
+            const usersWithTokens = await User.find({ "fcmTokens.0": { $exists: true } });
 
             for (const user of usersWithTokens) {
-                const userChats = await Chat.find({ participants: user._id }).select('_id').lean();
-                const chatIds = userChats.map(c => c._id);
+                if (!user.timezone) continue;
 
-                const unreadMsgsCount = await Message.countDocuments({
-                    chatId: { $in: chatIds },
-                    senderId: { $ne: user._id },
-                    status: { $ne: "read" }
-                });
+                try {
+                    const userTime = new Date().toLocaleString("en-US", { timeZone: user.timezone, hour12: false, hour: 'numeric' });
+                    const currentHour = parseInt(userTime, 10);
 
-                const unviewedMomentsCount = await Moment.countDocuments({
-                    userId: { $ne: user._id },
-                    expiresAt: { $gt: new Date() },
-                    "viewedBy.userId": { $ne: user._id }
-                });
+                    if (currentHour === 20) {
+                        const userDateStr = new Date().toLocaleString("en-US", { timeZone: user.timezone, year: 'numeric', month: 'numeric', day: 'numeric' });
+                        
+                        let alreadySentToday = false;
+                        if (user.lastDailyDigestSent) {
+                            const lastSentDateStr = new Date(user.lastDailyDigestSent).toLocaleString("en-US", { timeZone: user.timezone, year: 'numeric', month: 'numeric', day: 'numeric' });
+                            if (lastSentDateStr === userDateStr) {
+                                alreadySentToday = true;
+                            }
+                        }
 
-                if (unreadMsgsCount > 0 || unviewedMomentsCount > 0) {
-                    const parts = [];
-                    if (unreadMsgsCount > 0) parts.push(`${unreadMsgsCount} unread message${unreadMsgsCount > 1 ? 's' : ''}`);
-                    if (unviewedMomentsCount > 0) parts.push(`${unviewedMomentsCount} unviewed #Moment${unviewedMomentsCount > 1 ? 's' : ''}`);
+                        if (!alreadySentToday) {
+                            const userChats = await Chat.find({ participants: user._id }).select('_id').lean();
+                            const chatIds = userChats.map(c => c._id);
 
-                    const bodyText = `You have ${parts.join(' and ')} waiting for you!`;
+                            const unreadMsgsCount = await Message.countDocuments({
+                                chatId: { $in: chatIds },
+                                senderId: { $ne: user._id },
+                                status: { $ne: "read" }
+                            });
 
-                    for (const tokenData of user.fcmTokens) {
-                        await sendPushNotification(
-                            user._id,
-                            tokenData.token,
-                            "ZenChat Daily Digest",
-                            bodyText,
-                            { type: "daily_digest" }
-                        );
+                            const unviewedMomentsCount = await Moment.countDocuments({
+                                userId: { $ne: user._id },
+                                expiresAt: { $gt: new Date() },
+                                "viewedBy.userId": { $ne: user._id }
+                            });
+
+                            if (unreadMsgsCount > 0 || unviewedMomentsCount > 0) {
+                                const parts = [];
+                                if (unreadMsgsCount > 0) parts.push(`${unreadMsgsCount} unread message${unreadMsgsCount > 1 ? 's' : ''}`);
+                                if (unviewedMomentsCount > 0) parts.push(`${unviewedMomentsCount} unviewed #Moment${unviewedMomentsCount > 1 ? 's' : ''}`);
+
+                                const bodyText = `You have ${parts.join(' and ')} waiting for you!`;
+
+                                for (const tokenData of user.fcmTokens) {
+                                    await sendPushNotification(
+                                        user._id,
+                                        tokenData.token,
+                                        "ZenChat Daily Digest",
+                                        bodyText,
+                                        { type: "daily_digest" }
+                                    );
+                                }
+                                
+                                user.lastDailyDigestSent = new Date();
+                                await user.save();
+                            }
+                        }
                     }
+                } catch (tzErr) {
+                    // Invalid timezone string or other format error for this user
+                    console.error(`[Cron] Timezone check failed for user ${user._id}:`, tzErr);
                 }
             }
-            console.log("[Cron] 8 PM Daily Digest complete.");
+            console.log("[Cron] Hourly Daily Digest check complete.");
         } catch (err) {
             console.error("[Cron] Daily Digest job failed:", err);
         }
     });
 
-    console.log("[Cron] Daily Digest job scheduled to run at 8 PM.");
+    console.log("[Cron] Daily Digest job scheduled to run hourly.");
 };
 
 module.exports = { startCronJobs };

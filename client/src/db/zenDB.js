@@ -97,7 +97,7 @@ export const getLocalChats = async () => {
 
 export const getLocalMessages = async (chatId) => {
     const msgs = await db.messages.where("chatId").equals(chatId).sortBy("createdAt");
-    return msgs.map(m => healMessageDate(m));
+    return msgs.slice(-18).map(m => healMessageDate(m));
 };
 
 export const clearLocalData = async () => {

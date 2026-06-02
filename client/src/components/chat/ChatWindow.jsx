@@ -58,17 +58,21 @@ const OnlineDot = memo(({ isSPOp }) => {
 
 
 
-const ScrollDownBtn = ({ onClick, show, isLifted }) => (
+const ScrollDownBtn = ({ onClick, show, isLifted, unreadCount }) => (
     <button
         className={`scroll-down-btn ${show ? 'visible' : ''}`}
         style={{ marginBottom: isLifted ? '54px' : '0', transition: 'margin-bottom 0.2s ease-out' }}
         onClick={onClick}
         aria-label="Scroll to bottom"
     >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="7 13 12 18 17 13" />
-            <polyline points="7 6 12 11 17 6" />
-        </svg>
+        {unreadCount > 0 ? (
+            <span className="unread-scroll-count">{unreadCount > 99 ? '99+' : unreadCount}</span>
+        ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="7 13 12 18 17 13" />
+                <polyline points="7 6 12 11 17 6" />
+            </svg>
+        )}
     </button>
 );
 
@@ -632,10 +636,12 @@ const ChatWindow = ({ onBack }) => {
     const [replyingTo, setReplyingTo] = useState(null);
     const [deletingMessage, setDeletingMessage] = useState(null);
     const [showScrollDown, setShowScrollDown] = useState(false);
+    const [unreadScrollCount, setUnreadScrollCount] = useState(0);
     const [showUserCard, setShowUserCard] = useState(false);
     const [selectedMedia, setSelectedMedia] = useState(null);
     const [selectedDoc, setSelectedDoc] = useState(null);
-    const [activeViewerMoments, setActiveViewerMoments] = useState(null);
+    const activeViewerMoments = useMomentStore((s) => s.activeViewerMoments);
+    const setActiveViewerMoments = useMomentStore((s) => s.setActiveViewerMoments);
     const [showDisappearingMenu, setShowDisappearingMenu] = useState(false);
 
     // Multi-select state
@@ -1028,7 +1034,17 @@ const ChatWindow = ({ onBack }) => {
         }
     }, [activeChat?._id, isLowBandwidth, updateLowBandwidth]);
 
+    const prevMessagesLenRef = useRef(messages.length);
     useEffect(() => {
+        const prevLen = prevMessagesLenRef.current;
+        prevMessagesLenRef.current = messages.length;
+        
+        if (messages.length > prevLen) {
+            if (showScrollDown && !isLoadingOlderRef.current) {
+                setUnreadScrollCount(prev => prev + (messages.length - prevLen));
+            }
+        }
+
         if (!showScrollDown && !isLoadingOlderRef.current) {
             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }
@@ -1046,6 +1062,7 @@ const ChatWindow = ({ onBack }) => {
         const { scrollTop, scrollHeight, clientHeight } = e.target;
         const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
         setShowScrollDown(!isNearBottom);
+        if (isNearBottom) setUnreadScrollCount(0);
 
         const atTop = scrollTop === 0;
         const atBottom = scrollHeight - scrollTop - clientHeight <= 1;
@@ -1062,6 +1079,7 @@ const ChatWindow = ({ onBack }) => {
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         setShowScrollDown(false);
+        setUnreadScrollCount(0);
     };
 
     const [tick, setTick] = useState(0);
@@ -1339,7 +1357,7 @@ const ChatWindow = ({ onBack }) => {
                 {isTyping && <TypingIndicator scramble={isSPOpActive ? "" : (typeof typingScramble === "string" ? typingScramble : "")} />}
                 <div ref={messagesEndRef} />
             </div>
-            <ScrollDownBtn onClick={scrollToBottom} show={showScrollDown} isLifted={!!replyingTo} />
+            <ScrollDownBtn onClick={scrollToBottom} show={showScrollDown} isLifted={!!replyingTo} unreadCount={unreadScrollCount} />
 
             {activeChat?.disappearingMode && activeChat.disappearingMode !== 'off' && !showOnlyStarred && (
                 <DisappearingBanner

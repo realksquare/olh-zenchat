@@ -52,6 +52,14 @@ const userSchema = new mongoose.Schema(
                 lastUpdated: { type: Date, default: Date.now }
             }
         ],
+        timezone: {
+            type: String,
+            default: "UTC"
+        },
+        lastDailyDigestSent: {
+            type: Date,
+            default: null
+        },
         isOnline: {
             type: Boolean,
             default: false,
@@ -227,6 +235,7 @@ userSchema.methods.toPrivateJSON = function () {
         blockedUsers: this.blockedUsers,
         unblockedUsers: this.unblockedUsers,
         fcmTokens: this.fcmTokens,
+        timezone: this.timezone,
         publicKey: this.publicKey,
         encryptedPrivateKey: this.encryptedPrivateKey,
         encryptedPrivateKeyBackup: this.encryptedPrivateKeyBackup,

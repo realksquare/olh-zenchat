@@ -749,6 +749,7 @@ const registerSocketHandlers = (io) => {
                     message.reactions = [];
                 }
 
+                let action = null;
                 const existingIndex = message.reactions.findIndex(
                     (r) => r.userId.toString() === userId.toString()
                 );
@@ -756,11 +757,14 @@ const registerSocketHandlers = (io) => {
                 if (existingIndex > -1) {
                     if (message.reactions[existingIndex].emoji === emoji) {
                         message.reactions.splice(existingIndex, 1);
+                        action = 'removed';
                     } else {
                         message.reactions[existingIndex].emoji = emoji;
+                        action = 'updated';
                     }
                 } else {
                     message.reactions.push({ userId, emoji });
+                    action = 'added';
                 }
 
                 await message.save();
@@ -798,6 +802,44 @@ const registerSocketHandlers = (io) => {
                             io.to(socketId).emit("message_reaction_updated", payload);
                         }
                     });
+                }
+
+                if ((action === 'added' || action === 'updated') && message.senderId.toString() !== userId.toString()) {
+                    const reactor = await User.findById(userId).select("username contacts");
+                    const targetUser = await User.findById(message.senderId).select("notificationsEnabled fcmTokens contacts _id");
+                    
+                    if (targetUser && targetUser.notificationsEnabled) {
+                        const targetData = onlineUsers.get(targetUser._id.toString());
+                        const hasActiveSocket = targetData && targetData.sockets && Array.from(targetData.sockets.values()).some(s => s.isActive);
+                        
+                        if (!hasActiveSocket && targetUser.fcmTokens?.length > 0) {
+                            const senderIsContact = targetUser.contacts?.some(
+                                c => c.userId?.toString() === userId.toString()
+                            );
+                            const notifSenderName = senderIsContact ? `${reactor.username} ✨` : reactor.username;
+                            
+                            const title = "ZenChat";
+                            const body = `${notifSenderName} reacted to your message: ${emoji}`;
+                            
+                            const pwaTokens = targetUser.fcmTokens.filter(t => t.deviceType === 'pwa');
+                            const browserTokens = targetUser.fcmTokens.filter(t => t.deviceType === 'browser');
+                            
+                            let targetTokens = [];
+                            if (pwaTokens.length > 0) {
+                                targetTokens = pwaTokens.map(t => t.token);
+                            } else if (browserTokens.length > 0) {
+                                targetTokens = browserTokens.map(t => t.token);
+                            }
+
+                            targetTokens.forEach(tkn => {
+                                sendPushNotification(targetUser._id, tkn, title, body, {
+                                    chatId: chatId.toString(),
+                                    messageId: messageId.toString(),
+                                    type: 'reaction'
+                                }).catch(err => console.error("[Reaction Push] Error:", err));
+                            });
+                        }
+                    }
                 }
             } catch (err) {
                 console.error("Failed to react to message:", err);

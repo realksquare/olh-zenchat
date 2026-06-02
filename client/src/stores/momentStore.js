@@ -3,6 +3,8 @@ import axiosInstance from "../utils/axios";
 
 export const useMomentStore = create((set, get) => ({
     moments: [],
+    activeViewerMoments: null,
+    setActiveViewerMoments: (moments) => set({ activeViewerMoments: moments }),
     isLoading: false,
     error: null,
 

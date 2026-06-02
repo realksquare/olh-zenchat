@@ -285,9 +285,11 @@ const LoginPage = () => {
         <div className="auth-page">
             <div className="auth-card" style={{ border: "1px solid rgba(255, 255, 255, 0.08)", background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(20px)" }}>
                 <div className="auth-brand">
-                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-label="ZenChat logo">
-                        <rect width="32" height="32" rx="10" fill="#3da5d9" />
-                        <path d="M8 10h16M8 16h10M8 22h13" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" />
+                    <svg width="32" height="32" viewBox="0 0 80 80" fill="none" aria-label="ZenChat logo">
+                        <rect width="80" height="80" rx="22" fill="#1e2530" />
+                        <line x1="20" y1="27" x2="60" y2="27" stroke="#3da5d9" strokeWidth="5.5" strokeLinecap="round" />
+                        <line x1="20" y1="40" x2="50" y2="40" stroke="#3da5d9" strokeWidth="5.5" strokeLinecap="round" />
+                        <line x1="20" y1="53" x2="52" y2="53" stroke="#3da5d9" strokeWidth="5.5" strokeLinecap="round" />
                     </svg>
                     <span>ZenChat</span>
                 </div>

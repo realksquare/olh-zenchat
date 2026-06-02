@@ -51,8 +51,8 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
     const webpushNotif = {
         title: String(title),
         body: String(body),
-        icon: `${clientUrl}/favicon.svg`,
-        badge: `${clientUrl}/favicon.svg`,
+        icon: `${clientUrl}/logo192.png`,
+        badge: `${clientUrl}/logo192.png`,
         tag: stringData.tag || "zenchat-notif",
         renotify: true,
     };

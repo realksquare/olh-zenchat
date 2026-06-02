@@ -227,6 +227,13 @@ const App = () => {
       // Allow proper exit if the flag is set
       if (window.__isExitingPWA) return;
 
+      const momentStore = useMomentStore.getState();
+      if (momentStore.activeViewerMoments) {
+        momentStore.setActiveViewerMoments(null);
+        window.history.pushState({ pwaGuard: true }, "");
+        return;
+      }
+
       // If we are in a chat (activeChat is set), going back should just close the chat
       const chatStore = useChatStore.getState();
       if (chatStore.activeChat) {
@@ -299,10 +306,22 @@ const App = () => {
     const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
     if (isPWA) {
       window.close();
+      setTimeout(() => {
+        window.history.go(-(window.history.length + 1));
+      }, 100);
     } else {
       window.location.href = "about:blank";
     }
   };
+
+  useEffect(() => {
+    if (user && token) {
+      const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (user.timezone !== localTimezone) {
+        useAuthStore.getState().syncTimezone(localTimezone);
+      }
+    }
+  }, [user, token]);
 
   useEffect(() => {
     if (!mountedRef.current) {
