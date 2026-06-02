@@ -19,10 +19,10 @@ export const useMomentStore = create((set, get) => ({
         }
     },
 
-    createMoment: async (momentData) => {
+    createMoment: async (momentData, signal) => {
         set({ isLoading: true });
         try {
-            const res = await axiosInstance.post("/moments", momentData);
+            const res = await axiosInstance.post("/moments", momentData, { signal });
             const newMoment = res.data.moment || res.data;
             set((state) => {
                 if (state.moments.some(m => m._id === newMoment._id)) return state;

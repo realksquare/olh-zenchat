@@ -88,6 +88,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const seekTimeoutRef = useRef(null);
     const fileInputRef = useRef(null);
     const cameraInputRef = useRef(null);
+    const abortControllerRef = useRef(null);
     
     const { createMoment } = useMomentStore();
     const userId = useAuthStore((s) => s.user?._id);
@@ -244,6 +245,9 @@ const MomentCreator = ({ isOpen, onClose }) => {
         setIsUploading(true);
         setUploadProgress(0);
 
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
         try {
             let uploadedUrl = "";
             
@@ -261,6 +265,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                     `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
                     formData,
                     {
+                        signal: controller.signal,
                         onUploadProgress: (p) => {
                             const percent = Math.round((p.loaded * 100) / p.total);
                             setUploadProgress(percent);
@@ -290,7 +295,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 } : null
             };
 
-            await createMoment(momentPayload);
+            await createMoment(momentPayload, controller.signal);
             showToast("Moment shared successfully");
             
             setTimeout(() => { 
@@ -298,9 +303,14 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 onClose(); 
             }, 1200);
         } catch (err) {
-            showToast("Failed to share, please try again");
+            if (axios.isCancel(err)) {
+                console.log("[MomentCreator] Upload cancelled by user");
+            } else {
+                showToast("Failed to share, please try again");
+            }
         } finally { 
             setIsUploading(false); 
+            abortControllerRef.current = null;
         }
     };
 
@@ -320,9 +330,14 @@ const MomentCreator = ({ isOpen, onClose }) => {
         setSuggestedGenre("");
         setUploadProgress(0);
         setImageQuality("standard");
+        setIsUploading(false);
     };
 
     const handleClose = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
         if (audioRef.current) { 
             audioRef.current.pause(); 
             audioRef.current = null; 
@@ -340,12 +355,12 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
     return createPortal(
         <>
-            <div className="modal-overlay moments-aura-overlay" onClick={handleClose}>
+            <div className="modal-overlay moments-aura-overlay" onClick={isUploading ? undefined : handleClose}>
                 <div className="moments-aura-content" onClick={(e) => e.stopPropagation()} style={{ userSelect: isUploading ? 'none' : 'auto', WebkitUserSelect: isUploading ? 'none' : 'auto' }}>
                     <div className="moments-aura-header">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             {creatorStep === "create" && (
-                                <button className="aura-back-btn" onClick={() => { setCreatorStep("select"); handleReset(); }} style={{ background: 'none', border: 'none', color: '#94a3b8', padding: 4, cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                                <button className="aura-back-btn" onClick={() => { setCreatorStep("select"); handleReset(); }} disabled={isUploading} style={{ background: 'none', border: 'none', color: '#94a3b8', padding: 4, cursor: isUploading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', opacity: isUploading ? 0.5 : 1 }}>
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                         <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
                                     </svg>
@@ -448,6 +463,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                             value={content} 
                                             onChange={(e) => setContent(e.target.value)} 
                                             maxLength={49} 
+                                            disabled={isUploading}
                                         />
                                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginTop: 4 }}>
                                             <span>Min 3 characters</span>
@@ -487,6 +503,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                     <div style={{ position: 'absolute', top: '8px', left: '8px', display: 'flex', gap: '4px' }}>
                                                         <button
                                                             onClick={() => setImageQuality(q => q === "og" ? "standard" : "og")}
+                                                            disabled={isUploading}
                                                             style={{
                                                                 background: imageQuality === "og" ? 'rgba(61,165,217,0.25)' : 'rgba(15,23,42,0.75)',
                                                                 backdropFilter: 'blur(6px)',
@@ -496,8 +513,9 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                                 color: imageQuality === "og" ? 'var(--color-primary)' : '#94a3b8',
                                                                 fontSize: '0.62rem',
                                                                 fontWeight: '900',
-                                                                cursor: 'pointer',
-                                                                letterSpacing: '0.5px'
+                                                                cursor: isUploading ? 'not-allowed' : 'pointer',
+                                                                letterSpacing: '0.5px',
+                                                                opacity: isUploading ? 0.6 : 1
                                                             }}
                                                         >
                                                             {imageQuality === "og" ? "OG" : "STD"}
@@ -520,11 +538,11 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                     </svg>
                                                 </div>
                                                 <div style={{ display: 'flex', gap: '8px' }}>
-                                                    <button onClick={() => cameraInputRef.current?.click()} style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '12px', padding: '8px 16px', color: '#3b82f6', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <button onClick={() => cameraInputRef.current?.click()} disabled={isUploading} style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '12px', padding: '8px 16px', color: '#3b82f6', fontSize: '0.8rem', fontWeight: '600', cursor: isUploading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px', opacity: isUploading ? 0.5 : 1 }}>
                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                                                         Camera
                                                     </button>
-                                                    <button onClick={() => fileInputRef.current?.click()} style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '12px', padding: '8px 16px', color: '#10b981', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <button onClick={() => fileInputRef.current?.click()} disabled={isUploading} style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '12px', padding: '8px 16px', color: '#10b981', fontSize: '0.8rem', fontWeight: '600', cursor: isUploading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '6px', opacity: isUploading ? 0.5 : 1 }}>
                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                                                         Library
                                                     </button>
@@ -540,12 +558,13 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                         <div className="aura-input-section" style={{ marginTop: '16px' }}>
                                             {/* Live Filter Preset Strip */}
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
-                                                <span style={{ fontSize: '0.72rem', fontWeight: 'bold', color: '#64748b' }}>Presets</span>
+                                                <span style={{ fontSize: '0.72rem', fontWeight: 'bold', color: '#64748b' }}>Filters</span>
                                                 <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', width: '100%' }} className="filter-scroll-strip">
                                                     {FILTER_PRESETS.map((f) => (
                                                         <button 
                                                             key={f.id}
                                                             onClick={() => setActiveFilter(f.id)}
+                                                            disabled={isUploading}
                                                             style={{
                                                                 flexShrink: 0,
                                                                 background: activeFilter === f.id ? 'rgba(61,165,217,0.15)' : 'rgba(255,255,255,0.02)',
@@ -555,8 +574,9 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                                 borderRadius: '16px',
                                                                 fontSize: '0.72rem',
                                                                 fontWeight: '600',
-                                                                cursor: 'pointer',
-                                                                transition: 'all 0.15s ease'
+                                                                cursor: isUploading ? 'not-allowed' : 'pointer',
+                                                                transition: 'all 0.15s ease',
+                                                                opacity: isUploading ? 0.5 : 1
                                                             }}
                                                         >
                                                             {f.name}
@@ -575,6 +595,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                     value={caption}
                                                     onChange={(e) => setCaption(e.target.value)}
                                                     maxLength={49}
+                                                    disabled={isUploading}
                                                     style={{ height: '38px', padding: '8px 12px', borderRadius: '10px' }}
                                                 />
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: '#64748b' }}>
@@ -593,12 +614,14 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                     {locationText && (
                                                         <button 
                                                             onClick={() => setShowLocationPill(!showLocationPill)} 
+                                                            disabled={isUploading}
                                                             style={{
                                                                 background: 'none',
                                                                 border: 'none',
                                                                 color: showLocationPill ? 'var(--color-primary)' : '#64748b',
-                                                                cursor: 'pointer',
-                                                                padding: '4px'
+                                                                cursor: isUploading ? 'not-allowed' : 'pointer',
+                                                                padding: '4px',
+                                                                opacity: isUploading ? 0.5 : 1
                                                             }}
                                                             title={showLocationPill ? "Hide Location Overlay" : "Show Location Overlay"}
                                                         >
@@ -614,7 +637,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                     )}
                                                     <button 
                                                         onClick={handleFetchLocation}
-                                                        disabled={isFetchingLocation}
+                                                        disabled={isUploading || isFetchingLocation}
                                                         style={{
                                                             background: 'rgba(255,255,255,0.03)',
                                                             border: '1px solid rgba(255,255,255,0.08)',
@@ -623,10 +646,11 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                             color: '#f1f5f9',
                                                             fontSize: '0.72rem',
                                                             fontWeight: '600',
-                                                            cursor: 'pointer',
+                                                            cursor: (isUploading || isFetchingLocation) ? 'not-allowed' : 'pointer',
                                                             display: 'flex',
                                                             alignItems: 'center',
-                                                            gap: '6px'
+                                                            gap: '6px',
+                                                            opacity: isUploading ? 0.5 : 1
                                                         }}
                                                     >
                                                         {isFetchingLocation ? (
@@ -650,6 +674,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                         <button 
                                                             key={h}
                                                             onClick={() => setDisappearHours(h)}
+                                                            disabled={isUploading}
                                                             style={{
                                                                 background: disappearHours === h ? 'rgba(255,255,255,0.08)' : 'none',
                                                                 border: 'none',
@@ -658,8 +683,9 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                                 borderRadius: '6px',
                                                                 fontSize: '0.7rem',
                                                                 fontWeight: 'bold',
-                                                                cursor: 'pointer',
-                                                                transition: 'all 0.15s ease'
+                                                                cursor: isUploading ? 'not-allowed' : 'pointer',
+                                                                transition: 'all 0.15s ease',
+                                                                opacity: isUploading ? 0.5 : 1
                                                             }}
                                                         >
                                                             {h}h
@@ -676,10 +702,10 @@ const MomentCreator = ({ isOpen, onClose }) => {
                             {((momentType === "text" && content.trim().length >= 3) || (momentType === "image" && filePreview)) && (
                                 <div className="aura-input-section" style={{ borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '14px', margin: '0 28px' }}>
                                     {music && (
-                                        <div className="aura-music-cropper">
+                                        <div className="aura-music-cropper" style={{ opacity: isUploading ? 0.6 : 1 }}>
                                             {/* Row 1: play | title • artist | remove */}
                                             <div className="cropper-label">
-                                                <button className="cropper-play-btn" onClick={() => setIsPlaying(!isPlaying)}>
+                                                <button className="cropper-play-btn" onClick={() => setIsPlaying(!isPlaying)} disabled={isUploading} style={{ cursor: isUploading ? 'not-allowed' : 'pointer' }}>
                                                     {isPlaying ? (
                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                                                     ) : (
@@ -691,7 +717,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                         {(music.title + ' • ' + music.artist).replace(/\.\.\.$/, '')}
                                                     </div>
                                                 </span>
-                                                <button className="aura-remove-music" onClick={() => { setMusic(null); setIsPlaying(false); }}>
+                                                <button className="aura-remove-music" onClick={() => { setMusic(null); setIsPlaying(false); }} disabled={isUploading} style={{ cursor: isUploading ? 'not-allowed' : 'pointer' }}>
                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                                                 </button>
                                             </div>
@@ -701,10 +727,12 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                     <button
                                                         key={d}
                                                         className={`duration-opt ${duration === d ? 'active' : ''}`}
+                                                        disabled={isUploading}
                                                         onClick={() => {
                                                             setDuration(d);
                                                             if (startTime + d > 30) setStartTime(30 - d);
                                                         }}
+                                                        style={{ cursor: isUploading ? 'not-allowed' : 'pointer' }}
                                                     >
                                                         {d}s
                                                     </button>
@@ -722,7 +750,9 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                     step="0.5" 
                                                     value={startTime + duration} 
                                                     onChange={(e) => setStartTime(Number(e.target.value) - duration)} 
+                                                    disabled={isUploading}
                                                     className="aura-slider" 
+                                                    style={{ cursor: isUploading ? 'not-allowed' : 'pointer' }}
                                                 />
                                             </div>
                                         </div>
@@ -739,7 +769,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                     {/* Tone music prefill suggest pill */}
                                     {suggestedGenre && !music && !isMusicSearchOpen && (
                                         <div 
-                                            onClick={() => setIsMusicSearchOpen(true)}
+                                            onClick={isUploading ? undefined : () => setIsMusicSearchOpen(true)}
                                             style={{
                                                 background: 'rgba(61,165,217,0.06)',
                                                 border: '1px dashed rgba(61,165,217,0.3)',
@@ -748,12 +778,13 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                 color: '#f1f5f9',
                                                 fontSize: '0.72rem',
                                                 fontWeight: '600',
-                                                cursor: 'pointer',
+                                                cursor: isUploading ? 'not-allowed' : 'pointer',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'space-between',
                                                 marginBottom: '14px',
-                                                animation: 'fadeIn 0.3s ease-out'
+                                                animation: 'fadeIn 0.3s ease-out',
+                                                opacity: isUploading ? 0.6 : 1
                                             }}
                                         >
                                             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -766,7 +797,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
                                     <div className="aura-actions" style={{ display: 'flex', justifySelf: 'stretch', justifyContent: 'space-between', alignItems: 'center', margin: '14px 0 24px' }}>
                                         <div className="aura-tools">
-                                            <button className="aura-tool-btn" onClick={() => setIsMusicSearchOpen(!isMusicSearchOpen)} title="Vibe tracker">
+                                            <button className="aura-tool-btn" onClick={() => setIsMusicSearchOpen(!isMusicSearchOpen)} disabled={isUploading} style={{ cursor: isUploading ? 'not-allowed' : 'pointer', opacity: isUploading ? 0.5 : 1 }} title="Vibe tracker">
                                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
                                             </button>
                                         </div>
