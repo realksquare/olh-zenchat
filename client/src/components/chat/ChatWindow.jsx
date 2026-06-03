@@ -1111,6 +1111,9 @@ const ChatWindow = ({ onBack }) => {
         if (!otherUser) return "";
         if (isOffline || activeChat?.blockStatus?.iBlocked || activeChat?.blockStatus?.theyBlocked) return "Offline";
         if (otherUser.presenceHidden) return getMysteryQuote(otherUser._id);
+        if (isTyping) {
+            return isSPOpActive ? "typing..." : (typeof typingScramble === "string" ? typingScramble : "typing...");
+        }
         const isOtherInZen = zenUsers[otherUser._id] || zenUsers[otherUser._id?.toString()];
         if (isPeerOnline) {
             return isOtherInZen ? "Online - on #ZenMode" : "Online";
@@ -1119,7 +1122,7 @@ const ChatWindow = ({ onBack }) => {
             return `Last seen ${formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true })}`;
         }
         return "Offline";
-    }, [otherUser, isPeerOnline, tick, isOffline, activeChat?.blockStatus?.iBlocked, activeChat?.blockStatus?.theyBlocked, zenUsers]);
+    }, [otherUser, isPeerOnline, tick, isOffline, activeChat?.blockStatus?.iBlocked, activeChat?.blockStatus?.theyBlocked, zenUsers, isTyping, isSPOpActive, typingScramble]);
 
     const getStatusText = () => statusText;
 
