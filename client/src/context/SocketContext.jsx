@@ -353,10 +353,8 @@ export const SocketProvider = ({ children }) => {
                 if (userId === requesterId) {
                     if (responderId === requesterId) {
                         setZenWaitingState("cancelled");
-                        showZenToast("info", "Connection request cancelled");
                     } else {
                         setZenWaitingState("refused");
-                        showZenToast("error", "User rejected connection request");
                     }
                     setTimeout(() => {
                         setZenWaitingState(null);
@@ -364,7 +362,6 @@ export const SocketProvider = ({ children }) => {
                 } else {
                     // This is User B receiving User A's early cancellation
                     if (responderId === requesterId) {
-                        showZenToast("info", "Connection request was cancelled by the requester");
                         setIncomingZenInvite(null);
                     }
                 }
@@ -420,8 +417,8 @@ export const SocketProvider = ({ children }) => {
                 }
             } else {
                 if (userId === requesterId) {
-                    setZenWaitingState(null);
-                    showZenToast("error", "User refused to end #ZenMode");
+                    setZenWaitingState("exit-refused");
+                    setTimeout(() => setZenWaitingState(null), 3000);
                 }
             }
         };

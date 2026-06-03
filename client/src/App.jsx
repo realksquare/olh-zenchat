@@ -556,7 +556,8 @@ const App = () => {
                     style={{ width: '100%' }} 
                     onClick={() => {
                       clearZenTimers();
-                      setZenWaitingState(null);
+                      setZenWaitingState("exit-cancelled");
+                      setTimeout(() => setZenWaitingState(null), 3000);
                       if (socket && activeChat) {
                         const otherParticipant = activeChat.participants?.find(p => {
                           const pid = p?._id?.toString() || p?.toString();
@@ -608,6 +609,32 @@ const App = () => {
                   </div>
                   <h3 className="zen-modal-title">Cancelled</h3>
                   <p className="zen-modal-desc">Connection request was cancelled.</p>
+                </>
+              )}
+              {zenWaitingState === "exit-refused" && (
+                <>
+                  <div className="zen-waiting-loader" style={{ animation: 'none' }}>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: 'auto' }}>
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="15" y1="9" x2="9" y2="15" />
+                      <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                  </div>
+                  <h3 className="zen-modal-title">Declined</h3>
+                  <p className="zen-modal-desc">@{otherUserDisplayName} refused to end the #ZenMode session.</p>
+                </>
+              )}
+              {zenWaitingState === "exit-cancelled" && (
+                <>
+                  <div className="zen-waiting-loader" style={{ animation: 'none' }}>
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: 'auto' }}>
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                  </div>
+                  <h3 className="zen-modal-title">Cancelled</h3>
+                  <p className="zen-modal-desc">Exit request was cancelled.</p>
                 </>
               )}
             </div>
