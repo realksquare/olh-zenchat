@@ -9,7 +9,7 @@ import GuestOverlay from "../components/chat/GuestOverlay";
 const HomePage = () => {
     const token = useAuthStore((s) => s.token);
     const activeChat = useChatStore((s) => s.activeChat);
-    const { joinChat, leaveChat, setShowExitConfirm, hasInitiatedBackRef } = useSocket();
+    const { joinChat, leaveChat, setShowExitConfirm } = useSocket();
     const isZenMode = useChatStore((s) => s.isZenMode);
     const [showChat, setShowChat] = useState(false);
 
@@ -32,9 +32,6 @@ const HomePage = () => {
             if (showChat) {
                 if (isZenMode) {
                     window.history.pushState({ chat: true }, "");
-                    if (hasInitiatedBackRef) {
-                        hasInitiatedBackRef.current = true;
-                    }
                     if (setShowExitConfirm) {
                         setShowExitConfirm(true);
                     }
@@ -45,7 +42,7 @@ const HomePage = () => {
         };
         window.addEventListener("popstate", handlePopState);
         return () => window.removeEventListener("popstate", handlePopState);
-    }, [showChat, isZenMode, setShowExitConfirm, hasInitiatedBackRef]);
+    }, [showChat, isZenMode, setShowExitConfirm]);
 
     const handleBackToSidebar = () => {
         useChatStore.getState().setActiveChat(null);

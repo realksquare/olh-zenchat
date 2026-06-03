@@ -631,7 +631,6 @@ const ChatWindow = ({ onBack }) => {
         showZenToast,
         clearZenTimers,
         setShowExitConfirm,
-        hasInitiatedBackRef,
         zenExitTimeoutCountRef
     } = useSocket();
     const messagesEndRef = useRef(null);
@@ -774,14 +773,11 @@ const ChatWindow = ({ onBack }) => {
         // (e.g. after zen_exit_result fires setZenModeState(false) then clicks the back btn)
         const liveIsZenMode = useChatStore.getState().isZenMode;
         if (liveIsZenMode) {
-            if (hasInitiatedBackRef) {
-                hasInitiatedBackRef.current = true;
-            }
             setShowExitConfirm(true);
         } else {
             onBack();
         }
-    }, [onBack, hasInitiatedBackRef, setShowExitConfirm]);
+    }, [onBack, setShowExitConfirm]);
 
     const handleSkipIntro = useCallback((e) => {
         if (e) e.stopPropagation();

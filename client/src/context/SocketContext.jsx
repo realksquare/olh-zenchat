@@ -54,7 +54,6 @@ export const SocketProvider = ({ children }) => {
     const zenCountdownIntervalRef = useRef(null);
     const zenToastTimeoutRef = useRef(null);
     const zenExitTimeoutCountRef = useRef(0);
-    const hasInitiatedBackRef = useRef(false);
 
     const clearZenTimers = useCallback(() => {
         if (zenWaitingTimeoutRef.current) {
@@ -406,22 +405,10 @@ export const SocketProvider = ({ children }) => {
 
                 // Sync store isZenMode to false
                 useChatStore.getState().setZenModeState(false);
-                
-                // If hasInitiatedBackRef is true and this is the requester, go back automatically
-                if (hasInitiatedBackRef.current && userId === requesterId) {
-                    hasInitiatedBackRef.current = false;
-                    setTimeout(() => {
-                        const backBtn = document.querySelector(".chat-back-btn");
-                        if (backBtn) {
-                            backBtn.click();
-                        }
-                    }, 1200);
-                }
             } else {
                 if (userId === requesterId) {
                     setZenWaitingState("exit-refused");
                     setTimeout(() => setZenWaitingState(null), 3000);
-                    hasInitiatedBackRef.current = false;
                 }
             }
         };
@@ -947,7 +934,6 @@ export const SocketProvider = ({ children }) => {
         showZenToast,
         startZenTimer,
         zenExitTimeoutCountRef,
-        hasInitiatedBackRef,
         showExitConfirm,
         setShowExitConfirm
     }), [
