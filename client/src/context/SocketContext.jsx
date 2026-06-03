@@ -410,15 +410,18 @@ export const SocketProvider = ({ children }) => {
                 // If hasInitiatedBackRef is true and this is the requester, go back automatically
                 if (hasInitiatedBackRef.current && userId === requesterId) {
                     hasInitiatedBackRef.current = false;
-                    const backBtn = document.querySelector(".chat-back-btn");
-                    if (backBtn) {
-                        backBtn.click();
-                    }
+                    setTimeout(() => {
+                        const backBtn = document.querySelector(".chat-back-btn");
+                        if (backBtn) {
+                            backBtn.click();
+                        }
+                    }, 1200);
                 }
             } else {
                 if (userId === requesterId) {
                     setZenWaitingState("exit-refused");
                     setTimeout(() => setZenWaitingState(null), 3000);
+                    hasInitiatedBackRef.current = false;
                 }
             }
         };

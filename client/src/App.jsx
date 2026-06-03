@@ -196,6 +196,7 @@ const App = () => {
   const startZenTimer = socketContext?.startZenTimer;
   const showExitConfirm = socketContext?.showExitConfirm;
   const setShowExitConfirm = socketContext?.setShowExitConfirm;
+  const hasInitiatedBackRef = socketContext?.hasInitiatedBackRef;
 
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showPwaExitConfirm, setShowPwaExitConfirm] = useState(false);
@@ -558,6 +559,7 @@ const App = () => {
                       clearZenTimers();
                       setZenWaitingState("exit-cancelled");
                       setTimeout(() => setZenWaitingState(null), 3000);
+                      if (hasInitiatedBackRef) hasInitiatedBackRef.current = false;
                       if (socket && activeChat) {
                         const otherParticipant = activeChat.participants?.find(p => {
                           const pid = p?._id?.toString() || p?.toString();
@@ -787,7 +789,10 @@ const App = () => {
               <button 
                 className="zen-btn zen-btn-secondary" 
                 style={{ flex: 1 }} 
-                onClick={() => setShowExitConfirm(false)}
+                onClick={() => {
+                  setShowExitConfirm(false);
+                  if (hasInitiatedBackRef) hasInitiatedBackRef.current = false;
+                }}
               >
                 Keep Chatting
               </button>
