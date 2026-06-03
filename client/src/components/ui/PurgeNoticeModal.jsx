@@ -50,14 +50,14 @@ const PurgeNoticeModal = () => {
                 </div>
                 <h2>Important Update on Data Privacy</h2>
                 <p>
-                    In our ongoing effort to promote digital wellness and meaningful communication, text messages older than 21 days from tomorrow (26/5/2026) will be automatically deleted unless marked as <strong>"Fav"</strong>.
+                    In our ongoing effort to promote digital wellness and meaningful communication, text messages older than 21 days will be automatically deleted unless marked as <strong>"Fav"</strong>.
                 </p>
                 <p>
                     Media and documents will <strong>not</strong> be deleted and will remain forever.
                 </p>
-                
-                <button 
-                    className="btn btn-primary purge-btn" 
+
+                <button
+                    className="btn btn-primary purge-btn"
                     onClick={handleAcknowledge}
                     disabled={loading}
                 >

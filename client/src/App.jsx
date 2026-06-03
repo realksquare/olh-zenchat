@@ -59,9 +59,6 @@ const NetworkBanner = () => {
 
       if (offline) {
         showBanner("offline");
-      } else if (socket && !isConnected) {
-        // Online but socket not yet reconnected
-        showBanner("reconnecting");
       } else {
         showBanner("online");
         hideBanner();
@@ -91,21 +88,12 @@ const NetworkBanner = () => {
   }, [socket, isConnected]);
 
   if (!visible || dismissed) return null;
-  if (status === "online") return null;
+  if (status !== "offline") return null;
 
   return (
     <div className="network-banner" data-status={status} onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-      {status === "offline" ? (
-        <>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
-          <span style={{ flex: 1 }}>No connection</span>
-        </>
-      ) : (
-        <>
-          <span className="banner-spinner" />
-          <span style={{ flex: 1 }}>{status === "reconnecting" ? "Reconnecting to server" : "Reconnecting"}</span>
-        </>
-      )}
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+      <span style={{ flex: 1 }}>No connection</span>
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -159,24 +147,21 @@ const NetworkToast = () => {
   if (!toastVisible) return null;
 
   return (
-    <div className="sp-op-toast" style={{
-      border: toastIsLow ? '1px solid rgba(234, 179, 8, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
-      color: toastIsLow ? '#fef08a' : '#a7f3d0'
-    }}>
+    <div className={`zen-toast zen-toast-${toastIsLow ? 'info' : 'success'}`} style={{ pointerEvents: 'auto' }}>
       {toastIsLow ? (
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: '#eab308', flexShrink: 0 }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: '#eab308', flexShrink: 0 }}>
           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
           <line x1="12" y1="9" x2="12" y2="13"/>
           <line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
       ) : (
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: '#10b981', flexShrink: 0 }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: '#10b981', flexShrink: 0 }}>
           <polyline points="20 6 9 17 4 12"/>
         </svg>
       )}
-      <span className="sp-op-toast-text">{toastMessage}</span>
+      <span>{toastMessage}</span>
       <button
-        className="sp-op-toast-close"
+        style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '0 0 0 4px', display: 'flex', alignItems: 'center' }}
         onClick={() => setToastVisible(false)}
         aria-label="Dismiss"
       >

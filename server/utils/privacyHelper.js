@@ -1,18 +1,10 @@
 /**
- * Centralized privacy enforcement logic for presence visibility.
- * 
- * Rules for 'onlineStatus' visibility:
- * - 'everyone': Global visibility, but viewer must also have 'everyone' or 'contacts' (and target is a contact of viewer).
- *               However, for simplicity and as described in rules: 
- *               A sees B if B is everyone AND (A is everyone OR A is contacts and B in A's contacts).
- *               Wait, the exact rule stated by user: "If set to everyone - display online status and last seen for the other user only if they too have everyone or contacts only - if they have added the former as their contact"
- * - 'contacts': Only mutual contacts can see status.
- * - 'nobody': Nobody can see status.
+ * Centralized privacy enforcement logic for user profile fields.
+ * Symmetrical Privacy Logic: User A can only see User B's field if BOTH A allows B and B allows A.
  */
 
 /**
  * Checks if viewerUser is in targetUser's contacts.
- * Assumes contacts is populated or an array of ObjectIds/strings.
  */
 const isContact = (user, contactIdStr) => {
   if (!user || !user.contacts) return false;
@@ -26,23 +18,22 @@ const isContact = (user, contactIdStr) => {
 };
 
 /**
- * Determines if viewerUser can see targetUser's presence (online status / last seen).
- * Both targetUser and viewerUser should be populated user objects or lean documents.
- * Returns boolean.
+ * Determines if viewerUser can see targetUser's specific privacy field (onlineStatus, avatar, fullName).
+ * Enforces strict symmetrical visibility.
  */
-const canSeePresence = (targetUser, viewerUser) => {
+const canSeeField = (targetUser, viewerUser, fieldName) => {
   if (!targetUser || !viewerUser) return false;
   
-  const targetIdStr = targetUser._id.toString();
-  const viewerIdStr = viewerUser._id.toString();
+  const targetIdStr = targetUser._id ? targetUser._id.toString() : targetUser.toString();
+  const viewerIdStr = viewerUser._id ? viewerUser._id.toString() : viewerUser.toString();
 
-  // Can always see own presence
+  // Can always see own info
   if (targetIdStr === viewerIdStr) return true;
 
-  const targetVisibility = targetUser.privacySettings?.onlineStatus || 'everyone';
-  const viewerVisibility = viewerUser.privacySettings?.onlineStatus || 'everyone';
+  const targetVisibility = targetUser.privacySettings?.[fieldName] || 'everyone';
+  const viewerVisibility = viewerUser.privacySettings?.[fieldName] || 'everyone';
 
-  // If either is 'nobody', visibility is false
+  // If either is 'nobody', visibility is strictly false for both
   if (targetVisibility === 'nobody' || viewerVisibility === 'nobody') {
     return false;
   }
@@ -50,47 +41,52 @@ const canSeePresence = (targetUser, viewerUser) => {
   const viewerInTargetContacts = isContact(targetUser, viewerIdStr);
   const targetInViewerContacts = isContact(viewerUser, targetIdStr);
 
-  // If target set to contacts, viewer must be a contact AND viewer must allow target
-  if (targetVisibility === 'contacts') {
-    if (!viewerInTargetContacts) return false;
-    
-    // Viewer also needs to allow target. If viewer is 'contacts', target must be in viewer's contacts.
-    if (viewerVisibility === 'contacts' && !targetInViewerContacts) return false;
-    
-    return true; // viewer is everyone, or viewer is contacts & target in contacts
+  const checkAllows = (visibility, isPeerInContacts) => {
+      if (visibility === 'everyone') return true;
+      if (['contacts', 'family', 'close_circle'].includes(visibility)) return isPeerInContacts;
+      return false;
+  };
+
+  const targetAllowsViewer = checkAllows(targetVisibility, viewerInTargetContacts);
+  const viewerAllowsTarget = checkAllows(viewerVisibility, targetInViewerContacts);
+
+  return targetAllowsViewer && viewerAllowsTarget;
+};
+
+// Aliases for clarity
+const canSeePresence = (targetUser, viewerUser) => canSeeField(targetUser, viewerUser, 'onlineStatus');
+const canSeeAvatar = (targetUser, viewerUser) => canSeeField(targetUser, viewerUser, 'avatar');
+const canSeeFullName = (targetUser, viewerUser) => canSeeField(targetUser, viewerUser, 'fullName');
+
+const applySanitization = (userJson, viewerUser) => {
+  if (!canSeePresence(userJson, viewerUser)) {
+    delete userJson.isOnline;
+    delete userJson.lastSeen;
+    userJson.presenceHidden = true;
+  } else {
+    userJson.presenceHidden = false;
   }
 
-  // If target set to everyone
-  if (targetVisibility === 'everyone') {
-    // User stated: "only if they too have everyone or contacts only - if they have added the former as their contact"
-    if (viewerVisibility === 'everyone') {
-        return true;
-    }
-    if (viewerVisibility === 'contacts') {
-        return targetInViewerContacts;
-    }
+  if (!canSeeAvatar(userJson, viewerUser)) {
+    delete userJson.avatar;
+    userJson.avatarHidden = true;
   }
 
-  return false;
+  if (!canSeeFullName(userJson, viewerUser)) {
+    delete userJson.fullName;
+    userJson.fullNameHidden = true;
+  }
+
+  return userJson;
 };
 
 /**
- * Sanitizes an array of users by hiding presence fields if viewer cannot see them.
- * Adds `presenceHidden: true` flag.
+ * Sanitizes an array of users by hiding presence/avatar/fullName if viewer cannot see them.
  */
 const sanitizeUserList = (users, viewerUser) => {
   return users.map(user => {
     const userJson = user.toObject ? user.toObject() : { ...user };
-    
-    if (!canSeePresence(user, viewerUser)) {
-      delete userJson.isOnline;
-      delete userJson.lastSeen;
-      userJson.presenceHidden = true;
-    } else {
-      userJson.presenceHidden = false;
-    }
-    
-    return userJson;
+    return applySanitization(userJson, viewerUser);
   });
 };
 
@@ -102,18 +98,8 @@ const sanitizeChatParticipants = (chat, viewerUser) => {
   
   if (chatJson.participants && Array.isArray(chatJson.participants)) {
     chatJson.participants = chatJson.participants.map(p => {
-      // Sometimes populate is minimal, but assuming privacySettings are present
-      // If not, defaults to everyone.
-      if (!p._id) return p; // not populated
-
-      if (!canSeePresence(p, viewerUser)) {
-        delete p.isOnline;
-        delete p.lastSeen;
-        p.presenceHidden = true;
-      } else {
-        p.presenceHidden = false;
-      }
-      return p;
+      if (!p._id) return p;
+      return applySanitization(p, viewerUser);
     });
   }
   
@@ -122,6 +108,8 @@ const sanitizeChatParticipants = (chat, viewerUser) => {
 
 module.exports = {
   canSeePresence,
+  canSeeAvatar,
+  canSeeFullName,
   sanitizeUserList,
   sanitizeChatParticipants,
   isContact

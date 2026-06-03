@@ -71,7 +71,7 @@ const InviteModal = ({ isOpen, onClose, username }) => {
 
     return createPortal(
         <div className="modal-overlay moments-aura-overlay" style={{ zIndex: 10000 }}>
-            {copied && <div className="aura-toast" style={{ zIndex: 10001, bottom: '20px' }}>📋 Invitation copied to clipboard!</div>}
+            {copied && <div className="zen-toast zen-toast-success" style={{ pointerEvents: 'none' }}>Invitation copied to clipboard!</div>}
 
             <div className="moments-aura-content invite-modal-v3" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "95%", padding: 0 }}>
                 <div className="moments-aura-header">

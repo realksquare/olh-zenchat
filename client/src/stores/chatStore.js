@@ -76,12 +76,7 @@ export const useChatStore = create(
                 const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
                 if (conn) {
                     const type = conn.effectiveType || "";
-                    const rtt = conn.rtt || 0;
-                    const downlink = conn.downlink || Infinity;
-                    const definitelySlow = 
-                        type === "2g" || 
-                        type === "3g" || 
-                        conn.saveData === true;
+                    const definitelySlow = type === "2g" || type === "3g";
                     if (definitelySlow) {
                         if (get().isLowBandwidth !== true) set({ isLowBandwidth: true });
                         return true;
@@ -105,8 +100,8 @@ export const useChatStore = create(
 
                     if (res.ok) {
                         const rtt = performance.now() - start;
-                        // RTT threshold: > 400 ms client-to-server roundabout is slow
-                        const isSlowPing = rtt > 400;
+                        // RTT threshold: > 800 ms is considered slow
+                        const isSlowPing = rtt > 800;
 
                         // Hysteresis: increment/decrement a counter, toggle state only at ±2
                         const prev = get()._spOpConsecutive ?? 0;

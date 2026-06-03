@@ -770,7 +770,10 @@ const ChatWindow = ({ onBack }) => {
     }, [isZenMode, isPeerOnline, socket, activeChat?._id, user?._id, otherUser?._id, startZenTimer, showZenToast, setZenWaitingState, setShowExitConfirm]);
 
     const handleBackClick = useCallback((e) => {
-        if (isZenMode) {
+        // Read isZenMode live from store to avoid stale closure when called programmatically
+        // (e.g. after zen_exit_result fires setZenModeState(false) then clicks the back btn)
+        const liveIsZenMode = useChatStore.getState().isZenMode;
+        if (liveIsZenMode) {
             if (hasInitiatedBackRef) {
                 hasInitiatedBackRef.current = true;
             }
@@ -778,7 +781,7 @@ const ChatWindow = ({ onBack }) => {
         } else {
             onBack();
         }
-    }, [isZenMode, onBack, hasInitiatedBackRef, setShowExitConfirm]);
+    }, [onBack, hasInitiatedBackRef, setShowExitConfirm]);
 
     const handleSkipIntro = useCallback((e) => {
         if (e) e.stopPropagation();

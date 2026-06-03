@@ -208,10 +208,13 @@ select {
 @media (max-width: 480px) {
   .auth-page {
     padding: var(--space-4) var(--space-3);
+    justify-content: flex-start;
   }
   .auth-card {
     padding: var(--space-6) var(--space-4);
     border-radius: var(--radius-lg);
+    margin-top: 0;
+    margin-bottom: var(--space-6);
   }
 }
 
@@ -3582,7 +3585,7 @@ select {
 }
 
 .moments-row-container {
-  padding: 6px 16px;
+  padding: 3px 16px;
   background: rgba(255, 255, 255, 0.02);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   overflow: hidden;
@@ -3652,10 +3655,10 @@ select {
 }
 
 .moment-item .avatar {
-  margin: 6px;
+  margin: 4px;
   
-  width: 46px !important;
-  height: 46px !important;
+  width: 40px !important;
+  height: 40px !important;
 }
 
 .moment-label {

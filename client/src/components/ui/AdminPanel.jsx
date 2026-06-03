@@ -101,7 +101,7 @@ const AdminPanel = ({ onClose }) => {
 
     return createPortal(
         <div className="admin-modal-overlay">
-            {toast && <div className="aura-toast" style={{ zIndex: 9999, display: 'flex', alignItems: 'center', gap: '6px' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> {toast}</div>}
+            {toast && <div className="zen-toast zen-toast-info" style={{ pointerEvents: 'none' }}>{toast}</div>}
             <div className="admin-modal-content" onClick={e => e.stopPropagation()}>
                 <div className="admin-header">
                     <h2>Admin Dashboard</h2>

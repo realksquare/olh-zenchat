@@ -760,7 +760,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
 
     return (
         <div className="message-input-wrap">
-            {toast && <div className="aura-toast" style={{ zIndex: 10001, bottom: '80px' }}>{toast}</div>}
+            {toast && <div className="zen-toast zen-toast-info" style={{ pointerEvents: 'none' }}>{toast}</div>}
             {editingMessage && (
                 <div className="editing-banner">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
