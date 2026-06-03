@@ -302,6 +302,20 @@ export const SocketProvider = ({ children }) => {
         };
 
         const handleZenReceiveInvite = ({ chatId, senderId }) => {
+            const isCurrentlyInZenMode = useChatStore.getState().isZenMode;
+            if (isCurrentlyInZenMode) {
+                // Auto-reject because user is already busy in a ZenMode session
+                if (socketRef.current) {
+                    socketRef.current.emit("zen_invite_respond", { 
+                        chatId, 
+                        responderId: userId, 
+                        requesterId: senderId, 
+                        accepted: false 
+                    });
+                }
+                return;
+            }
+
             // Find target chat to get sender's username
             const targetChat = useChatStore.getState().chats.find(
                 (c) => c._id?.toString() === chatId?.toString()
