@@ -411,7 +411,7 @@ const registerSocketHandlers = (io) => {
             }
         });
 
-        socket.on("zen_invite_respond", ({ chatId, responderId, requesterId, receiverId, accepted }) => {
+        socket.on("zen_invite_respond", ({ chatId, responderId, requesterId, receiverId, accepted, reason, responderName }) => {
             if (accepted) {
                 const reqUserData = onlineUsers.get(requesterId);
                 const respUserData = onlineUsers.get(responderId);
@@ -425,13 +425,13 @@ const registerSocketHandlers = (io) => {
             const reqUserData = onlineUsers.get(requesterId);
             if (reqUserData && reqUserData.sockets) {
                 reqUserData.sockets.forEach((sData, socketId) => {
-                    io.to(socketId).emit("zen_invite_result", { chatId, responderId, requesterId, receiverId, accepted });
+                    io.to(socketId).emit("zen_invite_result", { chatId, responderId, requesterId, receiverId, accepted, reason, responderName });
                 });
             }
             const respUserData = onlineUsers.get(responderId);
             if (respUserData && respUserData.sockets) {
                 respUserData.sockets.forEach((sData, socketId) => {
-                    io.to(socketId).emit("zen_invite_result", { chatId, responderId, requesterId, receiverId, accepted });
+                    io.to(socketId).emit("zen_invite_result", { chatId, responderId, requesterId, receiverId, accepted, reason, responderName });
                 });
             }
 
@@ -440,7 +440,7 @@ const registerSocketHandlers = (io) => {
                 const recUserData = onlineUsers.get(receiverId);
                 if (recUserData && recUserData.sockets) {
                     recUserData.sockets.forEach((sData, socketId) => {
-                        io.to(socketId).emit("zen_invite_result", { chatId, responderId, requesterId, receiverId, accepted });
+                        io.to(socketId).emit("zen_invite_result", { chatId, responderId, requesterId, receiverId, accepted, reason, responderName });
                     });
                 }
             }

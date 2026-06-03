@@ -306,11 +306,14 @@ export const SocketProvider = ({ children }) => {
             if (isCurrentlyInZenMode) {
                 // Auto-reject because user is already busy in a ZenMode session
                 if (socketRef.current) {
+                    const currentUser = useAuthStore.getState().user;
                     socketRef.current.emit("zen_invite_respond", { 
                         chatId, 
                         responderId: userId, 
                         requesterId: senderId, 
-                        accepted: false 
+                        accepted: false,
+                        reason: "busy",
+                        responderName: currentUser?.username || "The user"
                     });
                 }
                 return;
@@ -343,7 +346,7 @@ export const SocketProvider = ({ children }) => {
             }, 18000);
         };
 
-        const handleZenInviteResult = ({ chatId, responderId, requesterId, accepted }) => {
+        const handleZenInviteResult = ({ chatId, responderId, requesterId, accepted, reason, responderName }) => {
             clearZenTimers();
             setIncomingZenInvite(null);
 
@@ -364,14 +367,20 @@ export const SocketProvider = ({ children }) => {
                 }
             } else {
                 if (userId === requesterId) {
-                    if (responderId === requesterId) {
-                        setZenWaitingState("cancelled");
-                    } else {
-                        setZenWaitingState("refused");
-                    }
-                    setTimeout(() => {
+                    if (reason === "busy") {
+                        const nameToDisplay = responderName || "The user";
+                        showZenToast("error", `${nameToDisplay} is currently in #ZenMode with another user. Kindly try after some time.`);
                         setZenWaitingState(null);
-                    }, 3000);
+                    } else {
+                        if (responderId === requesterId) {
+                            setZenWaitingState("cancelled");
+                        } else {
+                            setZenWaitingState("refused");
+                        }
+                        setTimeout(() => {
+                            setZenWaitingState(null);
+                        }, 3000);
+                    }
                 } else {
                     // This is User B receiving User A's early cancellation
                     if (responderId === requesterId) {
