@@ -313,18 +313,19 @@ router.post("/:id/reshare", protect, async (req, res) => {
             return res.status(409).json({ message: "You have already reshared this moment" });
         }
 
-        const hours = moment.disappearAfterHours || 24;
+        const original = moment.toObject();
+        const hours = original.disappearAfterHours || 24;
         const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000);
 
         const reshared = await Moment.create({
             userId: req.user._id,
-            type: moment.type,
-            content: moment.content,
-            mediaUrl: moment.mediaUrl,
-            music: moment.music,
-            caption: moment.caption,
-            locationTag: moment.locationTag,
-            filter: moment.filter,
+            type: original.type,
+            content: original.content,
+            mediaUrl: original.mediaUrl,
+            music: original.music || undefined,
+            caption: original.caption,
+            locationTag: original.locationTag,
+            filter: original.filter,
             disappearAfterHours: hours,
             expiresAt,
             resharedFrom: moment._id,
