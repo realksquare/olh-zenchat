@@ -297,8 +297,8 @@ router.post("/:id/reshare", protect, async (req, res) => {
         if (!moment) return res.status(404).json({ message: "Moment not found" });
 
         // Only tagged users can reshare
-        const isTagged = moment.taggedUsers.some(u =>
-            (u._id || u).toString() === req.user._id.toString()
+        const isTagged = Array.isArray(moment.taggedUsers) && moment.taggedUsers.some(u =>
+            u && (u._id || u).toString() === req.user._id.toString()
         );
         if (!isTagged) {
             return res.status(403).json({ message: "Only tagged users can reshare this moment" });
@@ -339,29 +339,46 @@ router.post("/:id/reshare", protect, async (req, res) => {
 
         const io = req.app.get("io");
         const resharer = await User.findById(req.user._id).select("contacts username avatar blockedUsers");
+        if (!resharer) {
+            return res.status(404).json({ message: "User not found" });
+        }
 
         const usersWhoBlockedMe = await User.find({ "blockedUsers.userId": req.user._id }).select("_id");
         const blockedMeIds = usersWhoBlockedMe.map(u => u._id.toString());
-        const myBlockedIds = resharer.blockedUsers?.map(u => u.userId.toString()) || [];
+        const myBlockedIds = (resharer.blockedUsers || [])
+            .filter(u => u && u.userId)
+            .map(u => u.userId.toString());
         const excludeUserIds = [...blockedMeIds, ...myBlockedIds];
 
-        const contactIds = resharer.contacts
+        const contactIds = (resharer.contacts || [])
+            .filter(c => c && c.userId)
             .map(c => c.userId.toString())
             .filter(cid => !excludeUserIds.includes(cid));
 
         // Emit to resharer themselves and their contacts
-        io.to(req.user._id.toString()).emit("new_moment", populated);
-        contactIds.forEach(cid => io.to(cid).emit("new_moment", populated));
+        if (io) {
+            io.to(req.user._id.toString()).emit("new_moment", populated);
+            contactIds.forEach(cid => io.to(cid).emit("new_moment", populated));
+        }
 
         // Push notification to the original moment author
-        const authorId = (moment.userId._id || moment.userId).toString();
-        if (authorId !== req.user._id.toString() && !onlineUsers.has(authorId)) {
+        const authorId = moment.userId 
+            ? (moment.userId._id || moment.userId).toString() 
+            : null;
+
+        const handlers = require("../socket/handlers");
+        const activeUsersMap = handlers?.onlineUsers || onlineUsers;
+        const isAuthorOnline = authorId && activeUsersMap && typeof activeUsersMap.has === 'function'
+            ? activeUsersMap.has(authorId)
+            : false;
+
+        if (authorId && authorId !== req.user._id.toString() && !isAuthorOnline) {
             try {
                 const authorUser = await User.findById(authorId).select("fcmTokens");
-                if (authorUser && authorUser.fcmTokens?.length > 0) {
+                if (authorUser && Array.isArray(authorUser.fcmTokens) && authorUser.fcmTokens.length > 0) {
                     const notificationTitle = `${resharer.username} has shared a #moment.!`;
-                    const pwaTokens = authorUser.fcmTokens.filter(t => t.deviceType === 'pwa');
-                    const browserTokens = authorUser.fcmTokens.filter(t => t.deviceType === 'browser');
+                    const pwaTokens = authorUser.fcmTokens.filter(t => t && t.deviceType === 'pwa');
+                    const browserTokens = authorUser.fcmTokens.filter(t => t && t.deviceType === 'browser');
                     let targetTokens = pwaTokens.length > 0
                         ? pwaTokens.map(t => t.token)
                         : browserTokens.length > 0
@@ -369,11 +386,13 @@ router.post("/:id/reshare", protect, async (req, res) => {
                             : authorUser.fcmTokens.map(t => t.token);
 
                     targetTokens.forEach(token => {
-                        sendPushNotification(authorId, token, notificationTitle, "", {
-                            icon: resharer.avatar || "/logo192.png",
-                            click_action: "https://olh-zenchat.vercel.app/?tab=moments",
-                            tag: `moment-reshare-${reshared._id.toString()}`
-                        });
+                        if (token) {
+                            sendPushNotification(authorId, token, notificationTitle, "", {
+                                icon: resharer.avatar || "/logo192.png",
+                                click_action: "https://olh-zenchat.vercel.app/?tab=moments",
+                                tag: `moment-reshare-${reshared._id.toString()}`
+                            });
+                        }
                     });
                 }
             } catch (err) {
