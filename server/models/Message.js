@@ -36,6 +36,15 @@ const messageSchema = new mongoose.Schema(
             ref: "Message",
             default: null,
         },
+        replyToMoment: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Moment",
+            default: null,
+        },
+        replyToMomentUsername: {
+            type: String,
+            default: "",
+        },
         isEdited: {
             type: Boolean,
             default: false,

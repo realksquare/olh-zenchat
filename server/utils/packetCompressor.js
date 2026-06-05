@@ -6,6 +6,20 @@ const compressPacket = (msg) => {
     if (msg.type !== undefined) compressed.y = msg.type;
     if (msg.mediaUrl !== undefined) compressed.u = msg.mediaUrl;
     if (msg.replyTo !== undefined) compressed.r = msg.replyTo;
+    if (msg.replyToMoment) {
+        compressed.rm = typeof msg.replyToMoment === 'object' ? {
+            _id: msg.replyToMoment._id || msg.replyToMoment,
+            userId: msg.replyToMoment.userId,
+            type: msg.replyToMoment.type,
+            content: msg.replyToMoment.content,
+            mediaUrl: msg.replyToMoment.mediaUrl,
+            music: msg.replyToMoment.music,
+            caption: msg.replyToMoment.caption,
+            locationTag: msg.replyToMoment.locationTag,
+            filter: msg.replyToMoment.filter,
+        } : msg.replyToMoment;
+    }
+    if (msg.replyToMomentUsername !== undefined) compressed.rmu = msg.replyToMomentUsername;
     if (msg.isViewOnce !== undefined) compressed.v = msg.isViewOnce;
     if (msg.cid !== undefined) compressed.i = msg.cid;
     if (msg.isEncrypted !== undefined) compressed.e = msg.isEncrypted;
@@ -39,6 +53,8 @@ const decompressPacket = (msg) => {
             type: msg.y || "text",
             mediaUrl: msg.u,
             replyTo: msg.r,
+            replyToMoment: msg.rm,
+            replyToMomentUsername: msg.rmu,
             isViewOnce: msg.v,
             cid: msg.i,
             isEncrypted: msg.e,

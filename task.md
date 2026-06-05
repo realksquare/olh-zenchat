@@ -1,0 +1,21 @@
+# Task List
+
+- [x] Update Database Schema (`Message` & `Moment` Models)
+- [x] Implement Packet Compressor changes on Client & Server
+- [x] Implement Server-side Socket and Message Router changes
+  - [x] Add `replyToMoment` support in message creation/retrieval
+  - [x] Switch FCM push notifications to data-only format
+  - [x] Add custom push notification text for moment replies
+- [x] Implement Moment Resharing backend API
+  - [x] Add `POST /api/moments/:id/reshare` endpoint
+  - [x] Add push notification to original author when reshared
+- [x] Implement Frontend Moments UI changes
+  - [x] Remove tagged usernames from viewer header
+  - [x] Add Moment Reply support (`replyToMoment` & `replyToMomentUsername` in `sendMessage`)
+  - [x] Replace custom absolute toasts with standard `showZenToast`
+  - [x] Render Interactive Moment reply tag in chat bubble
+  - [x] Render Reshare button left to the like button for tagged users
+  - [x] Wire up Reshare button click handler to trigger API & timeline refresh
+- [x] Verification and Testing
+  - [x] Run client build step
+  - [x] Verify message replies, tagging, and resharing flows

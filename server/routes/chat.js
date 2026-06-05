@@ -396,7 +396,7 @@ router.post("/offline-sync", async (req, res) => {
         const syncedMessages = [];
 
         for (const msgPayload of messages) {
-            const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth, isZenMessage } = msgPayload;
+            const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth, isZenMessage, replyToMoment, replyToMomentUsername } = msgPayload;
 
             const chat = await Chat.findById(chatId).populate("participants", "privacySettings contacts blockedUsers notificationsEnabled fcmTokens fcmToken");
             if (!chat) continue;
@@ -408,6 +408,8 @@ router.post("/offline-sync", async (req, res) => {
                 type: type || "text",
                 mediaUrl: mediaUrl || "",
                 replyTo: replyTo || null,
+                replyToMoment: replyToMoment || null,
+                replyToMomentUsername: replyToMomentUsername || "",
                 isViewOnce: isViewOnce || false,
                 cid: cid || null,
                 status: "sent",
@@ -427,7 +429,8 @@ router.post("/offline-sync", async (req, res) => {
 
             const populated = await Message.findById(message._id)
                 .populate("senderId", "username avatar createdAt")
-                .populate("replyTo");
+                .populate("replyTo")
+                .populate("replyToMoment");
 
             const messagePayloadBase = {
                 ...populated.toObject(),

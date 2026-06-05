@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, memo, useMemo, useContext } from "react";
 import { createPortal } from "react-dom";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
+import { useMomentStore } from "../../stores/momentStore";
 import { useSocket } from "../../context/SocketContext";
 import DecryptedText from "./DecryptedText";
 import VoiceMessageBubble from "./VoiceMessageBubble";
@@ -396,6 +397,12 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         return messages[message.chatId]?.find(m => m._id === message.replyTo);
     }, [message.replyTo, message.chatId]);
 
+    const repliedToMoment = useMemo(() => {
+        if (!message.replyToMoment) return null;
+        if (typeof message.replyToMoment === 'object' && message.replyToMoment._id) return message.replyToMoment;
+        return null;
+    }, [message.replyToMoment]);
+
     const scrollToMessage = (msgId) => {
         const el = document.getElementById(`msg-${msgId}`);
         if (el) {
@@ -609,6 +616,26 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                             Original message deleted
                                         </div>
                                     )}
+                                </div>
+                            )}
+                            {message.replyToMoment && (
+                                <div
+                                    className="replied-message-preview moment-reply-tag"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (repliedToMoment) {
+                                            useMomentStore.getState().setActiveViewerMoments([repliedToMoment]);
+                                        }
+                                    }}
+                                    style={{ cursor: repliedToMoment ? 'pointer' : 'default', borderLeftColor: '#10b981' }}
+                                >
+                                    <div className="replied-sender" style={{ color: '#10b981' }}>
+                                        #Moment
+                                    </div>
+                                    <div className="replied-content">
+                                        {message.replyToMomentUsername ? `@${message.replyToMomentUsername}'s moment` : 'View moment'}
+                                        {!repliedToMoment && <span style={{ opacity: 0.5, fontStyle: 'italic' }}> (expired)</span>}
+                                    </div>
                                 </div>
                             )}
                             {message.type === "voice" && message.mediaUrl && (

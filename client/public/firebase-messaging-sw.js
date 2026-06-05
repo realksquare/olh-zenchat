@@ -79,8 +79,8 @@ try {
             }
         }
 
-        let newTitle = payload.notification?.title || 'New Message';
-        let newBody = payload.notification?.body || '';
+        let newTitle = payload.data?.title || payload.notification?.title || 'New Message';
+        let newBody = payload.data?.body || payload.notification?.body || '';
 
         if (payload.data?.isViewOnce === "true") {
             newBody = "Image - Sent a view-once media";

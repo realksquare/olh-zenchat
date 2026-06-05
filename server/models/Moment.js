@@ -72,6 +72,11 @@ const momentSchema = new mongoose.Schema(
                 ref: "User"
             }
         ],
+        resharedFrom: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Moment",
+            default: null,
+        },
     },
     { timestamps: true }
 );

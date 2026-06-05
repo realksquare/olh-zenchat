@@ -55,6 +55,7 @@ router.get("/:chatId", async (req, res) => {
         })
             .populate("senderId", "username avatar createdAt")
             .populate("replyTo")
+            .populate("replyToMoment")
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
@@ -185,7 +186,7 @@ router.post("/:chatId", async (req, res) => {
             }
         }
 
-        const { content, type, mediaUrl, replyTo, isViewOnce, isZenMessage } = req.body;
+        const { content, type, mediaUrl, replyTo, isViewOnce, isZenMessage, replyToMoment, replyToMomentUsername } = req.body;
 
         if (!content && !mediaUrl) {
             return res.status(400).json({ message: "Message cannot be empty" });
@@ -198,6 +199,8 @@ router.post("/:chatId", async (req, res) => {
             type: type || "text",
             mediaUrl: mediaUrl || "",
             replyTo: replyTo || null,
+            replyToMoment: replyToMoment || null,
+            replyToMomentUsername: replyToMomentUsername || "",
             isViewOnce: isViewOnce === true || isViewOnce === "true",
             isZenMessage: isZenMessage === true || isZenMessage === "true",
             disappearingMode: chat.disappearingMode || "off",
@@ -210,7 +213,8 @@ router.post("/:chatId", async (req, res) => {
 
         const populated = await Message.findById(message._id)
             .populate("senderId", "username avatar")
-            .populate("replyTo");
+            .populate("replyTo")
+            .populate("replyToMoment");
 
         res.status(201).json({ message: populated });
     } catch (err) {

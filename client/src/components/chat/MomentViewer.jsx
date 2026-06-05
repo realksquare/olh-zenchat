@@ -26,13 +26,14 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const [showMusicInfo, setShowMusicInfo] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     const [likeLoading, setLikeLoading] = useState(false);
+    const [isResharing, setIsResharing] = useState(false);
+    const [reshared, setReshared] = useState(false);
 
     const [totalDuration, setTotalDuration] = useState(10);
     const [replyText, setReplyText] = useState("");
     const [isSendingReply, setIsSendingReply] = useState(false);
     const [isInputFocused, setIsInputFocused] = useState(false);
-    const [toastMessage, setToastMessage] = useState("");
-    const { sendMessage } = useSocket();
+    const { sendMessage, showZenToast } = useSocket();
 
     const audioRef = useRef(null);
     const videoRef = useRef(null);
@@ -336,21 +337,45 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             const { data } = await axiosInstance.post("/chats", { userId: targetUserId });
             const chatId = data.chat._id;
 
-            // Send the reply message
-            await sendMessage(chatId, replyText, "text");
+            // Send the reply message with moment context attached
+            const targetUsername = currentMoment.userId?.username || "";
+            await sendMessage(chatId, replyText, "text", "", null, false, null, false, "", currentMoment, targetUsername);
 
             setReplyText("");
             setIsInputFocused(false);
-            
-            // Show dynamic success indicator
-            setToastMessage("Reply sent via DM!");
-            setTimeout(() => setToastMessage(""), 2200);
+            showZenToast("success", "Reply sent via DM!");
         } catch (err) {
             console.error("Failed to send reply:", err);
         } finally {
             setIsSendingReply(false);
         }
     };
+
+    const handleReshare = async () => {
+        if (isResharing || reshared || !currentMoment) return;
+        setIsResharing(true);
+        try {
+            await axiosInstance.post(`/moments/${currentMoment._id}/reshare`);
+            setReshared(true);
+            await useMomentStore.getState().fetchMoments();
+            showZenToast("success", "Moment reshared to your feed!");
+        } catch (err) {
+            const msg = err.response?.data?.message;
+            if (err.response?.status === 409) {
+                showZenToast("info", "You have already reshared this moment");
+                setReshared(true);
+            } else {
+                showZenToast("error", msg || "Could not reshare. Try again.");
+            }
+        } finally {
+            setIsResharing(false);
+        }
+    };
+
+    const isTaggedUser = useMemo(() => {
+        if (!currentMoment || !currentMoment.taggedUsers || !currentUserId) return false;
+        return currentMoment.taggedUsers.some(u => (u._id || u)?.toString() === currentUserId?.toString());
+    }, [currentMoment, currentUserId]);
 
     const haloColor = useMemo(() => {
         if (!currentMoment?.userId) return "#082f49";
@@ -418,11 +443,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                             <div className="aura-user-info">
                                 <div className="aura-user-title-row">
                                     <span className="aura-username">{user?.username}</span>
-                                    {currentMoment.taggedUsers && currentMoment.taggedUsers.length > 0 && (
-                                        <span className="aura-tagged-list" style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.48)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px', fontWeight: '500' }} title={currentMoment.taggedUsers.map(u => `@${u.username}`).join(', ')}>
-                                            with {currentMoment.taggedUsers.map(u => `@${u.username}`).join(', ')}
-                                        </span>
-                                    )}
+
                                     <span className="aura-moment-counter">
                                         {currentIndex + 1}/{moments.length}
                                     </span>
@@ -585,26 +606,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                     </div>
                 )}
 
-                {toastMessage && (
-                    <div style={{
-                        position: 'absolute',
-                        top: '80px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        background: 'rgba(16, 185, 129, 0.95)',
-                        backdropFilter: 'blur(8px)',
-                        color: '#fff',
-                        padding: '8px 16px',
-                        borderRadius: '20px',
-                        fontSize: '0.82rem',
-                        fontWeight: 'bold',
-                        zIndex: 3000,
-                        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.4)',
-                        animation: 'aura-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                    }}>
-                        {toastMessage}
-                    </div>
-                )}
+
 
                 {/* Like button or Reply bar integration */}
                 {(() => {
@@ -638,9 +640,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                     onFocus={() => setIsInputFocused(true)}
                                     onBlur={() => setIsInputFocused(false)}
                                     onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            handleSendReply();
-                                        }
+                                        if (e.key === "Enter") handleSendReply();
                                     }}
                                     disabled={isSendingReply}
                                 />
@@ -658,6 +658,28 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                                 <line x1="22" y1="2" x2="11" y2="13" />
                                                 <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                                            </svg>
+                                        )}
+                                    </button>
+                                )}
+
+                                {/* Reshare button - only for tagged users */}
+                                {isTaggedUser && (
+                                    <button
+                                        className={`aura-reshare-btn ${reshared ? 'reshared' : ''} ${isResharing ? 'loading' : ''}`}
+                                        disabled={isResharing || reshared}
+                                        onClick={(e) => { e.stopPropagation(); handleReshare(); }}
+                                        title={reshared ? "Already reshared" : "Reshare to your feed"}
+                                        style={{ background: 'none', border: 'none', color: reshared ? '#10b981' : '#fff', cursor: reshared ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px', opacity: reshared ? 0.75 : 1, transition: 'all 0.2s' }}
+                                    >
+                                        {isResharing ? (
+                                            <div className="aura-mini-spinner" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
+                                        ) : (
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="17 1 21 5 17 9" />
+                                                <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                                                <polyline points="7 23 3 19 7 15" />
+                                                <path d="M21 13v2a4 4 0 0 1-4 4H3" />
                                             </svg>
                                         )}
                                     </button>

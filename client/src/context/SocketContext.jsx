@@ -789,11 +789,12 @@ export const SocketProvider = ({ children }) => {
         }
     }, []);
 
-    const sendMessage = useCallback(async (chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null, isZenMessage = false, waveform = "") => {
+    const sendMessage = useCallback(async (chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null, isZenMessage = false, waveform = "", replyToMoment = null, replyToMomentUsername = "") => {
         trackActiveTime(chatId);
         
         const isLowBandwidth = useChatStore.getState().isLowBandwidth;
-        let payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isLowBandwidth, isZenMessage, waveform };
+        let payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isLowBandwidth, isZenMessage, waveform, replyToMoment, replyToMomentUsername };
+
 
         // Transparent E2EE Message Encryption
         if (content && type === "text") {

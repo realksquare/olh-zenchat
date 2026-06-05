@@ -300,7 +300,7 @@ const registerSocketHandlers = (io) => {
                         chatId: { $in: chatIds },
                         senderId: { $ne: new mongoose.Types.ObjectId(userId) },
                         status: { $in: ["sent", "delivered"] },
-                    }).populate("senderId", "username avatar createdAt").populate("replyTo");
+                    }).populate("senderId", "username avatar createdAt").populate("replyTo").populate("replyToMoment");
 
                     if (pendingMessages.length > 0) {
                         await Message.updateMany(
@@ -493,7 +493,7 @@ const registerSocketHandlers = (io) => {
             try {
                 const unpacked = isBinaryPacket(rawPayload) ? unpackMessage(rawPayload) : rawPayload;
                 const decompressed = decompressPacket(unpacked);
-                const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth, isZenMessage, waveform } = decompressed;
+                const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth, isZenMessage, waveform, replyToMoment, replyToMomentUsername } = decompressed;
 
                 const chat = await Chat.findById(chatId).populate("participants", "privacySettings contacts");
                 if (!chat) return;
@@ -505,6 +505,8 @@ const registerSocketHandlers = (io) => {
                     type: type || "text",
                     mediaUrl: mediaUrl || "",
                     replyTo: replyTo || null,
+                    replyToMoment: replyToMoment || null,
+                    replyToMomentUsername: replyToMomentUsername || "",
                     isViewOnce: isViewOnce || false,
                     cid: cid || null,
                     status: "sent",
@@ -525,7 +527,8 @@ const registerSocketHandlers = (io) => {
 
                 const populated = await Message.findById(message._id)
                     .populate("senderId", "username avatar createdAt")
-                    .populate("replyTo");
+                    .populate("replyTo")
+                    .populate("replyToMoment");
 
                 const sender = await User.findById(userId).select("privacySettings contacts");
                 const typingPrivacy = sender.privacySettings?.typingIndicator || "everyone";
@@ -608,7 +611,9 @@ const registerSocketHandlers = (io) => {
                             const title = "ZenChat";
                             let body = `New message from ${notifSenderName}!`;
 
-                            if (unreadCount === 1) {
+                            if (populated.replyToMoment) {
+                                body = `${notifSenderName} replied to your #Moment!`;
+                            } else if (unreadCount === 1) {
                                 body = hasMedia ? `1 new media from ${notifSenderName}!` : `1 new message from ${notifSenderName}!`;
                             } else if (unreadCount > 1) {
                                 if (hasMedia && hasText) {
@@ -693,7 +698,7 @@ const registerSocketHandlers = (io) => {
                     messageId,
                     updateFields,
                     { new: true }
-                ).populate("senderId", "username avatar createdAt").populate("replyTo");
+                ).populate("senderId", "username avatar createdAt").populate("replyTo").populate("replyToMoment");
 
                 const editPayload = { ...updated.toObject(), chatId: chatId.toString() };
                 io.to(chatId).emit("message_edited", { message: editPayload });
