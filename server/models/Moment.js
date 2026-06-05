@@ -66,6 +66,12 @@ const momentSchema = new mongoose.Schema(
                 ref: "User"
             }
         ],
+        taggedUsers: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User"
+            }
+        ],
     },
     { timestamps: true }
 );

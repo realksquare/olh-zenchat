@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, memo, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
+import { useSocket } from "../../context/SocketContext";
 import { formatDistanceToNow } from "date-fns";
 import { getAudioContext } from "../../utils/audio";
 import axiosInstance from "../../utils/axios";
@@ -27,9 +28,16 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const [likeLoading, setLikeLoading] = useState(false);
 
     const [totalDuration, setTotalDuration] = useState(10);
+    const [replyText, setReplyText] = useState("");
+    const [isSendingReply, setIsSendingReply] = useState(false);
+    const [isInputFocused, setIsInputFocused] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+    const { sendMessage } = useSocket();
 
     const audioRef = useRef(null);
     const videoRef = useRef(null);
+    const isInputFocusedRef = useRef(false);
+    isInputFocusedRef.current = isInputFocused;
     
     const locationContainerRef = useRef(null);
     const locationContentRef = useRef(null);
@@ -134,21 +142,27 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     };
 
 
+    // Duration and time reset when moment changes
+    useEffect(() => {
+        if (isOpen && currentMoment) {
+            let duration = 10;
+            if (currentMoment.type === "video") {
+                // Will be updated by onLoadedMetadata
+            } else if (currentMoment.music && currentMoment.music.duration) {
+                duration = currentMoment.music.duration;
+            }
+            setTotalDuration(duration);
+            setTimeLeft(duration);
+        }
+    }, [currentIndex, isOpen, currentMoment?._id]);
+
+    // Timer effect that respects input focus (pausing)
     useEffect(() => {
         if (!isOpen || !currentMoment || showDeleteConfirm) return;
 
         stopAudio();
         setShowMusicInfo(false);
         useMomentStore.getState().viewMoment(currentMoment._id, currentUserId);
-
-        let duration = 10;
-        if (currentMoment.type === "video") {
-            // Will be updated by onLoadedMetadata
-        } else if (currentMoment.music && currentMoment.music.duration) {
-            duration = currentMoment.music.duration;
-        }
-        setTotalDuration(duration);
-        setTimeLeft(duration);
 
         if (currentMoment.music?.trackId || currentMoment.music?.previewUrl || currentMoment.music?.title) {
             let cancelled = false;
@@ -167,7 +181,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                     
                     audio.addEventListener("error", async (e) => {
                         console.warn("Moment audio load error:", e.target?.error?.message || e);
-                        // If it fails, fallback to fetching a fresh URL
                         if (!cancelled && url === currentMoment.music.previewUrl) {
                             await fetchAndPlay();
                         }
@@ -209,6 +222,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             setupAudio();
 
             const interval = setInterval(() => {
+                if (isInputFocusedRef.current) return;
                 setTimeLeft(prev => {
                     if (prev <= 1) { clearInterval(interval); handleNext(); return 0; }
                     return prev - 1;
@@ -223,6 +237,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         }
 
         const interval = setInterval(() => {
+            if (isInputFocusedRef.current) return;
             setTimeLeft(prev => {
                 if (prev <= 1) { clearInterval(interval); handleNext(); return 0; }
                 return prev - 1;
@@ -234,6 +249,24 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             stopAudio();
         };
     }, [currentIndex, isOpen, currentMoment?._id, showDeleteConfirm]);
+
+    // Handle audio/video pausing while user is typing a reply
+    useEffect(() => {
+        if (videoRef.current) {
+            if (isInputFocused) {
+                videoRef.current.pause();
+            } else {
+                videoRef.current.play().catch(() => {});
+            }
+        }
+        if (audioRef.current) {
+            if (isInputFocused) {
+                audioRef.current.pause();
+            } else {
+                audioRef.current.play().catch(() => {});
+            }
+        }
+    }, [isInputFocused]);
 
     useEffect(() => {
         if (audioRef.current) audioRef.current.muted = isMuted;
@@ -290,6 +323,33 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             setCurrentIndex(0);
             setShowDeleteConfirm(false);
         }, 800);
+    };
+
+    const handleSendReply = async () => {
+        if (!replyText.trim() || isSendingReply) return;
+        setIsSendingReply(true);
+        try {
+            const targetUserId = (currentMoment.userId?._id || currentMoment.userId)?.toString();
+            if (!targetUserId) return;
+
+            // Fetch or create the chat session
+            const { data } = await axiosInstance.post("/chats", { userId: targetUserId });
+            const chatId = data.chat._id;
+
+            // Send the reply message
+            await sendMessage(chatId, replyText, "text");
+
+            setReplyText("");
+            setIsInputFocused(false);
+            
+            // Show dynamic success indicator
+            setToastMessage("Reply sent via DM!");
+            setTimeout(() => setToastMessage(""), 2200);
+        } catch (err) {
+            console.error("Failed to send reply:", err);
+        } finally {
+            setIsSendingReply(false);
+        }
     };
 
     const haloColor = useMemo(() => {
@@ -358,6 +418,11 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                             <div className="aura-user-info">
                                 <div className="aura-user-title-row">
                                     <span className="aura-username">{user?.username}</span>
+                                    {currentMoment.taggedUsers && currentMoment.taggedUsers.length > 0 && (
+                                        <span className="aura-tagged-list" style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.48)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px', fontWeight: '500' }} title={currentMoment.taggedUsers.map(u => `@${u.username}`).join(', ')}>
+                                            with {currentMoment.taggedUsers.map(u => `@${u.username}`).join(', ')}
+                                        </span>
+                                    )}
                                     <span className="aura-moment-counter">
                                         {currentIndex + 1}/{moments.length}
                                     </span>
@@ -520,26 +585,84 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                     </div>
                 )}
 
-                {/* Like button — non-owners can like; owner sees count */}
+                {toastMessage && (
+                    <div style={{
+                        position: 'absolute',
+                        top: '80px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: 'rgba(16, 185, 129, 0.95)',
+                        backdropFilter: 'blur(8px)',
+                        color: '#fff',
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        fontSize: '0.82rem',
+                        fontWeight: 'bold',
+                        zIndex: 3000,
+                        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.4)',
+                        animation: 'aura-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                    }}>
+                        {toastMessage}
+                    </div>
+                )}
+
+                {/* Like button or Reply bar integration */}
                 {(() => {
                     const likes = currentMoment.likes || [];
                     const likeCount = likes.length;
                     const hasLiked = likes.some(id => id?.toString() === currentUserId?.toString());
+
+                    if (isOwn) {
+                        return (
+                            <div
+                                className="aura-like-pill aura-like-pill--owner"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill={likeCount > 0 ? "#f43f5e" : "none"} stroke={likeCount > 0 ? "#f43f5e" : "rgba(255,255,255,0.4)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                </svg>
+                                <span className="aura-like-count">{likeCount}</span>
+                            </div>
+                        );
+                    }
+
                     return (
-                        <div
-                            className={`aura-like-pill ${isOwn ? 'aura-like-pill--owner' : ''}`}
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {isOwn ? (
-                                /* Owner: read-only like count display */
-                                <>
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill={likeCount > 0 ? "#f43f5e" : "none"} stroke={likeCount > 0 ? "#f43f5e" : "rgba(255,255,255,0.4)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                                    </svg>
-                                    <span className="aura-like-count">{likeCount}</span>
-                                </>
-                            ) : (
-                                /* Viewer: toggleable like button */
+                        <div className="aura-reply-container" onClick={(e) => e.stopPropagation()}>
+                            <div className="aura-reply-input-wrapper">
+                                <input
+                                    type="text"
+                                    className="aura-reply-input"
+                                    placeholder="Reply to moment..."
+                                    value={replyText}
+                                    onChange={(e) => setReplyText(e.target.value)}
+                                    onFocus={() => setIsInputFocused(true)}
+                                    onBlur={() => setIsInputFocused(false)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            handleSendReply();
+                                        }
+                                    }}
+                                    disabled={isSendingReply}
+                                />
+                                
+                                {replyText.trim() && (
+                                    <button 
+                                        className="aura-reply-send-btn" 
+                                        onClick={handleSendReply}
+                                        disabled={isSendingReply}
+                                        style={{ marginRight: '6px' }}
+                                    >
+                                        {isSendingReply ? (
+                                            <div className="aura-mini-spinner" style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
+                                        ) : (
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <line x1="22" y1="2" x2="11" y2="13" />
+                                                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                                            </svg>
+                                        )}
+                                    </button>
+                                )}
+
                                 <button
                                     className={`aura-like-btn ${hasLiked ? 'liked' : ''} ${likeLoading ? 'loading' : ''}`}
                                     disabled={likeLoading}
@@ -551,20 +674,17 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                         setLikeLoading(false);
                                     }}
                                     title={hasLiked ? "Unlike" : "Like"}
+                                    style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                                 >
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill={hasLiked ? "#f43f5e" : "none"} stroke={hasLiked ? "#f43f5e" : "#fff"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="aura-heart-icon">
                                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                                     </svg>
                                     {likeCount > 0 && <span className="aura-like-count">{likeCount}</span>}
                                 </button>
-                            )}
+                            </div>
                         </div>
                     );
                 })()}
-
-                <div className="aura-viewer-footer-wrapper">
-                    <div className="aura-viewer-footer">#Moments - powered by OLH ZenChat.</div>
-                </div>
             </div>
         </div>,
         document.body

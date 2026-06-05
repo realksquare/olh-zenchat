@@ -78,7 +78,9 @@ router.post("/verify-2fa-otp", async (req, res) => {
 
         // Login complete
         await User.findByIdAndUpdate(user._id, { isOnline: true });
-        const populatedUser = await User.findById(user._id).populate("blockedUsers.userId", "username avatar");
+        const populatedUser = await User.findById(user._id)
+            .populate("blockedUsers.userId", "username avatar")
+            .populate("contacts.userId", "username avatar fullName");
         const token = generateToken(user);
 
         res.json({ token, user: populatedUser.toPrivateJSON() });
@@ -168,7 +170,9 @@ router.post("/verify-challenge", async (req, res) => {
 
         // Complete E2EE verification & login
         await User.findByIdAndUpdate(user._id, { isOnline: true });
-        const populatedUser = await User.findById(user._id).populate("blockedUsers.userId", "username avatar");
+        const populatedUser = await User.findById(user._id)
+            .populate("blockedUsers.userId", "username avatar")
+            .populate("contacts.userId", "username avatar fullName");
         const token = generateToken(user);
 
         res.json({ token, user: populatedUser.toPrivateJSON() });
@@ -329,7 +333,9 @@ router.post(
             }
 
             await User.findByIdAndUpdate(user._id, { isOnline: true });
-            const populatedUser = await User.findById(user._id).populate("blockedUsers.userId", "username avatar");
+            const populatedUser = await User.findById(user._id)
+                .populate("blockedUsers.userId", "username avatar")
+                .populate("contacts.userId", "username avatar fullName");
             const token = generateToken(user);
 
             res.json({ token, user: populatedUser.toPrivateJSON() });
@@ -342,7 +348,9 @@ router.post(
 
 router.get("/me", authMiddleware, async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).populate("blockedUsers.userId", "username avatar");
+        const user = await User.findById(req.user._id)
+            .populate("blockedUsers.userId", "username avatar")
+            .populate("contacts.userId", "username avatar fullName");
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -546,7 +554,9 @@ router.put(
             }
 
             await user.save();
-            const populatedUser = await User.findById(user._id).populate("blockedUsers.userId", "username avatar");
+            const populatedUser = await User.findById(user._id)
+                .populate("blockedUsers.userId", "username avatar")
+                .populate("contacts.userId", "username avatar fullName");
             res.json({ user: populatedUser.toPrivateJSON() });
         } catch (err) {
             console.error("[Auth] Update error:", err);
@@ -565,12 +575,16 @@ router.post("/contacts/:targetId", authMiddleware, async (req, res) => {
         }
         const already = me.contacts.find(c => c.userId?.toString() === targetId);
         if (already) {
-            const populatedMe = await User.findById(me._id).populate("blockedUsers.userId", "username avatar");
+            const populatedMe = await User.findById(me._id)
+                .populate("blockedUsers.userId", "username avatar")
+                .populate("contacts.userId", "username avatar fullName");
             return res.json({ user: populatedMe.toPrivateJSON() });
         }
         me.contacts.push({ userId: targetId, tag: "general" });
         await me.save();
-        const populatedMe = await User.findById(me._id).populate("blockedUsers.userId", "username avatar");
+        const populatedMe = await User.findById(me._id)
+            .populate("blockedUsers.userId", "username avatar")
+            .populate("contacts.userId", "username avatar fullName");
         res.json({ user: populatedMe.toPrivateJSON() });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
@@ -584,7 +598,9 @@ router.delete("/contacts/:targetId", authMiddleware, async (req, res) => {
         if (!me) return res.status(404).json({ message: "User not found" });
         me.contacts = me.contacts.filter(c => c.userId?.toString() !== targetId);
         await me.save();
-        const populatedMe = await User.findById(me._id).populate("blockedUsers.userId", "username avatar");
+        const populatedMe = await User.findById(me._id)
+            .populate("blockedUsers.userId", "username avatar")
+            .populate("contacts.userId", "username avatar fullName");
         res.json({ user: populatedMe.toPrivateJSON() });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
@@ -637,7 +653,9 @@ router.post("/block/:targetId", authMiddleware, async (req, res) => {
             io.to(targetId).emit("user_blocked", { blockerId: me._id.toString(), blockedId: targetId });
         }
 
-        const populatedMe = await User.findById(me._id).populate("blockedUsers.userId", "username avatar");
+        const populatedMe = await User.findById(me._id)
+            .populate("blockedUsers.userId", "username avatar")
+            .populate("contacts.userId", "username avatar fullName");
         res.json({ user: populatedMe.toPrivateJSON() });
     } catch (err) {
         console.error("Block user error:", err);
@@ -685,7 +703,9 @@ router.post("/unblock/:targetId", authMiddleware, async (req, res) => {
             io.to(targetId).emit("user_unblocked", { blockerId: me._id.toString(), blockedId: targetId });
         }
 
-        const populatedMe = await User.findById(me._id).populate("blockedUsers.userId", "username avatar");
+        const populatedMe = await User.findById(me._id)
+            .populate("blockedUsers.userId", "username avatar")
+            .populate("contacts.userId", "username avatar fullName");
         res.json({ user: populatedMe.toPrivateJSON() });
     } catch (err) {
         console.error("Unblock user error:", err);

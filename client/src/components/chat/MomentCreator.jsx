@@ -83,6 +83,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [imageQuality, setImageQuality] = useState("standard"); // "standard" | "og"
+    const [selectedTaggedUsers, setSelectedTaggedUsers] = useState([]);
     
     const audioRef = useRef(null);
     const seekTimeoutRef = useRef(null);
@@ -283,6 +284,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 filter: !isText ? activeFilter : "none",
                 locationTag: (!isText && showLocationPill) ? locationText : "",
                 disappearAfterHours: disappearHours,
+                taggedUsers: selectedTaggedUsers,
                 music: music ? {
                     trackId: music.id || null,
                     source: music.source || null,
@@ -331,6 +333,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
         setUploadProgress(0);
         setImageQuality("standard");
         setIsUploading(false);
+        setSelectedTaggedUsers([]);
     };
 
     const handleClose = () => {
@@ -349,6 +352,69 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const getPreviewFilterStyle = () => {
         const preset = FILTER_PRESETS.find(f => f.id === activeFilter);
         return preset ? preset.style : {};
+    };
+
+    const user = useAuthStore((s) => s.user);
+    const contacts = user?.contacts || [];
+
+    const handleToggleTagUser = (contactId) => {
+        setSelectedTaggedUsers(prev => 
+            prev.includes(contactId)
+                ? prev.filter(id => id !== contactId)
+                : [...prev, contactId]
+        );
+    };
+
+    const renderTagContactsSection = () => {
+        if (!contacts || contacts.length === 0) return null;
+        return (
+            <div className="aura-tag-contacts-section" style={{ marginTop: '14px' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 'bold', color: '#64748b', display: 'block', marginBottom: '6px' }}>Tag friends (shares to their feed)</span>
+                <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '4px 0' }} className="filter-scroll-strip">
+                    {contacts.map(c => {
+                        const contactUser = c.userId;
+                        if (!contactUser || !contactUser._id) return null;
+                        const isSelected = selectedTaggedUsers.includes(contactUser._id);
+                        return (
+                            <div 
+                                key={contactUser._id}
+                                onClick={() => handleToggleTagUser(contactUser._id)}
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    cursor: 'pointer',
+                                    flexShrink: 0
+                                }}
+                            >
+                                <div 
+                                    className="avatar avatar-sm"
+                                    style={{
+                                        border: isSelected ? '2px solid var(--color-primary, #3b82f6)' : '2px solid transparent',
+                                        boxShadow: isSelected ? '0 0 10px rgba(59, 130, 246, 0.4)' : 'none',
+                                        transition: 'all 0.2s',
+                                        width: '32px',
+                                        height: '32px',
+                                        borderRadius: '50%',
+                                        overflow: 'hidden'
+                                    }}
+                                >
+                                    {contactUser.avatar ? (
+                                        <img src={contactUser.avatar} alt={contactUser.username} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : (
+                                        <span>{contactUser.username?.slice(0, 2).toUpperCase()}</span>
+                                    )}
+                                </div>
+                                <span style={{ fontSize: '0.62rem', color: isSelected ? '#fff' : '#64748b', fontWeight: isSelected ? 'bold' : 'normal' }}>
+                                    @{contactUser.username}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
     };
 
     if (!isOpen) return null;
@@ -469,6 +535,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                             <span>Min 3 characters</span>
                                             <span>{content.length}/49</span>
                                         </div>
+                                        {renderTagContactsSection()}
                                     </div>
                                 </>
                             ) : (
@@ -666,8 +733,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                             {/* Disappear Timer CONTROL */}
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: '12px', marginBottom: '14px' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                    <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#cbd5e1' }}>Disappear timer</span>
-                                                    <span style={{ fontSize: '0.65rem', color: '#64748b' }}>Select how long this moment stays visible</span>
+                                                    <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#cbd5e1' }}>Select how long this moment stays visible</span>
                                                 </div>
                                                 <div style={{ display: 'flex', gap: '6px', background: 'rgba(0,0,0,0.2)', padding: '2px', borderRadius: '8px' }}>
                                                     {[7, 18, 24].map((h) => (
@@ -693,6 +759,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                     ))}
                                                 </div>
                                             </div>
+                                            {renderTagContactsSection()}
                                         </div>
                                     )}
                                 </>

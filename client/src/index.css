@@ -7732,3 +7732,133 @@ select {
 .sidebar-profile-btn:hover {
   color: #ffffff !important;
 }
+
+/* ── Moments DM Reply Bar ────────────────────────────── */
+.aura-reply-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px 20px 24px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+  z-index: 1200;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.aura-reply-input-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 440px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 100px;
+  padding: 6px 6px 6px 16px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.aura-reply-input-wrapper:focus-within {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.aura-reply-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 0.9rem;
+  padding: 8px 0;
+  font-family: inherit;
+}
+
+.aura-reply-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.aura-reply-send-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  color: #0f172a;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.aura-reply-send-btn:hover {
+  transform: scale(1.08);
+  background: #f8fafc;
+}
+
+.aura-reply-send-btn:active {
+  transform: scale(0.95);
+}
+
+.aura-reply-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.aura-reply-container .aura-like-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+  margin-left: 6px;
+}
+
+.aura-reply-container .aura-like-btn:hover {
+  transform: scale(1.08);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.aura-reply-container .aura-like-btn.liked {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: rgba(244, 63, 94, 0.3);
+}
+
+.aura-mini-spinner {
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: aura-spin 0.8s linear infinite;
+}
+
+@keyframes aura-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes aura-pop {
+  0% { transform: translate(-50%, -20px) scale(0.9); opacity: 0; }
+  100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+}
+
+.aura-like-pill.aura-like-pill--owner {
+  bottom: 24px;
+  right: 24px;
+}
+

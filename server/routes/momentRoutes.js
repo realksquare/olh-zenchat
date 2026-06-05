@@ -8,7 +8,7 @@ const { onlineUsers } = require("../socket/handlers");
 
 router.post("/", protect, async (req, res) => {
     try {
-        const { type, content, mediaUrl, music, caption, locationTag, filter, disappearAfterHours } = req.body;
+        const { type, content, mediaUrl, music, caption, locationTag, filter, disappearAfterHours, taggedUsers } = req.body;
         const hours = disappearAfterHours ? Number(disappearAfterHours) : 24;
         const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000);
 
@@ -22,10 +22,13 @@ router.post("/", protect, async (req, res) => {
             locationTag: locationTag || "",
             filter: filter || "none",
             disappearAfterHours: hours,
-            expiresAt
+            expiresAt,
+            taggedUsers: Array.isArray(taggedUsers) ? taggedUsers : []
         });
 
-        const populated = await Moment.findById(moment._id).populate("userId", "username avatar fullName");
+        const populated = await Moment.findById(moment._id)
+            .populate("userId", "username avatar fullName")
+            .populate("taggedUsers", "username avatar fullName");
 
         console.log(`[moments] New moment shared by ${req.user.username} (${req.user._id}). Type: ${type}`);
 
@@ -41,18 +44,46 @@ router.post("/", protect, async (req, res) => {
             .map(c => c.userId.toString())
             .filter(cid => !excludeUserIds.includes(cid));
 
+        // Collect all socket recipients
+        const recipientIds = new Set();
+        contactIds.forEach(cid => recipientIds.add(cid.toString()));
+
+        // Process tagged users
+        const validTaggedUsers = Array.isArray(taggedUsers) ? taggedUsers : [];
+        for (const taggedId of validTaggedUsers) {
+            recipientIds.add(taggedId.toString());
+            try {
+                const taggedUser = await User.findById(taggedId).select("contacts blockedUsers");
+                if (taggedUser) {
+                    const usersWhoBlockedTagged = await User.find({ "blockedUsers.userId": taggedId }).select("_id");
+                    const blockedTaggedMeIds = usersWhoBlockedTagged.map(u => u._id.toString());
+                    const taggedBlockedIds = taggedUser.blockedUsers?.map(u => u.userId.toString()) || [];
+                    const excludeTaggedIds = [...blockedTaggedMeIds, ...taggedBlockedIds];
+                    
+                    const taggedContactIds = taggedUser.contacts
+                        .map(c => c.userId.toString())
+                        .filter(cid => !excludeTaggedIds.includes(cid));
+                    
+                    taggedContactIds.forEach(cid => recipientIds.add(cid.toString()));
+                }
+            } catch (err) {
+                console.error(`[moments] Error fetching contacts for tagged user ${taggedId}:`, err);
+            }
+        }
+
         // Emit to the user themselves
         io.to(req.user._id.toString()).emit("new_moment", populated);
 
-        // Emit to each online contact and send push notification
+        // Emit to each online recipient and send push notification
         const notificationTitle = `${user.username} has shared a #moment.!`;
         const notificationBody = ""; // Simplified as requested
 
-        contactIds.forEach(async (cid) => {
+        recipientIds.forEach(async (cid) => {
             io.to(cid).emit("new_moment", populated);
 
-            // Send Push Notif to contacts if they are offline
-            if (!onlineUsers.has(cid.toString())) {
+            // Send Push Notif to direct contacts / tagged users if they are offline
+            const isDirectRecipient = contactIds.includes(cid) || validTaggedUsers.includes(cid);
+            if (isDirectRecipient && !onlineUsers.has(cid.toString())) {
                 try {
                     console.log(`[moments] Sending push to ${cid}. Title: "${notificationTitle}", Body: "${notificationBody}"`);
                     const contact = await User.findById(cid).select("fcmTokens");
@@ -108,10 +139,13 @@ router.get("/", protect, async (req, res) => {
         const moments = await Moment.find({
             $or: [
                 { userId: req.user._id },
-                { userId: { $in: contactIds } }
+                { userId: { $in: contactIds } },
+                { taggedUsers: req.user._id },
+                { taggedUsers: { $in: contactIds } }
             ]
         })
         .populate("userId", "username avatar fullName")
+        .populate("taggedUsers", "username avatar fullName")
         .sort({ createdAt: -1 });
 
         console.log(`[moments] Returning ${moments.length} moments for ${user.username}`);
@@ -141,7 +175,9 @@ router.post("/:id/view", protect, async (req, res) => {
         }
         
         // Return updated moment so client can sync viewedBy immediately
-        const updated = await Moment.findById(req.params.id).populate("userId", "username avatar fullName");
+        const updated = await Moment.findById(req.params.id)
+            .populate("userId", "username avatar fullName")
+            .populate("taggedUsers", "username avatar fullName");
         res.json({ success: true, moment: updated });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
@@ -201,7 +237,8 @@ router.post("/:id/like", protect, async (req, res) => {
             : { $addToSet: { likes: req.user._id } };
 
         const updated = await Moment.findByIdAndUpdate(req.params.id, update, { new: true })
-            .populate("userId", "username avatar fullName");
+            .populate("userId", "username avatar fullName")
+            .populate("taggedUsers", "username avatar fullName");
 
         // Broadcast to owner + all their contacts so like count updates in real-time
         const io = req.app.get("io");
