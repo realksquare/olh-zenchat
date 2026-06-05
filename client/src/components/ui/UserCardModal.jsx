@@ -130,9 +130,35 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                             <p className="user-card-fullname">{fullName}</p>
                         )}
                         {user.bio && (
-                            <p className="user-card-bio" style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', marginTop: '8px', textAlign: 'center', maxWidth: '80%', fontStyle: 'italic', wordBreak: 'break-word' }}>
-                                "{user.bio}"
-                            </p>
+                            <div 
+                                className="user-card-bio-wrapper"
+                                style={{
+                                    display: 'inline-block',
+                                    padding: '8px 16px',
+                                    background: 'rgba(61, 165, 217, 0.06)',
+                                    border: '1px solid rgba(61, 165, 217, 0.18)',
+                                    borderRadius: '14px',
+                                    marginTop: '12px',
+                                    maxWidth: '90%',
+                                    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+                                }}
+                            >
+                                <p 
+                                    className="user-card-bio" 
+                                    style={{ 
+                                        fontSize: '0.8rem', 
+                                        color: '#e2e8f0', 
+                                        textAlign: 'center', 
+                                        wordBreak: 'break-word',
+                                        margin: 0,
+                                        fontWeight: '500',
+                                        lineHeight: '1.45',
+                                        fontStyle: 'normal'
+                                    }}
+                                >
+                                    {user.bio}
+                                </p>
+                            </div>
                         )}
                     </div>
 
