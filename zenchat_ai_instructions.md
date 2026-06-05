@@ -22,8 +22,8 @@ These are the core operating principles and coding standards to be followed for 
 - **Different POVs:** If you cannot resolve an issue with usual approaches, try to resolve it from different POVs - think about what could have gone wrong from frontend, backend, database, network, etc. and try to fix it from that POV. Also search the internet for potential solutions.
 
 ## 5. UI & Aesthetics
-- **Professional Typography:** Keep UI text away from fancy dashes or excessive punctuation. Use standard hyphens.
-- **Iconography over Emojis:** Do not use emojis in the UI text. Always use Lucid icons or SVG icons wherever visual representation is needed.
+- **Professional Typography:** Keep UI text away from fancy dashes (em or en dashes) or excessive punctuation. Use standard hyphens.
+- **Iconography over Emojis:** Avoid emojis in the UI text. Always use Lucid icons or SVG icons wherever visual representation is needed.
 - **UI Consistency:** When adding new UI elements, ensure the styles and UI of the new elements are consistent with the existing UI elements, unless the component being added is intended to be visually distinct/unique from the components around it.
 
 ## 6. Version Control Protocol
