@@ -2,6 +2,9 @@ import axios from "axios";
 
 const baseURL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : "/api";
 
+const appStartupTime = typeof window !== "undefined" ? Date.now() : 0;
+const STARTUP_GRACE_PERIOD = 8000; // 8 seconds grace period for initial load/refresh
+
 const axiosInstance = axios.create({
     baseURL: baseURL,
     headers: {
@@ -26,7 +29,8 @@ axiosInstance.interceptors.response.use(
         const startTime = response.config?.metadata?.startTime;
         if (startTime) {
             const duration = new Date() - startTime;
-            if (duration > 2000) {
+            const isStartupGracePeriod = (Date.now() - appStartupTime) < STARTUP_GRACE_PERIOD;
+            if (duration > 2000 && !isStartupGracePeriod) {
                 import("../stores/chatStore").then(module => {
                     module.useChatStore.getState().setLowBandwidth(true);
                 });
@@ -38,7 +42,8 @@ axiosInstance.interceptors.response.use(
         const startTime = error.config?.metadata?.startTime;
         if (startTime) {
             const duration = new Date() - startTime;
-            if (duration > 2000 || error.code === "ECONNABORTED") {
+            const isStartupGracePeriod = (Date.now() - appStartupTime) < STARTUP_GRACE_PERIOD;
+            if ((duration > 2000 || error.code === "ECONNABORTED") && !isStartupGracePeriod) {
                 import("../stores/chatStore").then(module => {
                     module.useChatStore.getState().setLowBandwidth(true);
                 });

@@ -5,6 +5,9 @@ import { useAuthStore } from "./authStore";
 import { db, persistChat, persistMessage, getLocalChats, getLocalMessages, healMessageDate } from "../db/zenDB";
 import { decryptMessageIfNeeded } from "../utils/e2eeHelper";
 
+const appStartupTime = typeof window !== "undefined" ? Date.now() : 0;
+const STARTUP_GRACE_PERIOD = 8000; // 8 seconds grace period for initial load/refresh
+
 export const useChatStore = create(
     persist(
         (set, get) => ({
@@ -66,6 +69,11 @@ export const useChatStore = create(
 
             checkNetworkSpeed: async () => {
                 if (typeof navigator === "undefined") return false;
+
+                // Ignore connection checks if still within the initial startup grace period
+                if (Date.now() - appStartupTime < STARTUP_GRACE_PERIOD) {
+                    return get().isLowBandwidth;
+                }
 
                 if (!navigator.onLine) {
                     if (get().isLowBandwidth !== true) set({ isLowBandwidth: true });
