@@ -1,12 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZenChat - The Ultimate Communication App</title>
-  <meta name="description" content="ZenChat is a privacy-first, data-conservative real-time chat app with E2EE by default, #Moments, ZenVault, and #ZenMode - built for everyone, even on 2G." />
-  <meta property="og:title" content="ZenChat - The Ultimate Communication App" />
-  <meta property="og:description" content="No ads. No tracking. No data waste. ZenChat works even on 2G networks, keeps your chats encrypted by default, and puts you in control." />
+  <title>ZenChat - Messaging Without the Time Sink</title>
+  <meta name="description" content="ZenChat is a privacy-first, distraction-free messaging app. No ads, no tracking, and no algorithmic scrolling. Built for focused conversations, even on 2G." />
+  <meta property="og:title" content="ZenChat - Messaging Without the Time Sink" />
+  <meta property="og:description" content="No ads. No tracking. No feeds. ZenChat keeps your chats encrypted by default and respects your time." />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://api.fontshare.com" />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&display=swap" rel="stylesheet" />
@@ -1163,7 +1163,7 @@
       box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
     }
 
-    /* â”€â”€ Stagger delays â”€â”€ */
+    /* ── Stagger delays ── */
     .feature-card:nth-child(1){transition-delay:0ms}
     .feature-card:nth-child(2){transition-delay:70ms}
     .feature-card:nth-child(3){transition-delay:140ms}
@@ -1182,7 +1182,354 @@
     .compare-card:nth-child(2){transition-delay:80ms}
     .compare-card:nth-child(3){transition-delay:160ms}
 
-    /* â”€â”€ Responsive â”€â”€ */
+    /* ── Themed Grid ── */
+    .themes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    .theme-column {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 36px 30px;
+      transition: border-color 300ms ease, box-shadow 300ms ease, transform 300ms var(--ease);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .theme-column::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top left, var(--theme-accent-dim) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 300ms ease;
+      pointer-events: none;
+    }
+    .theme-column:hover::after { opacity: 1; }
+    .theme-column:hover {
+      border-color: var(--theme-accent-border);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+    }
+    .theme-header {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .theme-icon-wrapper {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 6px;
+    }
+    .theme-icon-wrapper svg { width: 24px; height: 24px; }
+    .theme-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+    .theme-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .theme-features-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .theme-feature-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .theme-feature-bullet {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--theme-accent-dim);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .theme-feature-bullet svg { width: 11px; height: 11px; stroke: var(--theme-accent); fill: none; stroke-width: 3; }
+    .theme-feature-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+    .theme-feature-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    #theme-privacy {
+      --theme-accent: var(--primary);
+      --theme-accent-dim: var(--primary-dim);
+      --theme-accent-border: var(--primary-border);
+    }
+    #theme-focus {
+      --theme-accent: var(--accent);
+      --theme-accent-dim: rgba(99, 102, 241, 0.12);
+      --theme-accent-border: rgba(99, 102, 241, 0.25);
+    }
+    #theme-speed {
+      --theme-accent: #fb923c;
+      --theme-accent-dim: rgba(251, 146, 60, 0.12);
+      --theme-accent-border: rgba(251, 146, 60, 0.25);
+    }
+
+    /* ── Scenario Section ── */
+    .scenario { padding: 100px 0; background: rgba(255,255,255,0.015); position: relative; }
+    .scenario::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 80% 50%, rgba(99,102,241,0.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .scenario-inner {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 64px;
+      align-items: center;
+    }
+    .scenario-content {
+      max-width: 540px;
+    }
+    .scenario-content .tag { margin-bottom: 18px; }
+    .scenario-title {
+      font-size: clamp(1.8rem, 3.2vw, 2.6rem);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+    .scenario-desc {
+      font-size: 0.98rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+      margin-bottom: 32px;
+    }
+    .scenario-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .scenario-points li {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .scenario-icon {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--primary-dim);
+      border: 1px solid var(--primary-border);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .scenario-icon svg { width: 11px; height: 11px; stroke: var(--primary); fill: none; stroke-width: 3; }
+    .scenario-visual {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .scenario-card {
+      width: 100%;
+      max-width: 360px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+      position: relative;
+    }
+    .scenario-card-header {
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .scenario-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--primary));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: #fff; font-size: 0.85rem;
+    }
+    .scenario-title-text { font-size: 0.9rem; font-weight: 600; }
+    .scenario-meta { font-size: 0.72rem; color: var(--text-muted); }
+    .scenario-chat-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .scenario-msg {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-width: 85%;
+    }
+    .scenario-msg.self {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+    .scenario-msg-bubble {
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      border-radius: 14px;
+    }
+    .scenario-msg:not(.self) .scenario-msg-bubble {
+      background: rgba(255,255,255,0.05);
+      border-bottom-left-radius: 3px;
+    }
+    .scenario-msg.self .scenario-msg-bubble {
+      background: var(--primary-dim);
+      border: 1px solid var(--primary-border);
+      color: var(--text);
+      border-bottom-right-radius: 3px;
+    }
+    .scenario-msg-time { font-size: 0.65rem; color: var(--text-faint); margin: 0 4px; }
+    .scenario-vault-link {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      align-self: flex-end;
+      max-width: 85%;
+      cursor: pointer;
+      transition: all 180ms ease;
+    }
+    .scenario-vault-link:hover {
+      background: rgba(61,165,217,0.08);
+      border-color: var(--primary-border);
+    }
+    .scenario-vault-icon {
+      width: 32px; height: 32px;
+      background: var(--primary-dim);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .scenario-vault-icon svg { width: 16px; height: 16px; stroke: var(--primary); fill: none; stroke-width: 2.5; }
+    .vault-filename { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+    .vault-filesize { font-size: 0.68rem; color: var(--text-muted); }
+
+    /* ── Comparison Table ── */
+    .compare-table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 40px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+      min-width: 600px;
+    }
+    .compare-table th, .compare-table td {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .compare-table th {
+      background: rgba(255,255,255,0.02);
+      font-weight: 700;
+      color: var(--text);
+      font-size: 0.95rem;
+      letter-spacing: -0.01em;
+    }
+    .compare-table tr:last-child th, .compare-table tr:last-child td {
+      border-bottom: none;
+    }
+    .compare-table td {
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .compare-highlight {
+      background: rgba(61,165,217,0.03);
+      border-left: 1px solid var(--primary-border);
+      border-right: 1px solid var(--primary-border);
+    }
+    th.compare-highlight {
+      background: rgba(61,165,217,0.05);
+    }
+    .compare-table-app {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .compare-table-app svg { flex-shrink: 0; }
+    .compare-check {
+      color: var(--green);
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .compare-cross {
+      color: #ef4444;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .compare-check svg, .compare-cross svg {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      padding: 3px;
+      flex-shrink: 0;
+    }
+    .compare-check svg {
+      background: rgba(74,222,128,0.12);
+      stroke: var(--green);
+      stroke-width: 3.5;
+      fill: none;
+    }
+    .compare-cross svg {
+      background: rgba(239,68,68,0.12);
+      stroke: #ef4444;
+      stroke-width: 3;
+      fill: none;
+    }
+    .compare-table sup {
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 0.7rem;
+      margin-left: 2px;
+      top: -0.3em;
+      position: relative;
+      vertical-align: baseline;
+    }
+
+    /* ── Responsive ── */
     @media (max-width: 900px) {
       .mobile-header-actions { display: flex; }
       .nav-links, .nav-cta { display: none; }
@@ -1190,14 +1537,13 @@
       .hero-inner { grid-template-columns: 1fr; gap: 52px; }
       .hero-visual { order: -1; }
       .badge-1, .badge-2 { display: none; }
-      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .themes-grid { grid-template-columns: 1fr; gap: 20px; }
+      .scenario-inner { grid-template-columns: 1fr; gap: 48px; }
+      .scenario-visual { order: -1; }
       .steps { grid-template-columns: 1fr; gap: 40px; }
       .steps::before { display: none; }
       .security-inner { grid-template-columns: 1fr; gap: 52px; }
       .security-visual { order: -1; }
-      .compare-grid { grid-template-columns: 1fr; }
-      .compare-card.zenchat-card { grid-column: auto; }
-      .compare-zenchat-cols { grid-template-columns: 1fr; }
     }
     @media (max-width: 600px) {
       .features-grid { grid-template-columns: 1fr; }
@@ -1268,11 +1614,11 @@
             <span class="tag"><span class="tag-dot"></span>Made for 2G. Built for everyone.</span>
           </div>
           <h1 class="hero-headline">
-            The ultimate<br/>
-            <span class="gradient-text">communication app.</span>
+            Messaging without<br/>
+            <span class="gradient-text">the time sink.</span>
           </h1>
           <p class="hero-sub">
-            No ads. No tracking. No data waste. E2EE texts and voice messages by default, works on 2G, and built for real people.
+            No ads. No algorithmic feeds. No distraction. Just end-to-end encrypted texts and voice messages that work even on 2G, helping you say what you need and get back to life.
           </p>
           <div class="hero-actions" id="hero-actions">
             <!-- Rendered by JS -->
@@ -1387,165 +1733,250 @@
     </div>
   </section>
 
-  <!-- â”€â”€ Features â”€â”€ -->
+  <!-- ── Core pillars ── -->
   <section class="features" id="features">
     <div class="container">
       <div class="section-header reveal">
-        <span class="tag"><span class="tag-dot"></span>Features</span>
+        <span class="tag"><span class="tag-dot"></span>Core pillars</span>
         <h2 class="section-title">Built different. By design.</h2>
-        <p class="section-sub">Every feature exists for a reason - faster, safer, smarter messaging.</p>
+        <p class="section-sub">Instead of chasing screen time, we focus on privacy, attention, and efficiency.</p>
       </div>
-      <div class="features-grid">
+      <div class="themes-grid">
 
-        <div class="feature-card" id="feat-1">
-          <div class="feature-icon" style="background:rgba(61,165,217,0.12)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#3da5d9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <!-- Column 1: Privacy -->
+        <div class="theme-column" id="theme-privacy">
+          <div class="theme-header">
+            <div class="theme-icon-wrapper" style="background:var(--primary-dim)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h3 class="theme-title">Privacy by design</h3>
+            <p class="theme-subtitle">Complete ownership of your footprint, built directly into the protocol.</p>
           </div>
-          <div class="feature-name">E2EE by Default</div>
-          <div class="feature-desc">Every text and voice message is end-to-end encrypted out of the box - no settings to toggle. Your messages stay yours.</div>
-          <span class="feature-badge">Always on</span>
-        </div>
-
-        <div class="feature-card" id="feat-2">
-          <div class="feature-icon" style="background:rgba(61,165,217,0.12)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#3da5d9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          </div>
-          <div class="feature-name">Real-time One-to-One Chat</div>
-          <div class="feature-desc">Instant messaging via Socket.io, with wave and hacker-text decryption typing animations.</div>
-        </div>
-
-        <div class="feature-card" id="feat-3">
-          <div class="feature-icon" style="background:rgba(99,102,241,0.12)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          </div>
-          <div class="feature-name">Media and Docs Sharing</div>
-          <div class="feature-desc">Send images, videos, and documents with in-chat previews and lightbox support.</div>
-        </div>
-
-        <div class="feature-card" id="feat-4">
-          <div class="feature-icon" style="background:rgba(168,85,247,0.12)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
-          </div>
-          <div class="feature-name">View-Once Media</div>
-          <div class="feature-desc">Photos and videos that vanish after being viewed once - built for private, ephemeral sharing.</div>
-          <span class="feature-badge">Privacy first</span>
-        </div>
-
-        <div class="feature-card" id="feat-5">
-          <div class="feature-icon" style="background:rgba(251,146,60,0.1)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-          </div>
-          <div class="feature-name">Chat Pinning</div>
-          <div class="feature-desc">Pin important conversations to the top of your inbox - always one tap away.</div>
-        </div>
-
-        <div class="feature-card" id="feat-6">
-          <div class="feature-icon" style="background:rgba(74,222,128,0.1)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          </div>
-          <div class="feature-name">User Discovery</div>
-          <div class="feature-desc">Search by username, add contacts, and start chatting instantly - no phone number needed.</div>
-        </div>
-
-        <div class="feature-card" id="feat-7">
-          <div class="feature-icon" style="background:rgba(61,165,217,0.12)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#3da5d9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-          </div>
-          <div class="feature-name">#Moments</div>
-          <div class="feature-desc">ZenChat's unique take on stories - share fleeting status updates with iTunes/Deezer music track previews and custom locations.</div>
-          <span class="feature-badge">Unique to ZenChat</span>
-        </div>
-
-        <div class="feature-card" id="feat-8">
-          <div class="feature-icon" style="background:rgba(234,179,8,0.1)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          </div>
-          <div class="feature-name">#SP-OP Mode</div>
-          <div class="feature-desc">SmartPayload Optimization auto-adjusts media and event sync to your connection quality - seamless even on 2G.</div>
-          <span class="feature-badge">Auto-adaptive</span>
-        </div>
-
-        <div class="feature-card" id="feat-9">
-          <div class="feature-icon" style="background:rgba(99,102,241,0.12)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-          </div>
-          <div class="feature-name">ZenVault</div>
-          <div class="feature-desc">Browser-based encrypted local file storage. Files stay on your device - never uploaded to any server.</div>
-          <span class="feature-badge">Unique to ZenChat</span>
-        </div>
-
-        <div class="feature-card" id="feat-10">
-          <div class="feature-icon" style="background:rgba(61,165,217,0.12)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#3da5d9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          </div>
-          <div class="feature-name">Push Notifications</div>
-          <div class="feature-desc">FCM web push keeps you notified even when ZenChat isn't open.</div>
-        </div>
-
-        <div class="feature-card" id="feat-11">
-          <div class="feature-icon" style="background:rgba(234,179,8,0.1)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          </div>
-          <div class="feature-name">YourTime Dashboard</div>
-          <div class="feature-desc">Interactive time tracking directly in your sidebar. Monitor active time and view communication statistics with different contacts.</div>
-          <span class="feature-badge">Insights</span>
-        </div>
-
-        <div class="feature-card" id="feat-12">
-          <div class="feature-icon" style="background:rgba(99,102,241,0.12)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-          </div>
-          <div class="feature-name">Giphy GIFs &amp; Stickers</div>
-          <div class="feature-desc">Express yourself with Giphy integration. Search and send high-fidelity GIFs and stickers seamlessly.</div>
-        </div>
-
-      </div>
-
-      <!-- ZenMode callout -->
-      <div class="reveal" style="margin-top:20px">
-        <div style="background:linear-gradient(135deg,rgba(61,165,217,0.08),rgba(99,102,241,0.06));border:1px solid var(--primary-border);border-radius:var(--radius-lg);padding:28px 32px;display:flex;align-items:center;gap:28px;flex-wrap:wrap">
-          <div style="flex:1;min-width:200px">
-            <div style="font-size:1.05rem;font-weight:700;margin-bottom:6px">#ZenMode</div>
-            <div style="font-size:0.875rem;color:var(--text-muted);line-height:1.65">Distraction-free one-to-one chat - no UI chrome, no noise. Just you and the conversation.</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;flex-shrink:0">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-            <span style="font-size:0.875rem;font-weight:600;color:var(--text)">Focus. Zen. Flow.</span>
+          <div class="theme-features-list">
+            <div class="theme-feature-item">
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div>
+                <h4 class="theme-feature-name">E2EE by Default</h4>
+                <p class="theme-feature-desc">All texts and voice messages are end-to-end encrypted instantly. Your chats stay yours.</p>
+              </div>
+            </div>
+            <div class="theme-feature-item">
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div>
+                <h4 class="theme-feature-name">ZenVault</h4>
+                <p class="theme-feature-desc">Browser-encrypted local storage. Heavy files stay on your device, never in the cloud.</p>
+              </div>
+            </div>
+            <div class="theme-feature-item">
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div>
+                <h4 class="theme-feature-name">View-Once Media</h4>
+                <p class="theme-feature-desc">Vanishing photos and videos that self-destruct immediately after viewing.</p>
+              </div>
+            </div>
+            <div class="theme-feature-item">
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div>
+                <h4 class="theme-feature-name">No PII Required</h4>
+                <p class="theme-feature-desc">Register with a simple username. No tracking phone numbers or address books.</p>
+              </div>
+            </div>
           </div>
         </div>
+
+        <!-- Column 2: Focus -->
+        <div class="theme-column" id="theme-focus">
+          <div class="theme-header">
+            <div class="theme-icon-wrapper" style="background:rgba(99,102,241,0.12)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            </div>
+            <h3 class="theme-title">Deep focus</h3>
+            <p class="theme-subtitle">Reclaim your attention. Built to help you communicate, then get back to life.</p>
+          </div>
+          <div class="theme-features-list">
+            <div class="theme-feature-item">
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div>
+                <h4 class="theme-feature-name">#ZenMode</h4>
+                <p class="theme-feature-desc">A minimal interface option that strips away all UI chrome, leaving only your conversation.</p>
+              </div>
+            </div>
+            <div class="theme-feature-item">
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div>
+                <h4 class="theme-feature-name">YourTime Insights</h4>
+                <p class="theme-feature-desc">Monitor active communication time directly in the sidebar to avoid screen fatigue.</p>
+              </div>
+            </div>
+            <div class="theme-feature-item">
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div>
+                <h4 class="theme-feature-name">Quiet #Moments</h4>
+                <p class="theme-feature-desc">Share updates and music track previews in a feed that doesn't track or scroll endlessly.</p>
+              </div>
+            </div>
+            <div class="theme-feature-item">
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div>
+                <h4 class="theme-feature-name">Priority Pinning</h4>
+                <p class="theme-feature-desc">Dock your most important conversations to the top of your inbox for quick access.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 3: Speed -->
+        <div class="theme-column" id="theme-speed">
+          <div class="theme-header">
+            <div class="theme-icon-wrapper" style="background:rgba(251,146,60,0.12)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <h3 class="theme-title">Optimized speed</h3>
+            <p class="theme-subtitle">Snappy, lightweight synchronization that adapts dynamically to your environment.</p>
+          </div>
+          <div class="theme-features-list">
+            <div class="theme-feature-item">
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div>
+                <h4 class="theme-feature-name">#SP-OP Protocol</h4>
+                <p class="theme-feature-desc">Adapts to low-bandwidth connections (2G/3G) by prioritizing texts and queuing heavy media.</p>
+              </div>
+            </div>
+            <div class="theme-feature-item">
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div>
+                <h4 class="theme-feature-name">Real-Time Core</h4>
+                <p class="theme-feature-desc">Bidirectional message sync via WebSockets, ensuring instant delivery without lag.</p>
+              </div>
+            </div>
+            <div class="theme-feature-item">
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div>
+                <h4 class="theme-feature-name">Silent Syncing</h4>
+                <p class="theme-feature-desc">Background event synchronization to ensure your dashboard is updated before you open it.</p>
+              </div>
+            </div>
+            <div class="theme-feature-item">
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div>
+                <h4 class="theme-feature-name">FCM Notifications</h4>
+                <p class="theme-feature-desc">Stay updated on new messages instantly with lightweight browser push alerts.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
 
-  <!-- â”€â”€ How it Works â”€â”€ -->
+  <!-- ── Getting Started ── -->
   <section class="how" id="how">
     <div class="container">
       <div class="section-header reveal">
-        <span class="tag"><span class="tag-dot"></span>How it Works</span>
-        <h2 class="section-title">Up and chatting in seconds</h2>
-        <p class="section-sub">No phone number. No unnecessary permissions. Just sign up and go.</p>
+        <span class="tag"><span class="tag-dot"></span>Simple setup</span>
+        <h2 class="section-title">Sign up, say it, sign off.</h2>
+        <p class="section-sub">No verification loops, no unnecessary permissions. Just sign up and start communicating.</p>
       </div>
       <div class="steps">
         <div class="step" id="step-1">
           <div class="step-num">1</div>
-          <div class="step-title">Create your account</div>
-          <div class="step-desc">Sign up with your email, pick a username, and you're in. No phone number needed.</div>
+          <div class="step-title">Claim your alias</div>
+          <div class="step-desc">Enter an email and pick a username. No phone numbers, verification loops, or metadata tracking.</div>
         </div>
         <div class="step" id="step-2">
           <div class="step-num">2</div>
-          <div class="step-title">Find and add contacts</div>
-          <div class="step-desc">Search by username, add contacts, and start a chat or view their #Moments</div>
+          <div class="step-title">Connect quietly</div>
+          <div class="step-desc">Search by username and send a request. No contacts uploading, no active/seen notifications pressure.</div>
         </div>
         <div class="step" id="step-3">
           <div class="step-num">3</div>
-          <div class="step-title">Chat, share, and secure</div>
-          <div class="step-desc">E2EE on by default. Share media, use view-once, enable 2FA - ZenChat handles the rest, even on 2G.</div>
+          <div class="step-title">Message &amp; move on</div>
+          <div class="step-desc">Encrypted text and media sync instantly. Local file sharing, zero distraction, zero time wasted.</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- â”€â”€ ZenChat vs Giants â”€â”€ -->
+  <!-- ── Scenario Section ── -->
+  <section class="scenario" id="scenario">
+    <div class="container">
+      <div class="scenario-inner">
+        <!-- Left Column: Copy -->
+        <div class="scenario-content reveal">
+          <span class="tag"><span class="tag-dot"></span>Real-World Use Case</span>
+          <h2 class="scenario-title">Designed for coordination.<br/><span class="gradient-text">Not endless scrolling.</span></h2>
+          <p class="scenario-desc">
+            ZenChat is built for students, builders, and teams who need a reliable communication tool without the cognitive payload of traditional social platforms.
+          </p>
+          <ul class="scenario-points">
+            <li>
+              <div class="scenario-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div>
+                <strong>Zero-Distraction Projects</strong>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">No typing indicator anxiety, no status feeds, and no notifications loops to hook your focus.</p>
+              </div>
+            </li>
+            <li>
+              <div class="scenario-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div>
+                <strong>Local-First File Exchange</strong>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">Share project assets and code repositories locally. Files are encrypted on-device and never stored in the cloud.</p>
+              </div>
+            </li>
+            <li>
+              <div class="scenario-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div>
+                <strong>Low-Signal Synchronization</strong>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">Coordinate on campus Wi-Fi or basement labs. Texts arrive instantly, and large files sync automatically when connection improves.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Right Column: Visual Mockup -->
+        <div class="scenario-visual reveal">
+          <div class="scenario-card">
+            <div class="scenario-card-header">
+              <div class="scenario-avatar">OLH</div>
+              <div>
+                <div class="scenario-title-text">ECE-302 Lab Team</div>
+                <div class="scenario-meta">3 members • E2EE active</div>
+              </div>
+            </div>
+            <div class="scenario-chat-body">
+              <div class="scenario-msg">
+                <span class="scenario-msg-time" style="color:var(--primary);font-weight:600;">Alex</span>
+                <div class="scenario-msg-bubble">Hey! Did anyone finish the ECE-302 report draft? Need to review before class.</div>
+                <span class="scenario-msg-time">4:02 PM</span>
+              </div>
+              <div class="scenario-msg self">
+                <span class="scenario-msg-time" style="color:var(--accent);font-weight:600;">You</span>
+                <div class="scenario-msg-bubble">Yeah, just built the PDF. Sharing via ZenVault.</div>
+                <span class="scenario-msg-time">4:04 PM</span>
+              </div>
+              <div class="scenario-vault-link">
+                <div class="scenario-vault-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                </div>
+                <div style="flex:1;">
+                  <div class="vault-filename">ece_302_lab_report_v2.pdf</div>
+                  <div class="vault-filesize">2.4 MB • Encrypted Local File</div>
+                </div>
+              </div>
+              <div class="scenario-msg">
+                <span class="scenario-msg-time" style="color:var(--primary);font-weight:600;">Alex</span>
+                <div class="scenario-msg-bubble">Awesome, downloaded instantly. Thanks! No distractions, let's get to class. 👍</div>
+                <span class="scenario-msg-time">4:05 PM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ZenChat vs Giants ── -->
   <section class="compare" id="compare">
     <div class="container">
       <div class="section-header reveal">
@@ -1555,119 +1986,137 @@
       </div>
 
       <!-- ZenChat card first -->
-      <div class="compare-grid">
-        <div class="compare-card zenchat-card reveal" id="cc-0">
-          <div class="compare-card-header">
-            <div class="compare-app-icon" style="background:rgba(61,165,217,0.12);border:1px solid var(--primary-border)">
-              <svg width="22" height="22" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="11" fill="#1e2530"/><path d="M9 11.5h18M9 18h11.5M9 24.5h14.5" stroke="#3da5d9" stroke-width="2.5" stroke-linecap="round"/></svg>
-            </div>
-            <div>
-              <div class="compare-app-name" style="color:var(--primary)">ZenChat</div>
-              <div class="compare-app-tagline">Built for everyone, everywhere, always.</div>
-            </div>
-            <span class="tag" style="margin-left:auto"><span class="tag-dot"></span>Our approach</span>
-          </div>
-          <div class="compare-zenchat-cols">
-            <ul class="compare-points">
-              <li>
-                <div class="compare-icon check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-                <span>E2EE active on texts and voice messages by default - no opt-in required</span>
-              </li>
-              <li>
-                <div class="compare-icon check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-                <span>Zero ads. Zero tracking. Zero data sharing</span>
-              </li>
-            </ul>
-            <ul class="compare-points">
-              <li>
-                <div class="compare-icon check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-                <span>No phone number required to sign up</span>
-              </li>
-              <li>
-                <div class="compare-icon check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-                <span>#ZenMode - distraction-free focused conversations</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- WhatsApp -->
-        <div class="compare-card reveal" id="cc-1">
-          <div class="compare-card-header">
-            <div class="compare-app-icon" style="background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.2)">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
-            </div>
-            <div>
-              <div class="compare-app-name">WhatsApp</div>
-              <div class="compare-app-tagline">Owned by Meta</div>
-            </div>
-          </div>
-          <ul class="compare-points">
-            <li>
-              <div class="compare-icon check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-              <span>E2EE by default for message content</span>
-            </li>
-            <li>
-              <div class="compare-icon cross"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
-              <span>Metadata (contacts, frequency, IP) shared with Meta for ad profiling <sup>[1]</sup></span>
-            </li>
-            <li>
-              <div class="compare-icon cross"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
-              <span>Requires a phone number to sign up</span>
-            </li>
-            <li>
-              <div class="compare-icon cross"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
-              <span>Cloud backups are not E2EE unless manually enabled <sup>[2]</sup></span>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Telegram -->
-        <div class="compare-card reveal" id="cc-2">
-          <div class="compare-card-header">
-            <div class="compare-app-icon" style="background:rgba(36,161,222,0.1);border:1px solid rgba(36,161,222,0.2)">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="#24a2de"><path d="m20.665 3.717-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.579.192l-8.533 7.701h-.002l.002.001-.314 4.692c.46 0 .663-.211.921-.46l2.211-2.15 4.599 3.397c.848.467 1.457.227 1.668-.785l3.019-14.228c.309-1.239-.473-1.8-1.282-1.434z"/></svg>
-            </div>
-            <div>
-              <div class="compare-app-name">Telegram</div>
-              <div class="compare-app-tagline">Cloud-first messaging</div>
-            </div>
-          </div>
-          <ul class="compare-points">
-            <li>
-              <div class="compare-icon check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-              <span>Contextual ads - not based on personal user data <sup>[3]</sup></span>
-            </li>
-            <li>
-              <div class="compare-icon cross"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
-              <span>E2EE is NOT the default - only in manually-initiated "Secret Chats" <sup>[4]</sup></span>
-            </li>
-            <li>
-              <div class="compare-icon cross"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
-              <span>Regular chats stored on Telegram's servers - server has access <sup>[4]</sup></span>
-            </li>
-            <li>
-              <div class="compare-icon cross"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
-              <span>E2EE Secret Chats limited to 1-on-1 only, no group E2EE <sup>[4]</sup></span>
-            </li>
-          </ul>
-        </div>
+      <!-- Comparison Table Matrix -->
+      <div class="compare-table-wrapper reveal">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Privacy &amp; Focus Metric</th>
+              <th class="compare-highlight">ZenChat</th>
+              <th>WhatsApp</th>
+              <th>Telegram</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Default Chat Encryption</strong></td>
+              <td class="compare-highlight">
+                <span class="compare-check">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  E2EE by Default
+                </span>
+              </td>
+              <td>
+                <span class="compare-check">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  E2EE by Default
+                </span>
+              </td>
+              <td>
+                <span class="compare-cross">
+                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Plain Text on Server<sup>[4]</sup>
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Account Requirements</strong></td>
+              <td class="compare-highlight">
+                <span class="compare-check">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  Username Only
+                </span>
+              </td>
+              <td>
+                <span class="compare-cross">
+                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Phone Number Required
+                </span>
+              </td>
+              <td>
+                <span class="compare-cross">
+                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Phone Number Required
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Metadata Harvesting</strong></td>
+              <td class="compare-highlight">
+                <span class="compare-check">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  Zero ads or tracking
+                </span>
+              </td>
+              <td>
+                <span class="compare-cross">
+                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Shared with Meta<sup>[1]</sup>
+                </span>
+              </td>
+              <td>
+                <span class="compare-cross">
+                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Logs IP &amp; Contacts<sup>[3]</sup>
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Backup Security</strong></td>
+              <td class="compare-highlight">
+                <span class="compare-check">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  Local Encrypted ZenVault
+                </span>
+              </td>
+              <td>
+                <span class="compare-cross">
+                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Unencrypted by Default<sup>[2]</sup>
+                </span>
+              </td>
+              <td>
+                <span class="compare-cross">
+                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Server-Side Cloud Backups<sup>[4]</sup>
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Focus Environment</strong></td>
+              <td class="compare-highlight">
+                <span class="compare-check">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  #ZenMode (Zero chrome)
+                </span>
+              </td>
+              <td>
+                <span class="compare-cross">
+                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Status Feeds &amp; Businesses
+                </span>
+              </td>
+              <td>
+                <span class="compare-cross">
+                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Public Channels &amp; Ads
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <div class="source-note reveal">
-        <strong>Sources:</strong> [1] WhatsApp metadata sharing with Meta - 
-        <a href="https://cnet.com" target="_blank" rel="noopener">CNET</a>, 
-        <a href="https://tuvis.com" target="_blank" rel="noopener">Tuvis</a>.
-        [2] WhatsApp cloud backup E2EE - 
-        <a href="https://medium.com" target="_blank" rel="noopener">Medium</a>,
-        <a href="https://atomicmail.io" target="_blank" rel="noopener">AtomicMail</a>.
-        [3] Telegram contextual ads - 
-        <a href="https://bitdefender.com" target="_blank" rel="noopener">Bitdefender</a>.
-        [4] Telegram E2EE defaults - 
-        <a href="https://eset.com" target="_blank" rel="noopener">ESET</a>,
-        <a href="https://privacyguides.net" target="_blank" rel="noopener">Privacy Guides</a>,
-        <a href="https://josa.ngo" target="_blank" rel="noopener">JOSA</a>.
-        ZenChat is an independent open app with no affiliation with any compared platform.
+        <strong>Sources &amp; Citations:</strong><br/>
+        [1] WhatsApp Privacy Policy updates detailing data sharing with Meta companies: 
+        <a href="https://www.whatsapp.com/legal/privacy-policy" target="_blank" rel="noopener">WhatsApp Privacy Policy</a>.<br/>
+        [2] WhatsApp documentation on E2EE backups requiring manual opt-in: 
+        <a href="https://faq.whatsapp.com/1151608935749718" target="_blank" rel="noopener">WhatsApp Help Center</a>.<br/>
+        [3] Telegram Privacy Policy on collecting IP addresses and telephone numbers: 
+        <a href="https://telegram.org/privacy" target="_blank" rel="noopener">Telegram Privacy Policy</a>.<br/>
+        [4] ESET and Privacy Guides analysis of Telegram default cloud chat storage on central servers: 
+        <a href="https://www.privacyguides.org/en/real-time-communication/" target="_blank" rel="noopener">Privacy Guides</a>.
       </div>
     </div>
   </section>
@@ -1812,13 +2261,13 @@
     </div>
   </section>
 
-  <!-- â”€â”€ Roadmap â”€â”€ -->
+  <!-- ── Roadmap ── -->
   <section class="roadmap" id="roadmap">
     <div class="container">
       <div class="section-header reveal">
-        <span class="tag"><span class="tag-dot"></span>What's Coming</span>
-        <h2 class="section-title">The roadmap ahead.</h2>
-        <p class="section-sub">ZenChat is actively evolving. Here's what the team is building next.</p>
+        <span class="tag"><span class="tag-dot"></span>Quiet evolution</span>
+        <h2 class="section-title">Focusing forward.</h2>
+        <p class="section-sub">ZenChat is actively evolving. Here is the future direction of the platform.</p>
       </div>
       <div class="roadmap-grid">
 
@@ -1853,12 +2302,12 @@
     </div>
   </section>
 
-  <!-- â”€â”€ CTA Banner â”€â”€ -->
+  <!-- ── CTA Banner ── -->
   <section class="cta-section" id="cta">
     <div class="container">
       <div class="cta-card reveal">
-        <h2 class="cta-title">Chat that works for everyone.</h2>
-        <p class="cta-sub">No ads. No tracking. No paywalls. ZenChat is and will always be free - built for users, not advertisers.</p>
+        <h2 class="cta-title">Focused messaging. Zero noise.</h2>
+        <p class="cta-sub">No paywalls. No premium tiers. Just a tool built to help you communicate, secure your files, and move on.</p>
         <div class="cta-actions" id="cta-actions">
           <!-- Rendered by JS -->
         </div>
@@ -1878,7 +2327,7 @@
           </svg>
           ZenChat
         </a>
-        <div class="footer-tagline">The ultimate communication app.</div>
+        <div class="footer-tagline">Messaging without the time sink.</div>
         <div class="footer-credit">Developed by OLH DevTeam - led by Krish (ECE, Year 3).</div>
       </div>
       <ul class="footer-links">
