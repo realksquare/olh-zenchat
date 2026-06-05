@@ -133,30 +133,34 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                             <div 
                                 className="user-card-bio-wrapper"
                                 style={{
-                                    display: 'inline-block',
-                                    padding: '8px 16px',
-                                    background: 'rgba(61, 165, 217, 0.06)',
-                                    border: '1px solid rgba(61, 165, 217, 0.18)',
-                                    borderRadius: '14px',
-                                    marginTop: '12px',
-                                    maxWidth: '90%',
-                                    boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '8px 18px',
+                                    background: 'linear-gradient(135deg, rgba(61, 165, 217, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%)',
+                                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                                    borderRadius: '999px',
+                                    marginTop: '16px',
+                                    marginLeft: 'auto',
+                                    marginRight: 'auto',
+                                    maxWidth: 'fit-content',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                                 }}
                             >
                                 <p 
                                     className="user-card-bio" 
                                     style={{ 
-                                        fontSize: '0.8rem', 
-                                        color: '#e2e8f0', 
+                                        fontSize: '0.85rem', 
+                                        color: 'rgba(255, 255, 255, 0.85)', 
                                         textAlign: 'center', 
                                         wordBreak: 'break-word',
                                         margin: 0,
                                         fontWeight: '500',
-                                        lineHeight: '1.45',
-                                        fontStyle: 'normal'
+                                        lineHeight: '1.4',
+                                        fontStyle: 'italic'
                                     }}
                                 >
-                                    {user.bio}
+                                    "{user.bio}"
                                 </p>
                             </div>
                         )}
