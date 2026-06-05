@@ -1423,6 +1423,8 @@ select {
 .deleted-bubble {
   background: transparent !important;
   border: 1px dashed rgba(255, 255, 255, 0.12) !important;
+  width: fit-content;
+  max-width: 65%;
 }
 
 .deleted-text {
