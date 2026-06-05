@@ -55,7 +55,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/health", (req, res) => {
-    res.json({ status: "ok", uptime: process.uptime() });
+    res.json({ status: "ok", version: "1e4df23", uptime: process.uptime() });
 });
 
 app.use("/api/auth", authRoutes);
