@@ -460,13 +460,13 @@ const Sidebar = ({ onChatSelect }) => {
                 </div>
 
                 <div className="sidebar-filters">
-                    {["All", "Unread", "Groups", "ZenMode"].map((filter) => (
+                    {["All", "Unread"].map((filter) => (
                         <button
                             key={filter}
                             className={`sidebar-filter-chip ${activeFilter === filter.toLowerCase() ? "active" : ""}`}
                             onClick={() => setActiveFilter(filter.toLowerCase())}
                         >
-                            {filter === "ZenMode" ? "Zen Mode" : filter}
+                            {filter}
                         </button>
                     ))}
                 </div>

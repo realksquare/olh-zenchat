@@ -2196,16 +2196,14 @@ select {
   display: flex;
   gap: 6px;
   margin-top: 8px;
-  overflow-x: auto;
-  scrollbar-width: none; /* Hide scrollbar for standard browsers */
-}
-
-.sidebar-filters::-webkit-scrollbar {
-  display: none; /* Hide scrollbar for webkit browsers */
 }
 
 .sidebar-filter-chip {
-  padding: 5px 12px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
   border-radius: 12px;
   font-size: 0.72rem;
   font-weight: 500;
