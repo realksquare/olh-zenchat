@@ -240,11 +240,16 @@ const Sidebar = ({ onChatSelect }) => {
 
     const filteredChats = useMemo(() => {
         const isContactChat = (chat) => {
-            const other = chat.participants?.find((p) => p._id !== user?._id);
+            const other = chat.participants?.find((p) => {
+                const pid = p?._id?.toString() || p?.toString();
+                return pid && pid !== user?._id?.toString();
+            });
             if (!other) return false;
-            return user?.contacts?.some(
-                c => c.userId?.toString() === other._id?.toString() || c.userId === other._id
-            );
+            const otherId = other?._id?.toString() || other?.toString();
+            return user?.contacts?.some(c => {
+                const cid = c.userId?._id?.toString() || c.userId?.toString();
+                return cid === otherId;
+            });
         };
         
         let result = activeTab === "contacts" ? chats.filter(isContactChat) : chats;
