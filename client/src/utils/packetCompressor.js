@@ -28,6 +28,7 @@ export const compressPacket = (msg) => {
     if (msg.isLowBandwidth !== undefined) compressed.l = msg.isLowBandwidth;
     if (msg.status !== undefined) compressed.p = msg.status;
     if (msg.isZenMessage !== undefined) compressed.z = msg.isZenMessage;
+    if (msg.lqip !== undefined) compressed.q = msg.lqip;
 
     if (msg.senderId) {
         compressed.s = typeof msg.senderId === 'object' ? {
@@ -64,7 +65,8 @@ export const decompressPacket = (msg) => {
             senderId: msg.s,
             createdAt: msg.d,
             isZenMessage: msg.z || false,
-            isCrisisMode: true
+            isCrisisMode: true,
+            lqip: msg.q
         };
     }
     return msg;

@@ -710,7 +710,7 @@ export const SocketProvider = ({ children }) => {
         if (!pending.length) return;
         for (const item of pending) {
             try {
-                const { id: _id, createdAt: _ts, base64, fileName, fileType, uploadType, chatId, textContent, replyTo, isViewOnce, cid, isZenMessage, isLowBandwidth } = item;
+                const { id: _id, createdAt: _ts, base64, fileName, fileType, uploadType, chatId, textContent, replyTo, isViewOnce, cid, isZenMessage, isLowBandwidth, lqip } = item;
                 const byteString = atob(base64);
                 const ab = new ArrayBuffer(byteString.length);
                 const ia = new Uint8Array(ab);
@@ -733,7 +733,8 @@ export const SocketProvider = ({ children }) => {
                 socketRef.current.emit("send_message", {
                     chatId, content: textContent || "", type: msgType,
                     mediaUrl: data.secure_url, replyTo, isViewOnce,
-                    cid, isLowBandwidth, isZenMessage, waveform: item.waveform || ""
+                    cid, isLowBandwidth, isZenMessage, waveform: item.waveform || "",
+                    lqip: lqip || ""
                 });
             } catch (err) {
                 console.error("[SocketContext] flushMediaOutbox item failed:", err);
@@ -793,11 +794,11 @@ export const SocketProvider = ({ children }) => {
         }
     }, []);
 
-    const sendMessage = useCallback(async (chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null, isZenMessage = false, waveform = "", replyToMoment = null, replyToMomentUsername = "") => {
+    const sendMessage = useCallback(async (chatId, content, type = "text", mediaUrl = "", replyTo = null, isViewOnce = false, cid = null, isZenMessage = false, waveform = "", replyToMoment = null, replyToMomentUsername = "", lqip = "") => {
         trackActiveTime(chatId);
         
         const isLowBandwidth = useChatStore.getState().isLowBandwidth;
-        let payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isLowBandwidth, isZenMessage, waveform, replyToMoment, replyToMomentUsername };
+        let payload = { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isLowBandwidth, isZenMessage, waveform, replyToMoment, replyToMomentUsername, lqip };
 
 
         // Transparent E2EE Message Encryption

@@ -38,7 +38,7 @@ axiosInstance.interceptors.response.use(
         }
         return response;
     },
-    (error) => {
+    async (error) => {
         const startTime = error.config?.metadata?.startTime;
         if (startTime) {
             const duration = new Date() - startTime;
@@ -49,6 +49,25 @@ axiosInstance.interceptors.response.use(
                 });
             }
         }
+
+        const config = error.config;
+        if (config) {
+            config.retryCount = config.retryCount || 0;
+            const maxRetries = 3;
+            const isIdempotent = ["get", "put", "delete", "head", "options"].includes(config.method?.toLowerCase());
+            const shouldRetry = isIdempotent &&
+                (!error.response || error.response.status >= 500 || error.response.status === 429) &&
+                config.retryCount < maxRetries;
+
+            if (shouldRetry) {
+                config.retryCount += 1;
+                const delay = 1000 * Math.pow(2, config.retryCount);
+                console.warn(`Retrying request ${config.url} (Attempt ${config.retryCount}/${maxRetries}) in ${delay}ms`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return axiosInstance(config);
+            }
+        }
+
         const isAuthRoute = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/auth/register');
         
         if (error.response?.status === 401 && !isAuthRoute) {

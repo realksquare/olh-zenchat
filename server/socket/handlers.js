@@ -487,13 +487,11 @@ const registerSocketHandlers = (io) => {
                     io.to(socketId).emit("zen_exit_cancel_receive");
                 });
             }
-        });
-
-        socket.on("send_message", async (rawPayload) => {
+socket.on("send_message", async (rawPayload) => {
             try {
                 const unpacked = isBinaryPacket(rawPayload) ? unpackMessage(rawPayload) : rawPayload;
                 const decompressed = decompressPacket(unpacked);
-                const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth, isZenMessage, waveform, replyToMoment, replyToMomentUsername } = decompressed;
+                const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth, isZenMessage, waveform, replyToMoment, replyToMomentUsername, lqip } = decompressed;
 
                 const chat = await Chat.findById(chatId).populate("participants", "privacySettings contacts");
                 if (!chat) return;
@@ -504,6 +502,7 @@ const registerSocketHandlers = (io) => {
                     content,
                     type: type || "text",
                     mediaUrl: mediaUrl || "",
+                    lqip: lqip || "",
                     replyTo: replyTo || null,
                     replyToMoment: replyToMoment || null,
                     replyToMomentUsername: replyToMomentUsername || "",

@@ -211,7 +211,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const isViewOnce = message.isViewOnce;
     const isMediaMsg = (message.type === "image" || message.type === "video") && message.mediaUrl;
     const needsLoading = isMediaMsg && !isViewOnce && !shouldDelayLoad && status !== "sending";
-    const isShown = !needsLoading || isMediaLoaded;
+    const isShown = !needsLoading || isMediaLoaded || !!message.lqip;
 
     const handleMouseEnter = () => {
         if (isMobile) return;
@@ -708,17 +708,51 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                              </div>
                                          </div>
                                      ) : (
-                                         <div className="message-media-wrap" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                                             {message.type === "image" || message.type === "gif" || message.type === "sticker" ? (
-                                                 <img 
-                                                      ref={imgRef}
-                                                      src={message.type === "image" ? getThumbnailUrl(message.mediaUrl) : message.mediaUrl} 
-                                                      alt={message.type} 
-                                                      className={message.type === "sticker" ? "message-sticker" : "message-image"} 
-                                                      loading="lazy" 
-                                                      onLoad={() => setIsMediaLoaded(true)}
+                                          <div className="message-media-wrap" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                                              {message.type === "image" ? (
+                                                  <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-md)', margin: '0 auto 4px', maxWidth: '100%', maxHeight: '300px', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                                                      {message.lqip && !isMediaLoaded && (
+                                                          <img
+                                                              src={message.lqip}
+                                                              alt="placeholder"
+                                                              style={{
+                                                                  position: 'absolute',
+                                                                  inset: 0,
+                                                                  width: '100%',
+                                                                  height: '100%',
+                                                                  objectFit: 'cover',
+                                                                  filter: 'blur(8px)',
+                                                                  transform: 'scale(1.1)',
+                                                                  zIndex: 1
+                                                              }}
+                                                          />
+                                                      )}
+                                                      <img 
+                                                          ref={imgRef}
+                                                          src={getThumbnailUrl(message.mediaUrl)} 
+                                                          alt={message.type} 
+                                                          className="message-image" 
+                                                          loading="lazy" 
+                                                          onLoad={() => setIsMediaLoaded(true)}
+                                                          style={{
+                                                              opacity: isMediaLoaded ? 1 : (message.lqip ? 0 : 1),
+                                                              transition: 'opacity 0.3s ease-in-out',
+                                                              position: 'relative',
+                                                              zIndex: 2,
+                                                              margin: 0
+                                                          }}
+                                                      />
+                                                  </div>
+                                              ) : (message.type === "gif" || message.type === "sticker") ? (
+                                                  <img 
+                                                       ref={imgRef}
+                                                       src={message.mediaUrl} 
+                                                       alt={message.type} 
+                                                       className={message.type === "sticker" ? "message-sticker" : "message-image"} 
+                                                       loading="lazy" 
+                                                       onLoad={() => setIsMediaLoaded(true)}
                                                   />
-                                             ) : message.type === "video" ? (
+                                              ) : message.type === "video" ? (
                                                  <video 
                                                       src={message.mediaUrl} 
                                                       className="message-video" 

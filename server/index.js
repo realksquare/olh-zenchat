@@ -4,6 +4,7 @@ const http = require("http");
 const cors = require("cors");
 const compression = require("compression");
 const { Server } = require("socket.io");
+const rateLimit = require("express-rate-limit");
 const connectDB = require("./utils/db");
 const authRoutes = require("./routes/auth");
 const chatRoutes = require("./routes/chat");
@@ -12,6 +13,24 @@ const registerSocketHandlers = require("./socket/handlers");
 const User = require("./models/User");
 
 const app = express();
+app.set("trust proxy", 1);
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 20,
+    message: { message: "Too many authentication attempts, please try again after 15 minutes." },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 100,
+    message: { message: "Too many requests, please slow down." },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 const server = http.createServer(app);
 
 const allowedOrigins = [
@@ -58,16 +77,16 @@ app.get("/api/health", (req, res) => {
     res.json({ status: "ok", version: "59e125d", uptime: process.uptime() });
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/chats", chatRoutes);
-app.use("/api/messages", messageRoutes);
-app.use("/api/moments", require("./routes/momentRoutes"));
-app.use("/api/admin", require("./routes/admin"));
-app.use("/api/music", require("./routes/music"));
-app.use("/api/giphy", require("./routes/giphy"));
-app.use("/api/analytics", require("./routes/analytics"));
-app.use("/api/messages/bulk", require("./routes/bulkMessage"));
-app.use("/api/user-media", require("./routes/userMedia"));
+app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/chats", apiLimiter, chatRoutes);
+app.use("/api/messages", apiLimiter, messageRoutes);
+app.use("/api/moments", apiLimiter, require("./routes/momentRoutes"));
+app.use("/api/admin", apiLimiter, require("./routes/admin"));
+app.use("/api/music", apiLimiter, require("./routes/music"));
+app.use("/api/giphy", apiLimiter, require("./routes/giphy"));
+app.use("/api/analytics", apiLimiter, require("./routes/analytics"));
+app.use("/api/messages/bulk", apiLimiter, require("./routes/bulkMessage"));
+app.use("/api/user-media", apiLimiter, require("./routes/userMedia"));
 
 registerSocketHandlers(io);
 

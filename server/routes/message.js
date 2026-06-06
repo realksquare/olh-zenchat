@@ -186,7 +186,7 @@ router.post("/:chatId", async (req, res) => {
             }
         }
 
-        const { content, type, mediaUrl, replyTo, isViewOnce, isZenMessage, replyToMoment, replyToMomentUsername } = req.body;
+        const { content, type, mediaUrl, replyTo, isViewOnce, isZenMessage, replyToMoment, replyToMomentUsername, lqip } = req.body;
 
         if (!content && !mediaUrl) {
             return res.status(400).json({ message: "Message cannot be empty" });
@@ -198,6 +198,7 @@ router.post("/:chatId", async (req, res) => {
             content,
             type: type || "text",
             mediaUrl: mediaUrl || "",
+            lqip: lqip || "",
             replyTo: replyTo || null,
             replyToMoment: replyToMoment || null,
             replyToMomentUsername: replyToMomentUsername || "",

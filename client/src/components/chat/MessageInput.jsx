@@ -7,6 +7,7 @@ import { playSendSound } from "../../utils/audio";
 import axiosInstance from "../../utils/axios";
 import axios from "axios";
 import { enqueuePendingMedia } from "../../db/zenDB";
+import { generateLQIP } from "../../utils/lqip";
 import GifPicker from "./GifPicker";
 import VoiceRecorder from "./VoiceRecorder";
 
@@ -455,6 +456,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 const isZen = useChatStore.getState().isZenMode;
                 const isLowBandwidth = useChatStore.getState().isLowBandwidth;
                 const msgContent = files.length === 1 ? (textContent || (isDoc ? file.name : "")) : (isDoc ? file.name : "");
+                const lqip = isImage ? await generateLQIP(file) : "";
+
                 addMessage(chatId, {
                     _id: tempId,
                     cid: tempId,
@@ -468,7 +471,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     replyTo: replyToId,
                     createdAt: new Date().toISOString(),
                     disappearingMode: activeChat?.disappearingMode || "off",
-                    isZenMessage: isZen
+                    isZenMessage: isZen,
+                    lqip
                 });
 
                 let fileToUpload = file;
@@ -493,7 +497,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     );
                     const downloadURL = res.data.secure_url;
                     const isZenMessage = useChatStore.getState().isZenMode;
-                    sendMessage(chatId, msgContent, msgType, downloadURL, replyToId, isViewOnceVal, tempId, isZenMessage);
+                    sendMessage(chatId, msgContent, msgType, downloadURL, replyToId, isViewOnceVal, tempId, isZenMessage, "", null, "", lqip);
                 } catch (uploadErr) {
                     console.warn("[MessageInput] Upload failed, queuing for retry:", uploadErr?.message);
                     updateMessage(chatId, { _id: tempId, status: "pending" });
@@ -513,7 +517,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                                 isViewOnce: isViewOnceVal,
                                 cid: tempId,
                                 isZenMessage: isZen,
-                                isLowBandwidth
+                                isLowBandwidth,
+                                lqip
                             });
                         };
                         reader.readAsDataURL(fileToUpload);

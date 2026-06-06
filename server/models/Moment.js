@@ -20,6 +20,10 @@ const momentSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        lqip: {
+            type: String,
+            default: "",
+        },
         music: {
             trackId: String,
             source: String,

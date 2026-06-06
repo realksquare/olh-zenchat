@@ -1,14 +1,15 @@
 // ZenChat PWA Application Root
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthStore } from "./stores/authStore";
 import { useChatStore } from "./stores/chatStore";
 import { useMomentStore } from "./stores/momentStore";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import HomePage from "./pages/HomePage";
+
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const HomePage = lazy(() => import("./pages/HomePage"));
 import InstallPWA from "./components/ui/InstallPWA";
 import RecoveryKeyModal from "./components/ui/RecoveryKeyModal";
 import { primeAudioContext, getAudioContext } from "./utils/audio";
@@ -845,49 +846,51 @@ const App = () => {
           <span>{zenToast.text}</span>
         </div>
       )}
-      <Routes>
-        <Route
-          path="/login"
-          element={
-            <GuestRoute>
-              <LoginPage />
-            </GuestRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <GuestRoute>
-              <RegisterPage />
-            </GuestRoute>
-          }
-        />
-        <Route
-          path="/forgot-password"
-          element={
-            <GuestRoute>
-              <ForgotPasswordPage />
-            </GuestRoute>
-          }
-        />
-        <Route
-          path="/reset-password/:token"
-          element={
-            <GuestRoute>
-              <ResetPasswordPage />
-            </GuestRoute>
-          }
-        />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <HomePage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <Suspense fallback={<SplashScreen isReady={false} />}>
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              <GuestRoute>
+                <LoginPage />
+              </GuestRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <GuestRoute>
+                <RegisterPage />
+              </GuestRoute>
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <GuestRoute>
+                <ForgotPasswordPage />
+              </GuestRoute>
+            }
+          />
+          <Route
+            path="/reset-password/:token"
+            element={
+              <GuestRoute>
+                <ResetPasswordPage />
+              </GuestRoute>
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <HomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
 
       {/* 2. PWA Exit Confirmation Overlay */}
       {showPwaExitConfirm && (

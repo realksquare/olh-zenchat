@@ -31,6 +31,10 @@ const messageSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        lqip: {
+            type: String,
+            default: "",
+        },
         replyTo: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Message",

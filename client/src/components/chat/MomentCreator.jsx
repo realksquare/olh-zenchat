@@ -4,6 +4,7 @@ import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
 import MusicSearch from "./MusicSearch";
 import axios from "axios";
+import { generateLQIP } from "../../utils/lqip";
 
 const FILTER_PRESETS = [
     { id: "none", name: "Original", style: {} },
@@ -251,6 +252,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
         try {
             let uploadedUrl = "";
+            let lqip = "";
             
             // Upload image to Cloudinary if it's an image moment
             if (!isText && selectedFile) {
@@ -261,6 +263,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 if (imageQuality === "standard") fileToUpload = await compressImage(selectedFile);
                 formData.append("file", fileToUpload);
                 formData.append("upload_preset", uploadPreset);
+
+                lqip = await generateLQIP(selectedFile);
 
                 const res = await axios.post(
                     `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
@@ -280,6 +284,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 type: isText ? (music ? "music" : "text") : "image",
                 content: isText ? content : "",
                 mediaUrl: uploadedUrl,
+                lqip,
                 caption: !isText ? caption : "",
                 filter: !isText ? activeFilter : "none",
                 locationTag: (!isText && showLocationPill) ? locationText : "",

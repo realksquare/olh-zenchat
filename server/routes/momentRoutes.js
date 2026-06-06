@@ -8,7 +8,7 @@ const { onlineUsers } = require("../socket/handlers");
 
 router.post("/", protect, async (req, res) => {
     try {
-        const { type, content, mediaUrl, music, caption, locationTag, filter, disappearAfterHours, taggedUsers } = req.body;
+        const { type, content, mediaUrl, music, caption, locationTag, filter, disappearAfterHours, taggedUsers, lqip } = req.body;
         const hours = disappearAfterHours ? Number(disappearAfterHours) : 24;
         const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000);
 
@@ -17,6 +17,7 @@ router.post("/", protect, async (req, res) => {
             type,
             content,
             mediaUrl,
+            lqip: lqip || "",
             music,
             caption: caption || "",
             locationTag: locationTag || "",
@@ -355,6 +356,7 @@ router.post("/:id/reshare", protect, async (req, res) => {
             type: original.type,
             content: original.content,
             mediaUrl: original.mediaUrl,
+            lqip: original.lqip || "",
             music: original.music || undefined,
             caption: original.caption,
             locationTag: original.locationTag,

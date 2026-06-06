@@ -28,6 +28,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const [likeLoading, setLikeLoading] = useState(false);
     const [isResharing, setIsResharing] = useState(false);
     const [reshared, setReshared] = useState(false);
+    const [isMomentMediaLoaded, setIsMomentMediaLoaded] = useState(false);
 
     const [totalDuration, setTotalDuration] = useState(10);
     const [replyText, setReplyText] = useState("");
@@ -59,6 +60,10 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     }, [allMoments, initialMoments]);
 
     const currentMoment = moments[currentIndex];
+
+    useEffect(() => {
+        setIsMomentMediaLoaded(false);
+    }, [currentIndex, currentMoment?._id]);
 
     useEffect(() => {
         const measure = () => {
@@ -552,12 +557,32 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                             }}
                         />
                     ) : hasMedia ? (
-                        <div className="aura-media-content" key={currentMoment._id}>
+                        <div className="aura-media-content" key={currentMoment._id} style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+                            {currentMoment.lqip && !isMomentMediaLoaded && (
+                                <img
+                                    src={currentMoment.lqip}
+                                    alt="placeholder"
+                                    className="viewer-main-media"
+                                    style={{
+                                        position: 'absolute',
+                                        filter: 'blur(12px) brightness(0.8)',
+                                        transform: 'scale(1.05)',
+                                        zIndex: 1
+                                    }}
+                                />
+                            )}
                             <img
                                 src={currentMoment.mediaUrl}
                                 alt="Moment"
                                 className="viewer-main-media"
-                                style={FILTER_STYLES[currentMoment.filter] || FILTER_STYLES.none}
+                                onLoad={() => setIsMomentMediaLoaded(true)}
+                                style={{
+                                    ...(FILTER_STYLES[currentMoment.filter] || FILTER_STYLES.none),
+                                    opacity: isMomentMediaLoaded ? 1 : (currentMoment.lqip ? 0 : 1),
+                                    transition: 'opacity 0.4s ease-in-out',
+                                    position: 'relative',
+                                    zIndex: 2
+                                }}
                             />
 
                             {currentMoment.caption && currentMoment.caption.trim().length >= 3 && (

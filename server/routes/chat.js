@@ -396,7 +396,7 @@ router.post("/offline-sync", async (req, res) => {
         const syncedMessages = [];
 
         for (const msgPayload of messages) {
-            const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth, isZenMessage, replyToMoment, replyToMomentUsername } = msgPayload;
+            const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth, isZenMessage, replyToMoment, replyToMomentUsername, lqip } = msgPayload;
 
             const chat = await Chat.findById(chatId).populate("participants", "privacySettings contacts blockedUsers notificationsEnabled fcmTokens fcmToken");
             if (!chat) continue;
@@ -407,6 +407,7 @@ router.post("/offline-sync", async (req, res) => {
                 content,
                 type: type || "text",
                 mediaUrl: mediaUrl || "",
+                lqip: lqip || "",
                 replyTo: replyTo || null,
                 replyToMoment: replyToMoment || null,
                 replyToMomentUsername: replyToMomentUsername || "",
