@@ -657,6 +657,18 @@ const ChatWindow = ({ onBack }) => {
     const activeViewerMoments = useMomentStore((s) => s.activeViewerMoments);
     const setActiveViewerMoments = useMomentStore((s) => s.setActiveViewerMoments);
     const [showDisappearingMenu, setShowDisappearingMenu] = useState(false);
+    const [showBio, setShowBio] = useState(false);
+
+    useEffect(() => {
+        if (!otherUser?.bio) {
+            setShowBio(false);
+            return;
+        }
+        const interval = setInterval(() => {
+            setShowBio(prev => !prev);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [otherUser?.bio]);
 
     // Multi-select state
     const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
@@ -1186,9 +1198,23 @@ const ChatWindow = ({ onBack }) => {
                         </span>
                         {otherUser?.isVerified && <span style={{ flexShrink: 0, display: 'flex' }}><VerifiedTick /></span>}
                     </span>
-                    <span className={`chat-header-status ${isPeerOnline ? "status-online" : ""}`}>
-                        {getStatusText()}
-                    </span>
+                    <div className="chat-header-status-wrapper" style={{ display: 'grid', alignItems: 'center', minWidth: 0 }}>
+                        <span 
+                            className={`chat-header-status ${showBio ? 'fade-out' : 'fade-in'} ${isPeerOnline ? "status-online" : ""}`}
+                            style={{ gridArea: '1 / 1', whiteSpace: 'nowrap', transition: 'all 0.4s ease', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                        >
+                            {getStatusText()}
+                        </span>
+                        {otherUser?.bio && (
+                            <span 
+                                className={`chat-header-status ${showBio ? 'fade-in' : 'fade-out'}`}
+                                style={{ gridArea: '1 / 1', whiteSpace: 'nowrap', fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', transition: 'all 0.4s ease', opacity: 0.85 }}
+                                title={otherUser.bio}
+                            >
+                                "{otherUser.bio}"
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 <div className="chat-header-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '12px', alignItems: 'center', flexShrink: 0 }}>
