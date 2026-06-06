@@ -1198,7 +1198,7 @@ const ChatWindow = ({ onBack }) => {
                         </span>
                         {otherUser?.isVerified && <span style={{ flexShrink: 0, display: 'flex' }}><VerifiedTick /></span>}
                     </span>
-                    <div className="chat-header-status-wrapper" style={{ display: 'grid', alignItems: 'center', minWidth: 0 }}>
+                    <div className="chat-header-status-wrapper" style={{ display: 'grid', alignItems: 'start', minWidth: 0 }}>
                         <span 
                             className={`chat-header-status ${showBio ? 'fade-out' : 'fade-in'} ${isPeerOnline ? "status-online" : ""}`}
                             style={{ gridArea: '1 / 1', whiteSpace: 'nowrap', transition: 'all 0.4s ease', overflow: 'hidden', textOverflow: 'ellipsis' }}
@@ -1208,7 +1208,20 @@ const ChatWindow = ({ onBack }) => {
                         {otherUser?.bio && (
                             <span 
                                 className={`chat-header-status ${showBio ? 'fade-in' : 'fade-out'}`}
-                                style={{ gridArea: '1 / 1', whiteSpace: 'nowrap', fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', transition: 'all 0.4s ease', opacity: 0.85 }}
+                                style={{ 
+                                    gridArea: '1 / 1', 
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 3,
+                                    WebkitBoxOrient: 'vertical',
+                                    whiteSpace: 'normal', 
+                                    fontStyle: 'italic', 
+                                    overflow: 'hidden', 
+                                    textOverflow: 'ellipsis', 
+                                    transition: 'all 0.4s ease', 
+                                    opacity: 0.85,
+                                    lineHeight: '1.3',
+                                    wordBreak: 'break-word'
+                                }}
                                 title={otherUser.bio}
                             >
                                 "{otherUser.bio}"
