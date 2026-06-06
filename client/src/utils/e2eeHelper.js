@@ -51,8 +51,24 @@ export const setupE2EEForUser = async (user, password) => {
         const cachedPublicKey = await db.keys.get("publicKey");
 
         if (cachedPrivateKey && cachedPublicKey) {
-            console.log("[E2EE] Cryptographic keys are already successfully cached locally.");
-            return null;
+            // Validate cached public key matches server's current public key
+            // to catch stale IndexedDB state after server-side key rotation
+            if (user.publicKey && cachedPublicKey.value) {
+                const cachedN = cachedPublicKey.value?.n;
+                const serverN = user.publicKey?.n;
+                if (cachedN && serverN && cachedN !== serverN) {
+                    console.warn("[E2EE] Cached public key mismatch detected — clearing stale local key cache.");
+                    await db.keys.delete("privateKey");
+                    await db.keys.delete("publicKey");
+                    // Fall through to re-derive from server keys below
+                } else {
+                    console.log("[E2EE] Cryptographic keys are already successfully cached and verified locally.");
+                    return null;
+                }
+            } else {
+                console.log("[E2EE] Cryptographic keys are already successfully cached locally.");
+                return null;
+            }
         }
 
         // Case A: Server already holds E2EE keys. We download, decrypt, and cache them.

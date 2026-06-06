@@ -487,7 +487,9 @@ const registerSocketHandlers = (io) => {
                     io.to(socketId).emit("zen_exit_cancel_receive");
                 });
             }
-socket.on("send_message", async (rawPayload) => {
+        });
+
+        socket.on("send_message", async (rawPayload) => {
             try {
                 const unpacked = isBinaryPacket(rawPayload) ? unpackMessage(rawPayload) : rawPayload;
                 const decompressed = decompressPacket(unpacked);
