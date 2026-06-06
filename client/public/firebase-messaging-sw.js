@@ -123,8 +123,8 @@ try {
             
             return self.registration.showNotification(finalTitle, {
                 body: finalBody,
-                icon: '/favicon.svg',
-                badge: '/favicon.svg',
+                icon: '/logo192.png',
+                badge: '/logo192.png',
                 tag: 'zenchat-notif',
                 renotify: true,
                 silent: false,
@@ -139,8 +139,8 @@ try {
 
         const notificationOptions = {
             body: newBody,
-            icon: '/favicon.svg',
-            badge: '/favicon.svg',
+            icon: '/logo192.png',
+            badge: '/logo192.png',
             tag: 'zenchat-notif',
             renotify: true,
             silent: false,
