@@ -7,7 +7,7 @@ const compressPacket = (msg) => {
     if (msg.mediaUrl !== undefined) compressed.u = msg.mediaUrl;
     if (msg.replyTo !== undefined) compressed.r = msg.replyTo;
     if (msg.replyToMoment) {
-        compressed.rm = typeof msg.replyToMoment === 'object' ? {
+        compressed.o = typeof msg.replyToMoment === 'object' ? {
             _id: msg.replyToMoment._id || msg.replyToMoment,
             userId: msg.replyToMoment.userId,
             type: msg.replyToMoment.type,
@@ -19,7 +19,7 @@ const compressPacket = (msg) => {
             filter: msg.replyToMoment.filter,
         } : msg.replyToMoment;
     }
-    if (msg.replyToMomentUsername !== undefined) compressed.rmu = msg.replyToMomentUsername;
+    if (msg.replyToMomentUsername !== undefined) compressed.n = msg.replyToMomentUsername;
     if (msg.isViewOnce !== undefined) compressed.v = msg.isViewOnce;
     if (msg.cid !== undefined) compressed.i = msg.cid;
     if (msg.isEncrypted !== undefined) compressed.e = msg.isEncrypted;
@@ -38,7 +38,7 @@ const compressPacket = (msg) => {
         };
     }
     if (msg.createdAt) compressed.d = msg.createdAt; // date
-    if (msg._id) compressed.id = msg._id; // message ID
+    if (msg._id) compressed.x = msg._id; // message ID
     compressed.m = true;
     return compressed;
 };
@@ -47,14 +47,14 @@ const decompressPacket = (msg) => {
     if (!msg) return msg;
     if (msg.m || msg.c !== undefined || msg.t !== undefined) {
         return {
-            _id: msg.id,
+            _id: msg.x,
             chatId: msg.c,
             content: msg.t,
             type: msg.y || "text",
             mediaUrl: msg.u,
             replyTo: msg.r,
-            replyToMoment: msg.rm,
-            replyToMomentUsername: msg.rmu,
+            replyToMoment: msg.o,
+            replyToMomentUsername: msg.n,
             isViewOnce: msg.v,
             cid: msg.i,
             isEncrypted: msg.e,

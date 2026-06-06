@@ -618,7 +618,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                     )}
                                 </div>
                             )}
-                            {message.replyToMoment && (
+                            {(message.replyToMoment || message.replyToMomentUsername) && (
                                 <div
                                     className="replied-message-preview moment-reply-tag"
                                     onClick={(e) => {
