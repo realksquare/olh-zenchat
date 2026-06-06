@@ -65,7 +65,7 @@ const DecryptedText = ({ text, animate = false }) => {
                     // Strip trailing punctuation commonly typed at the end of URLs
                     let cleanUrl = part;
                     let trailing = "";
-                    const trailingPunctuationRegex = /[.,\/#!$%\^&\*;:{}=\-_`~()?!\s]+$/;
+                    const trailingPunctuationRegex = /[.,#!$%^&*;:{}=_`~()?!\s-]+$/;
                     const match = part.match(trailingPunctuationRegex);
                     if (match) {
                         cleanUrl = part.slice(0, match.index);
