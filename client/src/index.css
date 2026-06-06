@@ -2190,6 +2190,48 @@ select {
   padding: 0 4px;
 }
 
+/* ── Sidebar Filters ──────────────────────────────────── */
+
+.sidebar-filters {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  overflow-x: auto;
+  scrollbar-width: none; /* Hide scrollbar for standard browsers */
+}
+
+.sidebar-filters::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for webkit browsers */
+}
+
+.sidebar-filter-chip {
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #64748b;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-filter-chip:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  border-color: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.sidebar-filter-chip.active {
+  background: rgba(61, 165, 217, 0.12);
+  color: var(--color-primary);
+  border-color: rgba(61, 165, 217, 0.25);
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(61, 165, 217, 0.08);
+}
+
 /* ── Contact name highlight ───────────────────────────── */
 
 .chat-card-name-contact {

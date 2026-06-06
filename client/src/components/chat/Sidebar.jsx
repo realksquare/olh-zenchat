@@ -25,7 +25,8 @@ const Sidebar = ({ onChatSelect }) => {
     const { hasActiveMoment, getHaloColor } = useMomentStore.getState();
     const { 
         chats, activeChat, setActiveChat, 
-        addChat, isLoadingChats, togglePinChat, onlineUsers, isOffline
+        addChat, isLoadingChats, togglePinChat, onlineUsers, isOffline,
+        unreadCounts, zenUsers
     } = useChatStore(useShallow((s) => ({
         chats: s.chats,
         activeChat: s.activeChat,
@@ -34,7 +35,9 @@ const Sidebar = ({ onChatSelect }) => {
         isLoadingChats: s.isLoadingChats,
         togglePinChat: s.togglePinChat,
         onlineUsers: s.onlineUsers,
-        isOffline: s.isOffline
+        isOffline: s.isOffline,
+        unreadCounts: s.unreadCounts,
+        zenUsers: s.zenUsers
     })));
     const [search, setSearch] = useState("");
     const [searchResults, setSearchResults] = useState([]);
@@ -49,6 +52,7 @@ const Sidebar = ({ onChatSelect }) => {
     const activeViewerMoments = useMomentStore((s) => s.activeViewerMoments);
     const setActiveViewerMoments = useMomentStore((s) => s.setActiveViewerMoments);
     const [activeTab, setActiveTab] = useState("recents");
+    const [activeFilter, setActiveFilter] = useState("all");
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [isVaultOpen, setIsVaultOpen] = useState(false);
     const [isYourTimeOpen, setIsYourTimeOpen] = useState(false);
@@ -242,8 +246,38 @@ const Sidebar = ({ onChatSelect }) => {
                 c => c.userId?.toString() === other._id?.toString() || c.userId === other._id
             );
         };
-        return activeTab === "contacts" ? chats.filter(isContactChat) : chats;
-    }, [chats, activeTab, user?._id, user?.contacts]);
+        
+        let result = activeTab === "contacts" ? chats.filter(isContactChat) : chats;
+
+        if (activeFilter === "unread") {
+            result = result.filter((chat) => {
+                const count = unreadCounts[chat._id] || 0;
+                const isLastMessageFromThem =
+                    chat.lastMessage?.senderId !== user?._id &&
+                    chat.lastMessage?.senderId?._id !== user?._id;
+                const isLastMessageUnread =
+                    isLastMessageFromThem &&
+                    chat.lastMessage?.status !== "read" &&
+                    !chat.lastMessage?.deletedForEveryone &&
+                    (chat.lastMessage?.content || chat.lastMessage?.mediaUrl || chat.lastMessage?.music);
+                return count > 0 || isLastMessageUnread;
+            });
+        } else if (activeFilter === "groups") {
+            result = result.filter((chat) => chat.isGroup);
+        } else if (activeFilter === "zenmode") {
+            result = result.filter((chat) => {
+                if (chat.isGroup) return false;
+                const other = chat.participants?.find((p) => {
+                    const pid = p?._id?.toString() || p?.toString();
+                    return pid && pid !== user?._id?.toString();
+                });
+                const otherId = other?._id?.toString() || other?.toString();
+                return otherId && !!zenUsers[otherId];
+            });
+        }
+
+        return result;
+    }, [chats, activeTab, activeFilter, user?._id, user?.contacts, unreadCounts, zenUsers]);
 
     const filteredSearchResults = useMemo(() => {
         if (activeTab !== "contacts") return searchResults;
@@ -423,6 +457,18 @@ const Sidebar = ({ onChatSelect }) => {
                             ) : null;
                         })()}
                     </button>
+                </div>
+
+                <div className="sidebar-filters">
+                    {["All", "Unread", "Groups", "ZenMode"].map((filter) => (
+                        <button
+                            key={filter}
+                            className={`sidebar-filter-chip ${activeFilter === filter.toLowerCase() ? "active" : ""}`}
+                            onClick={() => setActiveFilter(filter.toLowerCase())}
+                        >
+                            {filter === "ZenMode" ? "Zen Mode" : filter}
+                        </button>
+                    ))}
                 </div>
 
                 {search.trim().length >= 2 && (
