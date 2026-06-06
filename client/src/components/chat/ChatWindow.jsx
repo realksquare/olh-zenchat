@@ -1200,14 +1200,23 @@ const ChatWindow = ({ onBack }) => {
                     </span>
                     <div className="chat-header-status-wrapper" style={{ display: 'grid', alignItems: 'start', minWidth: 0 }}>
                         <span 
-                            className={`chat-header-status ${showBio ? 'fade-out' : 'fade-in'} ${isPeerOnline ? "status-online" : ""}`}
-                            style={{ gridArea: '1 / 1', whiteSpace: 'nowrap', transition: 'all 0.4s ease', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                            className={`chat-header-status ${isPeerOnline ? "status-online" : ""}`}
+                            style={{ 
+                                gridArea: '1 / 1', 
+                                whiteSpace: 'nowrap', 
+                                transition: 'all 0.4s ease', 
+                                overflow: 'hidden', 
+                                textOverflow: 'ellipsis',
+                                opacity: showBio ? 0 : 1,
+                                transform: showBio ? 'translateY(-5px)' : 'translateY(0)',
+                                pointerEvents: showBio ? 'none' : 'auto'
+                            }}
                         >
                             {getStatusText()}
                         </span>
                         {otherUser?.bio && (
                             <span 
-                                className={`chat-header-status ${showBio ? 'fade-in' : 'fade-out'}`}
+                                className="chat-header-status"
                                 style={{ 
                                     gridArea: '1 / 1', 
                                     display: '-webkit-box',
@@ -1218,7 +1227,9 @@ const ChatWindow = ({ onBack }) => {
                                     overflow: 'hidden', 
                                     textOverflow: 'ellipsis', 
                                     transition: 'all 0.4s ease', 
-                                    opacity: 0.85,
+                                    opacity: showBio ? 0.9 : 0,
+                                    transform: showBio ? 'translateY(0)' : 'translateY(5px)',
+                                    pointerEvents: showBio ? 'auto' : 'none',
                                     lineHeight: '1.3',
                                     wordBreak: 'break-word'
                                 }}

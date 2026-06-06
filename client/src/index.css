@@ -1138,7 +1138,7 @@ select {
 
 .chat-header-status {
   font-size: var(--text-xs);
-  color: #475569;
+  color: #94a3b8;
 }
 
 .chat-header-status.status-typing {
