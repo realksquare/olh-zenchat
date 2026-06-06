@@ -148,8 +148,20 @@ router.get("/", protect, async (req, res) => {
         .populate("taggedUsers", "username avatar fullName")
         .sort({ createdAt: -1 });
 
-        console.log(`[moments] Returning ${moments.length} moments for ${user.username}`);
-        res.json(moments);
+        const filteredMoments = moments.map(m => {
+            const momentObj = m.toObject();
+            const isOwner = (momentObj.userId?._id || momentObj.userId)?.toString() === req.user._id.toString();
+            if (!isOwner) {
+                const hasLiked = momentObj.likes?.some(id => id.toString() === req.user._id.toString());
+                momentObj.likes = hasLiked ? [req.user._id] : [];
+            } else {
+                momentObj.likes = momentObj.likes?.map(id => id.toString()) || [];
+            }
+            return momentObj;
+        });
+
+        console.log(`[moments] Returning ${filteredMoments.length} moments for ${user.username}`);
+        res.json(filteredMoments);
     } catch (err) {
         console.error(`[moments] Fetch error:`, err);
         res.status(500).json({ message: "Server error" });
@@ -178,7 +190,15 @@ router.post("/:id/view", protect, async (req, res) => {
         const updated = await Moment.findById(req.params.id)
             .populate("userId", "username avatar fullName")
             .populate("taggedUsers", "username avatar fullName");
-        res.json({ success: true, moment: updated });
+        const momentObj = updated.toObject();
+        const isOwner = (momentObj.userId?._id || momentObj.userId)?.toString() === req.user._id.toString();
+        if (!isOwner) {
+            const hasLiked = momentObj.likes?.some(id => id.toString() === req.user._id.toString());
+            momentObj.likes = hasLiked ? [req.user._id] : [];
+        } else {
+            momentObj.likes = momentObj.likes?.map(id => id.toString()) || [];
+        }
+        res.json({ success: true, moment: momentObj });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }
@@ -245,9 +265,21 @@ router.post("/:id/like", protect, async (req, res) => {
         if (io) {
             const owner = await User.findById(ownerId).select("contacts");
             const contactIds = (owner?.contacts || []).map(c => c.userId.toString());
-            const payload = { momentId: req.params.id, likes: updated.likes.map(id => id.toString()) };
-            io.to(ownerId).emit("moment_liked", payload);
-            contactIds.forEach(cid => io.to(cid).emit("moment_liked", payload));
+            
+            // Emit the full list of likes only to the owner
+            io.to(ownerId).emit("moment_liked", {
+                momentId: req.params.id,
+                likes: updated.likes.map(id => id.toString())
+            });
+            
+            // Emit filtered likes list to each contact separately
+            contactIds.forEach(cid => {
+                const hasLiked = updated.likes.some(id => id.toString() === cid.toString());
+                io.to(cid).emit("moment_liked", {
+                    momentId: req.params.id,
+                    likes: hasLiked ? [cid] : []
+                });
+            });
         }
 
         // Send Push Notif to the moment owner if they are offline and a new like was added
@@ -283,7 +315,8 @@ router.post("/:id/like", protect, async (req, res) => {
             }
         }
 
-        res.json({ success: true, likes: updated.likes.map(id => id.toString()), liked: !alreadyLiked });
+        const userHasLiked = updated.likes.some(id => id.toString() === userId);
+        res.json({ success: true, likes: userHasLiked ? [userId] : [], liked: !alreadyLiked });
     } catch (err) {
         console.error("[moments] Like error:", err);
         res.status(500).json({ message: "Server error" });

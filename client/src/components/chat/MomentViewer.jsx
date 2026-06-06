@@ -39,7 +39,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const videoRef = useRef(null);
     const isInputFocusedRef = useRef(false);
     isInputFocusedRef.current = isInputFocused;
-    
+
     const locationContainerRef = useRef(null);
     const locationContentRef = useRef(null);
     const [locMarqueeDist, setLocMarqueeDist] = useState(0);
@@ -53,7 +53,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         // Cast to string to avoid object comparison issues
         const targetUserId = (initialMoments[0].userId?._id || initialMoments[0].userId)?.toString();
         if (!targetUserId) return initialMoments; // Fallback to initial if ID extraction fails
-        
+
         const filtered = allMoments.filter(m => (m.userId?._id || m.userId)?.toString() === targetUserId);
         return filtered.length > 0 ? filtered : initialMoments;
     }, [allMoments, initialMoments]);
@@ -71,7 +71,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             const scrollDist = contentWidth - containerWidth;
             setLocMarqueeDist(scrollDist > 0 ? -(scrollDist + 10) : 0);
         };
-        
+
         if (isOpen && currentMoment?.locationTag) {
             const timer = setTimeout(measure, 150);
             return () => clearTimeout(timer);
@@ -179,7 +179,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                     audio.addEventListener("loadedmetadata", () => {
                         if (startTime) audio.currentTime = startTime;
                     });
-                    
+
                     audio.addEventListener("error", async (e) => {
                         console.warn("Moment audio load error:", e.target?.error?.message || e);
                         if (!cancelled && url === currentMoment.music.previewUrl) {
@@ -189,7 +189,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
 
                     audio.load();
                     audioRef.current = audio;
-                    audio.play().catch(() => {});
+                    audio.play().catch(() => { });
                 };
 
                 const fetchAndPlay = async () => {
@@ -198,14 +198,14 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                         try {
                             const res = await axiosInstance.get(`/music/preview?id=${encodeURIComponent(currentMoment.music.trackId)}`);
                             if (res.data?.previewUrl) freshUrl = res.data.previewUrl;
-                        } catch {}
+                        } catch { }
                     }
                     if (!freshUrl && currentMoment.music.title) {
                         const q = [currentMoment.music.title, currentMoment.music.artist].filter(Boolean).join(' ');
                         try {
                             const res = await axiosInstance.get(`/music/preview?q=${encodeURIComponent(q)}`);
                             if (res.data?.previewUrl) freshUrl = res.data.previewUrl;
-                        } catch {}
+                        } catch { }
                     }
                     if (freshUrl && !cancelled) {
                         playUrl(freshUrl);
@@ -257,14 +257,14 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             if (isInputFocused) {
                 videoRef.current.pause();
             } else {
-                videoRef.current.play().catch(() => {});
+                videoRef.current.play().catch(() => { });
             }
         }
         if (audioRef.current) {
             if (isInputFocused) {
                 audioRef.current.pause();
             } else {
-                audioRef.current.play().catch(() => {});
+                audioRef.current.play().catch(() => { });
             }
         }
     }, [isInputFocused]);
@@ -277,15 +277,15 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const triggerUnlockPlay = () => {
         try {
             const ctx = getAudioContext();
-            if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
-        } catch (err) {}
+            if (ctx && ctx.state === "suspended") ctx.resume().catch(() => { });
+        } catch (err) { }
 
         if (!isMuted) {
             if (audioRef.current && !audioRef.current.error) {
-                audioRef.current.play().catch(() => {});
+                audioRef.current.play().catch(() => { });
             }
             if (videoRef.current) {
-                videoRef.current.play().catch(() => {});
+                videoRef.current.play().catch(() => { });
             }
         }
     };
@@ -404,16 +404,16 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         <div className={`modal-overlay moments-aura-viewer-overlay ${isClosing ? 'fading-out' : ''}`} onClick={triggerUnlockPlay} onTouchStart={triggerUnlockPlay}>
             <div className="moments-aura-viewer-content" onClick={(e) => { e.stopPropagation(); triggerUnlockPlay(); }} onTouchStart={triggerUnlockPlay} style={bgStyle}>
                 {currentMoment.mediaUrl && (
-                    <div 
-                        className="aura-blur-backdrop" 
-                        style={{ backgroundImage: `url(${currentMoment.mediaUrl})` }} 
+                    <div
+                        className="aura-blur-backdrop"
+                        style={{ backgroundImage: `url(${currentMoment.mediaUrl})` }}
                     />
                 )}
                 <div className="aura-progress-bars" style={{ display: 'flex', gap: '4px', position: 'absolute', top: '12px', left: '12px', right: '12px', zIndex: 1100 }}>
                     {moments.map((_, idx) => (
                         <div key={`${currentIndex}-${idx}`} className="aura-progress-bg" style={{ flex: 1, height: '3px', background: 'rgba(255, 255, 255, 0.3)', borderRadius: '2px', overflow: 'hidden' }}>
-                            <div 
-                                className={`aura-progress-fill solid ${idx === currentIndex ? 'active' : (idx < currentIndex ? 'completed' : '')}`} 
+                            <div
+                                className={`aura-progress-fill solid ${idx === currentIndex ? 'active' : (idx < currentIndex ? 'completed' : '')}`}
                                 style={{
                                     ...(idx === currentIndex ? { '--duration': `${totalDuration}s` } : {}),
                                     background: '#ffffff',
@@ -453,9 +453,9 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                         {(() => {
                                             const diff = Math.floor((Date.now() - new Date(currentMoment.createdAt).getTime()) / 1000);
                                             if (diff < 60) return 'Just now';
-                                            if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-                                            if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
-                                            return `${Math.floor(diff/86400)}d ago`;
+                                            if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+                                            if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+                                            return `${Math.floor(diff / 86400)}d ago`;
                                         })()}
                                     </span>
                                     {currentMoment.music && (
@@ -473,7 +473,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                             <circle cx="12" cy="10" r="3" />
                                         </svg>
                                         <span className="aura-header-location-text">
-                                            <span 
+                                            <span
                                                 ref={locationContentRef}
                                                 className={`aura-header-location-content ${locMarqueeDist < 0 ? "marquee-bidirectional" : ""}`}
                                                 style={locMarqueeDist < 0 ? { "--marquee-dist": `${locMarqueeDist}px` } : {}}
@@ -553,10 +553,10 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                         />
                     ) : hasMedia ? (
                         <div className="aura-media-content" key={currentMoment._id}>
-                            <img 
-                                src={currentMoment.mediaUrl} 
-                                alt="Moment" 
-                                className="viewer-main-media" 
+                            <img
+                                src={currentMoment.mediaUrl}
+                                alt="Moment"
+                                className="viewer-main-media"
                                 style={FILTER_STYLES[currentMoment.filter] || FILTER_STYLES.none}
                             />
 
@@ -598,7 +598,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                 {showDeleteConfirm && (
                     <div className="aura-permission-popup">
                         <h3>Let go?</h3>
-                        <p>This #moment. will fade for everyone.</p>
+                        <p>This #Moment will fade for everyone...</p>
                         <div className="permission-actions">
                             <button className="deny-btn" onClick={(e) => { e.stopPropagation(); confirmDelete(); }}>Let go...</button>
                             <button className="allow-btn" onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(false); }}>Keep</button>
@@ -621,7 +621,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill={likeCount > 0 ? "#f43f5e" : "none"} stroke={likeCount > 0 ? "#f43f5e" : "rgba(255,255,255,0.4)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                                 </svg>
                                 <span className="aura-like-count">{likeCount}</span>
                             </div>
@@ -644,10 +644,10 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                     }}
                                     disabled={isSendingReply}
                                 />
-                                
+
                                 {replyText.trim() && (
-                                    <button 
-                                        className="aura-reply-send-btn" 
+                                    <button
+                                        className="aura-reply-send-btn"
                                         onClick={handleSendReply}
                                         disabled={isSendingReply}
                                         style={{ marginRight: '6px' }}
@@ -670,7 +670,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                         disabled={isResharing || reshared}
                                         onClick={(e) => { e.stopPropagation(); handleReshare(); }}
                                         title={reshared ? "Already reshared" : "Reshare to your feed"}
-                                        style={{ background: 'none', border: 'none', color: reshared ? '#10b981' : '#fff', cursor: reshared ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: '4px', opacity: reshared ? 0.75 : 1, transition: 'all 0.2s' }}
                                     >
                                         {isResharing ? (
                                             <div className="aura-mini-spinner" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
@@ -699,9 +698,8 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                     style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                                 >
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill={hasLiked ? "#f43f5e" : "none"} stroke={hasLiked ? "#f43f5e" : "#fff"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="aura-heart-icon">
-                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                                     </svg>
-                                    {likeCount > 0 && <span className="aura-like-count">{likeCount}</span>}
                                 </button>
                             </div>
                         </div>

@@ -451,6 +451,10 @@ export const SocketProvider = ({ children }) => {
 
             socket.emit("zen_mode_status", { isZenMode: chatStore.isZenMode });
 
+            // Emit active status immediately on connect
+            const isActive = document.visibilityState === "visible";
+            socket.emit("set_active_status", { isActive });
+
             const activeChat = chatStore.activeChat;
             const isLowBandwidth = chatStore.isLowBandwidth;
 

@@ -65,6 +65,10 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
 
     const message = {
         token: fcmToken,
+        notification: {
+            title: String(title),
+            body: String(body)
+        },
         data: {
             ...stringData,
             title: String(title),
@@ -72,6 +76,14 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
         },
         webpush: {
             headers: { Urgency: "high" },
+            notification: {
+                ...webpushNotif,
+                data: {
+                    url: clickUrl,
+                    chatId: stringData.chatId || null,
+                    ...(webpushNotif.data || {})
+                }
+            },
             fcm_options: {
                 link: clickUrl
             }
