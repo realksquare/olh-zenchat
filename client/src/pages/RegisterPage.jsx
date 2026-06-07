@@ -32,7 +32,11 @@ const RegisterPage = () => {
 
     const handleChange = (e) => {
         clearError();
-        setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+        let value = e.target.value;
+        if (e.target.name === "username") {
+            value = value.toLowerCase().replace(/[^a-z0-9_]/g, "");
+        }
+        setForm((prev) => ({ ...prev, [e.target.name]: value }));
         if (e.target.name === "password") setPwError("");
     };
 
@@ -116,6 +120,7 @@ const RegisterPage = () => {
                             value={form.username}
                             onChange={handleChange}
                         />
+                        <span className="field-hint" style={{ color: "#94a3b8" }}>Only lowercase letters, numbers, and underscores allowed.</span>
                     </div>
 
                     <div className="field">

@@ -185,7 +185,7 @@ router.post("/verify-challenge", async (req, res) => {
 router.post(
     "/register",
     [
-        body("username").trim().isLength({ min: 3, max: 20 }),
+        body("username").trim().isLength({ min: 3, max: 20 }).matches(/^[a-z0-9_]+$/).withMessage("Username can only contain lowercase letters, numbers, and underscores"),
         body("email").isEmail().normalizeEmail(),
         body("password").isLength({ min: 7, max: 18 }).matches(/\d/).withMessage("Password must contain at least one number"),
     ],
