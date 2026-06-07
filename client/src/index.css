@@ -3415,6 +3415,33 @@ select {
   color: #fff;
 }
 
+/* ── ZenPulse Admin ─────────────────────────────────── */
+.pulse-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.admin-pulse-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: white;
+  outline: none;
+}
+.admin-pulse-input:focus {
+  border-color: #3b82f6;
+}
+
+@media (max-width: 480px) {
+  .pulse-options-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── Dual Footer Bar ────────────────────────────────── */
 .sidebar-footer-container {
   display: flex;

@@ -317,14 +317,14 @@ const AdminPanel = ({ onClose }) => {
                         <div className="admin-pulse-section" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             <div className="pulse-create-form" style={{ background: 'rgba(30,41,59,0.5)', padding: '16px', borderRadius: '12px', border: '1px solid #334155', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 <h3 style={{ margin: 0, color: 'white', fontSize: '1.1rem' }}>Schedule New Pulse</h3>
-                                <input type="text" placeholder="Question?" value={pulseQuestion} onChange={e => setPulseQuestion(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white' }} />
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                    <input type="text" placeholder="Option 1 (Required)" value={pulseOption1} onChange={e => setPulseOption1(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white' }} />
-                                    <input type="text" placeholder="Option 2 (Required)" value={pulseOption2} onChange={e => setPulseOption2(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white' }} />
-                                    <input type="text" placeholder="Option 3 (Optional)" value={pulseOption3} onChange={e => setPulseOption3(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white' }} />
-                                    <input type="text" placeholder="Option 4 (Optional)" value={pulseOption4} onChange={e => setPulseOption4(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white' }} />
+                                <input type="text" placeholder="Question?" value={pulseQuestion} onChange={e => setPulseQuestion(e.target.value)} className="admin-pulse-input" />
+                                <div className="pulse-options-grid">
+                                    <input type="text" placeholder="Option 1 (Required)" value={pulseOption1} onChange={e => setPulseOption1(e.target.value)} className="admin-pulse-input" />
+                                    <input type="text" placeholder="Option 2 (Required)" value={pulseOption2} onChange={e => setPulseOption2(e.target.value)} className="admin-pulse-input" />
+                                    <input type="text" placeholder="Option 3 (Optional)" value={pulseOption3} onChange={e => setPulseOption3(e.target.value)} className="admin-pulse-input" />
+                                    <input type="text" placeholder="Option 4 (Optional)" value={pulseOption4} onChange={e => setPulseOption4(e.target.value)} className="admin-pulse-input" />
                                 </div>
-                                <input type="date" value={pulseDate} onChange={e => setPulseDate(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white', colorScheme: 'dark' }} title="Scheduled For (Date)" />
+                                <input type="date" value={pulseDate} onChange={e => setPulseDate(e.target.value)} className="admin-pulse-input" style={{ colorScheme: 'dark' }} title="Scheduled For (Date)" />
                                 <button onClick={handleSchedulePulse} disabled={isSchedulingPulse} style={{ padding: '10px', borderRadius: '6px', background: '#10b981', color: 'white', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
                                     {isSchedulingPulse ? "Scheduling..." : "Schedule Pulse"}
                                 </button>
