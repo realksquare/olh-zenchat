@@ -240,6 +240,8 @@ self.addEventListener('fetch', (event) => {
     if (url.pathname.startsWith('/api') || url.pathname.startsWith('/socket.io')) return;
     // Never intercept cross-origin requests (Firebase, Cloudinary, etc.)
     if (url.origin !== self.location.origin) return;
+    // Never intercept/cache local development assets to prevent stale static assets and HMR bugs
+    if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') return;
 
     const isNavigation = event.request.mode === 'navigate';
     const isStaticAsset = url.pathname.startsWith('/assets/') ||
