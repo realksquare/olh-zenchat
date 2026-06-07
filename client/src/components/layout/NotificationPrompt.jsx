@@ -153,7 +153,7 @@ const NotificationPrompt = () => {
             <div
                 className="moments-aura-content notif-prompt-popup"
                 onClick={(e) => e.stopPropagation()}
-                style={{ maxWidth: "400px", width: "95%", padding: 0, overflow: 'hidden', position: 'relative' }}
+                style={{ width: "400px", maxWidth: "95%", padding: 0, overflow: 'hidden', position: 'relative' }}
             >
                 <div className="moments-aura-header">
                     <h2 className="moments-aura-title">{success ? "Notifications" : "Stay Connected"}</h2>

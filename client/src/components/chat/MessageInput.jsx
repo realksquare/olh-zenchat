@@ -126,7 +126,7 @@ const MediaUploadPopup = ({ onClose, onFilesSelected, showToast }) => {
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
-                style={{ maxWidth: "400px", width: "95%", padding: 0 }}
+                style={{ width: "400px", maxWidth: "95%", padding: 0 }}
             >
                 <div className="moments-aura-header">
                     <h2 className="moments-aura-title">Media Upload</h2>

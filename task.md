@@ -10,5 +10,10 @@
 - [x] Swap inline style properties (`width` and `maxWidth`) in JSX files
   - [x] Modify [ProfileModal.jsx](file:///c:/olh-zenchat/client/src/components/ui/ProfileModal.jsx)
   - [x] Modify [InviteModal.jsx](file:///c:/olh-zenchat/client/src/components/ui/InviteModal.jsx)
+  - [x] Modify [NotificationPrompt.jsx](file:///c:/olh-zenchat/client/src/components/layout/NotificationPrompt.jsx)
+  - [x] Modify [InstallPWA.jsx](file:///c:/olh-zenchat/client/src/components/ui/InstallPWA.jsx)
+  - [x] Modify [MessageInput.jsx](file:///c:/olh-zenchat/client/src/components/chat/MessageInput.jsx)
 - [x] Run client build to verify compilation (`npm run build` in client)
 - [x] Verify fix visually in browser using browser subagent
+
+

@@ -172,7 +172,7 @@ const InstallPWA = () => {
                         <div
                             className="moments-aura-content pwa-install-popup"
                             onClick={(e) => e.stopPropagation()}
-                            style={{ maxWidth: "400px", width: "95%", padding: 0, overflow: 'hidden' }}
+                            style={{ width: "400px", maxWidth: "95%", padding: 0, overflow: 'hidden' }}
                         >
                             <div className="moments-aura-header">
                                 <h2 className="moments-aura-title">Open ZenChat PWA</h2>
@@ -257,7 +257,7 @@ const InstallPWA = () => {
                     <div
                         className="moments-aura-content pwa-install-popup"
                         onClick={(e) => e.stopPropagation()}
-                        style={{ maxWidth: "400px", width: "95%", padding: 0, overflow: 'hidden' }}
+                        style={{ width: "400px", maxWidth: "95%", padding: 0, overflow: 'hidden' }}
                     >
                         <div className="moments-aura-header">
                             <h2 className="moments-aura-title">{isSuccess ? "Installed" : "Install ZenChat"}</h2>
