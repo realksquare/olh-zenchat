@@ -35,7 +35,7 @@ const AdminPanel = ({ onClose }) => {
             const [statsRes, usersRes, pulseRes] = await Promise.all([
                 axiosInstance.get("/admin/stats"),
                 axiosInstance.get("/admin/users"),
-                axiosInstance.get("/pulse/admin/scheduled")
+                axiosInstance.get("/pulse/admin/questions")
             ]);
             setStats(statsRes.data);
             setUsers(usersRes.data.users);
@@ -113,7 +113,7 @@ const AdminPanel = ({ onClose }) => {
             if (pulseOption3) options.push({ id: "opt3", text: pulseOption3 });
             if (pulseOption4) options.push({ id: "opt4", text: pulseOption4 });
 
-            const { data } = await axiosInstance.post("/pulse/admin/create", {
+            const { data } = await axiosInstance.post("/pulse/admin/questions", {
                 question: pulseQuestion,
                 options,
                 scheduledFor: new Date(pulseDate).toISOString()
@@ -137,7 +137,7 @@ const AdminPanel = ({ onClose }) => {
     const handleDeletePulse = async (id) => {
         if (!window.confirm("Delete this scheduled pulse?")) return;
         try {
-            await axiosInstance.delete(`/pulse/admin/${id}`);
+            await axiosInstance.delete(`/pulse/admin/questions/${id}`);
             setScheduledPulses(scheduledPulses.filter(p => p._id !== id));
             showToast("Pulse deleted");
         } catch (err) {
