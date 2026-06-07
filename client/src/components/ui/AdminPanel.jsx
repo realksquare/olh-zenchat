@@ -153,6 +153,12 @@ const AdminPanel = ({ onClose }) => {
         </div>,
         document.body
     );
+    // Calculate minimum allowed date for ZenPulse (cannot be older than today, or tomorrow if past 7 PM)
+    const minPulseDate = new Date();
+    if (minPulseDate.getHours() >= 19) {
+        minPulseDate.setDate(minPulseDate.getDate() + 1);
+    }
+    const minPulseDateString = minPulseDate.toISOString().split("T")[0];
 
     return createPortal(
         <div className="admin-modal-overlay">
@@ -324,7 +330,7 @@ const AdminPanel = ({ onClose }) => {
                                     <input type="text" placeholder="Option 3 (Optional)" value={pulseOption3} onChange={e => setPulseOption3(e.target.value)} className="admin-pulse-input" />
                                     <input type="text" placeholder="Option 4 (Optional)" value={pulseOption4} onChange={e => setPulseOption4(e.target.value)} className="admin-pulse-input" />
                                 </div>
-                                <input type="date" value={pulseDate} onChange={e => setPulseDate(e.target.value)} className="admin-pulse-input" style={{ colorScheme: 'dark' }} title="Scheduled For (Date)" />
+                                <input type="date" value={pulseDate} onChange={e => setPulseDate(e.target.value)} min={minPulseDateString} className="admin-pulse-input" style={{ colorScheme: 'dark' }} title="Scheduled For (Date)" />
                                 <button onClick={handleSchedulePulse} disabled={isSchedulingPulse} style={{ padding: '10px', borderRadius: '6px', background: '#10b981', color: 'white', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
                                     {isSchedulingPulse ? "Scheduling..." : "Schedule Pulse"}
                                 </button>
