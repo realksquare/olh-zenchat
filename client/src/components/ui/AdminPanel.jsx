@@ -331,9 +331,9 @@ const AdminPanel = ({ onClose }) => {
                             </div>
 
                             <div className="pulse-scheduled-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                <h3 style={{ margin: 0, color: 'white', fontSize: '1.1rem' }}>Scheduled & Active Pulses</h3>
+                                <h3 style={{ margin: 0, color: 'white', fontSize: '1.1rem' }}>All Pulses (Scheduled, Active & Completed)</h3>
                                 {scheduledPulses.length === 0 ? (
-                                    <p style={{ color: '#94a3b8' }}>No pulses scheduled.</p>
+                                    <p style={{ color: '#94a3b8' }}>No pulses in database.</p>
                                 ) : (
                                     scheduledPulses.map(p => (
                                         <div key={p._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1e293b', padding: '12px', borderRadius: '8px', border: '1px solid #334155' }}>

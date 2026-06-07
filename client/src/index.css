@@ -3172,27 +3172,14 @@ select {
   max-width: 100%;
   min-width: 0;
   padding: 12px 24px;
-  padding-right: 0;
   gap: 8px;
   background: rgba(0, 0, 0, 0.2);
-  overflow-x: auto;
-  white-space: nowrap;
-  -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
 }
 
-.admin-tabs::after {
-  content: "";
-  flex-shrink: 0;
-  width: 24px;
-}
-
-.admin-tabs::-webkit-scrollbar {
-  display: none; /* Hide scrollbar for clean tab look */
-}
-
 .admin-tabs button {
-  flex-shrink: 0;
+  flex: 1;
+  text-align: center;
   padding: 8px 16px;
   border-radius: 8px;
   border: none;
@@ -3201,6 +3188,7 @@ select {
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .admin-tabs button.active {
@@ -3211,29 +3199,21 @@ select {
 @media (max-width: 768px) {
   .admin-tabs {
     padding: 8px 16px;
-    padding-right: 0;
     gap: 6px;
   }
-  .admin-tabs::after {
-    width: 16px;
-  }
   .admin-tabs button {
-    padding: 6px 12px;
+    padding: 6px 8px;
     font-size: 0.85rem;
   }
 }
 
 @media (max-width: 480px) {
   .admin-tabs {
-    padding: 6px 10px;
-    padding-right: 0;
+    padding: 6px 8px;
     gap: 4px;
   }
-  .admin-tabs::after {
-    width: 10px;
-  }
   .admin-tabs button {
-    padding: 6px 8px;
+    padding: 6px 4px;
     font-size: 0.8rem;
   }
 }
