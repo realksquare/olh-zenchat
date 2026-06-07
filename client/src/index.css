@@ -7901,10 +7901,6 @@ select {
   to { transform: rotate(360deg); }
 }
 
-@keyframes aura-pop {
-  0% { transform: translate(-50%, -20px) scale(0.9); opacity: 0; }
-  100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
-}
 
 .aura-like-pill.aura-like-pill--owner {
   bottom: 24px;
