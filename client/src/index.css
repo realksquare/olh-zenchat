@@ -1791,7 +1791,7 @@ select {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   background: rgba(14, 17, 23, 0.7);
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .modal-content {
@@ -3973,6 +3973,8 @@ select {
 }
 
 .moments-aura-overlay {
+  position: fixed;
+  inset: 0;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(12px) saturate(180%);
   display: flex;
@@ -3980,6 +3982,7 @@ select {
   justify-content: center;
   z-index: 1000;
   padding: 20px;
+  overflow: hidden;
 }
 
 .moments-aura-content {
