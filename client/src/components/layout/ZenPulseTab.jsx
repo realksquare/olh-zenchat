@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuthStore } from "../../stores/authStore";
 import { usePulseStore } from "../../stores/pulseStore";
+import { getFontFamily } from "../../pages/ZenPulsePage";
 
 const ActivityIcon = ({ size, className }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -261,6 +262,7 @@ const ZenPulseTab = () => {
                                             key={opt.id}
                                             className={`pulse-opt-btn ${selectedOption === opt.id ? 'selected' : ''}`}
                                             onClick={() => setSelectedOption(opt.id)}
+                                            style={{ fontFamily: getFontFamily(opt.text) }}
                                         >
                                             {opt.text}
                                         </button>
@@ -302,7 +304,7 @@ const ZenPulseTab = () => {
                                 
                                 return (
                                     <div key={opt.id} className="pulse-result-row">
-                                        <div className="result-label-bar">
+                                        <div className="result-label-bar" style={{ fontFamily: getFontFamily(opt.text) }}>
                                             <span className="result-text">{opt.text}</span>
                                             <span className="result-pct">{percentage}%</span>
                                         </div>

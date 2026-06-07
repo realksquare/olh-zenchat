@@ -4,6 +4,17 @@ import html2canvas from "html2canvas";
 import { useAuthStore } from "../stores/authStore";
 import { usePulseStore } from "../stores/pulseStore";
 
+export const getFontFamily = (text) => {
+    if (!text) return undefined;
+    const t = text.toLowerCase();
+    if (t.includes('outfit')) return "'Outfit', sans-serif";
+    if (t.includes('dm sans')) return "'DM Sans', sans-serif";
+    if (t.includes('space grotesk')) return "'Space Grotesk', sans-serif";
+    if (t.includes('plus jakarta')) return "'Plus Jakarta Sans', sans-serif";
+    if (t.includes('inter')) return "'Inter', sans-serif";
+    return undefined;
+};
+
 const ZenPulsePage = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -138,6 +149,7 @@ const ZenPulsePage = () => {
                                             key={opt.id}
                                             className={`pulse-option-btn ${selectedOption === opt.id ? 'selected' : ''}`}
                                             onClick={() => setSelectedOption(opt.id)}
+                                            style={{ fontFamily: getFontFamily(opt.text) }}
                                         >
                                             {opt.text}
                                         </button>
@@ -200,7 +212,7 @@ const ZenPulsePage = () => {
                                 
                                 return (
                                     <div key={opt.id} className="pulse-result-row">
-                                        <div className="pulse-result-label">
+                                        <div className="pulse-result-label" style={{ fontFamily: getFontFamily(opt.text) }}>
                                             <span>{opt.text}</span>
                                             <span>{percentage}%</span>
                                         </div>
