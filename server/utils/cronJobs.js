@@ -112,6 +112,68 @@ const startCronJobs = () => {
     });
 
     console.log("[Cron] Daily Digest job scheduled to run hourly.");
+
+    // ZenPulse Daily Question Activator at 13:30 UTC / 7:00 PM IST
+    cron.schedule('30 13 * * *', async () => {
+        try {
+            console.log("[Cron] Running ZenPulse Activator...");
+            const ZenPulseQuestion = require("../models/ZenPulseQuestion");
+            
+            // 1. Mark current active as revealed
+            const currentActive = await ZenPulseQuestion.findOne({ status: "active" });
+            if (currentActive) {
+                currentActive.status = "revealed";
+                currentActive.revealedAt = new Date();
+                await currentActive.save();
+            }
+
+            // 2. Find next scheduled
+            const now = new Date();
+            const nextScheduled = await ZenPulseQuestion.findOne({ 
+                status: "scheduled",
+                scheduledFor: { $lte: now }
+            }).sort({ scheduledFor: 1 });
+
+            if (nextScheduled) {
+                nextScheduled.status = "active";
+                nextScheduled.activatedAt = new Date();
+                await nextScheduled.save();
+
+                // Send push notification to everyone
+                console.log("[Cron] Sending ZenPulse push notifications...");
+                const usersWithTokens = await User.find({ "fcmTokens.0": { $exists: true } });
+                for (const user of usersWithTokens) {
+                    for (const tokenData of user.fcmTokens) {
+                        await sendPushNotification(
+                            user._id,
+                            tokenData.token,
+                            "ZenPulse",
+                            "Today's question is live - cast your vote!",
+                            { type: "zen_pulse", url: "/zenpulse", tag: "zen-pulse" }
+                        );
+                    }
+                }
+                console.log(`[Cron] ZenPulse push sent to ${usersWithTokens.length} users.`);
+            } else {
+                console.warn("[Cron] No scheduled ZenPulse questions available to activate!");
+            }
+        } catch (err) {
+            console.error("[Cron] ZenPulse Activator failed:", err);
+        }
+    });
+
+    // ZenPulse Question Bank Monitor at 08:00 UTC
+    cron.schedule('0 8 * * *', async () => {
+        try {
+            const ZenPulseQuestion = require("../models/ZenPulseQuestion");
+            const count = await ZenPulseQuestion.countDocuments({ status: "scheduled" });
+            if (count < 3) {
+                console.warn(`[Cron] ZenPulse Warning: Only ${count} scheduled questions left in queue.`);
+            }
+        } catch (err) {
+            console.error("[Cron] ZenPulse Bank Monitor failed:", err);
+        }
+    });
 };
 
 module.exports = { startCronJobs };

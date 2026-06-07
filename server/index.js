@@ -80,6 +80,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/chats", apiLimiter, chatRoutes);
 app.use("/api/messages", apiLimiter, messageRoutes);
+app.use("/api/pulse", apiLimiter, require("./routes/zenPulse"));
 app.use("/api/moments", apiLimiter, require("./routes/momentRoutes"));
 app.use("/api/admin", apiLimiter, require("./routes/admin"));
 app.use("/api/music", apiLimiter, require("./routes/music"));

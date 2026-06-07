@@ -172,6 +172,22 @@ self.addEventListener('install', (event) => {
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
 
+    // Handle ZenPulse notification click
+    if (event.notification.data?.type === 'zen_pulse') {
+        const pulseUrl = event.notification.data?.url || '/?tab=pulse';
+        event.waitUntil(
+            clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+                if (clientList.length > 0) {
+                    const client = clientList.find(c => c.focused) || clientList[0];
+                    client.navigate(pulseUrl);
+                    return client.focus();
+                }
+                return clients.openWindow(pulseUrl);
+            })
+        );
+        return;
+    }
+
     // Extract chatId from notification data (set for text message notifications)
     const chatId = event.notification.data?.chatId || event.notification.data?.url?.split('chatId=')[1]?.split('&')[0];
     const targetUrl = chatId

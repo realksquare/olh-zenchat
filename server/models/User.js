@@ -185,7 +185,16 @@ const userSchema = new mongoose.Schema(
                 mediaType: { type: String, enum: ["gif", "sticker"], default: "gif" }
             }],
             default: []
-        }
+        },
+        pulseStreak: {
+            current: { type: Number, default: 0 },
+            longest: { type: Number, default: 0 },
+            lastVotedDate: { type: String, default: null }
+        },
+        pulseVotedQuestions: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "ZenPulseQuestion"
+        }]
     },
     { timestamps: true }
 );
@@ -248,7 +257,8 @@ userSchema.methods.toPrivateJSON = function () {
         encryptedPrivateKeyBackup: this.encryptedPrivateKeyBackup,
         cryptoSalt: this.cryptoSalt,
         cryptoIv: this.cryptoIv,
-        hasSeenPurgeNotice: this.hasSeenPurgeNotice
+        hasSeenPurgeNotice: this.hasSeenPurgeNotice,
+        pulseStreak: this.pulseStreak
     };
 };
 

@@ -14,6 +14,16 @@ const AdminPanel = ({ onClose }) => {
     const [pushSending, setPushSending] = useState(false);
     const [toast, setToast] = useState(null);
 
+    // ZenPulse Admin State
+    const [pulseQuestion, setPulseQuestion] = useState("");
+    const [pulseOption1, setPulseOption1] = useState("");
+    const [pulseOption2, setPulseOption2] = useState("");
+    const [pulseOption3, setPulseOption3] = useState("");
+    const [pulseOption4, setPulseOption4] = useState("");
+    const [pulseDate, setPulseDate] = useState("");
+    const [scheduledPulses, setScheduledPulses] = useState([]);
+    const [isSchedulingPulse, setIsSchedulingPulse] = useState(false);
+
     const showToast = (msg) => {
         setToast(msg);
         setTimeout(() => setToast(null), 3000);
@@ -22,12 +32,14 @@ const AdminPanel = ({ onClose }) => {
     const fetchAdminData = async () => {
         try {
             setLoading(true);
-            const [statsRes, usersRes] = await Promise.all([
+            const [statsRes, usersRes, pulseRes] = await Promise.all([
                 axiosInstance.get("/admin/stats"),
-                axiosInstance.get("/admin/users")
+                axiosInstance.get("/admin/users"),
+                axiosInstance.get("/pulse/admin/scheduled")
             ]);
             setStats(statsRes.data);
             setUsers(usersRes.data.users);
+            setScheduledPulses(pulseRes.data.questions || []);
         } catch (err) {
             console.error("Admin fetch error:", err);
         } finally {
@@ -90,6 +102,49 @@ const AdminPanel = ({ onClose }) => {
         }
     };
 
+    const handleSchedulePulse = async () => {
+        if (!pulseQuestion || !pulseOption1 || !pulseOption2 || !pulseDate) return showToast("Required fields missing");
+        setIsSchedulingPulse(true);
+        try {
+            const options = [
+                { id: "opt1", text: pulseOption1 },
+                { id: "opt2", text: pulseOption2 }
+            ];
+            if (pulseOption3) options.push({ id: "opt3", text: pulseOption3 });
+            if (pulseOption4) options.push({ id: "opt4", text: pulseOption4 });
+
+            const { data } = await axiosInstance.post("/pulse/admin/create", {
+                question: pulseQuestion,
+                options,
+                scheduledFor: new Date(pulseDate).toISOString()
+            });
+
+            setScheduledPulses([...scheduledPulses, data.question].sort((a, b) => new Date(a.scheduledFor) - new Date(b.scheduledFor)));
+            showToast("Pulse scheduled successfully!");
+            setPulseQuestion("");
+            setPulseOption1("");
+            setPulseOption2("");
+            setPulseOption3("");
+            setPulseOption4("");
+            setPulseDate("");
+        } catch (err) {
+            showToast(err.response?.data?.message || "Failed to schedule pulse");
+        } finally {
+            setIsSchedulingPulse(false);
+        }
+    };
+
+    const handleDeletePulse = async (id) => {
+        if (!window.confirm("Delete this scheduled pulse?")) return;
+        try {
+            await axiosInstance.delete(`/pulse/admin/${id}`);
+            setScheduledPulses(scheduledPulses.filter(p => p._id !== id));
+            showToast("Pulse deleted");
+        } catch (err) {
+            showToast(err.response?.data?.message || "Failed to delete pulse");
+        }
+    };
+
     if (loading) return createPortal(
         <div className="admin-modal-overlay">
             <div className="admin-modal-content">
@@ -110,8 +165,9 @@ const AdminPanel = ({ onClose }) => {
 
                 <div className="admin-tabs">
                     <button className={activeTab === "stats" ? "active" : ""} onClick={() => setActiveTab("stats")}>Overview</button>
-                    <button className={activeTab === "users" ? "active" : ""} onClick={() => setActiveTab("users")}>Manage Users</button>
+                    <button className={activeTab === "users" ? "active" : ""} onClick={() => setActiveTab("users")}>Users</button>
                     <button className={activeTab === "push" ? "active" : ""} onClick={() => setActiveTab("push")}>Push Notifs</button>
+                    <button className={activeTab === "pulse" ? "active" : ""} onClick={() => setActiveTab("pulse")}>ZenPulse</button>
                 </div>
 
                 <div className="admin-body">
@@ -254,6 +310,44 @@ const AdminPanel = ({ onClose }) => {
                             >
                                 {pushSending ? "Sending..." : "Send Broadcast"}
                             </button>
+                        </div>
+                    )}
+
+                    {activeTab === "pulse" && (
+                        <div className="admin-pulse-section" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            <div className="pulse-create-form" style={{ background: 'rgba(30,41,59,0.5)', padding: '16px', borderRadius: '12px', border: '1px solid #334155', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <h3 style={{ margin: 0, color: 'white', fontSize: '1.1rem' }}>Schedule New Pulse</h3>
+                                <input type="text" placeholder="Question?" value={pulseQuestion} onChange={e => setPulseQuestion(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white' }} />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                    <input type="text" placeholder="Option 1 (Required)" value={pulseOption1} onChange={e => setPulseOption1(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white' }} />
+                                    <input type="text" placeholder="Option 2 (Required)" value={pulseOption2} onChange={e => setPulseOption2(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white' }} />
+                                    <input type="text" placeholder="Option 3 (Optional)" value={pulseOption3} onChange={e => setPulseOption3(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white' }} />
+                                    <input type="text" placeholder="Option 4 (Optional)" value={pulseOption4} onChange={e => setPulseOption4(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white' }} />
+                                </div>
+                                <input type="date" value={pulseDate} onChange={e => setPulseDate(e.target.value)} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white', colorScheme: 'dark' }} title="Scheduled For (Date)" />
+                                <button onClick={handleSchedulePulse} disabled={isSchedulingPulse} style={{ padding: '10px', borderRadius: '6px', background: '#10b981', color: 'white', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
+                                    {isSchedulingPulse ? "Scheduling..." : "Schedule Pulse"}
+                                </button>
+                            </div>
+
+                            <div className="pulse-scheduled-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <h3 style={{ margin: 0, color: 'white', fontSize: '1.1rem' }}>Scheduled & Active Pulses</h3>
+                                {scheduledPulses.length === 0 ? (
+                                    <p style={{ color: '#94a3b8' }}>No pulses scheduled.</p>
+                                ) : (
+                                    scheduledPulses.map(p => (
+                                        <div key={p._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#1e293b', padding: '12px', borderRadius: '8px', border: '1px solid #334155' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <span style={{ color: 'white', fontWeight: '500' }}>{p.question}</span>
+                                                <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
+                                                    {new Date(p.scheduledFor).toLocaleDateString()} • Status: <strong style={{ color: p.status === 'active' ? '#10b981' : '#3b82f6' }}>{p.status.toUpperCase()}</strong>
+                                                </span>
+                                            </div>
+                                            <button onClick={() => handleDeletePulse(p._id)} style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer' }}>Delete</button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>

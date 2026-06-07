@@ -16,6 +16,7 @@ import MomentCreator from "./MomentCreator";
 import MomentViewer from "./MomentViewer";
 import ZenVaultModal from "../ui/ZenVaultModal";
 import YourTimeDashboard from "../ui/YourTimeDashboard";
+import ZenPulseTab from "../layout/ZenPulseTab";
 import { useMomentStore } from "../../stores/momentStore";
 import { VerifiedTick, AdminIcon, HelpIcon, InviteIcon } from "../ui/Icons";
 
@@ -159,7 +160,7 @@ const Sidebar = ({ onChatSelect }) => {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const tab = params.get("tab");
-        if (tab === "contacts" || tab === "recents") {
+        if (tab === "contacts" || tab === "recents" || tab === "pulse") {
             setActiveTab(tab);
         }
     }, []);
@@ -425,9 +426,10 @@ const Sidebar = ({ onChatSelect }) => {
                     </svg>
                     <input
                         type="text"
-                        placeholder={activeTab === "contacts" ? "Search contacts..." : "Search users..."}
+                        placeholder={activeTab === "contacts" ? "Search contacts..." : (activeTab === "pulse" ? "Search disabled in Pulse" : "Search users...")}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
+                        disabled={activeTab === "pulse"}
                         aria-label="Search users"
                     />
                     {search && (
@@ -462,19 +464,27 @@ const Sidebar = ({ onChatSelect }) => {
                             ) : null;
                         })()}
                     </button>
+                    <button
+                        className={`sidebar-tab ${activeTab === "pulse" ? "active" : ""}`}
+                        onClick={() => setActiveTab("pulse")}
+                    >
+                        Pulse
+                    </button>
                 </div>
 
-                <div className="sidebar-filters">
-                    {["All", "Unread"].map((filter) => (
-                        <button
-                            key={filter}
-                            className={`sidebar-filter-chip ${activeFilter === filter.toLowerCase() ? "active" : ""}`}
-                            onClick={() => setActiveFilter(filter.toLowerCase())}
-                        >
-                            {filter}
-                        </button>
-                    ))}
-                </div>
+                {activeTab !== "pulse" && (
+                    <div className="sidebar-filters">
+                        {["All", "Unread"].map((filter) => (
+                            <button
+                                key={filter}
+                                className={`sidebar-filter-chip ${activeFilter === filter.toLowerCase() ? "active" : ""}`}
+                                onClick={() => setActiveFilter(filter.toLowerCase())}
+                            >
+                                {filter}
+                            </button>
+                        ))}
+                    </div>
+                )}
 
                 {search.trim().length >= 2 && (
                     <div className="search-results">
@@ -513,10 +523,15 @@ const Sidebar = ({ onChatSelect }) => {
                 )}
             </div>
 
-            <div
-                className="sidebar-chats"
-                ref={chatsRef}
-            >
+            {activeTab === "pulse" ? (
+                <div className="sidebar-pulse-wrap" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    <ZenPulseTab />
+                </div>
+            ) : (
+                <div
+                    className="sidebar-chats"
+                    ref={chatsRef}
+                >
                 <div
                     style={{ 
                         transform: pullY > 0 ? `translateY(${pullY}px)` : undefined, 
@@ -595,6 +610,7 @@ const Sidebar = ({ onChatSelect }) => {
                     )}
                 </div>
             </div>
+            )}
 
             {isProfileOpen && (
                 <ProfileModal
