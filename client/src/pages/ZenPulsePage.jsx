@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import html2canvas from "html2canvas";
 import { useAuthStore } from "../stores/authStore";
 import { usePulseStore } from "../stores/pulseStore";
 
@@ -14,6 +15,58 @@ const ZenPulsePage = () => {
     const [hasVoted, setHasVoted] = useState(false);
     const [voteError, setVoteError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    const [isSharingToday, setIsSharingToday] = useState(false);
+    const [isSharingYesterday, setIsSharingYesterday] = useState(false);
+    const todayCardRef = useRef(null);
+    const yesterdayCardRef = useRef(null);
+
+    const handleShare = async (type) => {
+        const isToday = type === 'today';
+        const cardRef = isToday ? todayCardRef : yesterdayCardRef;
+        if (!cardRef.current) return;
+
+        if (isToday) setIsSharingToday(true);
+        else setIsSharingYesterday(true);
+
+        try {
+            await new Promise(r => setTimeout(r, 100)); // allow state to hide button
+
+            const canvas = await html2canvas(cardRef.current, {
+                backgroundColor: "#0f172a",
+                scale: 2,
+            });
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) throw new Error("Canvas to Blob failed");
+                const file = new File([blob], `zenpulse-${type}.png`, { type: "image/png" });
+                
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'ZenPulse',
+                            text: 'Check out this pulse on ZenChat!'
+                        });
+                    } catch (e) {
+                        console.log("Share cancelled or failed", e);
+                    }
+                } else {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `zenpulse-${type}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+            }, "image/png");
+        } catch (error) {
+            console.error("Error generating image:", error);
+        } finally {
+            if (isToday) setIsSharingToday(false);
+            else setIsSharingYesterday(false);
+        }
+    };
 
     useEffect(() => {
         if (token) {
@@ -68,8 +121,9 @@ const ZenPulsePage = () => {
             </header>
 
             <main className="zenpulse-main">
-                <div className="pulse-card active-pulse">
+                <div className="pulse-card active-pulse" ref={todayCardRef} style={{ position: 'relative' }}>
                     <div className="pulse-badge">Today's Pulse</div>
+                    
                     
                     {isLoading ? (
                         <div className="pulse-loading">Loading...</div>
@@ -110,10 +164,13 @@ const ZenPulsePage = () => {
                                     <p>The community results will be revealed tomorrow at 7 PM IST.</p>
                                     <div className="join-cta-box">
                                         <p>Want to see every day's results and chat privately?</p>
-                                        <Link to={`/register${searchParams.get('ref') ? `?ref=${searchParams.get('ref')}` : ''}`} className="btn btn-primary">
-                                            Join ZenChat - It's Free
-                                        </Link>
+                                        {!isSharingToday && (
+                                            <Link to={`/register${searchParams.get('ref') ? `?ref=${searchParams.get('ref')}` : ''}`} className="btn btn-primary">
+                                                Join ZenChat - It's Free
+                                            </Link>
+                                        )}
                                     </div>
+                                    <div className="pulse-watermark" style={{ textAlign: 'center', fontSize: '0.85rem', color: '#334155', marginTop: '16px', fontWeight: 'bold' }}>zenchat.app</div>
                                 </div>
                             )}
                         </>
@@ -126,8 +183,13 @@ const ZenPulsePage = () => {
                 </div>
 
                 {yesterdayQuestion && (
-                    <div className="pulse-card yesterday-pulse">
+                    <div className="pulse-card yesterday-pulse" ref={yesterdayCardRef} style={{ position: 'relative' }}>
                         <div className="pulse-badge secondary">Yesterday's Results</div>
+                        {!isSharingYesterday && (
+                            <button className="share-pulse-btn" onClick={() => handleShare('yesterday')} title="Share / Download">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                            </button>
+                        )}
                         <h3 className="pulse-question-small">{yesterdayQuestion.question}</h3>
                         
                         <div className="pulse-results">
@@ -149,6 +211,7 @@ const ZenPulsePage = () => {
                                 );
                             })}
                             <p className="pulse-total-votes">{yesterdayQuestion.totalVotes} total votes</p>
+                            <div className="pulse-watermark" style={{ textAlign: 'center', fontSize: '0.85rem', color: '#334155', marginTop: '16px', fontWeight: 'bold' }}>zenchat.app</div>
                         </div>
                     </div>
                 )}
