@@ -7467,7 +7467,13 @@ select {
 @media(min-width: 768px) { .gif-picker-modal { height: 500px; border-radius: 20px; } }
 
 .gif-picker-header { display: flex; justify-content: center; align-items: center; position: relative; margin-bottom: 12px; width: 100%; }
-.gif-picker-header .aura-close-btn { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+.gif-picker-header .aura-close-btn { position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #94a3b8; cursor: pointer; padding: 4px; }
+.gif-picker-header .aura-close-btn svg { width: 20px; height: 20px; }
+@media(min-width: 768px) { .gif-picker-header .aura-close-btn svg { width: 24px; height: 24px; } }
+
+.gif-fav-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.5); border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; padding: 0; }
+.gif-fav-btn.active svg { fill: #eab308; stroke: #eab308; }
+.gif-fav-btn svg { width: 14px; height: 14px; stroke: #ffffff; }
 .gif-tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 12px; }
 .gif-tab { padding: 6px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #94a3b8; background: transparent; border: none; cursor: pointer; transition: 0.2s; }
 .gif-tab.active { background: var(--color-primary); color: #fff; }
