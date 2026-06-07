@@ -3172,6 +3172,7 @@ select {
   max-width: 100%;
   min-width: 0;
   padding: 12px 24px;
+  padding-right: 0;
   gap: 8px;
   background: rgba(0, 0, 0, 0.2);
   overflow-x: auto;
@@ -3179,6 +3180,13 @@ select {
   -webkit-overflow-scrolling: touch;
   box-sizing: border-box;
 }
+
+.admin-tabs::after {
+  content: "";
+  flex-shrink: 0;
+  width: 24px;
+}
+
 .admin-tabs::-webkit-scrollbar {
   display: none; /* Hide scrollbar for clean tab look */
 }
@@ -3203,7 +3211,11 @@ select {
 @media (max-width: 768px) {
   .admin-tabs {
     padding: 8px 16px;
+    padding-right: 0;
     gap: 6px;
+  }
+  .admin-tabs::after {
+    width: 16px;
   }
   .admin-tabs button {
     padding: 6px 12px;
@@ -3214,7 +3226,11 @@ select {
 @media (max-width: 480px) {
   .admin-tabs {
     padding: 6px 10px;
+    padding-right: 0;
     gap: 4px;
+  }
+  .admin-tabs::after {
+    width: 10px;
   }
   .admin-tabs button {
     padding: 6px 8px;
