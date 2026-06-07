@@ -3171,9 +3171,16 @@ select {
   padding: 12px 24px;
   gap: 8px;
   background: rgba(0, 0, 0, 0.2);
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+.admin-tabs::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for clean tab look */
 }
 
 .admin-tabs button {
+  flex-shrink: 0;
   padding: 8px 16px;
   border-radius: 8px;
   border: none;
