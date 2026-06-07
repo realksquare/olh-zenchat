@@ -36,8 +36,25 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/firebase-messaging-sw.js').then((registration) => {
       console.log('Service Worker registered with scope:', registration.scope);
+      
+      // Auto-check for updates when app is brought to foreground
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          registration.update();
+        }
+      });
+      
     }).catch((err) => {
       console.log('Service Worker registration failed:', err);
+    });
+
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        // Graceful reload to apply the new update automatically
+        window.location.reload();
+      }
     });
   });
 }

@@ -60,8 +60,13 @@ export default defineConfig({
             `const SHELL_URLS = ${filesListString};`
           );
           
+          swContent = swContent.replace(
+            /const CACHE_NAME = 'zenchat-v[^']+';/,
+            `const CACHE_NAME = 'zenchat-${Date.now()}';`
+          );
+          
           fs.writeFileSync(swPath, swContent, "utf8");
-          console.log(`[SW Injection] Injected ${filesToCache.length} build assets into Service Worker.`);
+          console.log(`[SW Injection] Injected ${filesToCache.length} build assets into Service Worker with dynamic cache name.`);
         } catch (err) {
           console.error("[SW Injection] Failed to inject assets:", err);
         }
