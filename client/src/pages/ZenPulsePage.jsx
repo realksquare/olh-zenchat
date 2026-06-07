@@ -182,7 +182,7 @@ const ZenPulsePage = () => {
                                             </Link>
                                         )}
                                     </div>
-                                    <div className="pulse-watermark" style={{ textAlign: 'center', fontSize: '0.85rem', color: '#334155', marginTop: '16px', fontWeight: 'bold' }}>zenchat.app</div>
+                                    <div className="pulse-watermark" style={{ textAlign: 'center', fontSize: '0.85rem', color: '#334155', marginTop: '16px', fontWeight: 'bold' }}>OLH ZenChat</div>
                                 </div>
                             )}
                         </>
@@ -223,7 +223,7 @@ const ZenPulsePage = () => {
                                 );
                             })}
                             <p className="pulse-total-votes">{yesterdayQuestion.totalVotes} total votes</p>
-                            <div className="pulse-watermark" style={{ textAlign: 'center', fontSize: '0.85rem', color: '#334155', marginTop: '16px', fontWeight: 'bold' }}>zenchat.app</div>
+                            <div className="pulse-watermark" style={{ textAlign: 'center', fontSize: '0.85rem', color: '#334155', marginTop: '16px', fontWeight: 'bold' }}>OLH ZenChat</div>
                         </div>
                     </div>
                 )}

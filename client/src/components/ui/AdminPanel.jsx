@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import axiosInstance from "../../utils/axios";
 import { useAuthStore } from "../../stores/authStore";
+import { getFontFamily } from "../../pages/ZenPulsePage";
 
 const AdminPanel = ({ onClose }) => {
     const { user: me } = useAuthStore();
@@ -325,10 +326,10 @@ const AdminPanel = ({ onClose }) => {
                                 <h3 style={{ margin: 0, color: 'white', fontSize: '1.1rem' }}>Schedule New Pulse</h3>
                                 <input type="text" placeholder="Question?" value={pulseQuestion} onChange={e => setPulseQuestion(e.target.value)} className="admin-pulse-input" />
                                 <div className="pulse-options-grid">
-                                    <input type="text" placeholder="Option 1 (Required)" value={pulseOption1} onChange={e => setPulseOption1(e.target.value)} className="admin-pulse-input" />
-                                    <input type="text" placeholder="Option 2 (Required)" value={pulseOption2} onChange={e => setPulseOption2(e.target.value)} className="admin-pulse-input" />
-                                    <input type="text" placeholder="Option 3 (Optional)" value={pulseOption3} onChange={e => setPulseOption3(e.target.value)} className="admin-pulse-input" />
-                                    <input type="text" placeholder="Option 4 (Optional)" value={pulseOption4} onChange={e => setPulseOption4(e.target.value)} className="admin-pulse-input" />
+                                    <input type="text" placeholder="Option 1 (Required)" value={pulseOption1} onChange={e => setPulseOption1(e.target.value)} className="admin-pulse-input" style={{ fontFamily: getFontFamily(pulseOption1) }} />
+                                    <input type="text" placeholder="Option 2 (Required)" value={pulseOption2} onChange={e => setPulseOption2(e.target.value)} className="admin-pulse-input" style={{ fontFamily: getFontFamily(pulseOption2) }} />
+                                    <input type="text" placeholder="Option 3 (Optional)" value={pulseOption3} onChange={e => setPulseOption3(e.target.value)} className="admin-pulse-input" style={{ fontFamily: getFontFamily(pulseOption3) }} />
+                                    <input type="text" placeholder="Option 4 (Optional)" value={pulseOption4} onChange={e => setPulseOption4(e.target.value)} className="admin-pulse-input" style={{ fontFamily: getFontFamily(pulseOption4) }} />
                                 </div>
                                 <input type="date" value={pulseDate} onChange={e => setPulseDate(e.target.value)} min={minPulseDateString} className="admin-pulse-input" style={{ colorScheme: 'dark' }} title="Scheduled For (Date)" />
                                 <button onClick={handleSchedulePulse} disabled={isSchedulingPulse} style={{ padding: '10px', borderRadius: '6px', background: '#10b981', color: 'white', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
