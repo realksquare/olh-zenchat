@@ -622,7 +622,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             {toast && <div className="zen-toast zen-toast-info" style={{ pointerEvents: 'none' }}>{toast}</div>}
             {isSubscribing && <LoadingOverlay message="Subscribing..." subMessage="Setting up your secure connection" />}
             {isE2EELoading && <LoadingOverlay message="Generating key..." subMessage="Performing zero-knowledge cryptographic operations" />}
-            <div className="moments-aura-content profile-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "440px", width: "95%", padding: 0 }}>
+            <div className="moments-aura-content profile-modal" onClick={(e) => e.stopPropagation()} style={{ width: "440px", maxWidth: "95%", padding: 0 }}>
                 <div className="moments-aura-header">
                     <h2 className="moments-aura-title">Profile & Settings</h2>
                     <button className="aura-close-btn" onClick={onClose}>

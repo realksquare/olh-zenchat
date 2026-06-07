@@ -1,21 +1,14 @@
-# Task List
+# Task List: Fix Desktop Modals Mid-Left Rendering Shift
 
-- [x] Update Database Schema (`Message` & `Moment` Models)
-- [x] Implement Packet Compressor changes on Client & Server
-- [x] Implement Server-side Socket and Message Router changes
-  - [x] Add `replyToMoment` support in message creation/retrieval
-  - [x] Switch FCM push notifications to data-only format
-  - [x] Add custom push notification text for moment replies
-- [x] Implement Moment Resharing backend API
-  - [x] Add `POST /api/moments/:id/reshare` endpoint
-  - [x] Add push notification to original author when reshared
-- [x] Implement Frontend Moments UI changes
-  - [x] Remove tagged usernames from viewer header
-  - [x] Add Moment Reply support (`replyToMoment` & `replyToMomentUsername` in `sendMessage`)
-  - [x] Replace custom absolute toasts with standard `showZenToast`
-  - [x] Render Interactive Moment reply tag in chat bubble
-  - [x] Render Reshare button left to the like button for tagged users
-  - [x] Wire up Reshare button click handler to trigger API & timeline refresh
-- [x] Verification and Testing
-  - [x] Run client build step
-  - [x] Verify message replies, tagging, and resharing flows
+- [x] Modify CSS layout rules in `client/src/index.css`
+  - [x] Adjust `.moments-aura-content` sizing (`width: 480px; max-width: 100%;`)
+  - [x] Adjust `.profile-modal` sizing (`width: 400px; max-width: 100%;`)
+  - [x] Adjust `.zen-modal-container` sizing (`width: 400px; max-width: 100%;`)
+  - [x] Adjust `.delete-modal` sizing (`width: 320px; max-width: 90%;`)
+  - [x] Adjust `.admin-modal-content` sizing (`width: 800px; max-width: 100%;`)
+  - [x] Add desktop `@media (min-width: 769px)` override to set `margin: auto` on modal contents for solid centering
+- [x] Swap inline style properties (`width` and `maxWidth`) in JSX files
+  - [x] Modify [ProfileModal.jsx](file:///c:/olh-zenchat/client/src/components/ui/ProfileModal.jsx)
+  - [x] Modify [InviteModal.jsx](file:///c:/olh-zenchat/client/src/components/ui/InviteModal.jsx)
+- [x] Run client build to verify compilation (`npm run build` in client)
+- [x] Verify fix visually in browser using browser subagent

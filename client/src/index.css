@@ -1724,8 +1724,8 @@ select {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   padding: 24px;
-  width: 90%;
-  max-width: 320px;
+  width: 320px;
+  max-width: 90%;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1817,8 +1817,8 @@ select {
 }
 
 .profile-modal {
-  width: 100%;
-  max-width: 400px;
+  width: 400px;
+  max-width: 100%;
   max-height: 85vh;
   overflow-y: auto;
   background: #161b22;
@@ -3109,8 +3109,8 @@ select {
 
 .admin-modal-content {
   background: #111827;
-  width: 100%;
-  max-width: 800px;
+  width: 800px;
+  max-width: 100%;
   max-height: 85vh;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -3983,8 +3983,8 @@ select {
 }
 
 .moments-aura-content {
-  width: 100%;
-  max-width: 480px;
+  width: 480px;
+  max-width: 100%;
   max-height: 92vh;
   overflow-y: auto;
   background: rgba(15, 23, 42, 0.95);
@@ -6683,8 +6683,8 @@ select {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 24px;
   padding: 28px 24px;
-  width: 100%;
-  max-width: 400px;
+  width: 400px;
+  max-width: 100%;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   color: #f1f5f9;
   text-align: center;
@@ -7940,5 +7940,17 @@ select {
   box-shadow: 0 0 6px rgba(16, 185, 129, 0.2);
   cursor: default;
   opacity: 0.75;
+}
+
+/* Force solid center positioning on desktops (>768px) to prevent first-render reflow lag */
+@media (min-width: 769px) {
+  .modal-overlay .modal-content,
+  .modal-overlay .moments-aura-content,
+  .moments-aura-overlay .moments-aura-content,
+  .zen-modal-overlay .zen-modal-container,
+  .admin-modal-overlay .admin-modal-content,
+  .delete-modal-overlay .delete-modal {
+    margin: auto !important;
+  }
 }
 
