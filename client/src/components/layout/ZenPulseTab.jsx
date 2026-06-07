@@ -234,8 +234,7 @@ const ZenPulseTab = () => {
     return (
         <div className="zenpulse-tab-container">
             <div className="pulse-header-bar">
-                <div className="pulse-title-area">
-                    <ActivityIcon size={24} className="pulse-icon" />
+                <div className="logo-container">
                     <h2>ZenPulse</h2>
                 </div>
                 <div className="pulse-streak-badge">
