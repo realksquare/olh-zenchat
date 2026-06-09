@@ -1,4 +1,4 @@
-import { memo, useMemo, useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { format } from "date-fns";
 import { VerifiedTick } from "./Icons";
@@ -37,7 +37,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
     const getHaloColor = useMomentStore((s) => s.getHaloColor);
     const moments = useMomentStore((s) => s.moments);
     const { user: currentUser, blockUser, unblockUser } = useAuthStore();
-    const zenUsers = useChatStore((s) => s.zenUsers);
+    const { zenUsers, isZenMode } = useChatStore();
 
     // Safety exit
     if (!isOpen || !user) return null;
@@ -64,7 +64,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
             const date = new Date(user.createdAt);
             if (isNaN(date.getTime())) return "Unknown";
             return format(date, "MMMM yyyy");
-        } catch (e) {
+        } catch (_) {
             return "Unknown";
         }
     })();
@@ -107,8 +107,8 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                 <div className="user-card-header">
                     <div className="user-card-avatar-wrap">
                         <div
-                            className={`avatar avatar-xl ${hasMoments && !iBlocked && !theyBlocked ? 'moments-halo-thin' : ''}`}
-                            style={hasMoments && !iBlocked && !theyBlocked ? { '--halo-color': haloColor } : {}}
+                            className={`avatar avatar-xl ${hasMoments && !iBlocked && !theyBlocked && !isZenMode && !isOtherInZen ? 'moments-halo-thin' : ''}`}
+                            style={hasMoments && !iBlocked && !theyBlocked && !isZenMode && !isOtherInZen ? { '--halo-color': haloColor } : {}}
                         >
                             {user.avatar ? (
                                 <img src={user.avatar} alt={username} />
@@ -182,7 +182,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                     </div>
 
                     <div className="user-card-actions" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
-                        {hasMoments && userMomentsCount > 0 && !iBlocked && !theyBlocked && (
+                        {hasMoments && userMomentsCount > 0 && !iBlocked && !theyBlocked && !isZenMode && !isOtherInZen && (
                             <button className="btn btn-primary btn-full moments-btn" onClick={onViewMoments}>
                                 View {userMomentsCount} {userMomentsCount === 1 ? '#Moment' : '#Moments'}
                             </button>

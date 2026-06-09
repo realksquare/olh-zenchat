@@ -1,6 +1,7 @@
 import { memo, useMemo } from "react";
 import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
+import { useChatStore } from "../../stores/chatStore";
 
 const MomentsRow = ({ onAddMoment, onViewMoment }) => {
     const userId = useAuthStore((s) => s.user?._id);
@@ -9,19 +10,23 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
     // Subscribe directly so the component re-renders when moments change
     const moments = useMomentStore((s) => s.moments);
     const getHaloColor = useMomentStore((s) => s.getHaloColor);
+    const isZenMode = useChatStore((s) => s.isZenMode);
+    const zenUsers = useChatStore((s) => s.zenUsers);
 
     const userGroups = useMemo(() => {
+        if (isZenMode) return [];
         const groups = {};
         moments.forEach(m => {
             const uid = (m.userId?._id || m.userId)?.toString();
             if (!uid || uid === userId?.toString()) return;
+            if (zenUsers[uid] || zenUsers[uid?.toString()]) return;
             if (!groups[uid]) {
                 groups[uid] = { user: m.userId, moments: [] };
             }
             groups[uid].moments.push(m);
         });
         return Object.values(groups);
-    }, [moments, userId]);
+    }, [moments, userId, isZenMode, zenUsers]);
 
     const myMoments = useMemo(() =>
         moments.filter(m => (m.userId?._id || m.userId)?.toString() === userId?.toString())
@@ -51,12 +56,12 @@ const MomentsRow = ({ onAddMoment, onViewMoment }) => {
                 </div>
 
                 {/* Contacts' moments — color computed live */}
-                {userGroups.map((group) => {
+                {userGroups.map((group, idx) => {
                     const uid = group.user?._id || group.user;
                     const color = getHaloColor(uid, userId);
                     return (
                         <div
-                            key={uid || Math.random()}
+                            key={uid || idx}
                             className="moment-item"
                             onClick={() => onViewMoment(group.moments)}
                         >

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, memo, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useMomentStore } from "../../stores/momentStore";
 import { useAuthStore } from "../../stores/authStore";
+import { useChatStore } from "../../stores/chatStore";
 import { useSocket } from "../../context/SocketContext";
 import { formatDistanceToNow } from "date-fns";
 import { getAudioContext } from "../../utils/audio";
@@ -48,6 +49,8 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     // Make the viewer reactive by pulling the latest moments for this user
     const allMoments = useMomentStore((s) => s.moments);
     const currentUserId = useAuthStore((s) => s.user?._id);
+    const isZenMode = useChatStore((s) => s.isZenMode);
+    const zenUsers = useChatStore((s) => s.zenUsers);
 
     const moments = useMemo(() => {
         if (!initialMoments || initialMoments.length === 0) return [];
@@ -107,6 +110,18 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         }
     }, [moments.length, isOpen, currentIndex, onClose]);
 
+    useEffect(() => {
+        if (isOpen && moments.length > 0) {
+            const targetUserId = (moments[0].userId?._id || moments[0].userId)?.toString();
+            const isOwn = targetUserId === currentUserId?.toString();
+            if (!isOwn) {
+                const isOtherInZen = targetUserId && (zenUsers[targetUserId] || zenUsers[targetUserId.toString()]);
+                if (isZenMode || isOtherInZen) {
+                    onClose();
+                }
+            }
+        }
+    }, [isOpen, isZenMode, zenUsers, moments, currentUserId, onClose]);
 
     const stopAudio = () => {
         if (audioRef.current) {

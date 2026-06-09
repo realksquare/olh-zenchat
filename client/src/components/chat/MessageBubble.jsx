@@ -155,6 +155,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const { toggleStarMessage, markViewOnceAsViewed } = useChatStore.getState();
     const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
     const isZenMode = useChatStore((s) => s.isZenMode);
+    const zenUsers = useChatStore((s) => s.zenUsers);
     
     const senderUsername = isMe ? (user?.username || "user") : (otherUser?.username || "user");
     
@@ -624,6 +625,14 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         if (repliedToMoment) {
+                                            const momentOwnerId = (repliedToMoment.userId?._id || repliedToMoment.userId)?.toString();
+                                            const isOwn = momentOwnerId === user?._id?.toString();
+                                            if (!isOwn) {
+                                                const isOtherInZen = momentOwnerId && (zenUsers[momentOwnerId] || zenUsers[momentOwnerId.toString()]);
+                                                if (isZenMode || isOtherInZen) {
+                                                    return; // Block other users' moments in ZenMode
+                                                }
+                                            }
                                             useMomentStore.getState().setActiveViewerMoments([repliedToMoment]);
                                         }
                                     }}

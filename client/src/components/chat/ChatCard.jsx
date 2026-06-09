@@ -21,6 +21,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const deleteChatForUser = useChatStore((s) => s.deleteChatForUser);
     const liveChat = useChatStore((s) => s.chats.find((c) => c._id === chat._id)) || chat;
     const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
+    const isZenMode = useChatStore((s) => s.isZenMode);
+    const zenUsers = useChatStore((s) => s.zenUsers);
 
     // ── Local state & refs ────────────────────────────────────────────────────
     const [showUserCard, setShowUserCard] = useState(false);
@@ -86,7 +88,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const isBlocked = iBlocked || theyBlocked;
     const isOnline = !isBlocked && !isOffline && !otherUser?.presenceHidden && (otherUser?.isOnline || (otherUserId && onlineUsers.has(otherUserId.toString())));
     const isSPOp = isLowBandwidth || (isOnline && peerLowBandwidth[otherUserId] === true);
-    const hasMoments = !isBlocked && !!(otherUserId && hasActiveMoment(otherUserId.toString()));
+    const isOtherInZen = !!(otherUserId && (zenUsers[otherUserId] || zenUsers[otherUserId.toString()]));
+    const hasMoments = !isBlocked && !isZenMode && !isOtherInZen && !!(otherUserId && hasActiveMoment(otherUserId.toString()));
     const isContact = !!(user?.contacts?.some(c => {
         const uid = c.userId?._id?.toString() || c.userId?.toString();
         return uid === otherUserId;

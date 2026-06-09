@@ -913,9 +913,9 @@ const ChatWindow = ({ onBack }) => {
     }, [typingUsers, activeChat?._id, otherUserId]);
 
     const hasMoments = useMemo(() => {
-        if (!otherUserId) return false;
+        if (!otherUserId || isZenMode || zenUsers[otherUserId]) return false;
         return hasActiveMoment(otherUserId);
-    }, [otherUserId, hasActiveMoment]);
+    }, [otherUserId, hasActiveMoment, isZenMode, zenUsers]);
 
     const isTyping = !!typingScramble;
 
@@ -950,6 +950,25 @@ const ChatWindow = ({ onBack }) => {
         }
     );
     const displayName = isDeleted ? "(user_deleted)" : otherUser?.username;
+
+    const handleExitEarly = useCallback(() => {
+        if (offlineCountdownIntervalRef.current) {
+            clearInterval(offlineCountdownIntervalRef.current);
+            offlineCountdownIntervalRef.current = null;
+        }
+        setOfflineCountdown(null);
+        
+        if (socket?.connected && activeChat?._id && user?._id && otherUserId) {
+            socket.emit("zen_exit_respond", { 
+                chatId: activeChat._id, 
+                responderId: user._id, 
+                requesterId: otherUserId, 
+                accepted: true 
+            });
+        }
+        triggerCircularReveal(window.innerWidth / 2, window.innerHeight / 2, false);
+        showZenToast("info", "ZenMode exited early");
+    }, [socket, activeChat?._id, user?._id, otherUserId, triggerCircularReveal, showZenToast]);
 
     useEffect(() => {
         if (isZenMode && !isPeerOnline) {
@@ -1455,7 +1474,35 @@ const ChatWindow = ({ onBack }) => {
                         <line x1="12" y1="8" x2="12" y2="12" />
                         <line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
-                    <span>@{displayName || "User"} has gone offline - exiting #ZenMode in {offlineCountdown} seconds</span>
+                    <span style={{ flex: 1 }}>@{displayName || "User"} has gone offline - exiting #ZenMode in {offlineCountdown} seconds</span>
+                    {offlineCountdown <= 20 && (
+                        <button
+                            className="zen-offline-exit-btn"
+                            onClick={handleExitEarly}
+                            style={{
+                                background: 'rgba(239, 68, 68, 0.2)',
+                                border: '1px solid rgba(239, 68, 68, 0.4)',
+                                color: '#fca5a5',
+                                padding: '4px 10px',
+                                borderRadius: '8px',
+                                fontSize: '0.75rem',
+                                fontWeight: '700',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                flexShrink: 0
+                            }}
+                            onMouseEnter={(e) => {
+                                e.target.style.background = 'rgba(239, 68, 68, 0.3)';
+                                e.target.style.borderColor = 'rgba(239, 68, 68, 0.6)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.background = 'rgba(239, 68, 68, 0.2)';
+                                e.target.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                            }}
+                        >
+                            Exit early
+                        </button>
+                    )}
                 </div>
             )}
 
