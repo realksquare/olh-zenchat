@@ -317,11 +317,9 @@ const ZenPulseTab = () => {
                             <div className="results-footer">
                                 <span className="total-votes">{yesterdayQuestion.totalVotes} votes</span>
                                 
-                                <button className="btn btn-outline share-pulse-btn" onClick={handleShare}>
+                                <button className="btn btn-outline share-pulse-btn" onClick={handleShare} title="Share Results">
                                     {shareMsg || (
-                                        <>
-                                            <ShareIcon size={16} /> Share Results
-                                        </>
+                                        <ShareIcon size={16} />
                                     )}
                                 </button>
                             </div>
