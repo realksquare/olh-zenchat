@@ -317,11 +317,12 @@ const ZenPulseTab = () => {
                             <div className="results-footer">
                                 <span className="total-votes">{yesterdayQuestion.totalVotes} votes</span>
                                 
-                                <button className="btn btn-outline share-pulse-btn" onClick={handleShare} title="Share Results">
-                                    {shareMsg || (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {shareMsg && <span style={{ fontSize: '0.8rem', color: '#94a3b8', animation: 'fade-in 0.3s ease' }}>{shareMsg}</span>}
+                                    <button className="btn btn-outline share-pulse-btn" onClick={handleShare} title="Share Results">
                                         <ShareIcon size={16} />
-                                    )}
-                                </button>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
