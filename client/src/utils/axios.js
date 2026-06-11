@@ -73,6 +73,7 @@ axiosInstance.interceptors.response.use(
         if (error.response?.status === 401 && !isAuthRoute) {
             localStorage.removeItem("zenchat_token");
             localStorage.removeItem("zenchat_user");
+            localStorage.removeItem("zenchat-auth");
             window.location.href = "/login";
         }
         return Promise.reject(error);

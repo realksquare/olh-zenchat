@@ -7,17 +7,7 @@ export const compressPacket = (msg) => {
     if (msg.mediaUrl !== undefined) compressed.u = msg.mediaUrl;
     if (msg.replyTo !== undefined) compressed.r = msg.replyTo;
     if (msg.replyToMoment) {
-        compressed.o = typeof msg.replyToMoment === 'object' ? {
-            _id: msg.replyToMoment._id || msg.replyToMoment,
-            userId: msg.replyToMoment.userId,
-            type: msg.replyToMoment.type,
-            content: msg.replyToMoment.content,
-            mediaUrl: msg.replyToMoment.mediaUrl,
-            music: msg.replyToMoment.music,
-            caption: msg.replyToMoment.caption,
-            locationTag: msg.replyToMoment.locationTag,
-            filter: msg.replyToMoment.filter,
-        } : msg.replyToMoment;
+        compressed.o = typeof msg.replyToMoment === 'object' ? (msg.replyToMoment._id || msg.replyToMoment.toString()) : msg.replyToMoment;
     }
     if (msg.replyToMomentUsername !== undefined) compressed.n = msg.replyToMomentUsername;
     if (msg.isViewOnce !== undefined) compressed.v = msg.isViewOnce;

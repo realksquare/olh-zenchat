@@ -8596,3 +8596,4 @@ select {
 }
 
 
+@media (max-width: 768px) { .message-input-wrap { padding-bottom: 4px !important; transform: translateY(4px); } }
