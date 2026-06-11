@@ -310,17 +310,6 @@ const App = () => {
     }
   }, [user, token]);
 
-  useEffect(() => {
-    if (!mountedRef.current) {
-      mountedRef.current = true;
-      prevTokenRef.current = token;
-      return;
-    }
-    if (token !== prevTokenRef.current) {
-      prevTokenRef.current = token;
-      window.location.reload();
-    }
-  }, [token]);
 
   useEffect(() => {
     if (token && userId) {

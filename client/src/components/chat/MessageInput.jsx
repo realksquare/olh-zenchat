@@ -361,7 +361,9 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
         const el = textareaRef.current;
         if (!el) return;
         el.style.height = "auto";
-        el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+        if (content) {
+            el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+        }
     };
 
     useEffect(() => { adjustHeight(); }, [content]);
