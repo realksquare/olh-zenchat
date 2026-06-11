@@ -8406,6 +8406,9 @@ select {
 }
 
 .pulse-voted-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
   padding: 24px 0 12px;
   animation: aura-pop 0.3s ease-out;
@@ -8657,4 +8660,58 @@ select {
     transform: translate3d(-50%, -50%, 0) scale(0) translate3d(0, 0, 0);
     opacity: 0;
   }
+}
+
+/* Streak Freeze Ice Flame */
+.ice-flame {
+  color: #06b6d4 !important;
+  filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.5));
+}
+
+/* Frozen Streak Info Banner */
+.pulse-streak-frozen-info {
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.15);
+  color: #22d3ee;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  text-align: center;
+  margin: 12px 20px 0 20px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* History Item Hover */
+.history-item {
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid transparent;
+}
+.history-item:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.06);
+  transform: translateY(-2px);
+}
+
+/* Share Pulse Modal */
+.share-pulse-preview {
+  margin: 20px 24px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.share-pulse-preview img {
+  max-width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  display: block;
 }

@@ -222,7 +222,36 @@ router.post("/vote", authMiddleware, async (req, res) => {
             if (diffDays === 1) {
                 currentStreak += 1;
             } else if (diffDays > 1) {
-                currentStreak = 1;
+                // Check if the missing days had any active or revealed questions
+                let hadActiveQuestionsOnMissingDays = false;
+                for (let i = 1; i < diffDays; i++) {
+                    const missingDate = new Date(lastVoted);
+                    missingDate.setDate(lastVoted.getDate() + i);
+                    
+                    const startOfDay = new Date(missingDate);
+                    startOfDay.setUTCHours(0, 0, 0, 0);
+                    const endOfDay = new Date(missingDate);
+                    endOfDay.setUTCHours(23, 59, 59, 999);
+                    
+                    const questionCount = await ZenPulseQuestion.countDocuments({
+                        status: { $in: ["active", "revealed"] },
+                        scheduledFor: {
+                            $gte: startOfDay,
+                            $lte: endOfDay
+                        }
+                    });
+                    
+                    if (questionCount > 0) {
+                        hadActiveQuestionsOnMissingDays = true;
+                        break;
+                    }
+                }
+                
+                if (hadActiveQuestionsOnMissingDays) {
+                    currentStreak = 1;
+                } else {
+                    currentStreak += 1; // Saved by streak freeze
+                }
             }
             // if diffDays === 0, they already got streak credit, but they shouldn't be able to vote again anyway
         } else {

@@ -1,7 +1,8 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "../../stores/authStore";
 import { usePulseStore } from "../../stores/pulseStore";
 import { getFontFamily } from "../../pages/ZenPulsePage";
+import SharePulseModal from "../ui/SharePulseModal";
 
 const ActivityIcon = ({ size, className }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -44,6 +45,17 @@ const ChevronUpIcon = ({ size, className }) => (
     </svg>
 );
 
+const SnowflakeIcon = ({ size, className }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <line x1="2" y1="12" x2="22" y2="12"></line>
+        <line x1="12" y1="2" x2="12" y2="22"></line>
+        <path d="m20 16-4-4 4-4"></path>
+        <path d="m4 8 4 4-4 4"></path>
+        <path d="m16 4-4 4-4-4"></path>
+        <path d="m8 20 4-4 4 4"></path>
+    </svg>
+);
+
 const ZenPulseTab = () => {
     const user = useAuthStore(s => s.user);
     const { 
@@ -66,8 +78,8 @@ const ZenPulseTab = () => {
     const [selectedOption, setSelectedOption] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
-    const [shareMsg, setShareMsg] = useState("");
-    const canvasRef = useRef(null);
+    const [shareModalOpen, setShareModalOpen] = useState(false);
+    const [selectedPulse, setSelectedPulse] = useState(null);
 
     useEffect(() => {
         fetchToday();
@@ -83,148 +95,7 @@ const ZenPulseTab = () => {
     };
 
     const hasVotedToday = myVote?.questionId === todayQuestion?._id || votedQuestionIds.includes(todayQuestion?._id);
-
-    // Share Card Generator
-    const generateShareCard = async () => {
-        if (!yesterdayQuestion) return null;
-        
-        const canvas = canvasRef.current;
-        if (!canvas) return null;
-        
-        const ctx = canvas.getContext('2d');
-        canvas.width = 1080;
-        canvas.height = 1080;
-
-        // Background
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // ZenChat Branding
-        ctx.fillStyle = '#f8fafc';
-        ctx.font = 'bold 64px "Inter", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('ZenPulse', canvas.width / 2, 120);
-        
-        ctx.fillStyle = '#3b82f6';
-        ctx.font = '500 36px "Inter", sans-serif';
-        ctx.fillText('Daily Community Opinion', canvas.width / 2, 180);
-
-        // Question
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 56px "Inter", sans-serif';
-        
-        const words = yesterdayQuestion.question.split(' ');
-        let line = '';
-        let y = 350;
-        
-        for (let n = 0; n < words.length; n++) {
-            const testLine = line + words[n] + ' ';
-            const metrics = ctx.measureText(testLine);
-            if (metrics.width > 900 && n > 0) {
-                ctx.fillText(line, canvas.width / 2, y);
-                line = words[n] + ' ';
-                y += 70;
-            } else {
-                line = testLine;
-            }
-        }
-        ctx.fillText(line, canvas.width / 2, y);
-
-        // Top Answer / Highlight
-        y += 120;
-        let topOption = yesterdayQuestion.options[0];
-        let maxCount = 0;
-        yesterdayQuestion.options.forEach(opt => {
-            const count = yesterdayQuestion.optionCounts?.[opt.id] || 0;
-            if (count > maxCount) {
-                maxCount = count;
-                topOption = opt;
-            }
-        });
-
-        const total = yesterdayQuestion.totalVotes || 1;
-        const topPercentage = Math.round((maxCount / total) * 100);
-
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.15)';
-        ctx.strokeStyle = '#3b82f6';
-        ctx.lineWidth = 4;
-        
-        // Draw rounded rectangle for top answer
-        const rectWidth = 800;
-        const rectHeight = 140;
-        const rectX = (canvas.width - rectWidth) / 2;
-        const rectY = y;
-        
-        ctx.beginPath();
-        ctx.roundRect(rectX, rectY, rectWidth, rectHeight, 24);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 48px "Inter", sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText(topOption.text, rectX + 40, rectY + 85);
-        
-        ctx.fillStyle = '#60a5fa';
-        ctx.textAlign = 'right';
-        ctx.fillText(`${topPercentage}% agreed`, rectX + rectWidth - 40, rectY + 85);
-
-        // Footer CTA
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '500 32px "Inter", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('Vote on today\'s pulse at', canvas.width / 2, 920);
-        
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 36px "Inter", sans-serif';
-        ctx.fillText(`olh-zenchat.vercel.app/zenpulse?ref=${user.username}`, canvas.width / 2, 980);
-
-        return new Promise(resolve => {
-            canvas.toBlob(blob => {
-                resolve(blob);
-            }, 'image/png');
-        });
-    };
-
-    const handleShare = async () => {
-        setShareMsg("Generating...");
-        const blob = await generateShareCard();
-        if (!blob) {
-            setShareMsg("Failed to generate");
-            return;
-        }
-
-        const file = new File([blob], 'zenpulse-results.png', { type: 'image/png' });
-        const shareUrl = `https://olh-zenchat.vercel.app/zenpulse?ref=${user.username}`;
-        
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: 'ZenPulse Results',
-                    text: `Check out the community opinion on ZenChat! Join using my link to vote on today's question: ${shareUrl}`,
-                    files: [file]
-                });
-                setShareMsg("Shared!");
-            } catch (err) {
-                console.log("Share failed", err);
-                downloadCard(blob);
-            }
-        } else {
-            downloadCard(blob);
-        }
-        
-        setTimeout(() => setShareMsg(""), 3000);
-    };
-
-    const downloadCard = (blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `zenpulse-${new Date().toISOString().split('T')[0]}.png`;
-        a.click();
-        URL.revokeObjectURL(url);
-        setShareMsg("Downloaded!");
-    };
+    const isFrozen = !isLoading && !todayQuestion && streak.current > 0;
 
     const loadMoreHistory = () => {
         if (historyHasMore) {
@@ -239,10 +110,17 @@ const ZenPulseTab = () => {
                     <h2>ZenPulse</h2>
                 </div>
                 <div className="pulse-streak-badge">
-                    <FlameIcon size={18} className={streak.current > 0 ? "active-flame" : ""} />
+                    <FlameIcon size={18} className={isFrozen ? "ice-flame" : (streak.current > 0 ? "active-flame" : "")} />
                     <span>{streak.current} day streak</span>
                 </div>
             </div>
+
+            {isFrozen && (
+                <div className="pulse-streak-frozen-info">
+                    <SnowflakeIcon size={16} />
+                    <span>No Pulse for today, streak saved!</span>
+                </div>
+            )}
 
             <div className="pulse-scroll-area">
                 {/* Active Question Section */}
@@ -318,8 +196,10 @@ const ZenPulseTab = () => {
                                 <span className="total-votes">{yesterdayQuestion.totalVotes} votes</span>
                                 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    {shareMsg && <span style={{ fontSize: '0.8rem', color: '#94a3b8', animation: 'fade-in 0.3s ease' }}>{shareMsg}</span>}
-                                    <button className="btn btn-outline share-pulse-btn" onClick={handleShare} title="Share Results">
+                                    <button className="btn btn-outline share-pulse-btn" onClick={() => {
+                                        setSelectedPulse(yesterdayQuestion);
+                                        setShareModalOpen(true);
+                                    }} title="Share Results">
                                         <ShareIcon size={16} />
                                     </button>
                                 </div>
@@ -327,9 +207,6 @@ const ZenPulseTab = () => {
                         </div>
                     </div>
                 )}
-
-                {/* Hidden canvas for generating the share image */}
-                <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
 
                 {/* History Section */}
                 <div className="pulse-history-section">
@@ -350,7 +227,10 @@ const ZenPulseTab = () => {
                                 <p className="history-empty">No past pulses found.</p>
                             ) : (
                                 history.map(q => (
-                                    <div key={q._id} className="history-item">
+                                    <div key={q._id} className="history-item" onClick={() => {
+                                        setSelectedPulse(q);
+                                        setShareModalOpen(true);
+                                    }}>
                                         <div className="history-date">{new Date(q.revealedAt).toLocaleDateString()}</div>
                                         <div className="history-question">{q.question}</div>
                                         <div className="history-top-answer">
@@ -369,6 +249,13 @@ const ZenPulseTab = () => {
                     )}
                 </div>
             </div>
+
+            <SharePulseModal 
+                isOpen={shareModalOpen}
+                onClose={() => setShareModalOpen(false)}
+                question={selectedPulse}
+                username={user?.username}
+            />
         </div>
     );
 };
