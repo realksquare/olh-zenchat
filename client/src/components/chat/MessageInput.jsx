@@ -875,7 +875,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     </button>
                 )}
 
-                {!voiceActive && <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0 }}>
+                {!voiceActive && <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0, minHeight: '36px' }}>
                     <textarea
                         ref={textareaRef}
                         className="message-textarea"
@@ -955,10 +955,10 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 </span>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     {isViewOnce && (
-                        <span className="view-once-hint">View Once active</span>
+                        <span className="input-hint">View Once active</span>
                     )}
                     {stagedFiles.some(f => isImageFile(f.file)) && (
-                        <span className="view-once-hint" style={{ background: 'rgba(255, 255, 255, 0.05)', color: 'var(--color-text-muted)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <span className="input-hint">
                             Double-tap image to toggle OG
                         </span>
                     )}
