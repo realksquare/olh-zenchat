@@ -57,9 +57,9 @@ const FAQModal = ({ isOpen, onClose }) => {
         return createPortal(
             <div className="mobile-bottom-sheet-overlay" style={{ zIndex: 2000 }}>
                 <div className="mobile-bottom-sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: '82vh', display: 'flex', flexDirection: 'column', gap: '0', padding: '16px 0 24px' }}>
-                    <div className="mobile-bottom-sheet-header" style={{ marginBottom: '14px', paddingBottom: '0', paddingLeft: '20px', paddingRight: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="mobile-bottom-sheet-header" style={{ position: 'relative', marginBottom: '14px', paddingBottom: '0', paddingLeft: '20px', paddingRight: '50px', display: 'flex', alignItems: 'center', minHeight: '28px' }}>
                         <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff', margin: 0 }}>ZenChat FAQ</h3>
-                        <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }} aria-label="Close FAQ">
+                        <button onClick={onClose} style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }} aria-label="Close FAQ">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18" />
                                 <line x1="6" y1="6" x2="18" y2="18" />

@@ -212,7 +212,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const isViewOnce = message.isViewOnce;
     const isMediaMsg = (message.type === "image" || message.type === "video") && message.mediaUrl;
     const needsLoading = isMediaMsg && !isViewOnce && !shouldDelayLoad && status !== "sending";
-    const isShown = !needsLoading || isMediaLoaded || !!message.lqip;
+    const isShown = true;
 
     const handleMouseEnter = () => {
         if (isMobile) return;
@@ -647,16 +647,16 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                     </div>
                                 </div>
                             )}
-                            {message.type === "voice" && message.mediaUrl && (
+                            {message.type === "voice" && (
                                 <VoiceMessageBubble message={message} />
                             )}
-                            {(message.type === "image" || message.type === "video" || message.type === "file" || message.type === "gif" || message.type === "sticker") && message.mediaUrl && !isViewOnce && (
+                            {(message.type === "image" || message.type === "video" || message.type === "file" || message.type === "gif" || message.type === "sticker") && !isViewOnce && (
                                 <div 
                                     className="message-media-wrap" 
                                     onClick={() => {
                                         if (shouldDelayLoad) {
                                             setManualLoad(true);
-                                        } else if (onMediaClick) {
+                                        } else if (onMediaClick && message.mediaUrl) {
                                             onMediaClick(message.mediaUrl, message.type, message.isViewOnce || false);
                                         }
                                     }} 
@@ -706,7 +706,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-primary)', opacity: 0.8 }}>
                                                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                                      <polyline points="7 10 12 15 17 10" />
-                                                     <line x1="12" y1="15" x2="12" y2="3" />
+                                                     <line x1="12" y1="3" x2="12" y2="15" />
                                                  </svg>
                                                  <span style={{ fontSize: '12px', fontWeight: '500', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.2px' }}>
                                                      Tap to load {message.type}
@@ -718,8 +718,83 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                          </div>
                                      ) : (
                                           <div className="message-media-wrap" style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
-                                              {message.type === "image" ? (
-                                                  <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-md)', margin: '0 auto 4px', maxWidth: '100%', maxHeight: '300px', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                                               {!message.mediaUrl ? (
+                                                   message.type === "file" ? (
+                                                       <div className="file-attachment-card media-loading-skeleton" style={{
+                                                           background: 'rgba(0, 0, 0, 0.3)',
+                                                           border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                           borderRadius: '12px',
+                                                           padding: '12px 16px',
+                                                           display: 'flex',
+                                                           alignItems: 'center',
+                                                           gap: '12px',
+                                                           minWidth: '180px',
+                                                           maxWidth: '100%',
+                                                           width: '100%',
+                                                           boxSizing: 'border-box'
+                                                       }}>
+                                                           <div className="file-icon" style={{
+                                                               background: 'rgba(59, 130, 246, 0.15)',
+                                                               color: '#3b82f6',
+                                                               width: '36px',
+                                                               height: '36px',
+                                                               borderRadius: '10px',
+                                                               display: 'flex',
+                                                               alignItems: 'center',
+                                                               justifyContent: 'center'
+                                                           }}>
+                                                               <div className="loader-sm" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
+                                                           </div>
+                                                           <div style={{ flex: 1, minWidth: 0 }}>
+                                                               <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                   {status === "sending" ? "Uploading file..." : "Decrypting file..."}
+                                                               </div>
+                                                               <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
+                                                                   Please wait
+                                                               </div>
+                                                           </div>
+                                                       </div>
+                                                   ) : (
+                                                       <div className="media-loading-skeleton" style={{ width: '240px', height: '180px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 'var(--radius-md)' }}>
+                                                           <div className="media-upload-overlay" style={{
+                                                               position: 'absolute',
+                                                               inset: 0,
+                                                               display: 'flex',
+                                                               alignItems: 'center',
+                                                               justifyContent: 'center',
+                                                               background: 'rgba(15, 23, 42, 0.4)',
+                                                               backdropFilter: 'blur(6px)',
+                                                               borderRadius: '8px',
+                                                               zIndex: 10
+                                                           }}>
+                                                               {status === "sending" ? (
+                                                                   <svg width="48" height="48" viewBox="0 0 32 32" fill="none" style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.5))' }}>
+                                                                       <circle cx="16" cy="16" r="13" stroke="rgba(255, 255, 255, 0.15)" strokeWidth="2.5"/>
+                                                                       <circle
+                                                                           cx="16" cy="16" r="13"
+                                                                           stroke="var(--color-primary)"
+                                                                           strokeWidth="2.5"
+                                                                           strokeLinecap="round"
+                                                                           strokeDasharray={`${2 * Math.PI * 13}`}
+                                                                           strokeDashoffset={`${2 * Math.PI * 13 * (1 - (progress || 0) / 100)}`}
+                                                                           transform="rotate(-90 16 16)"
+                                                                           style={{ transition: 'stroke-dashoffset 0.15s ease' }}
+                                                                       />
+                                                                       <text x="16" y="20.5" textAnchor="middle" fontSize="10" fontWeight="900" fill="var(--color-primary)" fontFamily="inherit">Z</text>
+                                                                   </svg>
+                                                               ) : (
+                                                                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', color: '#64748b' }}>
+                                                                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ptr-arc-spin">
+                                                                           <circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/>
+                                                                       </svg>
+                                                                       <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'rgba(255,255,255,0.7)' }}>Decrypting media...</span>
+                                                                   </div>
+                                                               )}
+                                                           </div>
+                                                       </div>
+                                                   )
+                                               ) : message.type === "image" ? (
+                                                  <div className={!isMediaLoaded && !message.lqip ? "media-loading-skeleton" : ""} style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-md)', margin: '0 auto 4px', maxWidth: '100%', maxHeight: '300px', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', minWidth: !isMediaLoaded && !message.lqip ? '200px' : 'auto', minHeight: !isMediaLoaded && !message.lqip ? '150px' : 'auto' }}>
                                                       {message.lqip && !isMediaLoaded && (
                                                           <img
                                                               src={message.lqip}
@@ -736,6 +811,14 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                               }}
                                                           />
                                                       )}
+                                                      {!isMediaLoaded && !message.lqip && (
+                                                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', zIndex: 3, color: '#64748b', position: 'absolute' }}>
+                                                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ptr-arc-spin">
+                                                                  <circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/>
+                                                              </svg>
+                                                              <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'rgba(255,255,255,0.5)' }}>Loading image...</span>
+                                                          </div>
+                                                      )}
                                                       <img 
                                                           ref={imgRef}
                                                           src={getThumbnailUrl(message.mediaUrl)} 
@@ -744,7 +827,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                           loading="lazy" 
                                                           onLoad={() => setIsMediaLoaded(true)}
                                                           style={{
-                                                              opacity: isMediaLoaded ? 1 : (message.lqip ? 0 : 1),
+                                                              opacity: isMediaLoaded ? 1 : (message.lqip ? 0 : 0),
                                                               transition: 'opacity 0.3s ease-in-out',
                                                               position: 'relative',
                                                               zIndex: 2,
@@ -753,78 +836,112 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                       />
                                                   </div>
                                               ) : (message.type === "gif" || message.type === "sticker") ? (
-                                                  <img 
-                                                       ref={imgRef}
-                                                       src={message.mediaUrl} 
-                                                       alt={message.type} 
-                                                       className={message.type === "sticker" ? "message-sticker" : "message-image"} 
-                                                       loading="lazy" 
-                                                       onLoad={() => setIsMediaLoaded(true)}
-                                                  />
-                                              ) : message.type === "video" ? (
-                                                 <video 
-                                                      src={message.mediaUrl} 
-                                                      className="message-video" 
-                                                      style={{ maxWidth: '100%', borderRadius: '8px', margin: '0 auto', display: 'block' }} 
-                                                      onLoadedData={() => setIsMediaLoaded(true)}
-                                                      controls
-                                                      playsInline
-                                                  />
-                                             ) : (
-                                                  <div className="file-attachment-card" style={{
-                                                      background: 'rgba(0, 0, 0, 0.3)',
-                                                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                      borderRadius: '12px',
-                                                      padding: '12px 16px',
-                                                      display: 'flex',
-                                                      alignItems: 'center',
-                                                      gap: '12px',
-                                                      minWidth: '180px',
-                                                      maxWidth: '100%',
-                                                      width: '100%',
-                                                      boxSizing: 'border-box',
-                                                      cursor: 'pointer'
-                                                  }} onClick={(e) => {
-                                                      e.stopPropagation();
-                                                      onMediaClick(message.mediaUrl, 'file', false);
-                                                  }}>
-                                                      <div className="file-icon" style={{
-                                                          background: 'rgba(59, 130, 246, 0.15)',
-                                                          color: '#3b82f6',
-                                                          width: '36px',
-                                                          height: '36px',
-                                                          borderRadius: '10px',
-                                                          display: 'flex',
-                                                          alignItems: 'center',
-                                                          justifyContent: 'center'
-                                                      }}>
-                                                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
-                                                          </svg>
-                                                      </div>
-                                                      <div style={{ flex: 1, minWidth: 0 }}>
-                                                          <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                              {getFileName(message.mediaUrl, message.content)}
+                                                  <div className={!isMediaLoaded ? "media-loading-skeleton" : ""} style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-md)', margin: '0 auto 4px', maxWidth: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', minWidth: !isMediaLoaded ? '200px' : 'auto', minHeight: !isMediaLoaded ? '150px' : 'auto' }}>
+                                                      {!isMediaLoaded && (
+                                                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', zIndex: 3, color: '#64748b', position: 'absolute' }}>
+                                                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ptr-arc-spin">
+                                                                  <circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/>
+                                                              </svg>
+                                                              <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'rgba(255,255,255,0.5)' }}>Loading {message.type === "gif" ? "GIF" : "sticker"}...</span>
                                                           </div>
-                                                          <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-                                                              {getFileName(message.mediaUrl, message.content).split('.').pop()?.toUpperCase() || 'FILE'} File
-                                                          </div>
-                                                      </div>
-                                                     <a
-                                                         href={message.mediaUrl}
-                                                         onClick={(e) => triggerDownload(e, message.mediaUrl, message.content, senderUsername)}
-                                                         style={{ color: '#94a3b8', padding: '4px', borderRadius: '6px', transition: 'all 0.2s', cursor: 'pointer' }}
-                                                          onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-                                                          onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
-                                                     >
-                                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-                                                         </svg>
-                                                     </a>
+                                                      )}
+                                                      <img 
+                                                           ref={imgRef}
+                                                           src={message.mediaUrl} 
+                                                           alt={message.type} 
+                                                           className={message.type === "sticker" ? "message-sticker" : "message-image"} 
+                                                           loading="lazy" 
+                                                           onLoad={() => setIsMediaLoaded(true)}
+                                                           style={{
+                                                               opacity: isMediaLoaded ? 1 : 0,
+                                                               transition: 'opacity 0.3s ease-in-out',
+                                                               width: '100%',
+                                                               height: '100%',
+                                                               objectFit: 'contain'
+                                                           }}
+                                                      />
                                                   </div>
-                                             )}
-                                             
-                                             {status === "sending" && (message.type === "image" || message.type === "video") && (
+                                              ) : message.type === "video" ? (
+                                                  <div className={!isMediaLoaded ? "media-loading-skeleton" : ""} style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-md)', margin: '0 auto', maxWidth: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', minWidth: !isMediaLoaded ? '240px' : 'auto', minHeight: !isMediaLoaded ? '180px' : 'auto' }}>
+                                                      {!isMediaLoaded && (
+                                                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', zIndex: 3, color: '#64748b', position: 'absolute' }}>
+                                                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ptr-arc-spin">
+                                                                  <circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/>
+                                                              </svg>
+                                                              <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'rgba(255,255,255,0.5)' }}>Loading video...</span>
+                                                          </div>
+                                                      )}
+                                                      <video 
+                                                           src={message.mediaUrl} 
+                                                           className="message-video" 
+                                                           style={{ 
+                                                               opacity: isMediaLoaded ? 1 : 0,
+                                                               transition: 'opacity 0.3s ease-in-out',
+                                                               maxWidth: '100%', 
+                                                               borderRadius: '8px', 
+                                                               margin: '0 auto', 
+                                                               display: 'block' 
+                                                           }} 
+                                                           onLoadedData={() => setIsMediaLoaded(true)}
+                                                           controls
+                                                           playsInline
+                                                      />
+                                                  </div>
+                                              ) : (
+                                                   <div className="file-attachment-card" style={{
+                                                       background: 'rgba(0, 0, 0, 0.3)',
+                                                       border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                       borderRadius: '12px',
+                                                       padding: '12px 16px',
+                                                       display: 'flex',
+                                                       alignItems: 'center',
+                                                       gap: '12px',
+                                                       minWidth: '180px',
+                                                       maxWidth: '100%',
+                                                       width: '100%',
+                                                       boxSizing: 'border-box',
+                                                       cursor: 'pointer'
+                                                   }} onClick={(e) => {
+                                                       e.stopPropagation();
+                                                       onMediaClick(message.mediaUrl, 'file', false);
+                                                   }}>
+                                                       <div className="file-icon" style={{
+                                                           background: 'rgba(59, 130, 246, 0.15)',
+                                                           color: '#3b82f6',
+                                                           width: '36px',
+                                                           height: '36px',
+                                                           borderRadius: '10px',
+                                                           display: 'flex',
+                                                           alignItems: 'center',
+                                                           justifyContent: 'center'
+                                                       }}>
+                                                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
+                                                           </svg>
+                                                       </div>
+                                                       <div style={{ flex: 1, minWidth: 0 }}>
+                                                           <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                               {getFileName(message.mediaUrl, message.content)}
+                                                           </div>
+                                                           <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
+                                                               {getFileName(message.mediaUrl, message.content).split('.').pop()?.toUpperCase() || 'FILE'} File
+                                                           </div>
+                                                       </div>
+                                                      <a
+                                                          href={message.mediaUrl}
+                                                          onClick={(e) => triggerDownload(e, message.mediaUrl, message.content, senderUsername)}
+                                                          style={{ color: '#94a3b8', padding: '4px', borderRadius: '6px', transition: 'all 0.2s', cursor: 'pointer' }}
+                                                           onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                                                           onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
+                                                      >
+                                                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                                                          </svg>
+                                                      </a>
+                                                   </div>
+                                              )}
+                                              
+                                              {status === "sending" && message.mediaUrl && (message.type === "image" || message.type === "video") && (
                                                  <div className="media-upload-overlay" style={{
                                                      position: 'absolute',
                                                      top: 0,
