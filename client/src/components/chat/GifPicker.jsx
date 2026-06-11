@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import axiosInstance from "../../utils/axios";
 import { getFavMedia, getRecentMedia, addFavMedia, removeFavMedia, addRecentMedia } from "../../utils/mediaStorage";
 
-const LIMIT = 6;
+const LIMIT = 9;
 const MAX_RETRIES = 2;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -61,7 +61,7 @@ const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
                 setResults((prev) => (isNewSearch ? newResults : [...prev, ...newResults]));
                 const nextOffset = currentOffset + LIMIT;
                 setOffset(nextOffset);
-                // Hard-cap online queries to 6 items — never load more pages
+                // Hard-cap online queries to 9 items — never load more pages
                 setHasMore(false);
                 lastErr = null;
                 break;
