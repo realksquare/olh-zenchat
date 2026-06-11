@@ -1620,6 +1620,7 @@ select {
   flex-shrink: 0;
   color: #334155;
   background: transparent;
+  position: relative;
 }
 
 .send-btn-active {
@@ -8597,3 +8598,63 @@ select {
 
 
 @media (max-width: 768px) { .message-input-wrap { padding-bottom: 4px !important; transform: translateY(4px); } }
+
+/* Send Button Animation Styles */
+.send-btn.is-animating .send-icon {
+  animation: planeFlyAway 0.55s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.send-btn.is-animating::after {
+  content: '';
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 
+    -8px 8px 0 rgba(255, 255, 255, 0.5), 
+    -16px 16px 0 rgba(255, 255, 255, 0.25);
+  top: 50%;
+  left: 50%;
+  transform: translate3d(-50%, -50%, 0);
+  pointer-events: none;
+  animation: planeTrail 0.55s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes planeFlyAway {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  35% {
+    transform: translate3d(28px, -28px, 0) scale(0.4) rotate(15deg);
+    opacity: 0;
+  }
+  38% {
+    transform: translate3d(-28px, 28px, 0) scale(0.4) rotate(-15deg);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes planeTrail {
+  0% {
+    transform: translate3d(-50%, -50%, 0) scale(0) translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  10% {
+    transform: translate3d(-50%, -50%, 0) scale(1) translate3d(-2px, 2px, 0);
+    opacity: 0.85;
+  }
+  35% {
+    transform: translate3d(-50%, -50%, 0) scale(0.4) translate3d(14px, -14px, 0);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(-50%, -50%, 0) scale(0) translate3d(0, 0, 0);
+    opacity: 0;
+  }
+}

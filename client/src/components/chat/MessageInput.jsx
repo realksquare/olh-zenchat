@@ -279,6 +279,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const [isVoiceMode, setIsVoiceMode] = useState(false);
     // True while VoiceRecorder is in recording or preview mode — hides the text input row
     const [voiceActive, setVoiceActive] = useState(false);
+    const [isAnimatingSend, setIsAnimatingSend] = useState(false);
+    const [sendCount, setSendCount] = useState(0);
     const { sendMessage, startTyping, stopTyping, editMessage, socket } = useSocket();
 
     const showToast = (msg) => {
@@ -636,6 +638,13 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             setIsViewOnce(false);
             onCancelReply();
             clearTyping();
+            
+            setIsAnimatingSend(true);
+            setSendCount(prev => prev + 1);
+            setTimeout(() => {
+                setIsAnimatingSend(false);
+            }, 550);
+
             uploadAndSend(filesToUpload, filteredContent, replyToId, isViewOnceVal);
             return;
         }
@@ -652,6 +661,13 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             const tempId = `temp-${Date.now()}-${Math.random()}`;
             const activeChat = useChatStore.getState().activeChat;
             const isZen = useChatStore.getState().isZenMode;
+            
+            setIsAnimatingSend(true);
+            setSendCount(prev => prev + 1);
+            setTimeout(() => {
+                setIsAnimatingSend(false);
+            }, 550);
+
             addMessage(chatId, {
                 _id: tempId,
                 cid: tempId,
@@ -886,9 +902,9 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     />
                 </div>}
 
-                {!voiceActive && (content.trim() || hasMedia || editingMessage) && (
+                {!voiceActive && (content.trim() || hasMedia || editingMessage || isAnimatingSend) && (
                 <button
-                    className={`send-btn ${!sendDisabled ? "send-btn-active" : ""}`}
+                    className={`send-btn ${!sendDisabled ? "send-btn-active" : ""} ${isAnimatingSend ? "is-animating" : ""}`}
                     onClick={handleSend}
                     disabled={sendDisabled}
                     aria-label={editingMessage ? "Save edit" : "Send message"}
@@ -900,7 +916,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                             <polyline points="20 6 9 17 4 12" />
                         </svg>
                     ) : (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg key={sendCount} className="send-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="22" y1="2" x2="11" y2="13" />
                             <polygon points="22 2 15 22 11 13 2 9 22 2" />
                         </svg>
