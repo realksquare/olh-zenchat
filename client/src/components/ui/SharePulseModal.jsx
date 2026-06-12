@@ -18,71 +18,74 @@ const SharePulseModal = ({ isOpen, onClose, question, username }) => {
         }
     }, [isOpen]);
 
-    // Calculate top option details
-    let topOption = null;
-    let topPercentage = 0;
+    // Calculate voted options (only those with at least 1 vote), sorted by vote count desc
+    const votedOptions = [];
     if (question && question.options && question.options.length > 0) {
-        topOption = question.options[0];
-        let maxCount = 0;
+        const total = question.totalVotes || 1;
         question.options.forEach(opt => {
             const count = question.optionCounts?.[opt.id] || 0;
-            if (count > maxCount) {
-                maxCount = count;
-                topOption = opt;
+            if (count > 0) {
+                votedOptions.push({
+                    text: opt.text,
+                    count,
+                    percentage: Math.round((count / total) * 100)
+                });
             }
         });
-        const total = question.totalVotes || 1;
-        topPercentage = Math.round((maxCount / total) * 100);
+        votedOptions.sort((a, b) => b.count - a.count);
     }
+
+    const topOption = votedOptions[0] || null;
+    const topPercentage = topOption?.percentage || 0;
 
     // Generate Share Card Image on Canvas
     useEffect(() => {
-        if (!isOpen || !question || !topOption) return;
+        if (!isOpen || !question || votedOptions.length === 0) return;
 
         setGenerating(true);
         const canvas = document.createElement("canvas");
         canvas.width = 1080;
-        canvas.height = 1080;
-        const ctx = canvas.getContext("2d");
 
-        // Wait for fonts to load for better canvas text rendering
+        // Dynamic height: base + per-bar slot
+        const BAR_SLOT = 160; // height per option bar including gap
+        const BASE_HEIGHT = 720; // header + question + footer space
+        canvas.height = BASE_HEIGHT + votedOptions.length * BAR_SLOT;
+
+        const ctx = canvas.getContext("2d");
+        const canvasHeight = canvas.height;
+
         const drawCard = () => {
-            // 1. Beautiful Indigo/Slate Radial Gradient Background
+            // 1. Radial Gradient Background
             const bgGrad = ctx.createRadialGradient(
-                canvas.width / 2,
-                canvas.height / 2,
-                100,
-                canvas.width / 2,
-                canvas.height / 2,
-                800
+                canvas.width / 2, canvasHeight / 2, 100,
+                canvas.width / 2, canvasHeight / 2, 900
             );
             bgGrad.addColorStop(0, "#1e1b4b");
             bgGrad.addColorStop(0.5, "#0f172a");
             bgGrad.addColorStop(1, "#020617");
             ctx.fillStyle = bgGrad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillRect(0, 0, canvas.width, canvasHeight);
 
-            // 2. Translucent Glassmorphism Container with Shadow
-            ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+            // 2. Glassmorphism Card Container
+            ctx.shadowColor = "rgba(0,0,0,0.5)";
             ctx.shadowBlur = 50;
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 24;
-
-            ctx.fillStyle = "rgba(30, 41, 59, 0.4)";
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+            ctx.fillStyle = "rgba(30,41,59,0.4)";
+            ctx.strokeStyle = "rgba(255,255,255,0.08)";
             ctx.lineWidth = 2;
 
-            const boxWidth = 920;
-            const boxHeight = 860;
-            const boxX = (canvas.width - boxWidth) / 2;
-            const boxY = 110;
+            const boxPad = 80;
+            const boxWidth = canvas.width - boxPad * 2;
+            const boxHeight = canvasHeight - 140;
+            const boxX = boxPad;
+            const boxY = 80;
 
             ctx.beginPath();
             ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 36);
             ctx.fill();
             ctx.stroke();
 
-            // Reset shadows for text rendering
             ctx.shadowColor = "transparent";
             ctx.shadowBlur = 0;
             ctx.shadowOffsetX = 0;
@@ -90,117 +93,112 @@ const SharePulseModal = ({ isOpen, onClose, question, username }) => {
 
             // 3. Header Branding
             ctx.fillStyle = "#ffffff";
-            ctx.font = 'bold 64px "Outfit", "Inter", -apple-system, sans-serif';
+            ctx.font = 'bold 64px "Outfit","Inter",-apple-system,sans-serif';
             ctx.textAlign = "center";
-            ctx.fillText("ZenPulse", canvas.width / 2, 220);
+            ctx.fillText("ZenPulse", canvas.width / 2, 210);
 
             ctx.fillStyle = "#38bdf8";
-            ctx.font = '600 32px "Inter", -apple-system, sans-serif';
-            ctx.fillText("DAILY COMMUNITY OPINION", canvas.width / 2, 280);
+            ctx.font = '600 32px "Inter",-apple-system,sans-serif';
+            ctx.fillText("DAILY COMMUNITY OPINION", canvas.width / 2, 268);
 
             // 4. Wrapped Question Text
             ctx.fillStyle = "#ffffff";
-            ctx.font = 'bold 50px "Inter", -apple-system, sans-serif';
-            
+            ctx.font = 'bold 46px "Inter",-apple-system,sans-serif';
             const words = question.question.split(" ");
             let line = "";
-            let y = 430;
-            const maxQuestionWidth = 780;
-
+            let y = 390;
+            const maxQW = 800;
             for (let n = 0; n < words.length; n++) {
                 const testLine = line + words[n] + " ";
-                const metrics = ctx.measureText(testLine);
-                if (metrics.width > maxQuestionWidth && n > 0) {
+                if (ctx.measureText(testLine).width > maxQW && n > 0) {
                     ctx.fillText(line, canvas.width / 2, y);
                     line = words[n] + " ";
-                    y += 70;
+                    y += 64;
                 } else {
                     line = testLine;
                 }
             }
             ctx.fillText(line, canvas.width / 2, y);
 
-            // 5. Styled Option Bar with Percentage Progress Fill
-            y += 80;
-            const barWidth = 760;
-            const barHeight = 130;
+            // 5. All voted option bars
+            const barWidth = 860;
+            const barHeight = 110;
             const barX = (canvas.width - barWidth) / 2;
-            const barY = y;
+            let barStartY = y + 70;
 
-            // Base Bar Background
-            ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.roundRect(barX, barY, barWidth, barHeight, 20);
-            ctx.fill();
-            ctx.stroke();
+            votedOptions.forEach((opt, idx) => {
+                const barY = barStartY + idx * BAR_SLOT;
 
-            // Progress Bar Fill (Royal Blue to Cyan Gradient)
-            const fillWidth = (barWidth * topPercentage) / 100;
-            if (fillWidth > 0) {
-                const progressGrad = ctx.createLinearGradient(barX, 0, barX + fillWidth, 0);
-                progressGrad.addColorStop(0, "#2563eb");
-                progressGrad.addColorStop(1, "#06b6d4");
-                ctx.fillStyle = progressGrad;
-
+                // Bar background
+                ctx.fillStyle = "rgba(255,255,255,0.04)";
+                ctx.strokeStyle = "rgba(255,255,255,0.08)";
+                ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.roundRect(
-                    barX,
-                    barY,
-                    fillWidth,
-                    barHeight,
-                    [20, topPercentage >= 98 ? 20 : 0, topPercentage >= 98 ? 20 : 0, 20]
-                );
+                ctx.roundRect(barX, barY, barWidth, barHeight, 18);
                 ctx.fill();
-            }
+                ctx.stroke();
 
-            // Truncate Option Text to prevent overlap with percentage
-            ctx.font = 'bold 36px "Inter", -apple-system, sans-serif';
-            const pctText = `${topPercentage}% agreed`;
-            const pctWidth = ctx.measureText(pctText).width;
-            const maxOptWidth = barWidth - pctWidth - 110;
-
-            let optText = topOption.text;
-            let optWidth = ctx.measureText(optText).width;
-            if (optWidth > maxOptWidth) {
-                while (optWidth > maxOptWidth && optText.length > 0) {
-                    optText = optText.slice(0, -1);
-                    optWidth = ctx.measureText(optText + "...").width;
+                // Progress fill
+                const fillWidth = (barWidth * opt.percentage) / 100;
+                if (fillWidth > 0) {
+                    // Top bar uses blue-cyan gradient, rest use a slightly muted variant
+                    const grad = ctx.createLinearGradient(barX, 0, barX + fillWidth, 0);
+                    if (idx === 0) {
+                        grad.addColorStop(0, "#2563eb");
+                        grad.addColorStop(1, "#06b6d4");
+                    } else {
+                        grad.addColorStop(0, "#1d4ed8");
+                        grad.addColorStop(1, "#0284c7");
+                    }
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.roundRect(
+                        barX, barY, fillWidth, barHeight,
+                        [18, opt.percentage >= 98 ? 18 : 4, opt.percentage >= 98 ? 18 : 4, 18]
+                    );
+                    ctx.fill();
                 }
-                optText += "...";
-            }
 
-            // Draw Texts over the option progress bar
-            ctx.fillStyle = "#ffffff";
-            ctx.textAlign = "left";
-            ctx.fillText(optText, barX + 45, barY + 76);
+                // Labels
+                ctx.font = 'bold 34px "Inter",-apple-system,sans-serif';
+                const pctText = `${opt.percentage}% agreed`;
+                const pctW = ctx.measureText(pctText).width;
+                const maxOptW = barWidth - pctW - 100;
 
-            ctx.fillStyle = "#ffffff";
-            ctx.textAlign = "right";
-            ctx.fillText(pctText, barX + barWidth - 45, barY + 76);
+                let optText = opt.text;
+                while (ctx.measureText(optText).width > maxOptW && optText.length > 0) {
+                    optText = optText.slice(0, -1);
+                }
+                if (optText !== opt.text) optText += "...";
 
-            // 6. Footer Invite CTA
+                ctx.fillStyle = "#ffffff";
+                ctx.textAlign = "left";
+                ctx.fillText(optText, barX + 40, barY + 63);
+                ctx.textAlign = "right";
+                ctx.fillText(pctText, barX + barWidth - 40, barY + 63);
+            });
+
+            // 6. Footer CTA
+            const footerY = canvasHeight - 80;
             ctx.fillStyle = "#94a3b8";
-            ctx.font = '500 28px "Inter", -apple-system, sans-serif';
+            ctx.font = '500 28px "Inter",-apple-system,sans-serif';
             ctx.textAlign = "center";
-            ctx.fillText("Vote on today's pulse at", canvas.width / 2, 850);
+            ctx.fillText("Vote on today's pulse at", canvas.width / 2, footerY - 48);
 
             ctx.fillStyle = "#38bdf8";
-            ctx.font = 'bold 32px "Inter", -apple-system, sans-serif';
-            ctx.fillText(`olh-zenchat.vercel.app/zenpulse?ref=${username || "guest"}`, canvas.width / 2, 900);
+            ctx.font = 'bold 30px "Inter",-apple-system,sans-serif';
+            ctx.fillText(`olh-zenchat.vercel.app/zenpulse?ref=${username || "guest"}`, canvas.width / 2, footerY);
 
-            // Convert to Blob
             canvas.toBlob(blob => {
                 setImageBlob(blob);
                 setGenerating(false);
             }, "image/png");
         };
 
-        // Delay slightly to ensure canvas fonts parse correctly
         const timer = setTimeout(drawCard, 200);
         return () => clearTimeout(timer);
-    }, [isOpen, question, topOption, username]);
+    }, [isOpen, question, username]);
+
 
     // Handle Blob URL lifecycle
     useEffect(() => {
@@ -212,9 +210,10 @@ const SharePulseModal = ({ isOpen, onClose, question, username }) => {
     }, [imageBlob]);
 
     const inviteLink = `${window.location.origin}/zenpulse?ref=${username || "guest"}`;
+    const resultsLines = votedOptions.map(o => `  - ${o.text}: ${o.percentage}% agreed`).join("\n");
     const shareMessage = `Check out the results for yesterday's ZenPulse:\n\n` +
         `"${question?.question}"\n\n` +
-        `Top Opinion: ${topOption?.text} (${topPercentage}% agreed)\n\n` +
+        `Results:\n${resultsLines}\n\n` +
         `Vote on today's pulse and see what the community thinks here: ${inviteLink}`;
 
     const handleAction = async () => {
