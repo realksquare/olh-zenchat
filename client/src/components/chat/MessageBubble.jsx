@@ -166,7 +166,9 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const { reactToMessage } = useSocket();
     const [showReactionsPill, setShowReactionsPill] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
-    const [isMediaLoaded, setIsMediaLoaded] = useState(false);
+    const isLocalBlob = (message.type === "image" || message.type === "video" || message.type === "gif") &&
+        !!message.mediaUrl?.startsWith("blob:");
+    const [isMediaLoaded, setIsMediaLoaded] = useState(isLocalBlob);
     const [manualLoad, setManualLoad] = useState(false);
     
     // Swipe to reply state
@@ -794,7 +796,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                        </div>
                                                    )
                                                ) : message.type === "image" ? (
-                                                  <div className={!isMediaLoaded && !message.lqip ? "media-loading-skeleton" : ""} style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-md)', margin: '0 auto 4px', maxWidth: '100%', maxHeight: '300px', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', minWidth: !isMediaLoaded && !message.lqip ? '200px' : 'auto', minHeight: !isMediaLoaded && !message.lqip ? '150px' : 'auto' }}>
+                                                  <div className={!isMediaLoaded ? "media-loading-skeleton" : ""} style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-md)', margin: '0 auto 4px', maxWidth: '100%', maxHeight: '300px', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', minWidth: '200px', minHeight: '150px' }}>
                                                       {message.lqip && !isMediaLoaded && (
                                                           <img
                                                               src={message.lqip}
@@ -824,10 +826,10 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                           src={getThumbnailUrl(message.mediaUrl)} 
                                                           alt={message.type} 
                                                           className="message-image" 
-                                                          loading="lazy" 
+                                                          loading="eager" 
                                                           onLoad={() => setIsMediaLoaded(true)}
                                                           style={{
-                                                              opacity: isMediaLoaded ? 1 : (message.lqip ? 0 : 0),
+                                                              opacity: isMediaLoaded ? 1 : 0,
                                                               transition: 'opacity 0.3s ease-in-out',
                                                               position: 'relative',
                                                               zIndex: 2,
@@ -850,7 +852,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                            src={message.mediaUrl} 
                                                            alt={message.type} 
                                                            className={message.type === "sticker" ? "message-sticker" : "message-image"} 
-                                                           loading="lazy" 
+                                                           loading="eager" 
                                                            onLoad={() => setIsMediaLoaded(true)}
                                                            style={{
                                                                opacity: isMediaLoaded ? 1 : 0,
