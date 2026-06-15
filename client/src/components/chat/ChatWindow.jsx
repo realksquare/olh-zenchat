@@ -658,6 +658,29 @@ const ChatWindow = ({ onBack }) => {
     const setActiveViewerMoments = useMomentStore((s) => s.setActiveViewerMoments);
     const [showDisappearingMenu, setShowDisappearingMenu] = useState(false);
     const [showBio, setShowBio] = useState(false);
+    const bioContainerRef = useRef(null);
+    const bioContentRef = useRef(null);
+    const [bioMarqueeDist, setBioMarqueeDist] = useState(0);
+
+    useEffect(() => {
+        const measure = () => {
+            if (!bioContainerRef.current || !bioContentRef.current) {
+                setBioMarqueeDist(0);
+                return;
+            }
+            const contentWidth = bioContentRef.current.scrollWidth;
+            const containerWidth = bioContainerRef.current.offsetWidth;
+            const scrollDist = contentWidth - containerWidth;
+            setBioMarqueeDist(scrollDist > 0 ? -(scrollDist + 10) : 0);
+        };
+
+        if (showBio && otherUser?.bio) {
+            const timer = setTimeout(measure, 150);
+            return () => clearTimeout(timer);
+        } else {
+            setBioMarqueeDist(0);
+        }
+    }, [showBio, otherUser?.bio]);
 
     useEffect(() => {
         if (!otherUser?.bio) {
@@ -1235,22 +1258,32 @@ const ChatWindow = ({ onBack }) => {
                         </span>
                         {otherUser?.bio && (
                             <span 
+                                ref={bioContainerRef}
                                 className="chat-header-status"
                                 style={{ 
                                     gridArea: '1 / 1', 
                                     whiteSpace: 'nowrap', 
                                     fontStyle: 'italic', 
                                     overflow: 'hidden', 
-                                    textOverflow: 'ellipsis', 
                                     transition: 'all 0.4s ease', 
                                     opacity: showBio ? 0.9 : 0,
                                     transform: showBio ? 'translateY(0)' : 'translateY(5px)',
                                     pointerEvents: showBio ? 'auto' : 'none',
-                                    lineHeight: '1.3'
+                                    lineHeight: '1.3',
+                                    display: 'block'
                                 }}
                                 title={otherUser.bio}
                             >
-                                "{otherUser.bio}"
+                                <span
+                                    ref={bioContentRef}
+                                    className={bioMarqueeDist < 0 ? "marquee-bidirectional" : ""}
+                                    style={{
+                                        display: 'inline-block',
+                                        ...(bioMarqueeDist < 0 ? { "--marquee-dist": `${bioMarqueeDist}px` } : { textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', verticalAlign: 'bottom', maxWidth: '100%' })
+                                    }}
+                                >
+                                    "{otherUser.bio}"
+                                </span>
                             </span>
                         )}
                     </div>
