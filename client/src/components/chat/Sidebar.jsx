@@ -557,15 +557,15 @@ const Sidebar = ({ onChatSelect }) => {
 
                     {!isLoadingChats && filteredChats.length === 0 && (
                         <div className="chats-empty">
-                            {activeTab === "contacts" ? (
+                            {activeFilter === "unread" ? (
+                                <>
+                                    <p>No unread {activeTab === "contacts" ? "contacts" : "chats"}</p>
+                                    <span>You're all caught up!</span>
+                                </>
+                            ) : activeTab === "contacts" ? (
                                 <>
                                     <p>No contacts yet</p>
                                     <span>Tag users as contacts from the three-dot menu on any chat</span>
-                                </>
-                            ) : activeFilter === "unread" ? (
-                                <>
-                                    <p>No unread chats</p>
-                                    <span>You're all caught up!</span>
                                 </>
                             ) : (
                                 <>
