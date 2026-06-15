@@ -37,7 +37,7 @@ const FAQModal = ({ isOpen, onClose }) => {
         },
         {
             q: "What are the standout features of ZenChat?",
-            a: "You get instant messaging, threaded replies, view-once media, and chat pinning. Everything is optimized to work beautifully even on unstable networks."
+            a: "You get instant messaging, threaded replies, view-once media, chat pinning, and our newest additions: ZenMode for focused private conversations, ZenPulse for daily community opinions, and #Moments for sharing temporary updates. Everything is optimized to work beautifully even on unstable networks."
         },
         {
             q: "What is SmartPayload-OPtimization (#SP-OP)?",
@@ -74,7 +74,7 @@ const FAQModal = ({ isOpen, onClose }) => {
                             </div>
                         ))}
                         <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', fontSize: '0.78rem', color: '#64748b', textAlign: 'center' }}>
-                            &copy; 2026 OLH ZenChat | v1.0b Pre-release
+                            &copy; 2026 OLH ZenChat | v1.1 (Stable)
                         </div>
                     </div>
                 </div>
@@ -105,7 +105,7 @@ const FAQModal = ({ isOpen, onClose }) => {
                         ))}
                     </div>
                     <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', fontSize: '0.8rem', color: '#64748b', textAlign: 'center' }}>
-                        &copy; 2026 OLH ZenChat | v1.0b Pre-release
+                        &copy; 2026 OLH ZenChat | v1.1 (Stable)
                     </div>
                 </div>
             </div>

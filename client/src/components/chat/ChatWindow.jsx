@@ -218,7 +218,7 @@ const ZenParticleCanvas = memo(({ phase, noiseElements }) => {
             try {
                 const audioCtx = getAudioContext();
                 if (!audioCtx) return;
-                
+
                 audioDest = audioCtx.createMediaStreamDestination();
                 setRecordingDestination(audioDest);
 
@@ -240,14 +240,14 @@ const ZenParticleCanvas = memo(({ phase, noiseElements }) => {
                     if (chunksRef.current.length === 0) return;
                     const blob = new Blob(chunksRef.current, { type: 'video/webm' });
                     const url = URL.createObjectURL(blob);
-                    
+
                     const a = document.createElement("a");
                     a.href = url;
                     a.download = "zen_cinematic.webm";
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
-                    
+
                     setRecordingDestination(null);
                 };
 
@@ -349,20 +349,20 @@ const ZenParticleCanvas = memo(({ phase, noiseElements }) => {
                         if (isImploding) {
                             const targetX = canvas.width / 2;
                             const targetY = canvas.height / 2;
-                            
+
                             // Stagger the suck-in start based on each card's unique random delay!
                             const cardProgress = Math.min(1, Math.max(0, (implosionElapsed - el.delay * 1000) / 1600));
-                            
+
                             // High-end dramatic cubic ease-in formula: accelerates near the gravity well center!
                             const easeProgress = Math.pow(cardProgress, 3.5);
-                            
+
                             // Random rotational spiral orbital whirlpool path!
                             const angleOffset = (1 - easeProgress) * el.rot * 0.15;
                             const dx = cx - targetX;
                             const dy = cy - targetY;
                             const currentDist = Math.sqrt(dx * dx + dy * dy) * (1 - easeProgress);
                             const currentAngle = Math.atan2(dy, dx) + angleOffset;
-                            
+
                             cx = targetX + Math.cos(currentAngle) * currentDist;
                             cy = targetY + Math.sin(currentAngle) * currentDist;
                             scale = scale * (1 - easeProgress);
@@ -434,8 +434,8 @@ const ZenParticleCanvas = memo(({ phase, noiseElements }) => {
                 }
 
                 // Shake / Stop-Motion Jitter typography for "THE NOISE IS LOUD." text
-                const textOpacity = currentPhase === "noise" 
-                    ? 0.9 
+                const textOpacity = currentPhase === "noise"
+                    ? 0.9
                     : Math.max(0, 0.9 * (1 - implosionElapsed / 1000)); // Fades out completely in 1 second during implosion
 
                 if (textOpacity > 0) {
@@ -446,7 +446,7 @@ const ZenParticleCanvas = memo(({ phase, noiseElements }) => {
 
                     const textStr = "THE NOISE IS LOUD.";
                     const charArray = textStr.split("");
-                    
+
                     // Pre-measure total width to center the shaky stop-motion text
                     let totalWidth = 0;
                     const charWidths = charArray.map(c => {
@@ -457,7 +457,7 @@ const ZenParticleCanvas = memo(({ phase, noiseElements }) => {
 
                     let startX = canvas.width / 2 - totalWidth / 2;
                     const centerY = canvas.height / 2;
-                    
+
                     // Stop-motion frame jitter step (updates 10 times a second)
                     const jitterSeed = Math.floor(now / 100);
 
@@ -467,7 +467,7 @@ const ZenParticleCanvas = memo(({ phase, noiseElements }) => {
                         const seedX = Math.sin(charIdx * 17.3 + jitterSeed * 4.9) * 43758.5453;
                         const seedY = Math.cos(charIdx * 9.2 + jitterSeed * 7.4) * 12345.6789;
                         const seedR = Math.sin(charIdx * 23.5 + jitterSeed * 11.2) * 98765.4321;
-                        
+
                         const jitterX = (seedX - Math.floor(seedX)) * 3.5 - 1.75; // [-1.75px, 1.75px]
                         const jitterY = (seedY - Math.floor(seedY)) * 3.5 - 1.75; // [-1.75px, 1.75px]
                         const jitterAngle = ((seedR - Math.floor(seedR)) * 6.5 - 3.25) * Math.PI / 180; // [-3.25deg, 3.25deg]
@@ -477,7 +477,7 @@ const ZenParticleCanvas = memo(({ phase, noiseElements }) => {
 
                         ctx.translate(charCX + jitterX, centerY + jitterY);
                         ctx.rotate(jitterAngle);
-                        
+
                         ctx.fillStyle = `rgba(255, 255, 255, ${textOpacity})`;
                         ctx.fillText(char, -charW / 2, 0);
 
@@ -584,12 +584,12 @@ const ChatWindow = ({ onBack }) => {
         activeChat && s.messages[activeChat._id] ? s.messages[activeChat._id] : EMPTY_MESSAGES
     );
 
-    const otherParticipant = useMemo(() => 
+    const otherParticipant = useMemo(() =>
         activeChat?.participants?.find((p) => {
             const pid = p?._id?.toString() || p?.toString();
             return pid && pid !== user?._id?.toString();
-        }), 
-    [activeChat, user?._id]);
+        }),
+        [activeChat, user?._id]);
 
     const isDeleted = useMemo(() => {
         if (!activeChat || activeChat.isGroup) return false;
@@ -602,8 +602,8 @@ const ChatWindow = ({ onBack }) => {
     const isPeerOnline = useMemo(() => {
         if (!otherUser) return false;
         if (otherUser.presenceHidden) return false;
-        return !isOffline && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked && 
-               (otherUser.isOnline || onlineUsers.has(otherUser._id) || onlineUsers.has(otherUser._id?.toString()));
+        return !isOffline && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked &&
+            (otherUser.isOnline || onlineUsers.has(otherUser._id) || onlineUsers.has(otherUser._id?.toString()));
     }, [otherUser, isOffline, activeChat?.blockStatus?.iBlocked, activeChat?.blockStatus?.theyBlocked, onlineUsers]);
 
     const messages = useMemo(() => {
@@ -619,12 +619,12 @@ const ChatWindow = ({ onBack }) => {
         return result;
     }, [rawMessages, showOnlyStarred, user?._id]);
 
-    const { 
-        joinChat, 
-        leaveChat, 
-        markAsRead, 
-        deleteMessage, 
-        updateLowBandwidth, 
+    const {
+        joinChat,
+        leaveChat,
+        markAsRead,
+        deleteMessage,
+        updateLowBandwidth,
         socket,
         setZenWaitingState,
         startZenTimer,
@@ -851,7 +851,7 @@ const ChatWindow = ({ onBack }) => {
     useEffect(() => {
         const currentChatId = activeChat?._id;
         const currentIsZenMode = isZenMode;
-        
+
         return () => {
             if (currentIsZenMode && currentChatId) {
                 const msgs = useChatStore.getState().messages[currentChatId] || [];
@@ -980,13 +980,13 @@ const ChatWindow = ({ onBack }) => {
             offlineCountdownIntervalRef.current = null;
         }
         setOfflineCountdown(null);
-        
+
         if (socket?.connected && activeChat?._id && user?._id && otherUserId) {
-            socket.emit("zen_exit_respond", { 
-                chatId: activeChat._id, 
-                responderId: user._id, 
-                requesterId: otherUserId, 
-                accepted: true 
+            socket.emit("zen_exit_respond", {
+                chatId: activeChat._id,
+                responderId: user._id,
+                requesterId: otherUserId,
+                accepted: true
             });
         }
         triggerCircularReveal(window.innerWidth / 2, window.innerHeight / 2, false);
@@ -996,10 +996,10 @@ const ChatWindow = ({ onBack }) => {
     useEffect(() => {
         if (isZenMode && !isPeerOnline) {
             if (offlineCountdownIntervalRef.current) return;
-            
+
             let remaining = 30;
             setOfflineCountdown(remaining);
-            
+
             offlineCountdownIntervalRef.current = setInterval(() => {
                 remaining -= 1;
                 if (remaining > 0) {
@@ -1008,13 +1008,13 @@ const ChatWindow = ({ onBack }) => {
                     clearInterval(offlineCountdownIntervalRef.current);
                     offlineCountdownIntervalRef.current = null;
                     setOfflineCountdown(null);
-                    
+
                     if (socket?.connected) {
-                        socket.emit("zen_exit_respond", { 
-                            chatId: activeChat._id, 
-                            responderId: user._id, 
-                            requesterId: otherUserId, 
-                            accepted: true 
+                        socket.emit("zen_exit_respond", {
+                            chatId: activeChat._id,
+                            responderId: user._id,
+                            requesterId: otherUserId,
+                            accepted: true
                         });
                     }
                     triggerCircularReveal(window.innerWidth / 2, window.innerHeight / 2, false);
@@ -1025,14 +1025,14 @@ const ChatWindow = ({ onBack }) => {
             if (offlineCountdownIntervalRef.current) {
                 clearInterval(offlineCountdownIntervalRef.current);
                 offlineCountdownIntervalRef.current = null;
-                
+
                 if (isZenMode && isPeerOnline) {
                     showZenToast("success", `${displayName || "User"} came back online`);
                 }
             }
             setOfflineCountdown(null);
         }
-        
+
         return () => {
             if (offlineCountdownIntervalRef.current) {
                 clearInterval(offlineCountdownIntervalRef.current);
@@ -1106,7 +1106,7 @@ const ChatWindow = ({ onBack }) => {
     useEffect(() => {
         const prevLen = prevMessagesLenRef.current;
         prevMessagesLenRef.current = messages.length;
-        
+
         if (messages.length > prevLen) {
             if (showScrollDown && !isLoadingOlderRef.current) {
                 setUnreadScrollCount(prev => prev + (messages.length - prevLen));
@@ -1241,13 +1241,13 @@ const ChatWindow = ({ onBack }) => {
                         {otherUser?.isVerified && <span style={{ flexShrink: 0, display: 'flex' }}><VerifiedTick /></span>}
                     </span>
                     <div className="chat-header-status-wrapper" style={{ display: 'grid', alignItems: 'start', minWidth: 0 }}>
-                        <span 
+                        <span
                             className={`chat-header-status ${isPeerOnline ? "status-online" : ""}`}
-                            style={{ 
-                                gridArea: '1 / 1', 
-                                whiteSpace: 'nowrap', 
-                                transition: 'all 0.4s ease', 
-                                overflow: 'hidden', 
+                            style={{
+                                gridArea: '1 / 1',
+                                whiteSpace: 'nowrap',
+                                transition: 'all 0.4s ease',
+                                overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 opacity: showBio ? 0 : 1,
                                 transform: showBio ? 'translateY(-5px)' : 'translateY(0)',
@@ -1257,15 +1257,15 @@ const ChatWindow = ({ onBack }) => {
                             {getStatusText()}
                         </span>
                         {otherUser?.bio && (
-                            <span 
+                            <span
                                 ref={bioContainerRef}
                                 className="chat-header-status"
-                                style={{ 
-                                    gridArea: '1 / 1', 
-                                    whiteSpace: 'nowrap', 
-                                    fontStyle: 'italic', 
-                                    overflow: 'hidden', 
-                                    transition: 'all 0.4s ease', 
+                                style={{
+                                    gridArea: '1 / 1',
+                                    whiteSpace: 'nowrap',
+                                    fontStyle: 'italic',
+                                    overflow: 'hidden',
+                                    transition: 'all 0.4s ease',
                                     opacity: showBio ? 0.9 : 0,
                                     transform: showBio ? 'translateY(0)' : 'translateY(5px)',
                                     pointerEvents: showBio ? 'auto' : 'none',
@@ -1334,7 +1334,7 @@ const ChatWindow = ({ onBack }) => {
                         style={{ flexShrink: 0 }}
                     >
                         <svg width="22" height="22" viewBox="0 0 32 32" fill="none" style={{ display: 'block' }}>
-                            <circle cx="16" cy="16" r="13" stroke="currentColor" strokeWidth="2.2" fill="none" opacity="0.4"/>
+                            <circle cx="16" cy="16" r="13" stroke="currentColor" strokeWidth="2.2" fill="none" opacity="0.4" />
                             <circle cx="16" cy="16" r="13" stroke="var(--color-primary)" strokeWidth="2.2" fill="none" strokeDasharray={`${2 * Math.PI * 13}`} strokeDashoffset={isZenMode ? 0 : `${2 * Math.PI * 13}`} transform="rotate(-90 16 16)" style={{ transition: 'stroke-dashoffset 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }} />
                             <text x="16" y="20.5" textAnchor="middle" fontSize="10.5" fontWeight="900" fill={isZenMode ? "var(--color-primary)" : "currentColor"} fontFamily="inherit">Z</text>
                         </svg>
@@ -1410,7 +1410,7 @@ const ChatWindow = ({ onBack }) => {
                     const showDateDivider = msgDate !== prevDate;
 
                     const zenMessagesAfter = messages.slice(idx + 1).filter(m => m.isZenMessage).length;
-                    
+
                     let zenFadeClass = "";
                     if (isZenMode) {
                         if (!msg.isZenMessage) {
@@ -1568,10 +1568,10 @@ const ChatWindow = ({ onBack }) => {
                     disabled={isDeleted || showOnlyStarred || activeChat?.blockStatus?.iBlocked || activeChat?.blockStatus?.theyBlocked}
                     disabledPlaceholder={
                         isDeleted ? "Account deleted..." :
-                        showOnlyStarred ? "Sending disabled in Fav mode..." :
-                        activeChat?.blockStatus?.iBlocked ? "You have blocked this user" :
-                        activeChat?.blockStatus?.theyBlocked ? "You have been blocked by this user" :
-                        "Sending disabled..."
+                            showOnlyStarred ? "Sending disabled in Fav mode..." :
+                                activeChat?.blockStatus?.iBlocked ? "You have blocked this user" :
+                                    activeChat?.blockStatus?.theyBlocked ? "You have been blocked by this user" :
+                                        "Sending disabled..."
                     }
                 />
             )}
@@ -1616,7 +1616,7 @@ const ChatWindow = ({ onBack }) => {
                 }}
             />
 
-            <MomentViewer 
+            <MomentViewer
                 moments={activeViewerMoments || []}
                 isOpen={!!activeViewerMoments}
                 onClose={() => setActiveViewerMoments(null)}
@@ -1641,7 +1641,7 @@ const ChatWindow = ({ onBack }) => {
             )}
 
             {showActualForwardModal && (
-                <ForwardModal 
+                <ForwardModal
                     onClose={() => setShowActualForwardModal(false)}
                     onForward={async (targetChatIds) => {
                         const { forwardMessages } = useChatStore.getState();
@@ -1666,7 +1666,7 @@ const ChatWindow = ({ onBack }) => {
                 </div>
             )}
             */}
-            
+
             {revealCircle && (
                 <div
                     className={`zen-reveal-circle ${revealCircle.fading ? 'fade-out' : ''}`}

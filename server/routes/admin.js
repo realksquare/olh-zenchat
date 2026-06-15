@@ -148,7 +148,7 @@ router.post("/push", authMiddleware, adminCheck, async (req, res) => {
             for (const t of u.fcmTokens) {
                 if (t.token) {
                     promises.push(
-                        sendPushNotification(u._id, t.token, title, body)
+                        sendPushNotification(u._id, t.token, title, body, { tag: "admin-broadcast" })
                             .then(success => success ? 1 : 0)
                             .catch(err => {
                                 console.error(`Error sending broadcast notification to user ${u._id}:`, err);

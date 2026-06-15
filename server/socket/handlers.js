@@ -651,7 +651,8 @@ const registerSocketHandlers = (io) => {
                                     chatId: chatId.toString(),
                                     messageId: message._id.toString(),
                                     type: 'new_message',
-                                    isViewOnce: populated.isViewOnce ? "true" : "false"
+                                    isViewOnce: populated.isViewOnce ? "true" : "false",
+                                    tag: `chat-${chatId.toString()}`
                                 })
                             );
                             const results = await Promise.all(sendPromises);
@@ -831,7 +832,8 @@ const registerSocketHandlers = (io) => {
                                 sendPushNotification(targetUser._id, tkn, title, body, {
                                     chatId: chatId.toString(),
                                     messageId: messageId.toString(),
-                                    type: 'reaction'
+                                    type: 'reaction',
+                                    tag: `chat-${chatId.toString()}`
                                 }).catch(err => console.error("[Reaction Push] Error:", err));
                             });
                         }

@@ -91,7 +91,7 @@ const startCronJobs = () => {
                                         tokenData.token,
                                         "ZenChat Daily Digest",
                                         bodyText,
-                                        { type: "daily_digest" }
+                                        { type: "daily_digest", tag: "daily-digest" }
                                     );
                                 }
                                 

@@ -86,69 +86,70 @@ try {
             newBody = "Image - Sent a view-once media";
         }
 
-        const notifications = await self.registration.getNotifications({ tag: 'zenchat-notif' });
-        
-        if (notifications.length > 0) {
-            let senders = new Set([newTitle]);
-            let existingBodies = [];
-            let totalMessages = 1;
-            
-            notifications.forEach(n => {
-                if (n.data?.senderName) {
-                    senders.add(n.data.senderName);
-                } else if (n.title !== 'ZenChat') {
-                    senders.add(n.title);
-                }
-                
-                if (n.data?.messages) {
-                    existingBodies = existingBodies.concat(n.data.messages);
-                } else if (n.title !== 'ZenChat') {
-                    existingBodies.push(n.body);
-                }
-                
-                totalMessages += (n.data?.msgCount || 1);
-                n.close();
-            });
+        const tag = payload.data?.tag || payload.notification?.tag || 'zenchat-notif';
 
-            existingBodies.push(newBody);
-            
-            let finalTitle, finalBody;
-            if (senders.size === 1) {
-                finalTitle = Array.from(senders)[0];
-                finalBody = existingBodies.slice(-4).join('\n');
-            } else {
-                finalTitle = 'ZenChat';
-                finalBody = `${totalMessages} new messages from ${senders.size} chats`;
+        if (tag.startsWith('chat-')) {
+            const notifications = await self.registration.getNotifications({ tag });
+            if (notifications.length > 0) {
+                let senders = new Set([newTitle]);
+                let existingBodies = [];
+                let totalMessages = 1;
+                
+                notifications.forEach(n => {
+                    if (n.data?.senderName) {
+                        senders.add(n.data.senderName);
+                    } else {
+                        senders.add(n.title);
+                    }
+                    
+                    if (n.data?.messages) {
+                        existingBodies = existingBodies.concat(n.data.messages);
+                    } else {
+                        existingBodies.push(n.body);
+                    }
+                    
+                    totalMessages += (n.data?.msgCount || 1);
+                    n.close();
+                });
+
+                existingBodies.push(newBody);
+                
+                const finalTitle = Array.from(senders)[0] || newTitle;
+                const finalBody = existingBodies.slice(-4).join('\n');
+                
+                return self.registration.showNotification(finalTitle, {
+                    body: finalBody,
+                    icon: '/logo192.png',
+                    badge: '/logo192.png',
+                    tag: tag,
+                    renotify: true,
+                    silent: false,
+                    data: {
+                        url: payload.fcmOptions?.link || payload.data?.url || '/',
+                        senderName: finalTitle,
+                        messages: existingBodies,
+                        msgCount: totalMessages,
+                        chatId: payload.data?.chatId,
+                        type: payload.data?.type
+                    }
+                });
             }
-            
-            return self.registration.showNotification(finalTitle, {
-                body: finalBody,
-                icon: '/logo192.png',
-                badge: '/logo192.png',
-                tag: 'zenchat-notif',
-                renotify: true,
-                silent: false,
-                data: {
-                    url: '/',
-                    senderName: senders.size === 1 ? finalTitle : null,
-                    messages: senders.size === 1 ? existingBodies : [],
-                    msgCount: totalMessages
-                }
-            });
         }
 
         const notificationOptions = {
             body: newBody,
             icon: '/logo192.png',
             badge: '/logo192.png',
-            tag: 'zenchat-notif',
+            tag: tag,
             renotify: true,
             silent: false,
             data: {
                 url: payload.fcmOptions?.link || payload.data?.url || '/',
                 senderName: newTitle,
                 messages: [newBody],
-                msgCount: 1
+                msgCount: 1,
+                chatId: payload.data?.chatId,
+                type: payload.data?.type || payload.data?.tag
             }
         };
 
