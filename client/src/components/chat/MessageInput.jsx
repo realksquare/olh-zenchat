@@ -697,6 +697,24 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
         stopTyping(chatId);
     };
 
+    const handlePaste = (e) => {
+        const items = e.clipboardData?.items;
+        if (!items) return;
+
+        const files = [];
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].type.startsWith("image/") || items[i].type.startsWith("video/")) {
+                const file = items[i].getAsFile();
+                if (file) files.push(file);
+            }
+        }
+
+        if (files.length > 0) {
+            e.preventDefault();
+            handleFilesSelected(files);
+        }
+    };
+
     const handleKeyDown = (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
@@ -888,6 +906,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                         value={content}
                         onChange={handleChange}
                         onKeyDown={handleKeyDown}
+                        onPaste={handlePaste}
                         onFocus={() => {
                             if (window.innerWidth <= 768) {
                                 setTimeout(() => {
