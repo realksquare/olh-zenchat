@@ -95,6 +95,7 @@ const ZenPulseTab = () => {
     };
 
     const hasVotedToday = myVote?.questionId === todayQuestion?._id || votedQuestionIds.includes(todayQuestion?._id);
+    const highlightedOption = (hasVotedToday && myVote?.questionId === todayQuestion?._id) ? myVote.optionId : selectedOption;
     const isFrozen = !isLoading && !todayQuestion && streak.current > 0;
 
     const loadMoreHistory = () => {
@@ -147,7 +148,7 @@ const ZenPulseTab = () => {
                                 {todayQuestion.options.map(opt => (
                                     <button 
                                         key={opt.id}
-                                        className={`pulse-opt-btn ${selectedOption === opt.id ? 'selected' : ''}`}
+                                        className={`pulse-opt-btn ${highlightedOption === opt.id ? 'selected' : ''}`}
                                         onClick={() => !hasVotedToday && setSelectedOption(opt.id)}
                                         style={{ fontFamily: getFontFamily(opt.text), opacity: hasVotedToday ? 0.7 : 1, cursor: hasVotedToday ? 'default' : 'pointer' }}
                                         disabled={hasVotedToday}

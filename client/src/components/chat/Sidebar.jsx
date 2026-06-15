@@ -17,6 +17,7 @@ import MomentViewer from "./MomentViewer";
 import ZenVaultModal from "../ui/ZenVaultModal";
 import YourTimeDashboard from "../ui/YourTimeDashboard";
 import ZenPulseTab from "../layout/ZenPulseTab";
+import { usePulseStore } from "../../stores/pulseStore";
 import { useMomentStore } from "../../stores/momentStore";
 import { VerifiedTick, AdminIcon, HelpIcon, InviteIcon } from "../ui/Icons";
 
@@ -58,6 +59,9 @@ const Sidebar = ({ onChatSelect }) => {
     const [isVaultOpen, setIsVaultOpen] = useState(false);
     const [isYourTimeOpen, setIsYourTimeOpen] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+    const { todayQuestion, myVote, votedQuestionIds } = usePulseStore();
+    const hasUnvotedPulse = todayQuestion && !(myVote?.questionId === todayQuestion?._id || votedQuestionIds.includes(todayQuestion?._id));
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
     useEffect(() => {
@@ -469,6 +473,7 @@ const Sidebar = ({ onChatSelect }) => {
                         onClick={() => setActiveTab("pulse")}
                     >
                         Pulse
+                        {hasUnvotedPulse && <span className="sidebar-tab-badge online" style={{ background: '#f59e0b', color: '#fff' }}>1</span>}
                     </button>
                 </div>
 

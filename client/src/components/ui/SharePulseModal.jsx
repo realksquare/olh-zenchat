@@ -37,10 +37,13 @@ const SharePulseModal = ({ isOpen, onClose, question, username }) => {
 
     const topOption = votedOptions[0] || null;
     const topPercentage = topOption?.percentage || 0;
+    
+    const isToday = question && (!question.optionCounts || Object.keys(question.optionCounts).length === 0);
+    const optionsToRender = isToday ? (question?.options || []).map(opt => ({ text: opt.text, percentage: null })) : votedOptions;
 
     // Generate Share Card Image on Canvas
     useEffect(() => {
-        if (!isOpen || !question || votedOptions.length === 0) return;
+        if (!isOpen || !question || optionsToRender.length === 0) return;
 
         setGenerating(true);
         const canvas = document.createElement("canvas");
@@ -49,7 +52,7 @@ const SharePulseModal = ({ isOpen, onClose, question, username }) => {
         // Dynamic height: base + per-bar slot
         const BAR_SLOT = 160; // height per option bar including gap
         const BASE_HEIGHT = 720; // header + question + footer space
-        canvas.height = BASE_HEIGHT + votedOptions.length * BAR_SLOT;
+        canvas.height = BASE_HEIGHT + optionsToRender.length * BAR_SLOT;
 
         const ctx = canvas.getContext("2d");
         const canvasHeight = canvas.height;
@@ -126,7 +129,7 @@ const SharePulseModal = ({ isOpen, onClose, question, username }) => {
             const barX = (canvas.width - barWidth) / 2;
             let barStartY = y + 70;
 
-            votedOptions.forEach((opt, idx) => {
+            optionsToRender.forEach((opt, idx) => {
                 const barY = barStartY + idx * BAR_SLOT;
 
                 // Bar background
@@ -139,7 +142,7 @@ const SharePulseModal = ({ isOpen, onClose, question, username }) => {
                 ctx.stroke();
 
                 // Progress fill
-                const fillWidth = (barWidth * opt.percentage) / 100;
+                const fillWidth = opt.percentage !== null ? (barWidth * opt.percentage) / 100 : 0;
                 if (fillWidth > 0) {
                     // Top bar uses blue-cyan gradient, rest use a slightly muted variant
                     const grad = ctx.createLinearGradient(barX, 0, barX + fillWidth, 0);
@@ -161,21 +164,33 @@ const SharePulseModal = ({ isOpen, onClose, question, username }) => {
 
                 // Labels
                 ctx.font = 'bold 34px "Inter",-apple-system,sans-serif';
-                const pctText = `${opt.percentage}% agreed`;
-                const pctW = ctx.measureText(pctText).width;
-                const maxOptW = barWidth - pctW - 100;
-
-                let optText = opt.text;
-                while (ctx.measureText(optText).width > maxOptW && optText.length > 0) {
-                    optText = optText.slice(0, -1);
-                }
-                if (optText !== opt.text) optText += "...";
-
                 ctx.fillStyle = "#ffffff";
-                ctx.textAlign = "left";
-                ctx.fillText(optText, barX + 40, barY + 63);
-                ctx.textAlign = "right";
-                ctx.fillText(pctText, barX + barWidth - 40, barY + 63);
+                
+                if (opt.percentage !== null) {
+                    const pctText = `${opt.percentage}% agreed`;
+                    const pctW = ctx.measureText(pctText).width;
+                    const maxOptW = barWidth - pctW - 100;
+
+                    let optText = opt.text;
+                    while (ctx.measureText(optText).width > maxOptW && optText.length > 0) {
+                        optText = optText.slice(0, -1);
+                    }
+                    if (optText !== opt.text) optText += "...";
+
+                    ctx.textAlign = "left";
+                    ctx.fillText(optText, barX + 40, barY + 63);
+                    ctx.textAlign = "right";
+                    ctx.fillText(pctText, barX + barWidth - 40, barY + 63);
+                } else {
+                    ctx.textAlign = "center";
+                    let optText = opt.text;
+                    const maxOptW = barWidth - 80;
+                    while (ctx.measureText(optText).width > maxOptW && optText.length > 0) {
+                        optText = optText.slice(0, -1);
+                    }
+                    if (optText !== opt.text) optText += "...";
+                    ctx.fillText(optText, canvas.width / 2, barY + 63);
+                }
             });
 
             // 6. Footer CTA
@@ -183,7 +198,7 @@ const SharePulseModal = ({ isOpen, onClose, question, username }) => {
             ctx.fillStyle = "#94a3b8";
             ctx.font = '500 28px "Inter",-apple-system,sans-serif';
             ctx.textAlign = "center";
-            ctx.fillText("Vote on today's pulse at", canvas.width / 2, footerY - 48);
+            ctx.fillText(isToday ? "Go vote your opinion at" : "Vote on today's pulse at", canvas.width / 2, footerY - 48);
 
             ctx.fillStyle = "#38bdf8";
             ctx.font = 'bold 30px "Inter",-apple-system,sans-serif';
@@ -211,10 +226,9 @@ const SharePulseModal = ({ isOpen, onClose, question, username }) => {
 
     const inviteLink = `${window.location.origin}/zenpulse?ref=${username || "guest"}`;
     const resultsLines = votedOptions.map(o => `  - ${o.text}: ${o.percentage}% agreed`).join("\n");
-    const shareMessage = `Check out the results for yesterday's ZenPulse:\n\n` +
-        `"${question?.question}"\n\n` +
-        `Results:\n${resultsLines}\n\n` +
-        `Vote on today's pulse and see what the community thinks here: ${inviteLink}`;
+    const shareMessage = isToday
+        ? `Go vote your opinion on today's ZenPulse:\n\n"${question?.question}"\n\nVote here: ${inviteLink}`
+        : `Check out the results for yesterday's ZenPulse:\n\n"${question?.question}"\n\nResults:\n${resultsLines}\n\nVote on today's pulse and see what the community thinks here: ${inviteLink}`;
 
     const handleAction = async () => {
         if (!imageBlob) return;

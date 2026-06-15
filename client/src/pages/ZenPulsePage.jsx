@@ -97,6 +97,7 @@ const ZenPulsePage = () => {
             const todayStr = new Date().toISOString().split("T")[0];
             if (parsed.date === todayStr) {
                 setHasVoted(true);
+                if (parsed.optionId) setSelectedOption(parsed.optionId);
             }
         }
     }, [fetchToday, fetchYesterday]);
@@ -114,7 +115,7 @@ const ZenPulsePage = () => {
         if (res.success) {
             setHasVoted(true);
             const todayStr = new Date().toISOString().split("T")[0];
-            localStorage.setItem("zenpulse_guest_voted_today", JSON.stringify({ date: todayStr }));
+            localStorage.setItem("zenpulse_guest_voted_today", JSON.stringify({ date: todayStr, optionId: selectedOption }));
         } else {
             setVoteError(res.message);
         }
