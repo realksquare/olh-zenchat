@@ -51,6 +51,17 @@ router.get("/", async (req, res) => {
 
         const me = await User.findById(req.user._id);
 
+        const otherUserIds = sortedChats
+            .filter(c => !c.isGroup)
+            .map(c => {
+                const other = c.participants.find(p => p._id.toString() !== req.user._id.toString());
+                return other?._id || other;
+            })
+            .filter(Boolean);
+            
+        const otherUsers = await User.find({ _id: { $in: otherUserIds } }).select("blockedUsers");
+        const otherUsersMap = Object.fromEntries(otherUsers.map(u => [u._id.toString(), u]));
+
         const chatsWithUnread = await Promise.all(sortedChats.map(async (chat) => {
             let lm = chat.lastMessage;
             if (!lm || (lm && (lm.deletedForEveryone || (lm.deletedFor && lm.deletedFor.includes(req.user._id))))) {
@@ -66,8 +77,7 @@ router.get("/", async (req, res) => {
                 const otherParticipant = chat.participants.find(p => p._id.toString() !== req.user._id.toString());
                 const otherParticipantId = otherParticipant?._id || otherParticipant;
                 if (otherParticipantId) {
-                    const me = await User.findById(req.user._id);
-                    const other = await User.findById(otherParticipantId);
+                    const other = otherUsersMap[otherParticipantId.toString()];
                     
                     const iBlockedThem = me?.blockedUsers?.some(u => u.userId.toString() === otherParticipantId.toString());
                     const theyBlockedMe = other?.blockedUsers?.some(u => u.userId.toString() === req.user._id.toString());
