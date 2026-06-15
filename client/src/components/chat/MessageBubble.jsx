@@ -1153,6 +1153,20 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                 </button>
                             )}
 
+                            {message.content && (
+                                <button className="bottom-sheet-item" onClick={() => { setMobileSheet(false); navigator.clipboard.writeText(message.content); }}
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', borderRadius: 0, color: '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
+                                    onTouchStart={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                                    onTouchEnd={e => e.currentTarget.style.background = 'transparent'}
+                                >
+                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                    </svg>
+                                    <span>Copy</span>
+                                </button>
+                            )}
+
                             <button className="bottom-sheet-item" onClick={() => { setMobileSheet(false); if (onEdit) onEdit({ action: 'select', ...message }); }}
                                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', borderRadius: 0, color: '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
                                 onTouchStart={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
@@ -1235,6 +1249,15 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                 <polyline points="9 17 4 12 9 7" /><path d="M20 18v-2a4 4 0 0 0-4-4H4" />
                             </svg>
                             Reply
+                        </button>
+                    )}
+                    {message.content && (
+                        <button onClick={() => { setDesktopMenu(null); navigator.clipboard.writeText(message.content); }} style={desktopMenuItemStyle}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                            </svg>
+                            Copy
                         </button>
                     )}
                     <button onClick={() => { setDesktopMenu(null); if (onEdit) onEdit({ action: 'select', ...message }); }} style={desktopMenuItemStyle}>
