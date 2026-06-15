@@ -8064,7 +8064,8 @@ select {
 
 /* Public Page */
 .zenpulse-public-page {
-  min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
   background: radial-gradient(circle at top center, #1e293b 0%, #0f172a 100%);
   color: #f8fafc;
   display: flex;
