@@ -66,7 +66,11 @@ const AdminPanel = ({ onClose }) => {
         } catch (err) { alert(err.response?.data?.message || "Failed"); }
     };
 
-    const handleToggleSuspend = async (userId) => {
+    const handleToggleSuspend = async (userId, isSuspended) => {
+        if (!isSuspended) {
+            const confirmed = window.confirm("Suspend this user? They will be unable to log in until unsuspended.");
+            if (!confirmed) return;
+        }
         try {
             const { data } = await axiosInstance.post(`/admin/suspend/${userId}`);
             setUsers(users.map(u => u._id === userId ? { ...u, isSuspended: data.user.isSuspended } : u));
@@ -271,8 +275,8 @@ const AdminPanel = ({ onClose }) => {
                                                         {u.isVerified ? "Verified" : "Verify"}
                                                     </button>
                                                     <button 
-                                                        className="btn-suspend"
-                                                        onClick={() => handleToggleSuspend(u._id)}
+                                                        className={u.isSuspended ? "btn-unsuspend" : "btn-suspend"}
+                                                        onClick={() => handleToggleSuspend(u._id, u.isSuspended)}
                                                         disabled={u.username === "admin_krish"}
                                                     >
                                                         {u.isSuspended ? "Unsuspend" : "Suspend"}

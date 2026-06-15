@@ -3394,6 +3394,11 @@ select {
   color: #f59e0b;
 }
 
+.btn-unsuspend {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
 .btn-delete {
   background: rgba(239, 68, 68, 0.1);
   color: #ef4444;
