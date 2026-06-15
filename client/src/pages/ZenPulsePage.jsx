@@ -128,6 +128,7 @@ const ZenPulsePage = () => {
             <header className="zenpulse-header">
                 <div className="logo-container">
                     <h2>ZenPulse</h2>
+                    <p style={{ margin: 0, marginTop: '4px', fontSize: '0.8rem', color: '#94a3b8' }}>Daily community opinion by OLH ZenChat</p>
                 </div>
                 <Link to="/register" className="btn btn-primary join-btn">Join ZenChat</Link>
             </header>
