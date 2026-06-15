@@ -94,8 +94,8 @@ const ZenPulseTab = () => {
         setIsSubmitting(false);
     };
 
-    const hasVotedToday = myVote?.questionId === todayQuestion?._id || votedQuestionIds.includes(todayQuestion?._id);
-    const highlightedOption = (hasVotedToday && myVote?.questionId === todayQuestion?._id) ? myVote.optionId : selectedOption;
+    const hasVotedToday = Boolean(todayQuestion?._id && (myVote?.questionId === todayQuestion._id || votedQuestionIds.includes(todayQuestion._id)));
+    const highlightedOption = (hasVotedToday && myVote?.questionId === todayQuestion?._id) ? myVote?.optionId : selectedOption;
     const isFrozen = !isLoading && !todayQuestion && streak.current > 0;
 
     const loadMoreHistory = () => {
