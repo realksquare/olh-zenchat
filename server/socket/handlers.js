@@ -347,7 +347,9 @@ const registerSocketHandlers = (io) => {
                             canSee = canSeePresence(otherUser, me);
                         }
 
-                        if (canSee) {
+                        const isOtherActive = otherData && otherData.sockets && Array.from(otherData.sockets.values()).some(s => s.isActive);
+
+                        if (canSee && isOtherActive) {
                             visibleOnlineUserIds.push(otherId);
                             if (otherData?.isZenMode) {
                                 socket.emit("user_zen_status", { userId: otherId, isZenMode: true });
@@ -403,6 +405,7 @@ const registerSocketHandlers = (io) => {
         });
 
         socket.on("zen_invite_send", ({ chatId, senderId, receiverId }) => {
+            setUserActivePresence(io, senderId, true, socket.id);
             const recUserData = onlineUsers.get(receiverId);
             if (recUserData && recUserData.sockets) {
                 recUserData.sockets.forEach((sData, socketId) => {
@@ -413,6 +416,9 @@ const registerSocketHandlers = (io) => {
 
         socket.on("zen_invite_respond", ({ chatId, responderId, requesterId, receiverId, accepted, reason, responderName }) => {
             if (accepted) {
+                setUserActivePresence(io, requesterId, true);
+                setUserActivePresence(io, responderId, true);
+
                 const reqUserData = onlineUsers.get(requesterId);
                 const respUserData = onlineUsers.get(responderId);
                 if (reqUserData) reqUserData.isZenMode = true;
@@ -491,6 +497,7 @@ const registerSocketHandlers = (io) => {
 
         socket.on("send_message", async (rawPayload) => {
             try {
+                setUserActivePresence(io, userId, true, socket.id);
                 const unpacked = isBinaryPacket(rawPayload) ? unpackMessage(rawPayload) : rawPayload;
                 const decompressed = decompressPacket(unpacked);
                 const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth, isZenMessage, waveform, replyToMoment, replyToMomentUsername, lqip } = decompressed;
@@ -880,6 +887,7 @@ const registerSocketHandlers = (io) => {
         });
 
         socket.on("typing_start", async ({ chatId, scramble }) => {
+            setUserActivePresence(io, userId, true, socket.id);
             const chat = await Chat.findById(chatId).select("participants").lean();
             if (!chat) return;
 
@@ -920,6 +928,7 @@ const registerSocketHandlers = (io) => {
         // Voice recording indicators — simple relay, no privacy check needed
         socket.on("voice_recording_start", async ({ chatId }) => {
             try {
+                setUserActivePresence(io, userId, true, socket.id);
                 const chat = await Chat.findById(chatId);
                 if (!chat) return;
                 chat.participants

@@ -195,10 +195,18 @@ export const SocketProvider = ({ children }) => {
 
         const handleTypingStatus = ({ userId, chatId, isTyping, scramble }) => {
             useChatStore.getState().setTypingUser(chatId, userId, isTyping, scramble);
+            if (isTyping) {
+                useChatStore.getState().setUserOnline(userId);
+                useChatStore.getState().updateParticipantStatus(userId, true, null);
+            }
         };
 
         const handleVoiceRecordingStatus = ({ userId, chatId, isRecording }) => {
             useChatStore.getState().setVoiceRecordingUser(chatId, userId, isRecording);
+            if (isRecording) {
+                useChatStore.getState().setUserOnline(userId);
+                useChatStore.getState().updateParticipantStatus(userId, true, null);
+            }
         };
 
         const handleUserOnline = ({ userId }) => {
@@ -542,22 +550,45 @@ export const SocketProvider = ({ children }) => {
         });
 
         // Page Visibility: emit set_active_status when tab/app goes to background or returns
-        const handleVisibilityChange = () => {
+        let lastActiveState = null;
+        let lastActiveEmit = 0;
+        
+        const emitActiveStatus = (isActive) => {
             if (!socketRef.current?.connected) return;
-            const isActive = document.visibilityState === "visible";
+            if (lastActiveState === isActive && isActive) {
+                const now = Date.now();
+                if (now - lastActiveEmit < 10000) return;
+            }
+            lastActiveState = isActive;
+            lastActiveEmit = Date.now();
             socketRef.current.emit("set_active_status", { isActive });
         };
+
+        const handleVisibilityChange = () => {
+            emitActiveStatus(document.visibilityState === "visible");
+        };
+        
+        const handleUserActivity = () => {
+            if (document.visibilityState === "visible") {
+                emitActiveStatus(true);
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("focus", handleUserActivity);
+        window.addEventListener("touchstart", handleUserActivity);
 
         const handlePageHide = () => {
             if (!socketRef.current?.connected) return;
             socketRef.current.emit("set_active_status", { isActive: false });
         };
 
-        document.addEventListener("visibilitychange", handleVisibilityChange);
         window.addEventListener("pagehide", handlePageHide);
 
         return () => {
             document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("focus", handleUserActivity);
+            window.removeEventListener("touchstart", handleUserActivity);
             window.removeEventListener("pagehide", handlePageHide);
             socket.off("connect");
             socket.off("disconnect");
