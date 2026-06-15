@@ -1238,10 +1238,7 @@ const ChatWindow = ({ onBack }) => {
                                 className="chat-header-status"
                                 style={{ 
                                     gridArea: '1 / 1', 
-                                    display: '-webkit-box',
-                                    WebkitLineClamp: 3,
-                                    WebkitBoxOrient: 'vertical',
-                                    whiteSpace: 'normal', 
+                                    whiteSpace: 'nowrap', 
                                     fontStyle: 'italic', 
                                     overflow: 'hidden', 
                                     textOverflow: 'ellipsis', 
@@ -1249,8 +1246,7 @@ const ChatWindow = ({ onBack }) => {
                                     opacity: showBio ? 0.9 : 0,
                                     transform: showBio ? 'translateY(0)' : 'translateY(5px)',
                                     pointerEvents: showBio ? 'auto' : 'none',
-                                    lineHeight: '1.3',
-                                    wordBreak: 'break-word'
+                                    lineHeight: '1.3'
                                 }}
                                 title={otherUser.bio}
                             >

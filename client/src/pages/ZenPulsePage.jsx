@@ -133,7 +133,14 @@ const ZenPulsePage = () => {
 
             <main className="zenpulse-main">
                 <div className="pulse-card active-pulse" ref={todayCardRef} style={{ position: 'relative' }}>
-                    <div className="pulse-badge">Today's Pulse</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                        <div className="pulse-badge" style={{ marginBottom: 0 }}>Today's Pulse</div>
+                        {!isSharingToday && todayQuestion && (
+                            <button className="share-pulse-btn" onClick={() => handleShare('today')} title="Share / Download">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                            </button>
+                        )}
+                    </div>
                     
                     
                     {isLoading ? (
@@ -142,21 +149,22 @@ const ZenPulsePage = () => {
                         <>
                             <h1 className="pulse-question">{todayQuestion.question}</h1>
                             
-                            {!hasVoted ? (
-                                <div className="pulse-options">
-                                    {todayQuestion.options.map(opt => (
-                                        <button 
-                                            key={opt.id}
-                                            className={`pulse-option-btn ${selectedOption === opt.id ? 'selected' : ''}`}
-                                            onClick={() => setSelectedOption(opt.id)}
-                                            style={{ fontFamily: getFontFamily(opt.text) }}
-                                        >
-                                            {opt.text}
-                                        </button>
-                                    ))}
-                                    
-                                    {voteError && <p className="pulse-error">{voteError}</p>}
-                                    
+                            <div className="pulse-options">
+                                {todayQuestion.options.map(opt => (
+                                    <button 
+                                        key={opt.id}
+                                        className={`pulse-option-btn ${selectedOption === opt.id ? 'selected' : ''}`}
+                                        onClick={() => !hasVoted && setSelectedOption(opt.id)}
+                                        style={{ fontFamily: getFontFamily(opt.text), opacity: hasVoted ? 0.7 : 1, cursor: hasVoted ? 'default' : 'pointer' }}
+                                        disabled={hasVoted}
+                                    >
+                                        {opt.text}
+                                    </button>
+                                ))}
+                                
+                                {voteError && <p className="pulse-error">{voteError}</p>}
+                                
+                                {!hasVoted ? (
                                     <button 
                                         className="btn btn-primary submit-vote-btn"
                                         disabled={!selectedOption || isSubmitting}
@@ -164,27 +172,31 @@ const ZenPulsePage = () => {
                                     >
                                         {isSubmitting ? "Submitting..." : "Submit Vote"}
                                     </button>
-                                </div>
-                            ) : (
-                                <div className="pulse-success-state">
-                                    <div className="success-icon">
-                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                    </div>
-                                    <h3>Your vote is in!</h3>
-                                    <p>The community results will be revealed tomorrow at 7 PM IST.</p>
-                                    <div className="join-cta-box">
-                                        <p>Want to see every day's results and chat privately?</p>
-                                        {!isSharingToday && (
-                                            <Link to={`/register${searchParams.get('ref') ? `?ref=${searchParams.get('ref')}` : ''}`} className="btn btn-primary">
-                                                Join ZenChat - It's Free
-                                            </Link>
+                                ) : (
+                                    <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '0.9rem', color: '#94a3b8' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '8px', color: '#10b981' }}>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                            </svg>
+                                            <span style={{ fontWeight: 600 }}>Vote cast successfully</span>
+                                        </div>
+                                        Results will be revealed tomorrow at 7 PM IST.
+                                        
+                                        <div className="join-cta-box" style={{ marginTop: '16px' }}>
+                                            <p style={{ marginBottom: '12px' }}>Want to see every day's results and chat privately?</p>
+                                            {!isSharingToday && (
+                                                <Link to={`/register${searchParams.get('ref') ? `?ref=${searchParams.get('ref')}` : ''}`} className="btn btn-primary">
+                                                    Join ZenChat - It's Free
+                                                </Link>
+                                            )}
+                                        </div>
+                                        {isSharingToday && (
+                                            <div className="pulse-watermark" style={{ textAlign: 'center', fontSize: '0.85rem', color: '#334155', marginTop: '16px', fontWeight: 'bold' }}>OLH ZenChat</div>
                                         )}
                                     </div>
-                                    <div className="pulse-watermark" style={{ textAlign: 'center', fontSize: '0.85rem', color: '#334155', marginTop: '16px', fontWeight: 'bold' }}>OLH ZenChat</div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </>
                     ) : (
                         <div className="no-pulse">

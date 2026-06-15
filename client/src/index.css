@@ -4118,11 +4118,15 @@ select {
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+
 .moments-aura-title {
-  margin: 0;
+  margin: 0 !important;
   font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.05em;
+  line-height: 1;
+  display: flex;
+  align-items: center;
   background: linear-gradient(135deg, #fff, #94a3b8);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

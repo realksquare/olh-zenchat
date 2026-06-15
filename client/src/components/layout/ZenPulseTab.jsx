@@ -125,7 +125,17 @@ const ZenPulseTab = () => {
             <div className="pulse-scroll-area">
                 {/* Active Question Section */}
                 <div className="pulse-inapp-card active-card">
-                    <div className="card-top-label">TODAY'S PULSE</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                        <div className="card-top-label" style={{ marginBottom: 0 }}>TODAY'S PULSE</div>
+                        {todayQuestion && (
+                            <button className="btn btn-outline share-pulse-btn" onClick={() => {
+                                setSelectedPulse(todayQuestion);
+                                setShareModalOpen(true);
+                            }} title="Share Pulse" style={{ padding: '4px 8px', height: 'auto', minHeight: 'auto' }}>
+                                <ShareIcon size={16} />
+                            </button>
+                        )}
+                    </div>
                     
                     {isLoading ? (
                         <div className="pulse-loading">Loading...</div>
@@ -133,18 +143,19 @@ const ZenPulseTab = () => {
                         <>
                             <h3 className="pulse-inapp-question">{todayQuestion.question}</h3>
                             
-                            {!hasVotedToday ? (
-                                <div className="pulse-inapp-options">
-                                    {todayQuestion.options.map(opt => (
-                                        <button 
-                                            key={opt.id}
-                                            className={`pulse-opt-btn ${selectedOption === opt.id ? 'selected' : ''}`}
-                                            onClick={() => setSelectedOption(opt.id)}
-                                            style={{ fontFamily: getFontFamily(opt.text) }}
-                                        >
-                                            {opt.text}
-                                        </button>
-                                    ))}
+                            <div className="pulse-inapp-options">
+                                {todayQuestion.options.map(opt => (
+                                    <button 
+                                        key={opt.id}
+                                        className={`pulse-opt-btn ${selectedOption === opt.id ? 'selected' : ''}`}
+                                        onClick={() => !hasVotedToday && setSelectedOption(opt.id)}
+                                        style={{ fontFamily: getFontFamily(opt.text), opacity: hasVotedToday ? 0.7 : 1, cursor: hasVotedToday ? 'default' : 'pointer' }}
+                                        disabled={hasVotedToday}
+                                    >
+                                        {opt.text}
+                                    </button>
+                                ))}
+                                {!hasVotedToday ? (
                                     <button 
                                         className="btn btn-primary pulse-submit"
                                         disabled={!selectedOption || isSubmitting}
@@ -152,14 +163,16 @@ const ZenPulseTab = () => {
                                     >
                                         {isSubmitting ? "Submitting..." : "Submit Vote"}
                                     </button>
-                                </div>
-                            ) : (
-                                <div className="pulse-voted-state">
-                                    <CheckCircleIcon size={32} className="voted-icon" />
-                                    <h4>Vote cast successfully!</h4>
-                                    <p>Results will be revealed tomorrow at 7 PM IST.</p>
-                                </div>
-                            )}
+                                ) : (
+                                    <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '0.9rem', color: '#94a3b8' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '4px', color: '#10b981' }}>
+                                            <CheckCircleIcon size={16} />
+                                            <span style={{ fontWeight: 600 }}>Vote cast successfully</span>
+                                        </div>
+                                        Results will be revealed tomorrow at 7 PM IST.
+                                    </div>
+                                )}
+                            </div>
                         </>
                     ) : (
                         <div className="pulse-empty">
