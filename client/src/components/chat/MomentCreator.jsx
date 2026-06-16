@@ -557,14 +557,14 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                 
                                                 {/* Caption Overlay */}
                                                 {caption.trim().length > 0 && (
-                                                    <div style={{ position: 'absolute', bottom: '38px', left: '50%', transform: 'translateX(-50%)', width: '85%', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)', padding: '6px 12px', borderRadius: '8px', color: '#f1f5f9', fontSize: '0.85rem', textAlign: 'center', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                                                    <div style={{ position: 'absolute', bottom: '38px', left: '50%', transform: 'translateX(-50%)', width: '85%', background: "var(--color-surface, rgba(15, 23, 42, 0.75))", backdropFilter: 'blur(8px)', padding: '6px 12px', borderRadius: '8px', color: '#f1f5f9', fontSize: '0.85rem', textAlign: 'center', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
                                                         {caption}
                                                     </div>
                                                 )}
 
                                                 {/* Location Tag Pill */}
                                                 {locationText && showLocationPill && (
-                                                    <div style={{ position: 'absolute', bottom: '8px', left: '8px', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                                                    <div style={{ position: 'absolute', bottom: '8px', left: '8px', background: "var(--color-surface, rgba(15, 23, 42, 0.75))", backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '1px' }}>
                                                         <span style={{ fontSize: '0.68rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>{locationText}</span>
                                                         <span style={{ fontSize: '0.55rem', color: '#64748b', fontWeight: '600' }}>#Moment. on OLH ZenChat</span>
                                                     </div>
@@ -596,7 +596,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                 )}
 
                                                 {/* Disappear Timer Pill */}
-                                                <div style={{ position: 'absolute', top: '8px', right: '8px', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(6px)', padding: '3px 8px', borderRadius: '12px', fontSize: '0.62rem', fontWeight: 'bold', color: '#cbd5e1' }}>
+                                                <div style={{ position: 'absolute', top: '8px', right: '8px', background: "var(--color-surface, rgba(15, 23, 42, 0.75))", backdropFilter: 'blur(6px)', padding: '3px 8px', borderRadius: '12px', fontSize: '0.62rem', fontWeight: 'bold', color: '#cbd5e1' }}>
                                                     Expires in {disappearHours}h
                                                 </div>
                                             </>

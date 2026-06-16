@@ -290,7 +290,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
 
     return createPortal(
         <div className="modal-overlay" style={{ zIndex: 100000, padding: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div className="modal-card" style={{ maxWidth: "800px", width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0, background: "rgba(15, 23, 42, 0.95)", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
+            <div className="modal-card" style={{ maxWidth: "800px", width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0, background: "var(--color-surface, rgba(15, 23, 42, 0.95))", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
                 <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(255, 255, 255, 0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <h2 style={{ margin: 0, color: "#f8fafc", fontSize: "1.3rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px" }}>
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

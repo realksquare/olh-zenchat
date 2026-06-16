@@ -25,7 +25,7 @@ const RecoveryKeyModal = () => {
             left: 0,
             width: "100vw",
             height: "100vh",
-            backgroundColor: "rgba(15, 23, 42, 0.75)",
+            backgroundColor: "var(--color-surface, rgba(15, 23, 42, 0.75))",
             backdropFilter: "blur(12px)",
             WebkitBackdropFilter: "blur(12px)",
             display: "flex",
@@ -83,7 +83,7 @@ const RecoveryKeyModal = () => {
 
                 {/* Secure Key Display Container */}
                 <div style={{
-                    backgroundColor: "rgba(15, 23, 42, 0.6)",
+                    backgroundColor: "var(--color-surface, rgba(15, 23, 42, 0.6))",
                     border: "1px solid rgba(255, 255, 255, 0.05)",
                     borderRadius: "16px",
                     padding: "20px",

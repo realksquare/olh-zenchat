@@ -100,7 +100,7 @@ const DocViewerModal = ({ url, fileName, onClose }) => {
 
             {/* Document Content Area */}
             <div className="doc-viewer-content-wrap" onClick={(e) => e.stopPropagation()} style={{
-                width: 'min(90vw, 900px)', height: 'min(82vh, 700px)', background: '#0e1117', 
+                width: 'min(90vw, 900px)', height: 'min(82vh, 700px)', background: "var(--body-bg, #0e1117)", 
                 border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', display: 'flex', 
                 flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 48px -12px rgba(0, 0, 0, 0.6)'
             }}>

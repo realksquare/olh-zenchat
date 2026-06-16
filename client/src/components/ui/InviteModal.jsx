@@ -183,7 +183,7 @@ const arrowStyle = {
     top: 0,
     bottom: 0,
     width: '32px',
-    background: '#0f172a',
+    background: "var(--color-surface, #0f172a)",
     border: 'none',
     color: '#fff',
     display: 'flex',

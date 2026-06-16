@@ -44,7 +44,7 @@ const CustomSelect = ({ value, onChange, options, isMobile }) => {
                 onClick={() => setIsOpen(!isOpen)}
                 style={{
                     width: "100%",
-                    background: "#0e1117",
+                    background: "var(--body-bg, #0e1117)",
                     border: "1px solid rgba(255, 255, 255, 0.08)",
                     borderRadius: "8px",
                     padding: "10px 14px",
@@ -72,7 +72,7 @@ const CustomSelect = ({ value, onChange, options, isMobile }) => {
                         top: "calc(100% + 4px)",
                         left: 0,
                         width: "100%",
-                        background: "#161b22",
+                        background: "var(--color-surface, #161b22)",
                         border: "1px solid rgba(255, 255, 255, 0.08)",
                         borderRadius: "8px",
                         boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
@@ -126,7 +126,7 @@ const CustomSelect = ({ value, onChange, options, isMobile }) => {
                         onClick={e => e.stopPropagation()}
                         style={{
                             width: '100%',
-                            background: 'linear-gradient(180deg, #1a2030 0%, #161b22 100%)',
+                            background: "var(--color-surface, linear-gradient(180deg, #1a2030 0%, #161b22 100%))",
                             borderTopLeftRadius: '24px',
                             borderTopRightRadius: '24px',
                             padding: '0 0 env(safe-area-inset-bottom, 24px)',
@@ -1187,7 +1187,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 </div>
 
                                 {showKeyText && (
-                                    <div style={{ background: "rgba(15, 23, 42, 0.6)", border: "1px solid rgba(255,255,255,0.08)", padding: "12px", borderRadius: "8px", marginTop: "0.5rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                                    <div style={{ background: "var(--color-surface, rgba(15, 23, 42, 0.6))", border: "1px solid rgba(255,255,255,0.08)", padding: "12px", borderRadius: "8px", marginTop: "0.5rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
                                         {recoveryKeyText ? (
                                             <>
                                                 <span style={{ fontFamily: "monospace", fontSize: "1rem", fontWeight: "700", letterSpacing: "1px", color: "var(--color-primary)" }}>

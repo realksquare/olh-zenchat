@@ -325,7 +325,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
             padding: "20px"
         }}>
             <div style={{
-                background: "rgba(15, 23, 42, 0.65)",
+                background: "var(--color-surface, rgba(15, 23, 42, 0.65))",
                 border: "1px solid rgba(255, 255, 255, 0.08)",
                 borderRadius: "24px",
                 width: "100%",

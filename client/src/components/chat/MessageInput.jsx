@@ -241,7 +241,7 @@ const MediaPreview = ({ files, onRemove, onToggleQuality }) => {
                                 position: 'absolute',
                                 top: '4px',
                                 left: '4px',
-                                background: 'rgba(15, 23, 42, 0.75)',
+                                background: "var(--color-surface, rgba(15, 23, 42, 0.75))",
                                 backdropFilter: 'blur(4px)',
                                 color: 'var(--color-primary)',
                                 fontSize: '8px',

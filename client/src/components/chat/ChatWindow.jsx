@@ -1304,7 +1304,7 @@ const ChatWindow = ({ onBack }) => {
                         </button>
 
                         {showDisappearingMenu && (
-                            <div className="message-action-dropdown disappearing-menu" style={{ position: 'absolute', right: 0, top: '100%', marginTop: '6px', minWidth: '135px', background: '#161b22', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', flexDirection: 'column', padding: '4px' }}>
+                            <div className="message-action-dropdown disappearing-menu" style={{ position: 'absolute', right: 0, top: '100%', marginTop: '6px', minWidth: '135px', background: "var(--color-surface, #161b22)", border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', flexDirection: 'column', padding: '4px' }}>
                                 {[
                                     { value: 'off', label: 'Off' },
                                     { value: 'instant', label: 'Going offline' },
@@ -1697,7 +1697,7 @@ const ChatWindow = ({ onBack }) => {
                     >
                         <div
                             onClick={e => e.stopPropagation()}
-                            style={{ width: '100%', maxWidth: '500px', background: 'linear-gradient(180deg, #1a2030 0%, #161b22 100%)', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', padding: '0 0 env(safe-area-inset-bottom, 28px)', boxShadow: '0 -12px 48px rgba(0,0,0,0.6)', animation: 'slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                            style={{ width: '100%', maxWidth: '500px', background: "var(--color-surface, linear-gradient(180deg, #1a2030 0%, #161b22 100%))", borderTopLeftRadius: '24px', borderTopRightRadius: '24px', padding: '0 0 env(safe-area-inset-bottom, 28px)', boxShadow: '0 -12px 48px rgba(0,0,0,0.6)', animation: 'slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1)' }}
                         >
                             <div style={{ padding: '16px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <span style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
