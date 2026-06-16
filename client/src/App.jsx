@@ -307,6 +307,13 @@ const App = () => {
       if (user.timezone !== localTimezone) {
         useAuthStore.getState().syncTimezone(localTimezone);
       }
+      if (user.selectedTheme && user.selectedTheme !== "default") {
+        document.documentElement.setAttribute('data-theme', user.selectedTheme);
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+    } else {
+      document.documentElement.removeAttribute('data-theme');
     }
   }, [user, token]);
 

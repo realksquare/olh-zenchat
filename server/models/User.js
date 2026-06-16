@@ -194,7 +194,12 @@ const userSchema = new mongoose.Schema(
         pulseVotedQuestions: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: "ZenPulseQuestion"
-        }]
+        }],
+        selectedTheme: {
+            type: String,
+            enum: ["default", "zen_oled", "earthy_calm"],
+            default: "default"
+        }
     },
     { timestamps: true }
 );
@@ -225,7 +230,8 @@ userSchema.methods.toPublicJSON = function () {
         lastSeen: this.lastSeen,
         role: this.role,
         isVerified: this.isVerified,
-        privacySettings: this.privacySettings
+        privacySettings: this.privacySettings,
+        selectedTheme: this.selectedTheme
     };
 };
 
@@ -258,7 +264,8 @@ userSchema.methods.toPrivateJSON = function () {
         cryptoSalt: this.cryptoSalt,
         cryptoIv: this.cryptoIv,
         hasSeenPurgeNotice: this.hasSeenPurgeNotice,
-        pulseStreak: this.pulseStreak
+        pulseStreak: this.pulseStreak,
+        selectedTheme: this.selectedTheme
     };
 };
 

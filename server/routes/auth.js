@@ -1005,5 +1005,44 @@ router.put("/purge-notice", authMiddleware, async (req, res) => {
         res.status(500).json({ message: "Server error", error: err.message });
     }
 });
+// @route   PUT /api/auth/theme
+// @desc    Update user selected theme with server-side validation
+// @access  Private
+router.put("/theme", authMiddleware, async (req, res) => {
+    try {
+        const { theme } = req.body;
+        const validThemes = ["default", "zen_oled", "earthy_calm"];
+        if (!validThemes.includes(theme)) {
+            return res.status(400).json({ message: "Invalid theme selection" });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Logic to check if user meets criteria for premium themes
+        const canUnlockThemes = () => {
+            if (!user.notificationsEnabled) return false;
+            const streak = user.pulseStreak?.current || 0;
+            const referrals = user.referralStats?.registrations || 0;
+            return streak >= 7 || referrals >= 1;
+        };
+
+        if (theme !== "default" && !canUnlockThemes()) {
+            return res.status(403).json({ message: "You have not met the criteria to unlock exclusive themes yet." });
+        }
+
+        user.selectedTheme = theme;
+        await user.save();
+        
+        const populatedUser = await User.findById(user._id)
+            .populate("blockedUsers.userId", "username avatar")
+            .populate("contacts.userId", "username avatar fullName");
+            
+        res.json({ success: true, user: populatedUser.toPrivateJSON() });
+    } catch (err) {
+        console.error("[ThemeUpdate] Error:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+});
 
 module.exports = router;

@@ -360,6 +360,23 @@ export const useAuthStore = create(
                 return { success: false, message };
             }
         },
+
+        updateTheme: async (theme) => {
+            set({ isLoading: true, error: null });
+            try {
+                const token = localStorage.getItem(TOKEN_KEY);
+                const { data } = await axiosInstance.put("/auth/theme", { theme }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                localStorage.setItem("zenchat_user", JSON.stringify(data.user));
+                set({ user: data.user, isLoading: false });
+                return { success: true };
+            } catch (err) {
+                const message = err.response?.data?.message || "Failed to update theme";
+                set({ error: message, isLoading: false });
+                return { success: false, message };
+            }
+        },
     }),
     {
         name: "zenchat-auth",
