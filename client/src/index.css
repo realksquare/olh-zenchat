@@ -92,25 +92,25 @@
 }
 
 [data-theme="earthy_calm"] {
-  --color-primary: #6B8E6B;
-  --color-primary-hover: #5A7B5A;
-  --color-primary-active: #486648;
+  --color-primary: #527a52;
+  --color-primary-hover: #436343;
+  --color-primary-active: #344d34;
 
-  --color-text: #2c3e2c;
-  --color-text-muted: #5e6b5e;
-  --color-text-faint: #899489;
+  --color-text: #1b241b;
+  --color-text-muted: #4a5c4a;
+  --color-text-faint: #738573;
 
-  --color-surface: #fdfbf7;
-  --color-surface-offset: #f4f1ea;
-  --color-surface-offset-2: rgba(107, 142, 107, 0.1);
+  --color-surface: #ffffff;
+  --color-surface-offset: #edebe4;
+  --color-surface-offset-2: rgba(82, 122, 82, 0.15);
 
-  --bubble-sending: rgba(137, 148, 137, 0.4);
+  --bubble-sending: rgba(115, 133, 115, 0.4);
   --bubble-failed: rgba(180, 83, 83, 0.2);
-  --bubble-sent: #899489;
-  --bubble-delivered: #5A7B5A;
-  --bubble-seen: #6B8E6B;
+  --bubble-sent: #738573;
+  --bubble-delivered: #527a52;
+  --bubble-seen: #3b5e3b;
 
-  --body-bg: #fdfbf7;
+  --body-bg: #f4f2ec;
 }
 
 /* Animated Border for ZenOLED Message Bubble */
