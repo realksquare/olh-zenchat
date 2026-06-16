@@ -352,30 +352,40 @@ const App = () => {
 
     useEffect(() => {
         const initialize = async () => {
-            await checkAuth();
             const currentToken = useAuthStore.getState().token;
             if (currentToken) {
+                // 1. Instantly load local IDB cache to unblock splash screen
                 await useChatStore.getState().initLocalData();
-                await useChatStore.getState().fetchChats();
-                await useMomentStore.getState().fetchMoments();
+                setServerReady(true);
                 
-                // Decrypt previews once E2EE keys are fully cached/ready
-                try {
-                    const { decryptMessageIfNeeded } = await import("./utils/e2eeHelper");
-                    const chats = useChatStore.getState().chats;
-                    let changed = false;
-                    await Promise.all(chats.map(async (chat) => {
-                        if (chat.lastMessage && chat.lastMessage.isEncrypted && !chat.lastMessage.decrypted) {
-                            await decryptMessageIfNeeded(chat.lastMessage);
-                            changed = true;
+                // 2. Perform slow network requests in the background
+                checkAuth().then(() => {
+                    return Promise.all([
+                        useChatStore.getState().fetchChats(),
+                        useMomentStore.getState().fetchMoments()
+                    ]);
+                }).then(async () => {
+                    // Decrypt previews once E2EE keys are fully cached/ready
+                    try {
+                        const { decryptMessageIfNeeded } = await import("./utils/e2eeHelper");
+                        const chats = useChatStore.getState().chats;
+                        let changed = false;
+                        await Promise.all(chats.map(async (chat) => {
+                            if (chat.lastMessage && chat.lastMessage.isEncrypted && !chat.lastMessage.decrypted) {
+                                await decryptMessageIfNeeded(chat.lastMessage);
+                                changed = true;
+                            }
+                        }));
+                        if (changed) {
+                            useChatStore.setState({ chats: [...chats] });
                         }
-                    }));
-                    if (changed) {
-                        useChatStore.setState({ chats: [...chats] });
+                    } catch (e2eeErr) {
+                        console.error("Post-auth E2EE decryption failed:", e2eeErr);
                     }
-                } catch (e2eeErr) {
-                    console.error("Post-auth E2EE decryption failed:", e2eeErr);
-                }
+                }).catch(console.error);
+            } else {
+                setServerReady(true);
+                await checkAuth();
             }
         };
         initialize();
@@ -454,33 +464,13 @@ const App = () => {
             clearNotifications();
         }
 
-        const checkHealth = async () => {
-            const timer = setTimeout(() => {
-                setServerReady(true);
-            }, 2500);
-
-            if (!navigator.onLine) {
-                clearTimeout(timer);
-                setServerReady(true);
-                return;
-            }
-            try {
-                await axiosInstance.get("/messages/health");
-                clearTimeout(timer);
-                setServerReady(true);
-            } catch (err) {
-                if (!navigator.onLine) {
-                    clearTimeout(timer);
-                    setServerReady(true);
-                } else {
-                    // Retry health check but don't block the screen
-                    setTimeout(async () => {
-                        try {
-                            await axiosInstance.get("/messages/health");
-                        } catch (_) {}
-                    }, 5000);
-                }
-            }
+        const checkHealth = () => {
+            if (!navigator.onLine) return;
+            axiosInstance.get("/messages/health").catch(() => {
+                setTimeout(async () => {
+                    try { await axiosInstance.get("/messages/health"); } catch (_) {}
+                }, 5000);
+            });
         };
         checkHealth();
 
