@@ -12,13 +12,13 @@
 }
 
 *::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
   border-radius: 100px;
   border: 1px solid rgba(15, 23, 42, 0.5);
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.2));
 }
 
 :root {
@@ -35,6 +35,8 @@
   --color-surface: #161b22;
   --color-surface-offset: rgba(255, 255, 255, 0.04);
   --color-surface-offset-2: rgba(61, 165, 217, 0.1);
+  --color-border: var(--color-border, rgba(255, 255, 255, 0.08));
+  --color-overlay: rgba(255, 255, 255, 0.05);
 
   --text-xs: clamp(0.7rem, 0.65rem + 0.15vw, 0.75rem);
   --text-sm: clamp(0.8rem, 0.75rem + 0.15vw, 0.85rem);
@@ -81,6 +83,8 @@
   --color-surface: #000000;
   --color-surface-offset: #0a0a0a;
   --color-surface-offset-2: rgba(94, 234, 212, 0.05);
+  --color-border: var(--color-border, rgba(255, 255, 255, 0.08));
+  --color-overlay: rgba(255, 255, 255, 0.05);
 
   --bubble-sending: #111111;
   --bubble-failed: rgba(220, 38, 38, 0.2);
@@ -92,25 +96,27 @@
 }
 
 [data-theme="earthy_calm"] {
-  --color-primary: #527a52;
-  --color-primary-hover: #436343;
-  --color-primary-active: #344d34;
+  --color-primary: #6B8E6B;
+  --color-primary-hover: #5A7B5A;
+  --color-primary-active: #486648;
 
-  --color-text: #1b241b;
-  --color-text-muted: #4a5c4a;
-  --color-text-faint: #738573;
+  --color-text: #2c3e2c;
+  --color-text-muted: #5e6b5e;
+  --color-text-faint: #899489;
 
-  --color-surface: #ffffff;
-  --color-surface-offset: #edebe4;
-  --color-surface-offset-2: rgba(82, 122, 82, 0.15);
+  --color-surface: #fdfbf7;
+  --color-surface-offset: #f4f1ea;
+  --color-surface-offset-2: rgba(107, 142, 107, 0.1);
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-overlay: rgba(0, 0, 0, 0.05);
 
-  --bubble-sending: rgba(115, 133, 115, 0.4);
+  --bubble-sending: rgba(137, 148, 137, 0.4);
   --bubble-failed: rgba(180, 83, 83, 0.2);
-  --bubble-sent: #738573;
-  --bubble-delivered: #527a52;
-  --bubble-seen: #3b5e3b;
+  --bubble-sent: #899489;
+  --bubble-delivered: #5A7B5A;
+  --bubble-seen: #6B8E6B;
 
-  --body-bg: #f4f2ec;
+  --body-bg: #fdfbf7;
 }
 
 /* Animated Border for ZenOLED Message Bubble */
@@ -309,7 +315,7 @@ select {
   width: 100%;
   max-width: 400px;
   background: var(--color-surface, #161b22);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-xl);
   padding: var(--space-8);
   flex: 0 0 auto;
@@ -384,7 +390,7 @@ select {
 
 .field input {
   background: var(--body-bg, #0e1117);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   font-size: var(--text-sm);
@@ -404,7 +410,7 @@ select {
 
 .btn-primary {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text, #fff);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   font-size: var(--text-sm);
@@ -425,7 +431,7 @@ select {
 
 .btn-outline {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   color: #94a3b8;
 }
 
@@ -550,7 +556,7 @@ select {
 
 .guest-card {
   background: var(--color-surface, #161b22);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-xl);
   padding: var(--space-10) var(--space-8);
   display: flex;
@@ -689,7 +695,7 @@ select {
   font-size: 2.5rem !important;
   cursor: pointer;
   position: relative;
-  border: 3px solid rgba(255, 255, 255, 0.05);
+  border: 3px solid var(--color-border, rgba(255, 255, 255, 0.08));
   transition: border-color 0.2s ease;
   overflow: hidden;
 }
@@ -767,7 +773,7 @@ select {
   font-weight: 500;
   padding: 5px 10px;
   border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   white-space: nowrap;
   pointer-events: none;
   z-index: 99999;
@@ -789,7 +795,7 @@ select {
   align-items: center;
   gap: var(--space-2);
   background: var(--body-bg, #0e1117);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-md);
   padding: var(--space-2) var(--space-3);
   color: #475569;
@@ -824,7 +830,7 @@ select {
   left: var(--space-4);
   right: var(--space-4);
   background: var(--color-surface-offset, #1e2530);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-md);
   z-index: 50;
   overflow: hidden;
@@ -968,7 +974,7 @@ select {
   z-index: 1000;
   background: var(--color-surface-offset, #1e2530);
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
 }
 
@@ -997,7 +1003,7 @@ select {
 
 .chats-section-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.08));
   margin: 6px 16px;
 }
 
@@ -1087,7 +1093,7 @@ select {
 }
 
 .chat-card:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.04));
 }
 
 .chat-card.active {
@@ -1374,7 +1380,7 @@ select {
 
 .message-bubble.theirs {
   background: var(--color-surface-offset, #1e2530);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-bottom-left-radius: var(--radius-sm);
 }
 
@@ -1385,7 +1391,7 @@ select {
 .message-bubble.mine.status-sending {
   background: var(--bubble-sending);
   
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.6));
   border: 1px dashed rgba(255, 255, 255, 0.2);
 }
 
@@ -1399,13 +1405,13 @@ select {
 .message-bubble.mine.status-sent {
   background: var(--bubble-sent);
   
-  color: #fff;
+  color: var(--color-text, #fff);
 }
 
 .message-bubble.mine.status-delivered {
   background: var(--bubble-delivered);
   
-  color: #fff;
+  color: var(--color-text, #fff);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
@@ -1413,14 +1419,14 @@ select {
 .message-bubble.mine.status-read {
   background: var(--bubble-seen);
   
-  color: #fff;
+  color: var(--color-text, #fff);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .message-bubble.mine.status-seen .message-text,
 .message-bubble.mine.status-read .message-text,
 .message-bubble.mine.status-delivered .message-text {
-  color: #ffffff;
+  color: var(--color-text, #fff)fff;
   font-weight: 500;
 }
 
@@ -1440,14 +1446,14 @@ select {
 
 .message-time {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--color-text-faint, rgba(255, 255, 255, 0.35));
   white-space: nowrap;
 }
 
 .message-bubble.mine.status-seen .message-time,
 .message-bubble.mine.status-read .message-time,
 .message-bubble.mine.status-delivered .message-time {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--color-text, rgba(255, 255, 255, 0.75));
 }
 
 .zen-tag-icon {
@@ -1470,7 +1476,7 @@ select {
 
 .message-edited-label {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--color-text-faint, rgba(255, 255, 255, 0.3));
   font-style: italic;
 }
 
@@ -1480,7 +1486,7 @@ select {
   top: 50%;
   transform: translateY(calc(-50% + 3px));
   background: var(--color-surface-offset, #1e2530);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-md);
   padding: 4px;
   display: flex;
@@ -1525,7 +1531,7 @@ select {
   padding: 8px 12px;
   border-radius: var(--radius-sm);
   text-align: left;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--color-text, rgba(255, 255, 255, 0.75));
   transition: background 0.12s ease;
   white-space: nowrap;
   display: flex;
@@ -1534,7 +1540,7 @@ select {
 }
 
 .message-dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.07));
 }
 
 .message-dropdown-item.delete {
@@ -1547,7 +1553,7 @@ select {
 
 .deleted-bubble {
   background: transparent !important;
-  border: 1px dashed rgba(255, 255, 255, 0.12) !important;
+  border: 1px dashed var(--color-border, rgba(255, 255, 255, 0.08)) !important;
   width: fit-content;
   max-width: 65%;
 }
@@ -1562,7 +1568,7 @@ select {
 
 .typing-scramble-bubble {
   background: var(--color-surface-offset);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   padding: 8px 14px;
   border-radius: 14px 14px 14px 4px;
   max-width: 150px;
@@ -1579,7 +1585,7 @@ select {
   align-items: flex-end;
   gap: 3px;
   background: var(--color-surface-offset);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-full);
   padding: 8px 12px;
   height: 34px;
@@ -1700,7 +1706,7 @@ select {
   align-items: flex-end;
   gap: var(--space-3);
   background: var(--body-bg, #0e1117);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-xl);
   padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
   width: 100%;
@@ -1756,7 +1762,7 @@ select {
 
 .send-btn-active {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text, #fff);
 }
 
 .send-btn-active:hover {
@@ -1801,7 +1807,7 @@ select {
   height: 18px;
   padding: 0 var(--space-1);
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text, #fff);
   font-size: 10px;
   font-weight: 700;
   border-radius: var(--radius-full);
@@ -1854,7 +1860,7 @@ select {
 
 .delete-modal {
   background: #1c1f26;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 12px;
   padding: 24px;
   width: 320px;
@@ -1872,7 +1878,7 @@ select {
 
 .delete-modal-subtitle {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-faint, rgba(255, 255, 255, 0.4));
   margin-bottom: 8px;
 }
 
@@ -1897,7 +1903,7 @@ select {
 }
 
 .delete-modal-btn.cancel {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.06));
   color: #e0e0e0;
 }
 
@@ -1946,7 +1952,7 @@ select {
 
 .modal-close:hover {
   color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
 }
 
 .profile-modal {
@@ -1955,7 +1961,7 @@ select {
   max-height: 85vh;
   overflow-y: auto;
   background: var(--color-surface, #161b22);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-xl);
   padding: var(--space-8);
   position: relative;
@@ -2001,7 +2007,7 @@ select {
   opacity: 0;
   transition: opacity var(--transition-interactive);
   border-radius: 50%;
-  color: #fff;
+  color: var(--color-text, #fff);
 }
 
 .avatar-lg:hover .avatar-edit-overlay {
@@ -2022,7 +2028,7 @@ select {
 
 .form-group input {
   background: var(--body-bg, #0e1117);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   font-size: var(--text-sm);
@@ -2087,7 +2093,7 @@ select {
   gap: 8px;
   padding: 12px;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.04));
   border-radius: var(--radius-md);
   color: var(--color-primary);
   font-size: var(--text-sm);
@@ -2095,7 +2101,7 @@ select {
   transition: background 0.2s;
 }
 .view-once-placeholder:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.08));
 }
 
 .view-once-placeholder.viewed {
@@ -2110,7 +2116,7 @@ select {
 }
 
 .message-bubble.mine .view-once-placeholder {
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--color-text, rgba(255, 255, 255, 0.95));
   background: rgba(0, 0, 0, 0.15);
 }
 
@@ -2119,7 +2125,7 @@ select {
 }
 
 .message-bubble.mine .view-once-placeholder.viewed {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.6));
   opacity: 0.8;
 }
 
@@ -2152,7 +2158,7 @@ select {
 }
 
 .view-once-btn.active {
-  color: #fff;
+  color: var(--color-text, #fff);
   background: var(--color-primary);
   box-shadow: 0 0 10px rgba(61, 165, 217, 0.4);
 }
@@ -2162,7 +2168,7 @@ select {
   height: 16px;
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  border-top-color: #fff;
+  border-top-color: var(--color-text, #fff);
   animation: spin 0.6s linear infinite;
 }
 
@@ -2183,7 +2189,7 @@ select {
 .profile-modal select {
   width: 100%;
   background: var(--body-bg, #0e1117);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
   font-size: var(--text-sm);
@@ -2204,13 +2210,13 @@ select {
 /* -- Premium Modal Inputs ----------------------------------------------- */
 
 .profile-modal input {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .profile-modal input:focus {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
   border-color: var(--color-primary);
   box-shadow: 0 0 0 4px rgba(61, 165, 217, 0.1);
 }
@@ -2241,7 +2247,7 @@ select {
 
 .input-hint {
   font-size: 0.7rem;
-  color: #ffffff;
+  color: var(--color-text, #fff)fff;
   opacity: 0.65;
 }
 
@@ -2275,7 +2281,7 @@ select {
   display: flex;
   gap: 4px;
   margin: 8px 0 4px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.03));
   border-radius: 10px;
   padding: 3px;
 }
@@ -2300,7 +2306,7 @@ select {
 
 .sidebar-tab:hover {
   color: #94a3b8;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.04));
 }
 
 .sidebar-tab.active {
@@ -2314,7 +2320,7 @@ select {
   align-items: center;
   justify-content: center;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text, #fff);
   font-size: 0.65rem;
   font-weight: 700;
   min-width: 16px;
@@ -2340,8 +2346,8 @@ select {
   border-radius: 12px;
   font-size: 0.72rem;
   font-weight: 500;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   color: #64748b;
   cursor: pointer;
   white-space: nowrap;
@@ -2349,9 +2355,9 @@ select {
 }
 
 .sidebar-filter-chip:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
   color: #94a3b8;
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-border, rgba(255, 255, 255, 0.08));
   transform: translateY(-1px);
 }
 
@@ -2378,7 +2384,7 @@ select {
   top: 40px;
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 10px;
   padding: 6px;
   z-index: 20;
@@ -2392,8 +2398,8 @@ select {
 }
 
 .chat-card-menu button:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
-  color: #fff !important;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05)) !important;
+  color: var(--color-text, #fff) !important;
 }
 
 /* ── Chat card menu - Mobile bottom sheet ──────────────── */
@@ -2455,8 +2461,8 @@ select {
   font-size: 0.95rem !important;
   font-weight: 500 !important;
   color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.03)) !important;
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08)) !important;
   border-radius: 12px !important;
   display: flex;
   align-items: center;
@@ -2466,7 +2472,7 @@ select {
 }
 
 .bottom-sheet-item:active {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.08)) !important;
   transform: scale(0.98);
 }
 
@@ -2477,7 +2483,7 @@ select {
 }
 
 .mobile-sheet-actions .bottom-sheet-item:active {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.08)) !important;
 }
 
 .bottom-sheet-item.danger-item {
@@ -2510,7 +2516,7 @@ select {
 
 .media-upload-popup {
   background: #131921;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 16px;
   padding: 1.5rem;
   width: 340px;
@@ -2659,7 +2665,7 @@ select {
   border-radius: 50%;
   background: #ef4444;
   border: 2px solid #131921;
-  color: #fff;
+  color: var(--color-text, #fff);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2683,7 +2689,7 @@ select {
   top: -4px;
   right: -4px;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text, #fff);
   font-size: 0.6rem;
   font-weight: 700;
   min-width: 14px;
@@ -2702,7 +2708,7 @@ select {
   width: 44px;
   height: 24px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
   border: none;
   cursor: pointer;
   padding: 2px;
@@ -2760,7 +2766,7 @@ select {
 
 .notif-prompt-card {
   background: #111827;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-2xl);
   padding: var(--space-8);
   max-width: 400px;
@@ -2813,12 +2819,12 @@ select {
   font-size: var(--text-sm);
   font-weight: 600;
   color: #94a3b8;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
   transition: all var(--transition-interactive);
 }
 
 .notif-btn-later:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
   color: #e2e8f0;
 }
 
@@ -2973,7 +2979,7 @@ select {
 .message-progress-container {
   margin-top: 6px;
   width: 100%;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
   height: 4px;
   border-radius: 2px;
   overflow: hidden;
@@ -2991,7 +2997,7 @@ select {
   right: 0;
   top: -14px;
   font-size: 9px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.6));
 }
 
 /* ── Replied Message Preview ─────────────────────────── */
@@ -3019,7 +3025,7 @@ select {
 
 .replied-content {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text, rgba(255, 255, 255, 0.7));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3085,8 +3091,8 @@ select {
 }
 
 .reply-cancel-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
+  color: var(--color-text, #fff);
 }
 
 /* ── Scroll Down Button ─────────────────────────────── */
@@ -3098,7 +3104,7 @@ select {
   height: 36px;
   border-radius: 50%;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text, #fff);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3138,7 +3144,7 @@ select {
   background: var(--bg-secondary);
   padding: 2.5rem;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   text-align: center;
   max-width: 320px;
   width: 90%;
@@ -3170,7 +3176,7 @@ select {
 .loading-progress-container {
   width: 100%;
   height: 4px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
   border-radius: 2px;
   overflow: hidden;
 }
@@ -3246,7 +3252,7 @@ select {
   max-width: 100%;
   max-height: 85vh;
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -3283,7 +3289,7 @@ select {
 .admin-header h2 {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--color-text, #fff);
 }
 
 .admin-close-btn {
@@ -3326,7 +3332,7 @@ select {
 
 .admin-tabs button.active {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text, #fff);
 }
 
 @media (max-width: 768px) {
@@ -3369,12 +3375,12 @@ select {
 }
 
 .admin-body::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.12));
   border-radius: 100px;
 }
 
 .admin-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.25));
 }
 
 .admin-stats-grid {
@@ -3384,7 +3390,7 @@ select {
 }
 
 .stat-card {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
   padding: 20px;
   border-radius: 12px;
   display: flex;
@@ -3450,7 +3456,7 @@ select {
 }
 
 .user-name {
-  color: #fff;
+  color: var(--color-text, #fff);
   font-weight: 500;
 }
 
@@ -3461,8 +3467,8 @@ select {
 
 .admin-users-list select {
   background: #1f2937;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text, #fff);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   padding: 6px 10px;
   border-radius: 6px;
   font-size: 0.85rem;
@@ -3488,7 +3494,7 @@ select {
 }
 
 .btn-unverified {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
   color: #94a3b8;
 }
 
@@ -3530,7 +3536,7 @@ select {
 
 .sidebar-admin-btn:hover {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text, #fff);
 }
 
 /* ── ZenPulse Admin ─────────────────────────────────── */
@@ -3592,7 +3598,7 @@ select {
   font-size: 0.8rem;
   font-weight: 600;
   transition: all 0.2s;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
 }
 
 .admin-btn {
@@ -3603,17 +3609,17 @@ select {
 
 .admin-btn:hover {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text, #fff);
 }
 
 .faq-btn {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
   color: #94a3b8;
 }
 
 .faq-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
+  color: var(--color-text, #fff);
 }
 
 .faq-item h3 {
@@ -3642,7 +3648,7 @@ select {
   overflow: hidden;
   background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 24px;
 }
 
@@ -3728,7 +3734,7 @@ select {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.03));
   padding: 16px;
   border-radius: 16px;
   margin-bottom: 24px;
@@ -3825,7 +3831,7 @@ select {
 
 .moments-row-container {
   padding: 3px 16px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.02));
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   overflow: hidden;
 }
@@ -3919,10 +3925,10 @@ select {
   border-radius: 50%;
   background: var(--color-surface, #0f172a);
   
-  color: #fff;
+  color: var(--color-text, #fff);
   font-weight: 700;
   overflow: visible;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
 }
 
 .add-moment-btn {
@@ -3944,8 +3950,8 @@ select {
 
 .aura-duration-selector select {
   background: #1e293b;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  color: var(--color-text, #fff);
   padding: 4px 8px;
   border-radius: 8px;
   font-size: 0.8rem;
@@ -3956,15 +3962,15 @@ select {
 
 .aura-duration-selector select option {
   background: #1e293b;
-  color: #fff;
+  color: var(--color-text, #fff);
 }
 
 .aura-music-cropper {
   margin-top: 12px;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.04));
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -3974,8 +3980,8 @@ select {
   display: flex;
   align-items: center;
   justify-content: space-evenly;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 100px;
   padding: 3px;
   gap: 0;
@@ -3999,7 +4005,7 @@ select {
 
 .duration-opt.active {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text, #fff);
   box-shadow: 0 2px 8px rgba(61, 165, 217, 0.35);
 }
 
@@ -4026,7 +4032,7 @@ select {
   -webkit-appearance: none;
   width: 100%;
   height: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
   border-radius: 2px;
   outline: none;
 }
@@ -4050,9 +4056,9 @@ select {
 }
 
 .cropper-play-btn {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
   border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+  color: var(--color-text, #fff);
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -4115,8 +4121,8 @@ select {
   backdrop-filter: blur(12px);
   padding: 12px 20px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  color: var(--color-text, #fff);
   font-size: 0.85rem;
   font-weight: 600;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
@@ -4186,7 +4192,7 @@ select {
   overflow-y: auto;
   background: rgba(15, 23, 42, 0.95);
   backdrop-filter: blur(40px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 32px;
   box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.7);
   display: flex;
@@ -4236,9 +4242,9 @@ select {
 }
 
 .aura-close-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  color: var(--color-text, #fff);
   padding: 8px;
   border-radius: 12px;
   cursor: pointer;
@@ -4249,7 +4255,7 @@ select {
 }
 
 .aura-close-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
   transform: rotate(90deg);
 }
 
@@ -4258,7 +4264,7 @@ select {
   min-height: 200px;
   margin: 0 28px;
   background: rgba(0, 0, 0, 0.3);
-  border: 2px dashed rgba(255, 255, 255, 0.08);
+  border: 2px dashed var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 28px;
   display: flex;
   align-items: center;
@@ -4289,7 +4295,7 @@ select {
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+  color: var(--color-text, #fff);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -4323,14 +4329,14 @@ select {
   text-align: center;
   width: 100%;
   margin-bottom: 8px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.02));
   border-radius: 20px;
 }
 
 .aura-placeholder-icon {
   width: 56px;
   height: 56px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.03));
   border-radius: 18px;
   display: flex;
   align-items: center;
@@ -4374,7 +4380,7 @@ select {
   backdrop-filter: blur(20px);
   padding: 24px;
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
   z-index: 200;
   text-align: center;
@@ -4382,7 +4388,7 @@ select {
 }
 
 .aura-permission-popup h3 {
-  color: #fff;
+  color: var(--color-text, #fff);
   font-size: 1.1rem;
   font-weight: 700;
   margin-bottom: 8px;
@@ -4402,7 +4408,7 @@ select {
 .allow-btn {
   flex: 1;
   background: #3b82f6;
-  color: #fff;
+  color: var(--color-text, #fff);
   border: none;
   padding: 10px;
   border-radius: 12px;
@@ -4412,9 +4418,9 @@ select {
 
 .deny-btn {
   flex: 1;
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
+  color: var(--color-text, #fff);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   padding: 10px;
   border-radius: 12px;
   font-weight: 700;
@@ -4456,7 +4462,7 @@ select {
 .camera-cancel {
   background: rgba(0, 0, 0, 0.5);
   border: none;
-  color: #fff;
+  color: var(--color-text, #fff);
   padding: 12px;
   border-radius: 50%;
   cursor: pointer;
@@ -4464,10 +4470,10 @@ select {
 
 .aura-duration-options {
   display: flex;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.03));
   padding: 2px;
   border-radius: 100px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   gap: 2px;
 }
 
@@ -4485,20 +4491,20 @@ select {
 
 .duration-opt.active {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text, #fff);
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
 .duration-opt:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
+  color: var(--color-text, #fff);
 }
 
 .aura-textarea {
   width: 100%;
   background: transparent;
   border: none;
-  color: #fff;
+  color: var(--color-text, #fff);
   font-size: 1.1rem;
   font-weight: 500;
   resize: none;
@@ -4525,8 +4531,8 @@ select {
 }
 
 .aura-tool-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   color: #94a3b8;
   width: 44px;
   height: 44px;
@@ -4539,15 +4545,15 @@ select {
 }
 
 .aura-tool-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
+  color: var(--color-text, #fff);
   transform: translateY(-2px);
 }
 
 .aura-share-btn {
   background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   border: none;
-  color: #fff;
+  color: var(--color-text, #fff);
   padding: 12px 24px;
   border-radius: 16px;
   font-weight: 700;
@@ -4574,7 +4580,7 @@ select {
   height: 20px;
   border: 3px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  border-top-color: #fff;
+  border-top-color: var(--color-text, #fff);
   animation: aura-spin 0.8s linear infinite;
 }
 
@@ -4704,7 +4710,7 @@ select {
 .aura-progress-bg {
   flex: 1;
   height: 2px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.2));
   border-radius: 4px;
 }
 
@@ -4798,8 +4804,8 @@ select {
 
 .aura-moment-counter {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.5));
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
   padding: 2px 6px;
   border-radius: 10px;
   font-weight: 500;
@@ -4808,7 +4814,7 @@ select {
 .aura-username {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-text, #fff);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4920,7 +4926,7 @@ select {
 .aura-viewer-close {
   background: rgba(0, 0, 0, 0.5) !important;
   border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
-  color: #ffffff !important;
+  color: var(--color-text, #fff)fff !important;
   cursor: pointer;
   opacity: 1 !important;
   visibility: visible !important;
@@ -4960,7 +4966,7 @@ select {
 .aura-viewer-close:hover {
   opacity: 1;
   transform: scale(1.15);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
 }
 
 .aura-trash-btn:hover {
@@ -4981,7 +4987,7 @@ select {
   backdrop-filter: blur(20px);
   padding: 32px;
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   width: 90%;
   max-width: 320px;
   box-sizing: border-box;
@@ -5004,14 +5010,14 @@ select {
 }
 
 .aura-permission-popup h3 {
-  color: #fff;
+  color: var(--color-text, #fff);
   font-size: 1.4rem;
   margin-bottom: 12px;
   font-weight: 800;
 }
 
 .aura-permission-popup p {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.6));
   font-size: 0.95rem;
   margin-bottom: 24px;
   line-height: 1.5;
@@ -5039,15 +5045,15 @@ select {
 
 .permission-actions .deny-btn {
   background: #ef4444;
-  color: #fff;
+  color: var(--color-text, #fff);
   border: 1px solid transparent;
   box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
 }
 
 .permission-actions .allow-btn {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
+  color: var(--color-text, #fff);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
 }
 
 .permission-actions button:hover {
@@ -5059,14 +5065,14 @@ select {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
   backdrop-filter: blur(8px);
   padding: 4px 10px;
   border-radius: 100px;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text, rgba(255, 255, 255, 0.8));
   font-size: 0.75rem;
   font-weight: 700;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
 }
 
 .aura-view-counter svg {
@@ -5078,14 +5084,14 @@ select {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
   backdrop-filter: blur(8px);
   padding: 4px 10px;
   border-radius: 100px;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text, rgba(255, 255, 255, 0.8));
   font-size: 0.75rem;
   font-weight: 700;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
 }
 
 .aura-view-counter svg {
@@ -5159,12 +5165,12 @@ select {
 
 .music-focus-info h2 {
   font-size: 1.8rem;
-  color: #fff;
+  color: var(--color-text, #fff);
   margin-bottom: 8px;
 }
 
 .music-focus-info p {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.6));
   font-size: 1.1rem;
 }
 
@@ -5189,7 +5195,7 @@ select {
 .aura-viewer-footer {
   font-size: 0.85rem;
   font-weight: 900;
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--color-text-faint, rgba(255, 255, 255, 0.2));
   letter-spacing: 0.1em;
 }
 
@@ -5213,7 +5219,7 @@ select {
 
 .aura-avatar-countdown {
   font-size: 0.65rem;
-  color: #fff;
+  color: var(--color-text, #fff);
   font-weight: 700;
   background: #000;
   padding: 2px 6px;
@@ -5281,7 +5287,7 @@ select {
   display: flex;
   align-items: center;
   gap: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   animation: aura-slide-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -5336,18 +5342,18 @@ select {
 }
 
 .m-title {
-  color: #fff;
+  color: var(--color-text, #fff);
   font-size: 0.85rem;
   font-weight: 700;
 }
 
 .m-artist {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.6));
   font-size: 0.75rem;
 }
 
 .aura-text-content {
-  color: #fff;
+  color: var(--color-text, #fff);
   font-size: 1.5rem;
   font-weight: 600;
   text-align: center;
@@ -5384,7 +5390,7 @@ select {
 .aura-music-search-container {
   margin-top: 12px;
   background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 20px;
   overflow: hidden;
 }
@@ -5406,9 +5412,9 @@ select {
 
 .music-search-header input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  color: var(--color-text, #fff);
   padding: 10px 16px;
   border-radius: 12px;
   outline: none;
@@ -5431,7 +5437,7 @@ select {
 }
 
 .music-results::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
   border-radius: 4px;
 }
 
@@ -5445,7 +5451,7 @@ select {
 }
 
 .music-track-item:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.03));
 }
 
 .track-cover {
@@ -5471,7 +5477,7 @@ select {
 }
 
 .track-name {
-  color: #fff;
+  color: var(--color-text, #fff);
   font-size: 0.9rem;
   font-weight: 600;
   white-space: nowrap;
@@ -5480,7 +5486,7 @@ select {
 }
 
 .track-artist {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.6));
   font-size: 0.8rem;
   white-space: nowrap;
   flex-shrink: 0;
@@ -5511,11 +5517,11 @@ select {
 
 .aura-close-search:hover {
   opacity: 1;
-  color: #fff;
+  color: var(--color-text, #fff);
 }
 
 .track-name {
-  color: #fff;
+  color: var(--color-text, #fff);
   font-size: 0.9rem;
   font-weight: 600;
   white-space: nowrap;
@@ -5535,9 +5541,9 @@ select {
 
 .preview-btn,
 .select-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  color: var(--color-text, #fff);
   padding: 6px 12px;
   border-radius: 8px;
   font-size: 0.75rem;
@@ -5552,7 +5558,7 @@ select {
 }
 
 .preview-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
 }
 
 .select-btn:hover {
@@ -5588,7 +5594,7 @@ select {
 }
 
 .aura-music-card .music-title {
-  color: #fff;
+  color: var(--color-text, #fff);
   font-size: 0.85rem;
   font-weight: 600;
 }
@@ -5607,8 +5613,8 @@ select {
 }
 
 .aura-music-cropper {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 18px;
   padding: 16px;
   display: flex;
@@ -5639,7 +5645,7 @@ select {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #fff;
+  color: var(--color-text, #fff);
   font-size: 0.85rem;
   font-weight: 600;
   min-width: 0;
@@ -5655,9 +5661,9 @@ select {
 }
 
 .cropper-play-btn {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
   border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+  color: var(--color-text, #fff);
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -5692,7 +5698,7 @@ select {
 
 .aura-remove-music:hover {
   background: #ef4444;
-  color: #fff;
+  color: var(--color-text, #fff);
   transform: scale(1.1);
 }
 
@@ -5707,7 +5713,7 @@ select {
   width: 100%;
   height: 8px;
   border-radius: 100px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
   outline: none;
   position: relative;
   z-index: 5;
@@ -5774,7 +5780,7 @@ select {
   gap: 6px;
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 100px;
   padding: 8px 14px;
   z-index: 1200;
@@ -5796,7 +5802,7 @@ select {
   border: none;
   cursor: pointer;
   padding: 0;
-  color: #fff;
+  color: var(--color-text, #fff);
 }
 
 .aura-like-btn:disabled {
@@ -5941,14 +5947,14 @@ select {
 
 .network-banner[data-status="offline"] {
   background: rgba(239, 68, 68, 0.85);
-  color: #fff;
+  color: var(--color-text, #fff);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
 }
 
 .network-banner[data-status="reconnecting"] {
   background: rgba(245, 158, 11, 0.85);
-  color: #fff;
+  color: var(--color-text, #fff);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
 }
@@ -5962,7 +5968,7 @@ select {
   width: 10px;
   height: 10px;
   border: 2px solid rgba(255,255,255,0.4);
-  border-top-color: #fff;
+  border-top-color: var(--color-text, #fff);
   border-radius: 50%;
   display: inline-block;
   animation: spin 0.7s linear infinite;
@@ -5976,13 +5982,13 @@ select {
 .field-hint-error { color: #f87171; }
 .field-hint-ok    { color: #34d399; }
 .profile-avatar-container { position: relative; width: 130px; height: 130px; margin: 0 auto; }
-.avatar-reset-btn { position: absolute !important; bottom: 2px !important; right: 2px !important; width: 24px !important; height: 24px !important; background: #f43f5e !important; color: #fff !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; border: 2px solid #0f1117 !important; cursor: pointer; z-index: 20 !important; padding: 0 !important; }
+.avatar-reset-btn { position: absolute !important; bottom: 2px !important; right: 2px !important; width: 24px !important; height: 24px !important; background: #f43f5e !important; color: var(--color-text, #fff) !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; border: 2px solid #0f1117 !important; cursor: pointer; z-index: 20 !important; padding: 0 !important; }
 .avatar-reset-btn:hover { transform: scale(1.15) !important; background: #e11d48 !important; }
 .aura-user-meta { overflow: visible !important; }
 .aura-user-meta .avatar { flex-shrink: 0; overflow: visible; }
 @media (max-width: 480px) { .aura-speaker-btn, .aura-trash-btn, .aura-viewer-close { padding: 5px !important; min-width: 28px !important; min-height: 28px !important; } .aura-speaker-btn svg, .aura-trash-btn svg, .aura-viewer-close svg { width: 16px !important; height: 16px !important; } .aura-viewer-actions { gap: 4px; } .aura-header-right { gap: 4px; } }
 .music-track-item { display: flex !important; align-items: flex-start !important; padding: 10px 12px; gap: 12px; cursor: pointer; border-radius: 12px; transition: background 0.18s; }
-.music-track-item:hover { background: rgba(255,255,255,0.04); }
+.music-track-item:hover { background: var(--color-overlay, rgba(255, 255, 255, 0.04)); }
 .track-cover { width: 46px; height: 46px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
 .track-info { display: flex !important; flex-direction: column !important; gap: 3px; min-width: 0; flex: 1; }
 .track-name { color: #f1f5f9; font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -6031,7 +6037,7 @@ select {
   z-index: 30;
   background: rgba(0, 0, 0, 0.55) !important;
   border: 1.5px solid rgba(255, 255, 255, 0.25) !important;
-  color: #fff !important;
+  color: var(--color-text, #fff) !important;
   border-radius: 50% !important;
   width: 40px !important;
   height: 40px !important;
@@ -6045,7 +6051,7 @@ select {
   padding: 0 !important;
   pointer-events: auto;
 }
-.aura-mute-overlay:hover { transform: scale(1.12); background: rgba(255,255,255,0.12) !important; }
+.aura-mute-overlay:hover { transform: scale(1.12); background: var(--color-overlay, rgba(255, 255, 255, 0.12)) !important; }
 .aura-mute-overlay svg { pointer-events: none; }
 
 /* DualBadge: crossfade sparkle <-> verified tick every 3s */
@@ -6182,11 +6188,11 @@ select {
 
 /* === MomentViewer Dropdown === */
 .aura-menu-container { position: relative; }
-.aura-menu-trigger { background: transparent; border: none; color: #fff; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; opacity: 0.8; transition: opacity 0.2s; }
+.aura-menu-trigger { background: transparent; border: none; color: var(--color-text, #fff); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; opacity: 0.8; transition: opacity 0.2s; }
 .aura-menu-trigger:hover { opacity: 1; }
-.aura-dropdown-menu { position: absolute; top: 100%; right: 0; background: rgba(30, 30, 30, 0.95); backdrop-filter: blur(10px); border-radius: 8px; padding: 4px; min-width: 140px; border: 1px solid rgba(255, 255, 255, 0.1); z-index: 100; display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
-.aura-dropdown-item { background: transparent; border: none; color: #fff; text-align: left; padding: 8px 12px; font-size: 0.9rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; white-space: nowrap; }
-.aura-dropdown-item:hover { background: rgba(255, 255, 255, 0.1); }
+.aura-dropdown-menu { position: absolute; top: 100%; right: 0; background: rgba(30, 30, 30, 0.95); backdrop-filter: blur(10px); border-radius: 8px; padding: 4px; min-width: 140px; border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08)); z-index: 100; display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
+.aura-dropdown-item { background: transparent; border: none; color: var(--color-text, #fff); text-align: left; padding: 8px 12px; font-size: 0.9rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; white-space: nowrap; }
+.aura-dropdown-item:hover { background: var(--color-overlay, rgba(255, 255, 255, 0.1)); }
 .aura-dropdown-item.danger { color: #ff4d4d; }
 .aura-dropdown-item.danger:hover { background: rgba(255, 77, 77, 0.1); }
 
@@ -6205,8 +6211,8 @@ select {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   color: #94a3b8;
   font-size: 0.75rem;
   font-weight: 500;
@@ -6288,7 +6294,7 @@ select {
 }
 
 .hd-quality-btn.active {
-  color: #fff;
+  color: var(--color-text, #fff);
   background: var(--color-primary);
   box-shadow: 0 0 10px rgba(61, 165, 217, 0.4);
 }
@@ -6327,9 +6333,9 @@ select {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.1));
   border: none;
-  color: rgba(255,255,255,0.6);
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.6));
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -6340,8 +6346,8 @@ select {
 }
 
 .sp-op-toast-close:hover {
-  background: rgba(255,255,255,0.2);
-  color: #fff;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.2));
+  color: var(--color-text, #fff);
 }
 
 @keyframes sp-op-slide-in {
@@ -6380,7 +6386,7 @@ select {
     opacity: 0;
     pointer-events: none;
     background: var(--color-surface-offset, #1e2530);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     min-width: 130px;
     z-index: 2000;
@@ -6638,7 +6644,7 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--color-text, #fff);
   overflow: hidden;
   user-select: none;
 }
@@ -6648,9 +6654,9 @@ select {
   position: absolute;
   top: 24px;
   right: 24px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.65);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.65));
   padding: 8px 16px;
   border-radius: 20px;
   font-size: 0.72rem;
@@ -6663,8 +6669,8 @@ select {
 }
 
 .zen-skip-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.12));
+  color: var(--color-text, #fff);
   transform: translateY(-1px);
 }
 
@@ -6675,7 +6681,7 @@ select {
   letter-spacing: 0.06em;
   text-align: center;
   max-width: 80%;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--color-text, rgba(255, 255, 255, 0.95));
   animation: elegantFadeIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
@@ -6685,7 +6691,7 @@ select {
   font-size: 2.4rem;
   font-weight: 700;
   letter-spacing: 0.12em;
-  color: #fff;
+  color: var(--color-text, #fff);
   text-transform: uppercase;
   font-family: 'Cinzel', Georgia, serif;
   animation: gentleBreathingDrift 2.5s ease-in-out infinite;
@@ -6722,7 +6728,7 @@ select {
   font-weight: 300;
   font-style: italic;
   letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text, rgba(255, 255, 255, 0.9));
   opacity: 0;
   transform: translateY(12px);
   animation: wordRise 2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -6844,8 +6850,8 @@ select {
   -webkit-backdrop-filter: blur(12px);
   padding: 8px 18px;
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #ffffff;
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  color: var(--color-text, #fff)fff;
   font-size: 0.95rem;
   font-weight: 500;
   text-align: center;
@@ -6885,7 +6891,7 @@ select {
 
 .zen-modal-container {
   background: rgba(15, 22, 36, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 24px;
   padding: 28px 24px;
   width: 400px;
@@ -6937,7 +6943,7 @@ select {
   font-weight: 700;
   margin-bottom: 10px;
   letter-spacing: -0.02em;
-  color: #fff;
+  color: var(--color-text, #fff);
 }
 
 .zen-modal-desc {
@@ -6966,7 +6972,7 @@ select {
 
 .zen-btn-primary {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text, #fff);
   box-shadow: 0 4px 12px rgba(61, 165, 217, 0.25);
 }
 
@@ -6976,14 +6982,14 @@ select {
 }
 
 .zen-btn-secondary {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   color: #cbd5e1;
 }
 
 .zen-btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.12));
+  color: var(--color-text, #fff);
 }
 
 /* Animations */
@@ -7046,12 +7052,12 @@ select {
   background: rgba(10, 15, 28, 0.95);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   padding: 10px 20px;
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 500;
-  color: #fff;
+  color: var(--color-text, #fff);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
@@ -7153,7 +7159,7 @@ select {
   top: -46px;
   right: 12px;
   background: rgba(22, 27, 34, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 999px;
   padding: 4px 10px;
   display: flex;
@@ -7195,8 +7201,8 @@ select {
 
 .reaction-option-btn:hover {
   transform: scale(1.3) translateY(-4px);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.08));
+  color: var(--color-text, #fff);
 }
 
 .reaction-option-btn svg {
@@ -7210,7 +7216,7 @@ select {
   bottom: -15px;
   right: 14px;
   background: rgba(22, 27, 34, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 999px;
   padding: 3px 8px;
   display: inline-flex;
@@ -7233,7 +7239,7 @@ select {
 
 .bubble-reactions-capsule:hover {
   background: rgba(30, 37, 48, 0.98);
-  border-color: rgba(255,255,255,0.18);
+  border-color: var(--color-text-faint, rgba(255, 255, 255, 0.18));
   transform: translateY(-1px);
 }
 
@@ -7292,8 +7298,8 @@ select {
 }
 
 .bubble-reaction-item.is-peer {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 50%;
   padding: 1px;
 }
@@ -7396,7 +7402,7 @@ select {
 /* ── WhatsApp-Like Reaction Detail list sheets ── */
 .reactions-detail-modal {
   background: var(--color-surface, #161b22);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 380px;
@@ -7416,7 +7422,7 @@ select {
 .reactions-detail-title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-text, #fff);
 }
 
 .reactions-detail-close {
@@ -7433,8 +7439,8 @@ select {
 }
 
 .reactions-detail-close:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
+  color: var(--color-text, #fff);
 }
 
 .reactions-detail-body {
@@ -7453,7 +7459,7 @@ select {
 }
 
 .reaction-row-item:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.03));
 }
 
 .reaction-row-item.is-own {
@@ -7481,8 +7487,8 @@ select {
   justify-content: center;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--color-text, #fff);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   overflow: hidden;
 }
 
@@ -7523,7 +7529,7 @@ select {
   width: 100%;
   max-width: 420px;
   background: var(--color-surface, #161b22);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 24px;
   padding: 32px;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
@@ -7549,7 +7555,7 @@ select {
 .compulsory-push-title {
   font-size: 1.35rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--color-text, #fff)fff;
   margin-bottom: 12px;
   letter-spacing: -0.01em;
 }
@@ -7593,7 +7599,7 @@ select {
   padding: 14px;
   border-radius: 12px;
   font-size: 0.95rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   user-select: none !important;
   -webkit-user-select: none !important;
   -webkit-touch-callout: none !important;
@@ -7602,13 +7608,13 @@ select {
 
 
 /* GIF & Sticker Integration */
-.gif-preview-btn { background: rgba(255, 255, 255, 0.1); border: none; border-radius: 8px; color: #fff; font-size: 10px; font-weight: bold; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; overflow: hidden; margin-left: 2px; margin-right: 8px; flex-shrink: 0; }
-.gif-preview-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
+.gif-preview-btn { background: var(--color-overlay, rgba(255, 255, 255, 0.1)); border: none; border-radius: 8px; color: var(--color-text, #fff); font-size: 10px; font-weight: bold; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; overflow: hidden; margin-left: 2px; margin-right: 8px; flex-shrink: 0; }
+.gif-preview-btn:hover:not(:disabled) { background: var(--color-overlay, rgba(255, 255, 255, 0.2)); }
 .gif-preview-img { width: 100%; height: 100%; object-fit: cover; }
 
 .gif-picker-overlay { display: flex; align-items: flex-end; justify-content: center; }
 @media(min-width: 768px) { .gif-picker-overlay { align-items: center; } }
-.gif-picker-modal { background: var(--color-surface); width: 100%; max-width: 400px; height: 60vh; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; overflow: hidden; padding: 16px; border: 1px solid rgba(255,255,255,0.05); }
+.gif-picker-modal { background: var(--color-surface); width: 100%; max-width: 400px; height: 60vh; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; overflow: hidden; padding: 16px; border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08)); }
 @media(min-width: 768px) { .gif-picker-modal { height: 500px; border-radius: 20px; } }
 
 .gif-picker-header { display: flex; justify-content: center; align-items: center; position: relative; margin-bottom: 12px; width: 100%; }
@@ -7621,15 +7627,15 @@ select {
 .gif-fav-btn svg { width: 14px; height: 14px; stroke: #ffffff; }
 .gif-tabs { display: flex; gap: 8px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 12px; }
 .gif-tab { padding: 6px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; color: #94a3b8; background: transparent; border: none; cursor: pointer; transition: 0.2s; }
-.gif-tab.active { background: var(--color-primary); color: #fff; }
+.gif-tab.active { background: var(--color-primary); color: var(--color-text, #fff); }
 
-.gif-search-container { display: flex; align-items: center; background: rgba(255,255,255,0.05); padding: 10px 16px; border-radius: 12px; margin-bottom: 16px; gap: 10px; }
+.gif-search-container { display: flex; align-items: center; background: var(--color-overlay, rgba(255, 255, 255, 0.05)); padding: 10px 16px; border-radius: 12px; margin-bottom: 16px; gap: 10px; }
 .gif-search-icon { color: #94a3b8; }
 .gif-search-input { background: transparent; border: none; color: #f1f5f9; outline: none; width: 100%; font-size: 14px; }
 
 .gif-scroll-wrap { flex: 1; overflow-y: auto; min-height: 0; padding: 2px; }
 .gif-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.gif-grid-item { width: 100%; aspect-ratio: 1 / 1; border-radius: 8px; overflow: hidden; cursor: pointer; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; }
+.gif-grid-item { width: 100%; aspect-ratio: 1 / 1; border-radius: 8px; overflow: hidden; cursor: pointer; background: var(--color-overlay, rgba(255, 255, 255, 0.05)); display: flex; align-items: center; justify-content: center; }
 .gif-grid-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .gif-grid-item.is-sticker img { object-fit: contain; padding: 4px; }
 .gif-loading { grid-column: span 3; display: flex; justify-content: center; padding: 20px; }
@@ -7654,10 +7660,10 @@ select {
   text-align: left;
 }
 .mobile-menu-btn:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.04));
 }
 .mobile-menu-btn:active {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.08));
   transform: scale(0.98);
 }
 .mobile-menu-btn svg {
@@ -7665,7 +7671,7 @@ select {
 }
 .mobile-menu-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.06));
   margin: 4px 12px;
 }
 
@@ -7679,7 +7685,7 @@ select {
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.06));
   color: #94a3b8;
   cursor: pointer;
   flex-shrink: 0;
@@ -7720,7 +7726,7 @@ select {
   border-radius: 8px;
   overflow: hidden;
   padding: 4px 6px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.04));
 }
 
 .voice-waveform-canvas {
@@ -7764,7 +7770,7 @@ select {
   height: 32px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.07));
   color: #94a3b8;
   cursor: pointer;
   transition: background 0.16s, color 0.16s;
@@ -7826,7 +7832,7 @@ select {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.65));
   white-space: nowrap;
   flex-shrink: 0;
   user-select: none;
@@ -7842,7 +7848,7 @@ select {
   border-radius: 50%;
   border: none;
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-text, #fff);
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.16s, transform 0.12s;
@@ -7870,7 +7876,7 @@ select {
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.55));
   font-size: 0.82rem;
   font-style: italic;
 }
@@ -7970,7 +7976,7 @@ select {
   }
 }
 
-.gif-fav-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.5); border: none; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; opacity: 0; transition: opacity 0.2s; }
+.gif-fav-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.5); border: none; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: var(--color-text, #fff); cursor: pointer; opacity: 0; transition: opacity 0.2s; }
 .gif-grid-item:hover .gif-fav-btn, .gif-fav-btn.active { opacity: 1; }
 .gif-fav-btn:hover { background: rgba(0,0,0,0.8); }
 
@@ -7979,7 +7985,7 @@ select {
 .chat-card-time,
 .chat-card-preview,
 .sidebar-profile-btn {
-  color: rgba(255, 255, 255, 0.75) !important;
+  color: var(--color-text, rgba(255, 255, 255, 0.75)) !important;
 }
 
 .sidebar-profile-btn.logout {
@@ -7987,7 +7993,7 @@ select {
 }
 
 .sidebar-profile-btn:hover {
-  color: #ffffff !important;
+  color: var(--color-text, #fff)fff !important;
 }
 
 /* ── Moments DM Reply Bar ────────────────────────────── */
@@ -8010,10 +8016,10 @@ select {
   align-items: center;
   width: 100%;
   max-width: 440px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.08));
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 100px;
   padding: 6px 6px 6px 16px;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -8021,8 +8027,8 @@ select {
 }
 
 .aura-reply-input-wrapper:focus-within {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.12));
+  border-color: var(--color-text-faint, rgba(255, 255, 255, 0.25));
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
   transform: translateY(-2px);
 }
@@ -8032,14 +8038,14 @@ select {
   background: transparent;
   border: none;
   outline: none;
-  color: #fff;
+  color: var(--color-text, #fff);
   font-size: 0.9rem;
   padding: 8px 0;
   font-family: inherit;
 }
 
 .aura-reply-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-faint, rgba(255, 255, 255, 0.4));
 }
 
 .aura-reply-send-btn {
@@ -8079,8 +8085,8 @@ select {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   flex-shrink: 0;
@@ -8089,8 +8095,8 @@ select {
 
 .aura-reply-container .aura-like-btn:hover {
   transform: scale(1.08);
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.15));
+  border-color: var(--color-text-faint, rgba(255, 255, 255, 0.2));
 }
 
 .aura-reply-container .aura-like-btn.liked {
@@ -8130,7 +8136,7 @@ select {
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   flex-shrink: 0;
   margin-left: 6px;
-  color: #fff;
+  color: var(--color-text, #fff);
 }
 
 .aura-reply-container .aura-reshare-btn:hover:not(:disabled) {
@@ -8199,7 +8205,7 @@ select {
   text-decoration: none;
   font-size: 0.95rem;
   background: #3b82f6;
-  color: #fff;
+  color: var(--color-text, #fff);
   transition: background 0.2s;
   display: inline-flex;
   align-items: center;
@@ -8234,7 +8240,7 @@ select {
 .pulse-card {
   background: rgba(30, 41, 59, 0.7);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 24px;
   padding: 40px;
   position: relative;
@@ -8270,7 +8276,7 @@ select {
   font-weight: 800;
   line-height: 1.3;
   margin: 0 0 32px 0;
-  color: #ffffff;
+  color: var(--color-text, #fff)fff;
   letter-spacing: -0.5px;
 }
 
@@ -8281,8 +8287,8 @@ select {
 }
 
 .pulse-option-btn {
-  background: rgba(255, 255, 255, 0.03);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.03));
+  border: 2px solid var(--color-border, rgba(255, 255, 255, 0.08));
   padding: 18px 24px;
   border-radius: 12px;
   color: #e2e8f0;
@@ -8294,15 +8300,15 @@ select {
 }
 
 .pulse-option-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.06));
+  border-color: var(--color-text-faint, rgba(255, 255, 255, 0.2));
   transform: translateY(-2px);
 }
 
 .pulse-option-btn.selected {
   background: rgba(59, 130, 246, 0.15);
   border-color: #3b82f6;
-  color: #ffffff;
+  color: var(--color-text, #fff)fff;
 }
 
 .submit-vote-btn {
@@ -8334,7 +8340,7 @@ select {
   font-size: 2rem;
   font-weight: 700;
   margin: 0 0 12px 0;
-  color: #fff;
+  color: var(--color-text, #fff);
 }
 
 .pulse-success-state p {
@@ -8363,7 +8369,7 @@ select {
 
 .no-pulse h3 {
   font-size: 1.8rem;
-  color: #fff;
+  color: var(--color-text, #fff);
   margin: 0 0 12px 0;
 }
 
@@ -8403,7 +8409,7 @@ select {
 
 .pulse-result-bar-bg {
   height: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
   border-radius: 6px;
   overflow: hidden;
 }
@@ -8488,7 +8494,7 @@ select {
 
 .pulse-inapp-card {
   background: #1e293b;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: 16px;
   padding: 20px;
 }
@@ -8524,8 +8530,8 @@ select {
 }
 
 .pulse-opt-btn {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   padding: 14px 16px;
   border-radius: 10px;
   color: #e2e8f0;
@@ -8536,13 +8542,13 @@ select {
 }
 
 .pulse-opt-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.08));
 }
 
 .pulse-opt-btn.selected {
   background: rgba(59, 130, 246, 0.15);
   border-color: #3b82f6;
-  color: #ffffff;
+  color: var(--color-text, #fff)fff;
 }
 
 .pulse-submit {
@@ -8607,7 +8613,7 @@ select {
 
 .result-progress-bg {
   height: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 12px;
@@ -8641,11 +8647,11 @@ select {
   height: 32px;
   padding: 0 !important;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05)) !important;
   transition: all 0.2s ease;
   color: #94a3b8 !important;
   cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08)) !important;
   flex-shrink: 0;
 }
 
@@ -8690,7 +8696,7 @@ select {
 }
 
 .history-item {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.02));
   border-radius: 12px;
   padding: 16px;
 }
@@ -8849,8 +8855,8 @@ select {
   border: 1px solid transparent;
 }
 .history-item:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.06);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05)) !important;
+  border-color: var(--color-border, rgba(255, 255, 255, 0.08));
   transform: translateY(-2px);
 }
 
@@ -8859,7 +8865,7 @@ select {
   margin: 20px 24px;
   border-radius: 16px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   background: rgba(0, 0, 0, 0.2);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   display: flex;
@@ -8876,14 +8882,14 @@ select {
 /* Media/Document Loading Skeleton Styling */
 .media-loading-skeleton {
   position: relative;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05));
   border-radius: 12px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
 }
 
 .media-loading-skeleton::before {

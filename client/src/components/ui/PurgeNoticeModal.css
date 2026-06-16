@@ -21,7 +21,7 @@
     max-width: 440px;
     width: 100%;
     text-align: center;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -39,7 +39,7 @@
 }
 
 .purge-notice-content h2 {
-    color: #fff;
+    color: var(--color-text, #fff);
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 16px;
@@ -47,14 +47,14 @@
 }
 
 .purge-notice-content p {
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-text, rgba(255, 255, 255, 0.7));
     font-size: 0.95rem;
     line-height: 1.6;
     margin-bottom: 16px;
 }
 
 .purge-notice-content p strong {
-    color: #fff;
+    color: var(--color-text, #fff);
 }
 
 .purge-btn {

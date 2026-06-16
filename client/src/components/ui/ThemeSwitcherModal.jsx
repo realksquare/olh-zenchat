@@ -54,7 +54,7 @@ const ThemeSwitcherModal = ({ isOpen, onClose }) => {
                     flexDirection: "column", 
                     padding: 0, 
                     background: "var(--color-surface, rgba(15, 23, 42, 0.95))", 
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                     borderRadius: "16px",
                     overflow: "hidden"
                 }}
@@ -88,7 +88,7 @@ const ThemeSwitcherModal = ({ isOpen, onClose }) => {
                             style={{
                                 padding: "16px",
                                 borderRadius: "12px",
-                                border: (user.selectedTheme === "default" || !user.selectedTheme) ? "2px solid var(--color-primary, #38bdf8)" : "2px solid rgba(255,255,255,0.05)",
+                                border: (user.selectedTheme === "default" || !user.selectedTheme) ? "2px solid var(--color-primary, #38bdf8)" : "2px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                 background: (user.selectedTheme === "default" || !user.selectedTheme) ? "rgba(56, 189, 248, 0.05)" : "var(--color-surface-offset, rgba(255,255,255,0.02))",
                                 cursor: "pointer",
                                 transition: "all 0.2s"
@@ -109,7 +109,7 @@ const ThemeSwitcherModal = ({ isOpen, onClose }) => {
                             style={{
                                 padding: "16px",
                                 borderRadius: "12px",
-                                border: !isUnlocked ? "2px solid rgba(255,255,255,0.05)" : user.selectedTheme === "zen_oled" ? "2px solid #5eead4" : "2px solid rgba(255,255,255,0.05)",
+                                border: !isUnlocked ? "2px solid var(--color-border, rgba(255, 255, 255, 0.08))" : user.selectedTheme === "zen_oled" ? "2px solid #5eead4" : "2px solid rgba(255,255,255,0.05)",
                                 background: !isUnlocked ? "var(--color-surface-offset, rgba(255,255,255,0.02))" : user.selectedTheme === "zen_oled" ? "rgba(94, 234, 212, 0.05)" : "var(--color-surface-offset, rgba(255,255,255,0.02))",
                                 cursor: !isUnlocked ? "not-allowed" : "pointer",
                                 opacity: !isUnlocked ? 0.6 : 1,
@@ -134,7 +134,7 @@ const ThemeSwitcherModal = ({ isOpen, onClose }) => {
                             style={{
                                 padding: "16px",
                                 borderRadius: "12px",
-                                border: !isUnlocked ? "2px solid rgba(255,255,255,0.05)" : user.selectedTheme === "earthy_calm" ? "2px solid #6B8E6B" : "2px solid rgba(255,255,255,0.05)",
+                                border: !isUnlocked ? "2px solid var(--color-border, rgba(255, 255, 255, 0.08))" : user.selectedTheme === "earthy_calm" ? "2px solid #6B8E6B" : "2px solid rgba(255,255,255,0.05)",
                                 background: !isUnlocked ? "var(--color-surface-offset, rgba(255,255,255,0.02))" : user.selectedTheme === "earthy_calm" ? "rgba(107, 142, 107, 0.05)" : "var(--color-surface-offset, rgba(255,255,255,0.02))",
                                 cursor: !isUnlocked ? "not-allowed" : "pointer",
                                 opacity: !isUnlocked ? 0.6 : 1,

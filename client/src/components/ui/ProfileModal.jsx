@@ -45,7 +45,7 @@ const CustomSelect = ({ value, onChange, options, isMobile }) => {
                 style={{
                     width: "100%",
                     background: "var(--body-bg, #0e1117)",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                     borderRadius: "8px",
                     padding: "10px 14px",
                     fontSize: "0.85rem",
@@ -73,7 +73,7 @@ const CustomSelect = ({ value, onChange, options, isMobile }) => {
                         left: 0,
                         width: "100%",
                         background: "var(--color-surface, #161b22)",
-                        border: "1px solid rgba(255, 255, 255, 0.08)",
+                        border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                         borderRadius: "8px",
                         boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
                         zIndex: 1000,
@@ -137,7 +137,7 @@ const CustomSelect = ({ value, onChange, options, isMobile }) => {
                             overflow: 'hidden'
                         }}
                     >
-                        <div style={{ padding: "10px 20px 10px", fontSize: "0.95rem", fontWeight: 600, color: "#fff" }}>
+                        <div style={{ padding: "10px 20px 10px", fontSize: "0.95rem", fontWeight: 600, color: "var(--color-text, #fff)" }}>
                             Select Option
                         </div>
 
@@ -696,7 +696,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 width: '100%', 
                                 padding: '10px 12px', 
                                 background: 'rgba(0, 0, 0, 0.2)', 
-                                border: '1px solid rgba(255, 255, 255, 0.1)', 
+                                border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))', 
                                 borderRadius: '8px',
                                 color: 'white',
                                 minHeight: '60px',
@@ -766,7 +766,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                     </div>
 
                     <div className="profile-settings-row" style={{ marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "var(--color-overlay, rgba(255, 255, 255, 0.03))", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                             <div>
                                 <span style={{ fontWeight: "600", fontSize: "0.85rem", display: "block" }}>
                                     SmartPayload-OPtimization (#SP-OP)
@@ -784,7 +784,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 borderRadius: '6px',
                                 background: isLowBandwidth ? 'rgba(234, 179, 8, 0.15)' : 'rgba(255, 255, 255, 0.05)',
                                 color: isLowBandwidth ? '#eab308' : '#64748b',
-                                border: isLowBandwidth ? '1px solid rgba(234, 179, 8, 0.2)' : '1px solid rgba(255, 255, 255, 0.08)',
+                                border: isLowBandwidth ? '1px solid rgba(234, 179, 8, 0.2)' : '1px solid var(--color-border, rgba(255, 255, 255, 0.08))',
                                 fontWeight: '800',
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.5px'
@@ -792,7 +792,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 {isLowBandwidth ? "Active" : "Off"}
                             </span>
                         </div>
-                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "var(--color-overlay, rgba(255, 255, 255, 0.03))", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "12px" }}>
                             <div>
                                 <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem" }}>Two-Factor Authentication (2FA)</span>
                                 <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Secure your account using Email OTP</span>
@@ -818,7 +818,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                     </button>
                                 </div>
                             ) : (
-                                <div style={{ display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "10px" }}>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", paddingTop: "10px" }}>
                                     {!otpSent ? (
                                         <>
                                             <span style={{ fontSize: "0.75rem", color: "#94a3b8", lineHeight: "1.4" }}>
@@ -830,7 +830,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                 disabled={!email.trim()}
                                                 style={{ 
                                                     background: !email.trim() ? "rgba(255, 255, 255, 0.05)" : "rgba(61, 165, 217, 0.15)", 
-                                                    border: !email.trim() ? "1px solid rgba(255, 255, 255, 0.08)" : "1px solid rgba(61, 165, 217, 0.3)", 
+                                                    border: !email.trim() ? "1px solid var(--color-border, rgba(255, 255, 255, 0.08))" : "1px solid rgba(61, 165, 217, 0.3)", 
                                                     color: !email.trim() ? "#64748b" : "var(--color-primary)", 
                                                     padding: "8px 16px", 
                                                     borderRadius: "8px", 
@@ -845,7 +845,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                             </button>
                                         </>
                                     ) : (
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", background: "rgba(255,255,255,0.02)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", background: "var(--color-overlay, rgba(255, 255, 255, 0.02))", padding: "12px", borderRadius: "8px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))" }}>
                                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                                 <label style={{ fontSize: "0.75rem", color: "var(--color-primary)", fontWeight: "600" }}>Enter 6-Digit Code</label>
                                                 <span style={{ fontSize: "0.75rem", color: expiryTimeLeft > 0 ? "#94a3b8" : "#ef4444", fontWeight: "700" }}>
@@ -867,11 +867,11 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                 style={{
                                                     width: "100%",
                                                     background: "rgba(0, 0, 0, 0.3)",
-                                                    border: "1px solid rgba(255,255,255,0.15)",
+                                                    border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                                     borderRadius: "8px",
                                                     padding: "10px 12px",
                                                     fontSize: "1.1rem",
-                                                    color: "#fff",
+                                                    color: "var(--color-text, #fff)",
                                                     letterSpacing: "8px",
                                                     textAlign: "center",
                                                     fontFamily: "monospace",
@@ -906,9 +906,9 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                     style={{ 
                                                         flex: 1, 
                                                         maxWidth: "150px", 
-                                                        background: "rgba(255,255,255,0.06)", 
-                                                        border: "1px solid rgba(255,255,255,0.1)", 
-                                                        color: "#fff", 
+                                                        background: "var(--color-overlay, rgba(255, 255, 255, 0.06))", 
+                                                        border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", 
+                                                        color: "var(--color-text, #fff)", 
                                                         padding: "10px 16px", 
                                                         borderRadius: "8px", 
                                                         fontSize: "0.8rem", 
@@ -953,7 +953,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                             )}
                         </div>
 
-                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "var(--color-border, rgba(255, 255, 255, 0.08))", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                             <div>
                                 <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem" }}>Message Sounds</span>
                                 <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Play sounds for sent/received messages</span>
@@ -968,7 +968,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                             </button>
                         </div>
 
-                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px" }}>
+                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "var(--color-overlay, rgba(255, 255, 255, 0.03))", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "12px" }}>
                             <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem", marginBottom: "0.5rem" }}>Push Notifications</span>
                             {isSubscribedInBrowser ? (
                                 <div style={{ color: "#10b981", fontSize: "0.8rem", fontWeight: "500" }}>Subscribed in this browser</div>
@@ -979,7 +979,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                             )}
                         </div>
 
-                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px" }}>
+                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "var(--color-border, rgba(255, 255, 255, 0.08))", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "12px" }}>
                             <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem", marginBottom: "0.5rem" }}>Blocked Users</span>
                             {(!user?.blockedUsers || user.blockedUsers.length === 0) ? (
                                 <span style={{ fontSize: "0.75rem", color: "#64748b" }}>No blocked users.</span>
@@ -1039,7 +1039,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                             placeholder="Enter account password"
                                             value={activationPassword}
                                             onChange={(e) => setActivationPassword(e.target.value)}
-                                            style={{ flex: 1, padding: "8px 36px 8px 10px", borderRadius: "8px", background: "rgba(0, 0, 0, 0.4)", border: "1px solid rgba(255,255,255,0.15)", color: "white", fontSize: "0.78rem", width: "100%" }}
+                                            style={{ flex: 1, padding: "8px 36px 8px 10px", borderRadius: "8px", background: "rgba(0, 0, 0, 0.4)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", color: "white", fontSize: "0.78rem", width: "100%" }}
                                         />
                                         <button
                                             type="button"
@@ -1093,7 +1093,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                             placeholder="Enter account password"
                                             value={activationPassword}
                                             onChange={(e) => setActivationPassword(e.target.value)}
-                                            style={{ flex: 1, padding: "8px 36px 8px 10px", borderRadius: "8px", background: "rgba(0, 0, 0, 0.4)", border: "1px solid rgba(255,255,255,0.15)", color: "white", fontSize: "0.78rem", width: "100%" }}
+                                            style={{ flex: 1, padding: "8px 36px 8px 10px", borderRadius: "8px", background: "rgba(0, 0, 0, 0.4)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", color: "white", fontSize: "0.78rem", width: "100%" }}
                                         />
                                         <button
                                             type="button"
@@ -1133,7 +1133,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 </span>
                             </div>
                         ) : (
-                            <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                            <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "var(--color-border, rgba(255, 255, 255, 0.08))", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                                 <div>
                                     <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem" }}>E2EE Offline Recovery Key</span>
                                     <span style={{ fontSize: "0.72rem", color: "#94a3b8", display: "block", marginTop: "4px", lineHeight: "1.3" }}>
@@ -1155,8 +1155,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                             onClick={handleRotateRecoveryKey}
                                             style={{
                                                 flex: 1,
-                                                background: isConfirmingRotate ? "rgba(244, 63, 94, 0.15)" : "rgba(255, 255, 255, 0.04)",
-                                                border: isConfirmingRotate ? "1px solid rgba(244, 63, 94, 0.4)" : "1px solid rgba(255, 255, 255, 0.1)",
+                                                background: isConfirmingRotate ? "rgba(244, 63, 94, 0.15)" : "var(--color-border, rgba(255, 255, 255, 0.08))",
+                                                border: isConfirmingRotate ? "1px solid rgba(244, 63, 94, 0.4)" : "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                                 color: isConfirmingRotate ? "#f43f5e" : "#f1f5f9",
                                                 padding: "7px 12px",
                                                 borderRadius: "8px",
@@ -1187,7 +1187,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 </div>
 
                                 {showKeyText && (
-                                    <div style={{ background: "var(--color-surface, rgba(15, 23, 42, 0.6))", border: "1px solid rgba(255,255,255,0.08)", padding: "12px", borderRadius: "8px", marginTop: "0.5rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                                    <div style={{ background: "var(--color-surface, rgba(15, 23, 42, 0.6))", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "12px", borderRadius: "8px", marginTop: "0.5rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
                                         {recoveryKeyText ? (
                                             <>
                                                 <span style={{ fontFamily: "monospace", fontSize: "1rem", fontWeight: "700", letterSpacing: "1px", color: "var(--color-primary)" }}>
@@ -1199,7 +1199,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                         navigator.clipboard.writeText(recoveryKeyText);
                                                         showToast("Recovery key copied to clipboard.");
                                                     }}
-                                                    style={{ background: "rgba(255,255,255,0.06)", border: "none", color: "#94a3b8", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "600", cursor: "pointer" }}
+                                                    style={{ background: "var(--color-overlay, rgba(255, 255, 255, 0.06))", border: "none", color: "#94a3b8", padding: "4px 10px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "600", cursor: "pointer" }}
                                                 >
                                                     Copy Key
                                                 </button>
@@ -1221,8 +1221,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                             onClick={handleExport}
                             style={{
                                 flex: 1,
-                                background: "rgba(255, 255, 255, 0.05)",
-                                border: "1px solid rgba(255, 255, 255, 0.1)",
+                                background: "var(--color-border, rgba(255, 255, 255, 0.08))",
+                                border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                 color: "#f1f5f9",
                                 padding: "10px 16px",
                                 borderRadius: "8px",
@@ -1251,8 +1251,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                             onClick={() => importInputRef.current?.click()}
                             style={{
                                 flex: 1,
-                                background: "rgba(255, 255, 255, 0.05)",
-                                border: "1px solid rgba(255, 255, 255, 0.1)",
+                                background: "var(--color-overlay, rgba(255, 255, 255, 0.05))",
+                                border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                 color: "#f1f5f9",
                                 padding: "10px 16px",
                                 borderRadius: "8px",

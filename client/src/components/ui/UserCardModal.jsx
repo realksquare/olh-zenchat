@@ -138,7 +138,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                                     justifyContent: 'center',
                                     padding: '8px 18px',
                                     background: 'linear-gradient(135deg, rgba(61, 165, 217, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%)',
-                                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                                    border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))',
                                     borderRadius: '999px',
                                     marginTop: '16px',
                                     marginLeft: 'auto',
@@ -151,7 +151,7 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                                     className="user-card-bio" 
                                     style={{ 
                                         fontSize: '0.85rem', 
-                                        color: 'rgba(255, 255, 255, 0.85)', 
+                                        color: 'var(--color-text, rgba(255, 255, 255, 0.85))', 
                                         textAlign: 'center', 
                                         wordBreak: 'break-word',
                                         margin: 0,
@@ -212,12 +212,12 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                                 <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
                             </svg>
                         </div>
-                        <h3 style={{ color: "#fff", fontSize: "1.25rem", fontWeight: "800", marginBottom: "12px" }}>Block @{username}?</h3>
-                        <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.9rem", marginBottom: "24px", lineHeight: "1.5" }}>
+                        <h3 style={{ color: "var(--color-text, #fff)", fontSize: "1.25rem", fontWeight: "800", marginBottom: "12px" }}>Block @{username}?</h3>
+                        <p style={{ color: "var(--color-text-muted, rgba(255, 255, 255, 0.6))", fontSize: "0.9rem", marginBottom: "24px", lineHeight: "1.5" }}>
                             Blocked users will no longer be able to message you, see your online status, or view your moments.
                         </p>
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                            <button className="btn btn-danger btn-full" onClick={handleConfirmBlock} style={{ background: "#ef4444", color: "#fff", border: "none" }}>
+                            <button className="btn btn-danger btn-full" onClick={handleConfirmBlock} style={{ background: "#ef4444", color: "var(--color-text, #fff)", border: "none" }}>
                                 Block User
                             </button>
                             <button className="btn btn-outline btn-full" onClick={() => setShowConfirmBlock(false)}>

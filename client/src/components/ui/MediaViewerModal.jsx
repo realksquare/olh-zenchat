@@ -49,21 +49,21 @@ const MediaViewerModal = ({ url, type, username, isViewOnce, onClose }) => {
             display: 'flex', justifyContent: 'center', alignItems: 'center', backdropFilter: 'blur(8px)'
         }}>
             <button className="media-viewer-close" onClick={onClose} style={{
-                position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.1)', 
+                position: 'absolute', top: '20px', right: '20px', background: 'var(--color-overlay, rgba(255, 255, 255, 0.1))', 
                 border: 'none', color: 'white', borderRadius: '50%', width: '40px', height: '40px', 
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10,
                 transition: 'background 0.2s'
-            }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'} onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}>
+            }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'} onMouseOut={(e) => e.currentTarget.style.background = 'var(--color-border, rgba(255, 255, 255, 0.08))'}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
 
             {!isViewOnce && (
                 <button className="media-viewer-download" onClick={handleDownload} style={{
-                    position: 'absolute', top: '70px', right: '20px', background: 'rgba(255,255,255,0.1)', 
+                    position: 'absolute', top: '70px', right: '20px', background: 'var(--color-overlay, rgba(255, 255, 255, 0.1))', 
                     border: 'none', color: 'white', borderRadius: '50%', width: '40px', height: '40px', 
                     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10,
                     transition: 'background 0.2s'
-                }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'} onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'} title="Download Media">
+                }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'} onMouseOut={(e) => e.currentTarget.style.background = 'var(--color-border, rgba(255, 255, 255, 0.08))'} title="Download Media">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 </button>
             )}

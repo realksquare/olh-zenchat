@@ -66,8 +66,8 @@ const DocViewerModal = ({ url, fileName, onClose }) => {
         }}>
             {/* Close Button */}
             <button className="media-viewer-close" onClick={onClose} style={{
-                position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.06)', 
-                border: '1px solid rgba(255,255,255,0.08)', color: 'white', borderRadius: '50%', width: '42px', height: '42px', 
+                position: 'absolute', top: '20px', right: '20px', background: 'var(--color-overlay, rgba(255, 255, 255, 0.06))', 
+                border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))', color: 'white', borderRadius: '50%', width: '42px', height: '42px', 
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10,
                 transition: 'all 0.2s'
             }} onMouseOver={(e) => {
@@ -101,7 +101,7 @@ const DocViewerModal = ({ url, fileName, onClose }) => {
             {/* Document Content Area */}
             <div className="doc-viewer-content-wrap" onClick={(e) => e.stopPropagation()} style={{
                 width: 'min(90vw, 900px)', height: 'min(82vh, 700px)', background: "var(--body-bg, #0e1117)", 
-                border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '16px', display: 'flex', 
+                border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))', borderRadius: '16px', display: 'flex', 
                 flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 48px -12px rgba(0, 0, 0, 0.6)'
             }}>
                 {/* Titlebar */}
@@ -120,7 +120,7 @@ const DocViewerModal = ({ url, fileName, onClose }) => {
                         {fileName}
                     </span>
                     <span style={{
-                        fontSize: '0.72rem', background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)',
+                        fontSize: '0.72rem', background: 'var(--color-overlay, rgba(255, 255, 255, 0.06))', color: 'var(--color-text-muted, rgba(255, 255, 255, 0.5))',
                         padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.5px'
                     }}>
                         {fileExtension || 'unknown'}

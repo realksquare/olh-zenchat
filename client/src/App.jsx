@@ -163,7 +163,7 @@ const NetworkToast = () => {
       )}
       <span>{toastMessage}</span>
       <button
-        style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', padding: '0 0 0 4px', display: 'flex', alignItems: 'center' }}
+        style={{ background: 'none', border: 'none', color: 'var(--color-text-muted, rgba(255, 255, 255, 0.5))', cursor: 'pointer', padding: '0 0 0 4px', display: 'flex', alignItems: 'center' }}
         onClick={() => setToastVisible(false)}
         aria-label="Dismiss"
       >
@@ -646,7 +646,7 @@ const App = () => {
               </button>
               <button 
                 className="zen-btn zen-btn-danger" 
-                style={{ flex: 1, background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }} 
+                style={{ flex: 1, background: '#ef4444', color: 'var(--color-text, #fff)', border: 'none', borderRadius: '8px', cursor: 'pointer' }} 
                 onClick={() => {
                   clearZenTimers();
                   setZenWaitingState(null);
@@ -781,7 +781,7 @@ const App = () => {
               </button>
               <button 
                 className="zen-btn zen-btn-danger" 
-                style={{ flex: 1, background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }} 
+                style={{ flex: 1, background: '#ef4444', color: 'var(--color-text, #fff)', border: 'none', borderRadius: '8px', cursor: 'pointer' }} 
                 onClick={() => {
                   setShowExitConfirm(false);
                   
@@ -906,14 +906,14 @@ const App = () => {
                     } catch (_) {}
                   }, 300);
                 }}
-                style={{ width: "100%", padding: "12px", borderRadius: "12px", background: "#ef4444", border: "none", color: "#fff", cursor: "pointer", fontWeight: "600", fontSize: "0.95rem" }}
+                style={{ width: "100%", padding: "12px", borderRadius: "12px", background: "#ef4444", border: "none", color: "var(--color-text, #fff)", cursor: "pointer", fontWeight: "600", fontSize: "0.95rem" }}
               >
                 Exit App
               </button>
               <button
                 className="btn btn-outline"
                 onClick={() => setShowPwaExitConfirm(false)}
-                style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#cbd5e1", cursor: "pointer", fontSize: "0.95rem" }}
+                style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "transparent", color: "#cbd5e1", cursor: "pointer", fontSize: "0.95rem" }}
               >
                 Cancel
               </button>

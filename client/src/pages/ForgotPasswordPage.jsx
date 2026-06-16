@@ -197,8 +197,8 @@ const ForgotPasswordPage = () => {
                                         letterSpacing: "6px",
                                         fontFamily: "monospace",
                                         background: "rgba(30, 41, 59, 0.6)",
-                                        border: "1px solid rgba(255,255,255,0.1)",
-                                        color: "#fff"
+                                        border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
+                                        color: "var(--color-text, #fff)"
                                     }}
                                 />
                             </div>

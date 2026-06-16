@@ -491,7 +491,7 @@ const Sidebar = ({ onChatSelect }) => {
                         onClick={() => setActiveTab("pulse")}
                     >
                         Pulse
-                        {hasUnvotedPulse && <span className="sidebar-tab-badge online" style={{ background: '#f59e0b', color: '#fff' }}>1</span>}
+                        {hasUnvotedPulse && <span className="sidebar-tab-badge online" style={{ background: '#f59e0b', color: 'var(--color-text, #fff)' }}>1</span>}
                     </button>
                 </div>
 
@@ -697,7 +697,7 @@ const Sidebar = ({ onChatSelect }) => {
 
             {showMobileMenu && createPortal(
                 <div className={isMobile ? "mobile-bottom-sheet-overlay" : "modal-backdrop"} style={{ display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.4)", zIndex: 20000 }} onClick={() => setShowMobileMenu(false)}>
-                    <div className={isMobile ? "mobile-bottom-sheet" : "modal-card"} onClick={(e) => e.stopPropagation()} style={isMobile ? { padding: "20px 0 32px" } : { maxWidth: "340px", border: "1px solid rgba(255, 255, 255, 0.08)", background: "var(--color-surface, rgba(15, 23, 42, 0.9))", backdropFilter: "blur(20px)", padding: "24px", borderRadius: "16px", width: "100%" }}>
+                    <div className={isMobile ? "mobile-bottom-sheet" : "modal-card"} onClick={(e) => e.stopPropagation()} style={isMobile ? { padding: "20px 0 32px" } : { maxWidth: "340px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "var(--color-surface, rgba(15, 23, 42, 0.9))", backdropFilter: "blur(20px)", padding: "24px", borderRadius: "16px", width: "100%" }}>
                         <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#f8fafc", marginBottom: "16px", textAlign: "center", padding: isMobile ? "0 20px" : "0" }}>Menu</h3>
                         
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px", padding: isMobile ? "0 20px" : "0" }}>
@@ -749,14 +749,14 @@ const Sidebar = ({ onChatSelect }) => {
                                             setShowLogoutConfirm(false);
                                             logout();
                                         }}
-                                        style={{ width: "100%", padding: "12px", borderRadius: "12px", background: "#ef4444", border: "none", color: "#fff", cursor: "pointer", fontWeight: "600", fontSize: "0.95rem" }}
+                                        style={{ width: "100%", padding: "12px", borderRadius: "12px", background: "#ef4444", border: "none", color: "var(--color-text, #fff)", cursor: "pointer", fontWeight: "600", fontSize: "0.95rem" }}
                                     >
                                         Log Out
                                     </button>
                                     <button
                                         className="btn"
                                         onClick={() => setShowLogoutConfirm(false)}
-                                        style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#cbd5e1", cursor: "pointer", fontSize: "0.95rem" }}
+                                        style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "transparent", color: "#cbd5e1", cursor: "pointer", fontSize: "0.95rem" }}
                                     >
                                         Cancel
                                     </button>
@@ -768,14 +768,14 @@ const Sidebar = ({ onChatSelect }) => {
                 ) : (
                     createPortal(
                         <div className="modal-backdrop" style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.4)", zIndex: 20000 }}>
-                            <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "380px", border: "1px solid rgba(255, 255, 255, 0.08)", background: "var(--color-surface, rgba(15, 23, 42, 0.9))", backdropFilter: "blur(20px)", padding: "24px", borderRadius: "16px", textAlign: "center" }}>
+                            <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "380px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "var(--color-surface, rgba(15, 23, 42, 0.9))", backdropFilter: "blur(20px)", padding: "24px", borderRadius: "16px", textAlign: "center" }}>
                                 <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#f8fafc", marginBottom: "12px" }}>Confirm Sign Out</h3>
                                 <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "24px", lineHeight: "1.5" }}>Are you sure you want to log out of ZenChat? You will need your credentials to sign back in.</p>
                                 <div style={{ display: "flex", gap: "12px" }}>
                                     <button
                                         className="btn"
                                         onClick={() => setShowLogoutConfirm(false)}
-                                        style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#cbd5e1", cursor: "pointer" }}
+                                        style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "transparent", color: "#cbd5e1", cursor: "pointer" }}
                                     >
                                         Cancel
                                     </button>
@@ -785,7 +785,7 @@ const Sidebar = ({ onChatSelect }) => {
                                             setShowLogoutConfirm(false);
                                             logout();
                                         }}
-                                        style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "#ef4444", border: "none", color: "#fff", cursor: "pointer", fontWeight: "600" }}
+                                        style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "#ef4444", border: "none", color: "var(--color-text, #fff)", cursor: "pointer", fontWeight: "600" }}
                                     >
                                         Log Out
                                     </button>

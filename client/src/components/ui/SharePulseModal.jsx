@@ -374,7 +374,7 @@ const SharePulseModal = ({ isOpen, onClose, question, username }) => {
                         <div style={{ fontSize: "2.8rem", marginBottom: "18px", display: "flex", justifyContent: "center" }}>
                             {currentTab?.icon}
                         </div>
-                        <h3 style={{ margin: "0 0 10px 0", fontSize: "1.15rem", fontWeight: 600, color: "#fff" }}>
+                        <h3 style={{ margin: "0 0 10px 0", fontSize: "1.15rem", fontWeight: 600, color: "var(--color-text, #fff)" }}>
                             {activeTab === "download" ? "Download Image" : activeTab === "copy" ? "Copy Text Link" : `Share via ${currentTab?.label}`}
                         </h3>
                         <p style={{ color: "#94a3b8", fontSize: "0.9rem", lineHeight: 1.6, maxWidth: "320px", margin: "0 auto" }}>
@@ -439,7 +439,7 @@ const arrowStyle = {
     width: "32px",
     background: "var(--color-surface, #0f172a)",
     border: "none",
-    color: "#fff",
+    color: "var(--color-text, #fff)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",

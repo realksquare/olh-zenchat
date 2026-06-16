@@ -273,7 +273,7 @@ const VoiceMessageBubble = ({ message }) => {
                         <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                     </svg>
                 ) : !message.mediaUrl ? (
-                    <div className="loader-sm" style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
+                    <div className="loader-sm" style={{ width: '14px', height: '14px', border: '2px solid var(--color-border, rgba(255, 255, 255, 0.08))', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
                 ) : isPlaying ? (
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                 ) : (

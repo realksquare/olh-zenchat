@@ -169,7 +169,7 @@ const ResetPasswordPage = () => {
                         </div>
 
                         {/* Visual Security Checklist */}
-                        <div className="password-checklist" style={{ margin: "16px 0", background: "rgba(255, 255, 255, 0.02)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                        <div className="password-checklist" style={{ margin: "16px 0", background: "var(--color-border, rgba(255, 255, 255, 0.08))", padding: "12px", borderRadius: "8px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))" }}>
                             <div style={{ fontSize: "0.8rem", fontWeight: "600", color: "var(--color-text-muted)", marginBottom: "8px" }}>PASSWORD REQUIREMENTS</div>
                             <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "0.8rem" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px", color: meetsLength ? "#10b981" : "var(--color-text-muted)" }}>

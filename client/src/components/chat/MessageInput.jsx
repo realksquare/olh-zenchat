@@ -145,7 +145,7 @@ const MediaUploadPopup = ({ onClose, onFilesSelected, showToast }) => {
                     <div
                         className={`media-upload-dropzone ${dragOver ? "dragover" : ""}`}
                         onClick={() => fileInputRef.current?.click()}
-                        style={{ border: '2px dashed rgba(255,255,255,0.1)', borderRadius: '20px', padding: '40px 20px', transition: 'all 0.2s' }}
+                        style={{ border: '2px dashed var(--color-border, rgba(255, 255, 255, 0.08))', borderRadius: '20px', padding: '40px 20px', transition: 'all 0.2s' }}
                     >
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.3, marginBottom: 16 }}>
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -210,7 +210,7 @@ const MediaPreview = ({ files, onRemove, onToggleQuality }) => {
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                background: 'rgba(255, 255, 255, 0.04)',
+                                background: 'var(--color-overlay, rgba(255, 255, 255, 0.04))',
                                 gap: '2px',
                                 padding: '4px',
                                 textAlign: 'center',
@@ -1001,7 +1001,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             {showAttachmentSheet && createPortal(
                 <div className="modal-overlay" onClick={() => setShowAttachmentSheet(false)} style={{ zIndex: 10002, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
                     <div className="attachment-sheet" onClick={e => e.stopPropagation()} style={{ background: 'var(--color-surface)', width: '100%', maxWidth: '500px', borderTopLeftRadius: '20px', borderTopRightRadius: '20px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <label className="attachment-option" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', cursor: 'pointer' }}>
+                        <label className="attachment-option" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', background: 'var(--color-overlay, rgba(255, 255, 255, 0.05))', cursor: 'pointer' }}>
                             <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                             </div>
@@ -1022,7 +1022,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                             />
                         </label>
                         
-                        <label className="attachment-option" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', cursor: 'pointer' }}>
+                        <label className="attachment-option" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', background: 'var(--color-overlay, rgba(255, 255, 255, 0.05))', cursor: 'pointer' }}>
                             <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                             </div>

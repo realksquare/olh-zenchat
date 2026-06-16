@@ -64,7 +64,7 @@ const ForwardModal = ({ onClose, onForward }) => {
                             ) : otherParticipant?.profilePic ? (
                                 <img src={otherParticipant.profilePic} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
-                                <span style={{ color: '#fff', fontWeight: 600 }}>{chat.chatName?.charAt(0) || otherParticipant?.username?.charAt(0) || '?'}</span>
+                                <span style={{ color: 'var(--color-text, #fff)', fontWeight: 600 }}>{chat.chatName?.charAt(0) || otherParticipant?.username?.charAt(0) || '?'}</span>
                             )}
                         </div>
                         <div style={{ flex: 1, overflow: 'hidden' }}>
@@ -95,7 +95,7 @@ const ForwardModal = ({ onClose, onForward }) => {
             <button 
                 onClick={handleConfirm}
                 disabled={selectedChats.length === 0}
-                style={{ padding: '10px 20px', background: 'var(--color-primary)', border: 'none', color: '#fff', cursor: selectedChats.length === 0 ? 'not-allowed' : 'pointer', fontWeight: 600, borderRadius: '8px', opacity: selectedChats.length === 0 ? 0.5 : 1 }}
+                style={{ padding: '10px 20px', background: 'var(--color-primary)', border: 'none', color: 'var(--color-text, #fff)', cursor: selectedChats.length === 0 ? 'not-allowed' : 'pointer', fontWeight: 600, borderRadius: '8px', opacity: selectedChats.length === 0 ? 0.5 : 1 }}
             >
                 Forward
             </button>
@@ -107,7 +107,7 @@ const ForwardModal = ({ onClose, onForward }) => {
             <div className="mobile-bottom-sheet-overlay" style={{ zIndex: 1000000 }}>
                 <div className="mobile-bottom-sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: '82vh', display: 'flex', flexDirection: 'column', gap: '0', padding: '16px 0 24px' }}>
                     <div className="mobile-bottom-sheet-header" style={{ position: 'relative', marginBottom: '14px', paddingBottom: '0', paddingLeft: '20px', paddingRight: '50px', display: 'flex', alignItems: 'center', minHeight: '28px' }}>
-                        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff', margin: 0 }}>Forward to...</h3>
+                        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-text, #fff)', margin: 0 }}>Forward to...</h3>
                         <button onClick={onClose} style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }} aria-label="Close Forward">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18" />

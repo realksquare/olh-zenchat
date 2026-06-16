@@ -125,7 +125,7 @@ const InviteModal = ({ isOpen, onClose, username }) => {
                         <div style={{ fontSize: '2.8rem', marginBottom: '18px', display: 'flex', justifyContent: 'center' }}>
                             {currentTab?.icon}
                         </div>
-                        <h3 style={{ margin: '0 0 10px 0', fontSize: '1.15rem', fontWeight: 600, color: '#fff' }}>
+                        <h3 style={{ margin: '0 0 10px 0', fontSize: '1.15rem', fontWeight: 600, color: 'var(--color-text, #fff)' }}>
                             {activeTab === "copy" ? "Copy Link" : `Share via ${currentTab?.label}`}
                         </h3>
                         <p style={{ color: '#94a3b8', fontSize: '0.9rem', lineHeight: 1.6, maxWidth: '320px', margin: '0 auto' }}>
@@ -139,7 +139,7 @@ const InviteModal = ({ isOpen, onClose, username }) => {
                             width: '100%',
                             padding: '15px',
                             background: '#3b82f6',
-                            color: '#fff',
+                            color: 'var(--color-text, #fff)',
                             border: 'none',
                             borderRadius: '14px',
                             fontSize: '1rem',
@@ -167,7 +167,7 @@ const InviteModal = ({ isOpen, onClose, username }) => {
                     width: 14px;
                     height: 14px;
                     border: 2px solid rgba(255,255,255,0.3);
-                    border-top-color: #fff;
+                    border-top-color: var(--color-text, #fff);
                     border-radius: 50%;
                     animation: spin 0.8s linear infinite;
                 }
@@ -185,7 +185,7 @@ const arrowStyle = {
     width: '32px',
     background: "var(--color-surface, #0f172a)",
     border: 'none',
-    color: '#fff',
+    color: 'var(--color-text, #fff)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

@@ -215,7 +215,7 @@ const InstallPWA = () => {
                                             setCustomAlert("To open the PWA, please click your browser's options menu (e.g. three dots in Chrome) and select 'Open in ZenChat', or launch ZenChat from your home screen / application launcher!");
                                         }}
                                         className="btn btn-primary"
-                                        style={{ flex: 1, padding: '12px', background: "#10b981", border: "none", color: "#fff", fontWeight: "600" }}
+                                        style={{ flex: 1, padding: '12px', background: "#10b981", border: "none", color: "var(--color-text, #fff)", fontWeight: "600" }}
                                     >
                                         Open App
                                     </button>
@@ -235,8 +235,8 @@ const InstallPWA = () => {
                                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
                                 </svg>
                             </div>
-                            <h3 style={{ color: "#fff", fontSize: "1.1rem", fontWeight: "700", marginBottom: "12px" }}>Install ZenChat</h3>
-                            <p style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.85rem", marginBottom: "24px", lineHeight: "1.6" }}>
+                            <h3 style={{ color: "var(--color-text, #fff)", fontSize: "1.1rem", fontWeight: "700", marginBottom: "12px" }}>Install ZenChat</h3>
+                            <p style={{ color: "var(--color-text-muted, rgba(255, 255, 255, 0.65))", fontSize: "0.85rem", marginBottom: "24px", lineHeight: "1.6" }}>
                                 {customAlert}
                             </p>
                             <button className="btn btn-primary" onClick={() => setCustomAlert(null)} style={{ width: "100%", padding: "10px", fontWeight: "600" }}>
@@ -334,7 +334,7 @@ const InstallPWA = () => {
 
                                     {isLoading && (
                                         <div style={{
-                                            width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)',
+                                            width: '100%', height: '4px', background: 'var(--color-overlay, rgba(255, 255, 255, 0.05))',
                                             marginTop: '2rem', borderRadius: '4px', overflow: 'hidden'
                                         }}>
                                             <div style={{
@@ -366,8 +366,8 @@ const InstallPWA = () => {
                                 <line x1="12" y1="8" x2="12.01" y2="8"></line>
                             </svg>
                         </div>
-                        <h3 style={{ color: "#fff", fontSize: "1.1rem", fontWeight: "700", marginBottom: "12px" }}>Install ZenChat</h3>
-                        <p style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.85rem", marginBottom: "24px", lineHeight: "1.6" }}>
+                        <h3 style={{ color: "var(--color-text, #fff)", fontSize: "1.1rem", fontWeight: "700", marginBottom: "12px" }}>Install ZenChat</h3>
+                        <p style={{ color: "var(--color-text-muted, rgba(255, 255, 255, 0.65))", fontSize: "0.85rem", marginBottom: "24px", lineHeight: "1.6" }}>
                             {customAlert}
                         </p>
                         <button className="btn btn-primary" onClick={() => setCustomAlert(null)} style={{ width: "100%", padding: "10px", fontWeight: "600" }}>

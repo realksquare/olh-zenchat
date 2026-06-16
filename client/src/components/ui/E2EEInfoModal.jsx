@@ -50,7 +50,7 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
             <div className="mobile-bottom-sheet-overlay" style={{ zIndex: 2000 }}>
                 <div className="mobile-bottom-sheet" onClick={e => e.stopPropagation()} style={{ maxHeight: '82vh', display: 'flex', flexDirection: 'column', gap: '0', padding: '16px 0 24px' }}>
                     <div className="mobile-bottom-sheet-header" style={{ position: 'relative', marginBottom: '14px', paddingBottom: '0', paddingLeft: '20px', paddingRight: '50px', display: 'flex', alignItems: 'center', minHeight: '28px' }}>
-                        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#fff', margin: 0 }}>End-to-End Encryption FAQ</h3>
+                        <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--color-text, #fff)', margin: 0 }}>End-to-End Encryption FAQ</h3>
                         <button onClick={onClose} style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }} aria-label="Close E2EE FAQ">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="18" y1="6" x2="6" y2="18" />
@@ -65,7 +65,7 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
                                 <p style={{ color: '#94a3b8', fontSize: '0.82rem', lineHeight: '1.5', margin: 0 }}>{item.a}</p>
                             </div>
                         ))}
-                        <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', fontSize: '0.78rem', color: '#64748b', textAlign: 'center' }}>
+                        <div style={{ marginTop: '12px', padding: '12px', background: 'var(--color-border, rgba(255, 255, 255, 0.08))', borderRadius: '8px', fontSize: '0.78rem', color: '#64748b', textAlign: 'center' }}>
                             Zero-Knowledge Security | ZenChat E2EE Protocol
                         </div>
                     </div>
@@ -96,7 +96,7 @@ const E2EEInfoModal = ({ isOpen, onClose }) => {
                             </div>
                         ))}
                     </div>
-                    <div style={{ marginTop: '20px', padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', fontSize: '0.8rem', color: '#64748b', textAlign: 'center' }}>
+                    <div style={{ marginTop: '20px', padding: '12px', background: 'var(--color-overlay, rgba(255, 255, 255, 0.03))', borderRadius: '8px', fontSize: '0.8rem', color: '#64748b', textAlign: 'center' }}>
                         Zero-Knowledge Security | ZenChat E2EE Protocol v1.0b
                     </div>
                 </div>

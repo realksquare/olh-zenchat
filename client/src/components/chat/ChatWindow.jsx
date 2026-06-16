@@ -1304,7 +1304,7 @@ const ChatWindow = ({ onBack }) => {
                         </button>
 
                         {showDisappearingMenu && (
-                            <div className="message-action-dropdown disappearing-menu" style={{ position: 'absolute', right: 0, top: '100%', marginTop: '6px', minWidth: '135px', background: "var(--color-surface, #161b22)", border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', flexDirection: 'column', padding: '4px' }}>
+                            <div className="message-action-dropdown disappearing-menu" style={{ position: 'absolute', right: 0, top: '100%', marginTop: '6px', minWidth: '135px', background: "var(--color-surface, #161b22)", border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', flexDirection: 'column', padding: '4px' }}>
                                 {[
                                     { value: 'off', label: 'Off' },
                                     { value: 'instant', label: 'Going offline' },
@@ -1544,7 +1544,7 @@ const ChatWindow = ({ onBack }) => {
                     backdropFilter: 'blur(12px)',
                     animation: 'slideUp 0.2s ease-out'
                 }}>
-                    <button onClick={handleExitMultiSelect} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', borderRadius: '10px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
+                    <button onClick={handleExitMultiSelect} style={{ background: 'var(--color-overlay, rgba(255, 255, 255, 0.06))', border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))', color: '#94a3b8', borderRadius: '10px', padding: '8px 14px', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}>
                         Cancel
                     </button>
                     <span style={{ flex: 1, textAlign: 'center', fontSize: '0.9rem', color: '#8b949e', fontWeight: 600 }}>
@@ -1700,7 +1700,7 @@ const ChatWindow = ({ onBack }) => {
                             style={{ width: '100%', maxWidth: '500px', background: "var(--color-surface, linear-gradient(180deg, #1a2030 0%, #161b22 100%))", borderTopLeftRadius: '24px', borderTopRightRadius: '24px', padding: '0 0 env(safe-area-inset-bottom, 28px)', boxShadow: '0 -12px 48px rgba(0,0,0,0.6)', animation: 'slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1)' }}
                         >
                             <div style={{ padding: '16px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <span style={{ fontSize: '1rem', fontWeight: 700, color: '#fff' }}>
+                                <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text, #fff)' }}>
                                     {selectedMsgs.length} message{selectedMsgs.length !== 1 ? 's' : ''} selected
                                 </span>
                                 {tooMany && (
@@ -1717,7 +1717,7 @@ const ChatWindow = ({ onBack }) => {
                                         setShowActualForwardModal(true);
                                     }}
                                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: tooMany ? '#64748b' : '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: tooMany ? 'not-allowed' : 'pointer', transition: 'background 0.15s' }}
-                                    onTouchStart={e => !tooMany && (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+                                    onTouchStart={e => !tooMany && (e.currentTarget.style.background = 'var(--color-border, rgba(255, 255, 255, 0.08))')}
                                     onTouchEnd={e => (e.currentTarget.style.background = 'transparent')}
                                 >
                                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1741,7 +1741,7 @@ const ChatWindow = ({ onBack }) => {
                                         showToast(`${selectedMsgs.length} message${selectedMsgs.length !== 1 ? 's' : ''} marked as Fav`, 'success');
                                     }}
                                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
-                                    onTouchStart={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+                                    onTouchStart={e => (e.currentTarget.style.background = 'var(--color-border, rgba(255, 255, 255, 0.08))')}
                                     onTouchEnd={e => (e.currentTarget.style.background = 'transparent')}
                                 >
                                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

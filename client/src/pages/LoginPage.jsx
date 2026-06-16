@@ -109,7 +109,7 @@ const LoginPage = () => {
     if (mfaRequired) {
         return (
             <div className="auth-page">
-                <div className="auth-card" style={{ maxWidth: "440px", border: "1px solid rgba(255, 255, 255, 0.08)", background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(20px)" }}>
+                <div className="auth-card" style={{ maxWidth: "440px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(20px)" }}>
                     <div className="auth-brand" style={{ justifyContent: "center" }}>
                         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
                             <rect width="32" height="32" rx="10" fill="#3da5d9" />
@@ -161,8 +161,8 @@ const LoginPage = () => {
                                             padding: "12px",
                                             fontFamily: "monospace",
                                             background: "rgba(30, 41, 59, 0.6)",
-                                            border: "1px solid rgba(255,255,255,0.1)",
-                                            color: "#fff"
+                                            border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
+                                            color: "var(--color-text, #fff)"
                                         }}
                                     />
                                 </div>
@@ -246,8 +246,8 @@ const LoginPage = () => {
                                             fontFamily: "monospace",
                                             fontSize: "1.1rem",
                                             background: "rgba(30, 41, 59, 0.6)",
-                                            border: "1px solid rgba(255,255,255,0.1)",
-                                            color: "#fff"
+                                            border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
+                                            color: "var(--color-text, #fff)"
                                         }}
                                     />
                                 </div>
@@ -283,7 +283,7 @@ const LoginPage = () => {
 
     return (
         <div className="auth-page">
-            <div className="auth-card" style={{ border: "1px solid rgba(255, 255, 255, 0.08)", background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(20px)" }}>
+            <div className="auth-card" style={{ border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(20px)" }}>
                 <div className="auth-brand">
                     <svg width="32" height="32" viewBox="0 0 80 80" fill="none" aria-label="ZenChat logo">
                         <rect width="80" height="80" rx="22" fill="#1e2530" />
@@ -302,7 +302,7 @@ const LoginPage = () => {
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                         New: 21-day auto-cleanup active!
                     </span>
-                    <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", marginTop: "4px" }}>Keeping your digital footprint light & meaningful.</p>
+                    <p style={{ fontSize: "0.75rem", color: "var(--color-text-muted, rgba(255, 255, 255, 0.6))", marginTop: "4px" }}>Keeping your digital footprint light & meaningful.</p>
                 </div>
 
                 {error && (

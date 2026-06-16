@@ -693,7 +693,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                         style={{ marginRight: '6px' }}
                                     >
                                         {isSendingReply ? (
-                                            <div className="aura-mini-spinner" style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
+                                            <div className="aura-mini-spinner" style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopcolor: 'var(--color-text, #fff)', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
                                         ) : (
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                                 <line x1="22" y1="2" x2="11" y2="13" />
@@ -712,7 +712,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                         title={reshared ? "Already reshared" : "Reshare to your feed"}
                                     >
                                         {isResharing ? (
-                                            <div className="aura-mini-spinner" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
+                                            <div className="aura-mini-spinner" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopcolor: 'var(--color-text, #fff)', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
                                         ) : (
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <polyline points="17 1 21 5 17 9" />
@@ -735,7 +735,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                         setLikeLoading(false);
                                     }}
                                     title={hasLiked ? "Unlike" : "Like"}
-                                    style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                    style={{ background: 'none', border: 'none', color: 'var(--color-text, #fff)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                                 >
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill={hasLiked ? "#f43f5e" : "none"} stroke={hasLiked ? "#f43f5e" : "#fff"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="aura-heart-icon">
                                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />

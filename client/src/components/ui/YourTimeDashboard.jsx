@@ -26,8 +26,8 @@ const ContactDropdown = ({ options, value, onChange }) => {
                     justifyContent: "space-between",
                     gap: "8px",
                     width: "100%",
-                    background: "rgba(255, 255, 255, 0.06)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "var(--color-overlay, rgba(255, 255, 255, 0.06))",
+                    border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                     borderRadius: "10px",
                     color: "#e2e8f0",
                     padding: "7px 12px",
@@ -57,7 +57,7 @@ const ContactDropdown = ({ options, value, onChange }) => {
                     minWidth: "180px",
                     maxWidth: "220px",
                     background: "#1e293b",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                     borderRadius: "12px",
                     padding: "6px",
                     zIndex: 200,
@@ -86,7 +86,7 @@ const ContactDropdown = ({ options, value, onChange }) => {
                                 overflow: "hidden",
                                 textOverflow: "ellipsis"
                             }}
-                            onMouseEnter={e => { if (opt.value !== value) e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+                            onMouseEnter={e => { if (opt.value !== value) e.currentTarget.style.background = "var(--color-border, rgba(255, 255, 255, 0.08))"; }}
                             onMouseLeave={e => { if (opt.value !== value) e.currentTarget.style.background = "transparent"; }}
                         >
                             {opt.label}
@@ -261,7 +261,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
                             <div key={user.userId} style={{
                                 display: "flex", alignItems: "center", padding: "12px",
                                 background: user.isMe ? "rgba(168, 85, 247, 0.1)" : "rgba(255, 255, 255, 0.02)",
-                                borderRadius: "12px", border: user.isMe ? "1px solid rgba(168, 85, 247, 0.3)" : "1px solid rgba(255, 255, 255, 0.05)"
+                                borderRadius: "12px", border: user.isMe ? "1px solid rgba(168, 85, 247, 0.3)" : "1px solid var(--color-border, rgba(255, 255, 255, 0.08))"
                             }}>
                                 <div style={{ width: "24px", color: index < 3 ? "#a855f7" : "#64748b", fontWeight: "700", fontSize: "1rem" }}>
                                     #{index + 1}
@@ -290,7 +290,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
 
     return createPortal(
         <div className="modal-overlay" style={{ zIndex: 100000, padding: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div className="modal-card" style={{ maxWidth: "800px", width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0, background: "var(--color-surface, rgba(15, 23, 42, 0.95))", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
+            <div className="modal-card" style={{ maxWidth: "800px", width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0, background: "var(--color-surface, rgba(15, 23, 42, 0.95))", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))" }}>
                 <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(255, 255, 255, 0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <h2 style={{ margin: 0, color: "#f8fafc", fontSize: "1.3rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px" }}>
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -325,8 +325,8 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
 
                 <style>{`
                     .analytics-card {
-                        background: rgba(255, 255, 255, 0.02);
-                        border: 1px solid rgba(255, 255, 255, 0.05);
+                        background: var(--color-overlay, rgba(255, 255, 255, 0.02));
+                        border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
                         border-radius: 16px;
                         padding: 20px;
                         display: flex;
@@ -337,7 +337,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
                         border-radius: 12px;
                         padding: 12px;
                         text-align: center;
-                        border: 1px solid rgba(255, 255, 255, 0.02);
+                        border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
                     }
                     .stat-val {
                         font-size: 1.5rem;

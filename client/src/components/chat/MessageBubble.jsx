@@ -522,7 +522,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: 'rgba(255,255,255,0.05)',
+                        background: 'var(--color-overlay, rgba(255, 255, 255, 0.05))',
                         borderRadius: '50%',
                         width: '32px',
                         height: '32px',
@@ -679,7 +679,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                  width: '100%',
                                                  maxWidth: '240px',
                                                  height: '160px',
-                                                 border: '1px dashed rgba(255,255,255,0.15)',
+                                                 border: '1px dashed var(--color-border, rgba(255, 255, 255, 0.08))',
                                                  gap: '8px',
                                                  padding: '16px',
                                                  position: 'relative',
@@ -710,10 +710,10 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                      <polyline points="7 10 12 15 17 10" />
                                                      <line x1="12" y1="3" x2="12" y2="15" />
                                                  </svg>
-                                                 <span style={{ fontSize: '12px', fontWeight: '500', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.2px' }}>
+                                                 <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--color-text, rgba(255, 255, 255, 0.9))', letterSpacing: '0.2px' }}>
                                                      Tap to load {message.type}
                                                  </span>
-                                                  <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>
+                                                  <span style={{ fontSize: '10px', color: 'var(--color-text-muted, rgba(255, 255, 255, 0.5))', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '700' }}>
                                                       #SP-OP mode active
                                                   </span>
                                              </div>
@@ -724,7 +724,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                    message.type === "file" ? (
                                                        <div className="file-attachment-card media-loading-skeleton" style={{
                                                            background: 'rgba(0, 0, 0, 0.3)',
-                                                           border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                           border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))',
                                                            borderRadius: '12px',
                                                            padding: '12px 16px',
                                                            display: 'flex',
@@ -745,7 +745,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                                alignItems: 'center',
                                                                justifyContent: 'center'
                                                            }}>
-                                                               <div className="loader-sm" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
+                                                               <div className="loader-sm" style={{ width: '16px', height: '16px', border: '2px solid var(--color-border, rgba(255, 255, 255, 0.08))', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
                                                            </div>
                                                            <div style={{ flex: 1, minWidth: 0 }}>
                                                                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -789,7 +789,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ptr-arc-spin">
                                                                            <circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/>
                                                                        </svg>
-                                                                       <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'rgba(255,255,255,0.7)' }}>Decrypting media...</span>
+                                                                       <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--color-text, rgba(255, 255, 255, 0.7))' }}>Decrypting media...</span>
                                                                    </div>
                                                                )}
                                                            </div>
@@ -818,7 +818,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ptr-arc-spin">
                                                                   <circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/>
                                                               </svg>
-                                                              <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'rgba(255,255,255,0.5)' }}>Loading image...</span>
+                                                              <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--color-text-muted, rgba(255, 255, 255, 0.5))' }}>Loading image...</span>
                                                           </div>
                                                       )}
                                                       <img 
@@ -844,7 +844,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ptr-arc-spin">
                                                                   <circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/>
                                                               </svg>
-                                                              <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'rgba(255,255,255,0.5)' }}>Loading {message.type === "gif" ? "GIF" : "sticker"}...</span>
+                                                              <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--color-text-muted, rgba(255, 255, 255, 0.5))' }}>Loading {message.type === "gif" ? "GIF" : "sticker"}...</span>
                                                           </div>
                                                       )}
                                                       <img 
@@ -870,7 +870,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ptr-arc-spin">
                                                                   <circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10"/>
                                                               </svg>
-                                                              <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'rgba(255,255,255,0.5)' }}>Loading video...</span>
+                                                              <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--color-text-muted, rgba(255, 255, 255, 0.5))' }}>Loading video...</span>
                                                           </div>
                                                       )}
                                                       <video 
@@ -892,7 +892,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                               ) : (
                                                    <div className="file-attachment-card" style={{
                                                        background: 'rgba(0, 0, 0, 0.3)',
-                                                       border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                       border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))',
                                                        borderRadius: '12px',
                                                        padding: '12px 16px',
                                                        display: 'flex',
@@ -1130,7 +1130,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                             {!isZenMode && (
                                 <button className="bottom-sheet-item" onClick={() => { setMobileSheet(false); toggleStarMessage(message._id, message.chatId); }}
                                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', borderRadius: 0, color: '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
-                                    onTouchStart={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                                    onTouchStart={e => e.currentTarget.style.background = 'var(--color-border, rgba(255, 255, 255, 0.08))'}
                                     onTouchEnd={e => e.currentTarget.style.background = 'transparent'}
                                 >
                                     <svg width="19" height="19" viewBox="0 0 24 24" fill={message.starredBy?.includes(user?._id) ? "#eab308" : "none"} stroke={message.starredBy?.includes(user?._id) ? "#eab308" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1143,7 +1143,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                             {canReply && (
                                 <button className="bottom-sheet-item" onClick={() => { setMobileSheet(false); onEdit({ action: "reply", ...message }); }}
                                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', borderRadius: 0, color: '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
-                                    onTouchStart={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                                    onTouchStart={e => e.currentTarget.style.background = 'var(--color-border, rgba(255, 255, 255, 0.08))'}
                                     onTouchEnd={e => e.currentTarget.style.background = 'transparent'}
                                 >
                                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1156,7 +1156,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                             {message.content && (
                                 <button className="bottom-sheet-item" onClick={() => { setMobileSheet(false); navigator.clipboard.writeText(message.content); }}
                                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', borderRadius: 0, color: '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
-                                    onTouchStart={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                                    onTouchStart={e => e.currentTarget.style.background = 'var(--color-border, rgba(255, 255, 255, 0.08))'}
                                     onTouchEnd={e => e.currentTarget.style.background = 'transparent'}
                                 >
                                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1169,7 +1169,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
 
                             <button className="bottom-sheet-item" onClick={() => { setMobileSheet(false); if (onEdit) onEdit({ action: 'select', ...message }); }}
                                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', borderRadius: 0, color: '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
-                                onTouchStart={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                                onTouchStart={e => e.currentTarget.style.background = 'var(--color-border, rgba(255, 255, 255, 0.08))'}
                                 onTouchEnd={e => e.currentTarget.style.background = 'transparent'}
                             >
                                 <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1181,7 +1181,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                             {canReply && (
                                 <button className="bottom-sheet-item" onClick={() => { setMobileSheet(false); if (onEdit) onEdit({ action: 'forward', ...message }); }}
                                     style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', borderRadius: 0, color: '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
-                                    onTouchStart={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                                    onTouchStart={e => e.currentTarget.style.background = 'var(--color-border, rgba(255, 255, 255, 0.08))'}
                                     onTouchEnd={e => e.currentTarget.style.background = 'transparent'}
                                 >
                                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1196,7 +1196,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                     {isWithinEditWindow && message.type !== "voice" && (
                                         <button className="bottom-sheet-item" onClick={() => { setMobileSheet(false); onEdit(message); }}
                                             style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', borderRadius: 0, color: '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
-                                            onTouchStart={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                                            onTouchStart={e => e.currentTarget.style.background = 'var(--color-border, rgba(255, 255, 255, 0.08))'}
                                             onTouchEnd={e => e.currentTarget.style.background = 'transparent'}
                                         >
                                             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1235,7 +1235,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                         background: 'rgba(17, 24, 36, 0.96)',
                         backdropFilter: 'blur(16px)',
                         WebkitBackdropFilter: 'blur(16px)',
-                        border: '1px solid rgba(255,255,255,0.08)',
+                        border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))',
                         borderRadius: '14px',
                         padding: '6px',
                         boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
@@ -1292,7 +1292,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                     Edit
                                 </button>
                             )}
-                            <div style={{ height: '1px', background: 'rgba(255,255,255,0.07)', margin: '4px 8px' }} />
+                            <div style={{ height: '1px', background: 'var(--color-overlay, rgba(255, 255, 255, 0.07))', margin: '4px 8px' }} />
                             <button onClick={() => { setDesktopMenu(null); onDelete(message); }} style={{ ...desktopMenuItemStyle, color: '#f85149' }}>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                                     <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />

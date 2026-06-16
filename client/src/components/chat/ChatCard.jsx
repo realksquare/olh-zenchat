@@ -435,8 +435,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                                 <line x1="14" y1="11" x2="14" y2="17" />
                             </svg>
                         </div>
-                        <h3 style={{ color: "#fff", fontSize: "1.25rem", fontWeight: "800", marginBottom: "12px" }}>Delete Chat?</h3>
-                        <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.9rem", marginBottom: "24px", lineHeight: "1.5" }}>
+                        <h3 style={{ color: "var(--color-text, #fff)", fontSize: "1.25rem", fontWeight: "800", marginBottom: "12px" }}>Delete Chat?</h3>
+                        <p style={{ color: "var(--color-text-muted, rgba(255, 255, 255, 0.6))", fontSize: "0.9rem", marginBottom: "24px", lineHeight: "1.5" }}>
                             This will remove the entire chat thread for you. This action cannot be undone.
                         </p>
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>

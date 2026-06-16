@@ -456,8 +456,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                     className="moments-card-select"
                                     onClick={() => { setMomentType("text"); setCreatorStep("create"); }}
                                     style={{
-                                        background: 'rgba(255, 255, 255, 0.03)',
-                                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                                        background: 'var(--color-overlay, rgba(255, 255, 255, 0.03))',
+                                        border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))',
                                         borderRadius: '16px',
                                         padding: '24px 16px',
                                         cursor: 'pointer',
@@ -482,8 +482,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                     className="moments-card-select"
                                     onClick={() => { setMomentType("image"); setCreatorStep("create"); }}
                                     style={{
-                                        background: 'rgba(255, 255, 255, 0.03)',
-                                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                                        background: 'var(--color-overlay, rgba(255, 255, 255, 0.03))',
+                                        border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))',
                                         borderRadius: '16px',
                                         padding: '24px 16px',
                                         cursor: 'pointer',
@@ -557,14 +557,14 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                 
                                                 {/* Caption Overlay */}
                                                 {caption.trim().length > 0 && (
-                                                    <div style={{ position: 'absolute', bottom: '38px', left: '50%', transform: 'translateX(-50%)', width: '85%', background: "var(--color-surface, rgba(15, 23, 42, 0.75))", backdropFilter: 'blur(8px)', padding: '6px 12px', borderRadius: '8px', color: '#f1f5f9', fontSize: '0.85rem', textAlign: 'center', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                                                    <div style={{ position: 'absolute', bottom: '38px', left: '50%', transform: 'translateX(-50%)', width: '85%', background: "var(--color-surface, rgba(15, 23, 42, 0.75))", backdropFilter: 'blur(8px)', padding: '6px 12px', borderRadius: '8px', color: '#f1f5f9', fontSize: '0.85rem', textAlign: 'center', border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))' }}>
                                                         {caption}
                                                     </div>
                                                 )}
 
                                                 {/* Location Tag Pill */}
                                                 {locationText && showLocationPill && (
-                                                    <div style={{ position: 'absolute', bottom: '8px', left: '8px', background: "var(--color-surface, rgba(15, 23, 42, 0.75))", backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                                                    <div style={{ position: 'absolute', bottom: '8px', left: '8px', background: "var(--color-surface, rgba(15, 23, 42, 0.75))", backdropFilter: 'blur(8px)', padding: '4px 10px', borderRadius: '20px', border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))', display: 'flex', flexDirection: 'column', gap: '1px' }}>
                                                         <span style={{ fontSize: '0.68rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>{locationText}</span>
                                                         <span style={{ fontSize: '0.55rem', color: '#64748b', fontWeight: '600' }}>#Moment. on OLH ZenChat</span>
                                                     </div>
@@ -579,7 +579,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                             style={{
                                                                 background: imageQuality === "og" ? 'rgba(61,165,217,0.25)' : 'rgba(15,23,42,0.75)',
                                                                 backdropFilter: 'blur(6px)',
-                                                                border: imageQuality === "og" ? '1px solid rgba(61,165,217,0.6)' : '1px solid rgba(255,255,255,0.1)',
+                                                                border: imageQuality === "og" ? '1px solid rgba(61,165,217,0.6)' : '1px solid var(--color-border, rgba(255, 255, 255, 0.08))',
                                                                 borderRadius: '6px',
                                                                 padding: '3px 8px',
                                                                 color: imageQuality === "og" ? 'var(--color-primary)' : '#94a3b8',
@@ -602,7 +602,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                             </>
                                         ) : (
                                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', padding: '24px' }}>
-                                                <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+                                                <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--color-overlay, rgba(255, 255, 255, 0.02))', border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
                                                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                                                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                                                         <circle cx="8.5" cy="8.5" r="1.5" />
@@ -639,8 +639,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                             disabled={isUploading}
                                                             style={{
                                                                 flexShrink: 0,
-                                                                background: activeFilter === f.id ? 'rgba(61,165,217,0.15)' : 'rgba(255,255,255,0.02)',
-                                                                border: activeFilter === f.id ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.06)',
+                                                                background: activeFilter === f.id ? 'rgba(61,165,217,0.15)' : 'var(--color-border, rgba(255, 255, 255, 0.08))',
+                                                                border: activeFilter === f.id ? '1px solid var(--color-primary)' : '1px solid var(--color-border, rgba(255, 255, 255, 0.08))',
                                                                 color: activeFilter === f.id ? 'var(--color-primary)' : '#94a3b8',
                                                                 padding: '6px 12px',
                                                                 borderRadius: '16px',
@@ -677,7 +677,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                             </div>
 
                                             {/* Location Tag Control */}
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: '12px', marginBottom: '14px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--color-overlay, rgba(255, 255, 255, 0.01))', border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))', padding: '8px 12px', borderRadius: '12px', marginBottom: '14px' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                     <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#cbd5e1' }}>Location tag</span>
                                                     <span style={{ fontSize: '0.65rem', color: '#64748b' }}>{locationText ? locationText : "Append approximate current location"}</span>
@@ -711,8 +711,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                         onClick={handleFetchLocation}
                                                         disabled={isUploading || isFetchingLocation}
                                                         style={{
-                                                            background: 'rgba(255,255,255,0.03)',
-                                                            border: '1px solid rgba(255,255,255,0.08)',
+                                                            background: 'var(--color-border, rgba(255, 255, 255, 0.08))',
+                                                            border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))',
                                                             borderRadius: '10px',
                                                             padding: '6px 12px',
                                                             color: '#f1f5f9',
@@ -736,7 +736,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                             </div>
 
                                             {/* Disappear Timer CONTROL */}
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: '12px', marginBottom: '14px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--color-overlay, rgba(255, 255, 255, 0.01))', border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))', padding: '8px 12px', borderRadius: '12px', marginBottom: '14px' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                     <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#cbd5e1' }}>Select how long this moment stays visible</span>
                                                 </div>
@@ -772,7 +772,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
                             {/* Render Music / Vibe Controls if Content is Added / Staged */}
                             {((momentType === "text" && content.trim().length >= 3) || (momentType === "image" && filePreview)) && (
-                                <div className="aura-input-section" style={{ borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '14px', margin: '0 28px' }}>
+                                <div className="aura-input-section" style={{ borderTop: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))', paddingTop: '14px', margin: '0 28px' }}>
                                     {music && (
                                         <div className="aura-music-cropper" style={{ opacity: isUploading ? 0.6 : 1 }}>
                                             {/* Row 1: play | title • artist | remove */}
@@ -891,7 +891,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                 borderRadius: '24px',
                                                 border: 'none',
                                                 background: 'var(--color-primary)',
-                                                color: '#fff',
+                                                color: 'var(--color-text, #fff)',
                                                 fontWeight: 'bold',
                                                 fontSize: '0.85rem',
                                                 cursor: 'pointer',

@@ -326,7 +326,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
         }}>
             <div style={{
                 background: "var(--color-surface, rgba(15, 23, 42, 0.65))",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
+                border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                 borderRadius: "24px",
                 width: "100%",
                 maxWidth: "600px",
@@ -336,7 +336,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                 overflow: "hidden",
                 boxShadow: "0 20px 50px rgba(0, 0, 0, 0.5)",
                 fontFamily: "inherit",
-                color: "#fff"
+                color: "var(--color-text, #fff)"
             }}>
                 {/* Header */}
                 <div style={{
@@ -345,7 +345,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    background: "rgba(255, 255, 255, 0.01)"
+                    background: "var(--color-overlay, rgba(255, 255, 255, 0.01))"
                 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -370,7 +370,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                             borderRadius: "50%",
                             transition: "all 0.2s"
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"}
+                        onMouseEnter={(e) => e.currentTarget.style.background = "var(--color-border, rgba(255, 255, 255, 0.08))"}
                         onMouseLeave={(e) => e.currentTarget.style.background = "none"}
                     >
                         <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -396,7 +396,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                     {vaultState === "setup" && (
                         <form onSubmit={handleSetup} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                             <div style={{ background: "rgba(61, 165, 217, 0.04)", border: "1px solid rgba(61, 165, 217, 0.1)", padding: "14px", borderRadius: "12px", fontSize: "0.8rem", color: "#94a3b8", lineHeight: "1.5" }}>
-                                <strong style={{ color: "#fff", display: "block", marginBottom: "6px" }}>Set up your ZenVault Password</strong>
+                                <strong style={{ color: "var(--color-text, #fff)", display: "block", marginBottom: "6px" }}>Set up your ZenVault Password</strong>
                                 Unlike device-level locks (like biometrics or pin codes) which can be bypassed by anyone who knows your device passcode, ZenVault secures your files with custom 256-bit AES-GCM local encryption right inside your browser. Your password never leaves this device, meaning zero server footprint and complete privacy - but remember, if you lose it, we can't recover your files!
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -407,7 +407,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                                     placeholder="3 to 8 characters/numbers"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    style={{ background: "rgba(0, 0, 0, 0.2)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "10px 14px", fontSize: "0.9rem", color: "#fff" }}
+                                    style={{ background: "rgba(0, 0, 0, 0.2)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "10px", padding: "10px 14px", fontSize: "0.9rem", color: "var(--color-text, #fff)" }}
                                 />
                             </div>
                             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
@@ -418,7 +418,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                                     placeholder="Re-enter password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    style={{ background: "rgba(0, 0, 0, 0.2)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "10px 14px", fontSize: "0.9rem", color: "#fff" }}
+                                    style={{ background: "rgba(0, 0, 0, 0.2)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "10px", padding: "10px 14px", fontSize: "0.9rem", color: "var(--color-text, #fff)" }}
                                 />
                             </div>
                             <button
@@ -435,7 +435,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                     {vaultState === "locked" && (
                         <form onSubmit={handleUnlock} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                             <div style={{ display: "flex", justifyContent: "center", margin: "20px 0" }}>
-                                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", padding: "24px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <div style={{ background: "var(--color-border, rgba(255, 255, 255, 0.08))", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                                         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -450,7 +450,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                                     placeholder="Password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    style={{ background: "rgba(0, 0, 0, 0.2)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", padding: "12px 14px", fontSize: "1rem", color: "#fff", textAlign: "center" }}
+                                    style={{ background: "rgba(0, 0, 0, 0.2)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "10px", padding: "12px 14px", fontSize: "1rem", color: "var(--color-text, #fff)", textAlign: "center" }}
                                 />
                             </div>
                             <button
@@ -473,7 +473,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                                 onDrop={handleFileDrop}
                                 onClick={() => fileInputRef.current?.click()}
                                 style={{
-                                    border: isDragOver ? "2px dashed var(--color-primary)" : "2px dashed rgba(255, 255, 255, 0.15)",
+                                    border: isDragOver ? "2px dashed var(--color-primary)" : "2px dashed var(--color-border, rgba(255, 255, 255, 0.08))",
                                     background: isDragOver ? "rgba(61, 165, 217, 0.05)" : "rgba(0, 0, 0, 0.15)",
                                     borderRadius: "16px",
                                     padding: "24px",
@@ -528,7 +528,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                             {/* Files List */}
                             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                                 {files.length === 0 ? (
-                                    <div style={{ textAlign: "center", padding: "40px 20px", background: "rgba(255,255,255,0.01)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.03)", color: "#64748b", fontSize: "0.8rem" }}>
+                                    <div style={{ textAlign: "center", padding: "40px 20px", background: "var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "16px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", color: "#64748b", fontSize: "0.8rem" }}>
                                         Safe is empty. Encrypt files to protect them.
                                     </div>
                                 ) : (
@@ -537,8 +537,8 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "space-between",
-                                            background: "rgba(255, 255, 255, 0.02)",
-                                            border: "1px solid rgba(255, 255, 255, 0.05)",
+                                            background: "var(--color-overlay, rgba(255, 255, 255, 0.02))",
+                                            border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                             padding: "12px 16px",
                                             borderRadius: "12px",
                                             transition: "background 0.2s"
@@ -554,7 +554,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                                                     </svg>
                                                 </div>
                                                 <div style={{ overflow: "hidden" }}>
-                                                    <div style={{ fontSize: "0.82rem", fontWeight: "600", color: "#fff", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }} title={f.name}>{f.name}</div>
+                                                    <div style={{ fontSize: "0.82rem", fontWeight: "600", color: "var(--color-text, #fff)", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }} title={f.name}>{f.name}</div>
                                                     <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "2px" }}>
                                                         {formatBytes(f.size)} • {new Date(f.date).toLocaleDateString()}
                                                     </div>
@@ -564,9 +564,9 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                                                 <button
                                                     onClick={() => downloadFile(f)}
                                                     style={{
-                                                        background: "rgba(255, 255, 255, 0.06)",
-                                                        border: "1px solid rgba(255, 255, 255, 0.1)",
-                                                        color: "#fff",
+                                                        background: "var(--color-overlay, rgba(255, 255, 255, 0.06))",
+                                                        border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
+                                                        color: "var(--color-text, #fff)",
                                                         padding: "6px",
                                                         borderRadius: "8px",
                                                         cursor: "pointer",

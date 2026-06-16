@@ -84,7 +84,7 @@ const RecoveryKeyModal = () => {
                 {/* Secure Key Display Container */}
                 <div style={{
                     backgroundColor: "var(--color-surface, rgba(15, 23, 42, 0.6))",
-                    border: "1px solid rgba(255, 255, 255, 0.05)",
+                    border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                     borderRadius: "16px",
                     padding: "20px",
                     display: "flex",
@@ -108,7 +108,7 @@ const RecoveryKeyModal = () => {
                         onClick={handleCopy}
                         style={{
                             background: copied ? "rgba(34, 197, 94, 0.15)" : "rgba(255, 255, 255, 0.05)",
-                            border: `1px solid ${copied ? "rgba(34, 197, 94, 0.3)" : "rgba(255, 255, 255, 0.1)"}`,
+                            border: `1px solid ${copied ? "rgba(34, 197, 94, 0.3)" : "var(--color-border, rgba(255, 255, 255, 0.08))"}`,
                             borderRadius: "10px",
                             padding: "8px 12px",
                             color: copied ? "#4ade80" : "#cbd5e1",
@@ -171,7 +171,7 @@ const RecoveryKeyModal = () => {
                         border: "none",
                         borderRadius: "12px",
                         padding: "14px",
-                        color: "#ffffff",
+                        color: "var(--color-text, #fff)fff",
                         fontSize: "15px",
                         fontWeight: "600",
                         cursor: "pointer",
