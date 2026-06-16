@@ -58,6 +58,12 @@
   --radius-xl: 1rem;
   --radius-full: 9999px;
 
+  --bubble-sending: rgba(71, 85, 105, 0.4);
+  --bubble-failed: rgba(224, 92, 106, 0.2);
+  --bubble-sent: #475569;
+  --bubble-delivered: #2563eb;
+  --bubble-seen: #059669;
+
   --transition-interactive: 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -76,6 +82,12 @@
   --color-surface-offset: #0a0a0a;
   --color-surface-offset-2: rgba(94, 234, 212, 0.05);
 
+  --bubble-sending: #111111;
+  --bubble-failed: rgba(220, 38, 38, 0.2);
+  --bubble-sent: #0a0a0a;
+  --bubble-delivered: #0a0a0a;
+  --bubble-seen: #0a0a0a;
+
   --body-bg: #000000;
 }
 
@@ -91,6 +103,12 @@
   --color-surface: #fdfbf7;
   --color-surface-offset: #f4f1ea;
   --color-surface-offset-2: rgba(107, 142, 107, 0.1);
+
+  --bubble-sending: rgba(137, 148, 137, 0.4);
+  --bubble-failed: rgba(180, 83, 83, 0.2);
+  --bubble-sent: #899489;
+  --bubble-delivered: #5A7B5A;
+  --bubble-seen: #6B8E6B;
 
   --body-bg: #fdfbf7;
 }
@@ -117,9 +135,21 @@
   right: -1px;
   bottom: -1px;
   z-index: -1;
-  background: conic-gradient(from 0deg, transparent 60%, var(--color-primary) 100%);
+  background: conic-gradient(from 0deg, transparent 60%, var(--color-text-muted) 100%);
   animation: spin-border 3s linear infinite;
   border-radius: inherit;
+}
+
+/* Update glow color based on status */
+[data-theme="zen_oled"] .message-bubble.mine.status-sent::before {
+  background: conic-gradient(from 0deg, transparent 60%, #94a3b8 100%);
+}
+[data-theme="zen_oled"] .message-bubble.mine.status-delivered::before {
+  background: conic-gradient(from 0deg, transparent 60%, #3b82f6 100%);
+}
+[data-theme="zen_oled"] .message-bubble.mine.status-seen::before,
+[data-theme="zen_oled"] .message-bubble.mine.status-read::before {
+  background: conic-gradient(from 0deg, transparent 60%, var(--color-primary) 100%);
 }
 
 [data-theme="zen_oled"] .message-bubble.mine::after {
@@ -1352,38 +1382,38 @@ select {
 }
 
 .message-bubble.mine.status-sending {
-  background: rgba(71, 85, 105, 0.4);
+  background: var(--bubble-sending);
   
   color: rgba(255, 255, 255, 0.6);
   border: 1px dashed rgba(255, 255, 255, 0.2);
 }
 
 .message-bubble.mine.status-failed {
-  background: rgba(224, 92, 106, 0.2);
+  background: var(--bubble-failed);
   
   color: #e05c6a;
   border: 1px solid rgba(224, 92, 106, 0.3);
 }
 
 .message-bubble.mine.status-sent {
-  background: #475569;
+  background: var(--bubble-sent);
   
   color: #fff;
 }
 
 .message-bubble.mine.status-delivered {
-  background: #2563eb;
+  background: var(--bubble-delivered);
   
   color: #fff;
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .message-bubble.mine.status-seen,
 .message-bubble.mine.status-read {
-  background: #059669;
+  background: var(--bubble-seen);
   
   color: #fff;
-  box-shadow: 0 4px 15px rgba(5, 150, 105, 0.25);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .message-bubble.mine.status-seen .message-text,
