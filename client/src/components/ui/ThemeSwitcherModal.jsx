@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useAuthStore } from "../../stores/authStore";
 
 const PaletteIcon = () => (
@@ -22,8 +23,13 @@ const XIcon = () => (
 
 const ThemeSwitcherModal = ({ isOpen, onClose }) => {
     const { user, updateTheme } = useAuthStore();
+    const [mounted, setMounted] = useState(false);
 
-    if (!isOpen || !user) return null;
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!isOpen || !user || !mounted) return null;
 
     const streak = user.pulseStreak?.current || 0;
     const referrals = user.referralStats?.registrations || 0;
@@ -34,93 +40,122 @@ const ThemeSwitcherModal = ({ isOpen, onClose }) => {
         await updateTheme(theme);
     };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-black/60 backdrop-blur-sm">
-            <div
-                className="w-full sm:w-[450px] bg-surface rounded-t-2xl sm:rounded-2xl border-t sm:border border-white/10 shadow-2xl overflow-hidden flex flex-col"
-                style={{ maxHeight: "85vh" }}
+    return createPortal(
+        <div className="modal-overlay" onClick={onClose} style={{ zIndex: 100000, padding: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div 
+                className="modal-card" 
+                onClick={(e) => e.stopPropagation()}
+                style={{ 
+                    maxWidth: "450px", 
+                    width: "100%", 
+                    maxHeight: "85vh", 
+                    display: "flex", 
+                    flexDirection: "column", 
+                    padding: 0, 
+                    background: "var(--color-surface, rgba(15, 23, 42, 0.95))", 
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    borderRadius: "16px",
+                    overflow: "hidden"
+                }}
             >
                 {/* Header */}
-                <div className="p-5 border-b border-white/5 flex items-center justify-between sticky top-0 bg-surface/95 backdrop-blur-md z-10">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 text-primary rounded-xl">
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255, 255, 255, 0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--color-surface)", position: "sticky", top: 0, zIndex: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div style={{ padding: "8px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <PaletteIcon />
                         </div>
-                        <h2 className="text-xl font-bold">Themes</h2>
+                        <h2 style={{ margin: 0, color: "var(--color-text, #f8fafc)", fontSize: "1.2rem", fontWeight: "600" }}>Themes</h2>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 text-text-muted hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
-                    >
+                    <button onClick={onClose} style={{ background: "transparent", border: "none", color: "var(--color-text-muted, #94a3b8)", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", justifyContent: "center", transition: "color 0.2s" }} onMouseEnter={(e) => e.currentTarget.style.color = "var(--color-text, #fff)"} onMouseLeave={(e) => e.currentTarget.style.color = "var(--color-text-muted, #94a3b8)"}>
                         <XIcon />
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="p-5 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+                <div style={{ padding: "20px", overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: "16px" }}>
                     {!isUnlocked && (
-                        <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-xl text-orange-200 text-sm mb-4">
-                            <strong>Exclusive Themes Locked!</strong><br />
+                        <div style={{ padding: "14px", background: "rgba(249, 115, 22, 0.1)", border: "1px solid rgba(249, 115, 22, 0.2)", borderRadius: "12px", color: "#fdba74", fontSize: "0.85rem", lineHeight: "1.5" }}>
+                            <strong style={{ display: "block", marginBottom: "4px" }}>Exclusive Themes Locked!</strong>
                             Enable push notifications in your current device & have a current streak of 7+ days on ZenPulse (or) one successful referral to ZenChat, to unlock exclusive themes!
                         </div>
                     )}
 
-                    <div className="grid gap-4">
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                         {/* Default Theme */}
                         <div
                             onClick={() => handleThemeChange("default")}
-                            className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${user.selectedTheme === "default" || !user.selectedTheme ? "border-primary bg-primary/5" : "border-white/5 hover:border-white/20 bg-surface-offset"}`}
+                            style={{
+                                padding: "16px",
+                                borderRadius: "12px",
+                                border: (user.selectedTheme === "default" || !user.selectedTheme) ? "2px solid var(--color-primary, #38bdf8)" : "2px solid rgba(255,255,255,0.05)",
+                                background: (user.selectedTheme === "default" || !user.selectedTheme) ? "rgba(56, 189, 248, 0.05)" : "var(--color-surface-offset, rgba(255,255,255,0.02))",
+                                cursor: "pointer",
+                                transition: "all 0.2s"
+                            }}
                         >
-                            <div className="flex items-center justify-between">
-                                <span className="font-semibold">Classic Default</span>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+                                <span style={{ fontWeight: "600", color: "var(--color-text, #fff)" }}>Classic Default</span>
                                 {(user.selectedTheme === "default" || !user.selectedTheme) && (
-                                    <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-1 rounded-md">Active</span>
+                                    <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "var(--color-primary, #38bdf8)", background: "rgba(56, 189, 248, 0.1)", padding: "2px 6px", borderRadius: "6px" }}>Active</span>
                                 )}
                             </div>
-                            <p className="text-sm text-text-muted mt-1">The original ZenChat experience.</p>
+                            <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--color-text-muted, #94a3b8)", lineHeight: "1.4" }}>The original ZenChat experience.</p>
                         </div>
 
                         {/* #ZenOLED Theme */}
                         <div
                             onClick={() => handleThemeChange("zen_oled")}
-                            className={`p-4 rounded-xl border-2 transition-all ${
-                                !isUnlocked ? "opacity-50 cursor-not-allowed border-white/5 bg-surface-offset grayscale" :
-                                user.selectedTheme === "zen_oled" ? "border-[#5eead4] bg-[#5eead4]/5 cursor-pointer" : "border-white/5 hover:border-white/20 bg-surface-offset cursor-pointer"
-                            }`}
+                            style={{
+                                padding: "16px",
+                                borderRadius: "12px",
+                                border: !isUnlocked ? "2px solid rgba(255,255,255,0.05)" : user.selectedTheme === "zen_oled" ? "2px solid #5eead4" : "2px solid rgba(255,255,255,0.05)",
+                                background: !isUnlocked ? "var(--color-surface-offset, rgba(255,255,255,0.02))" : user.selectedTheme === "zen_oled" ? "rgba(94, 234, 212, 0.05)" : "var(--color-surface-offset, rgba(255,255,255,0.02))",
+                                cursor: !isUnlocked ? "not-allowed" : "pointer",
+                                opacity: !isUnlocked ? 0.6 : 1,
+                                filter: !isUnlocked ? "grayscale(100%)" : "none",
+                                transition: "all 0.2s"
+                            }}
                         >
-                            <div className="flex items-center justify-between">
-                                <span className="font-semibold text-white">#ZenOLED</span>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+                                <span style={{ fontWeight: "600", color: "var(--color-text, #fff)" }}>#ZenOLED</span>
                                 {!isUnlocked ? (
-                                    <LockIcon className="text-text-muted" />
+                                    <span style={{ color: "var(--color-text-muted, #94a3b8)" }}><LockIcon /></span>
                                 ) : user.selectedTheme === "zen_oled" ? (
-                                    <span className="text-xs font-bold text-[#5eead4] bg-[#5eead4]/10 px-2 py-1 rounded-md">Active</span>
+                                    <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#5eead4", background: "rgba(94, 234, 212, 0.1)", padding: "2px 6px", borderRadius: "6px" }}>Active</span>
                                 ) : null}
                             </div>
-                            <p className="text-sm text-text-muted mt-1">Deep obsidian blacks with animated glowing chat bubbles. Perfect for OLED screens.</p>
+                            <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--color-text-muted, #94a3b8)", lineHeight: "1.4" }}>Deep obsidian blacks with animated glowing chat bubbles. Perfect for OLED screens.</p>
                         </div>
 
                         {/* Earthy Calm Theme */}
                         <div
                             onClick={() => handleThemeChange("earthy_calm")}
-                            className={`p-4 rounded-xl border-2 transition-all ${
-                                !isUnlocked ? "opacity-50 cursor-not-allowed border-white/5 bg-surface-offset grayscale" :
-                                user.selectedTheme === "earthy_calm" ? "border-[#6B8E6B] bg-[#6B8E6B]/5 cursor-pointer" : "border-white/5 hover:border-white/20 bg-surface-offset cursor-pointer"
-                            }`}
+                            style={{
+                                padding: "16px",
+                                borderRadius: "12px",
+                                border: !isUnlocked ? "2px solid rgba(255,255,255,0.05)" : user.selectedTheme === "earthy_calm" ? "2px solid #6B8E6B" : "2px solid rgba(255,255,255,0.05)",
+                                background: !isUnlocked ? "var(--color-surface-offset, rgba(255,255,255,0.02))" : user.selectedTheme === "earthy_calm" ? "rgba(107, 142, 107, 0.05)" : "var(--color-surface-offset, rgba(255,255,255,0.02))",
+                                cursor: !isUnlocked ? "not-allowed" : "pointer",
+                                opacity: !isUnlocked ? 0.6 : 1,
+                                filter: !isUnlocked ? "grayscale(100%)" : "none",
+                                transition: "all 0.2s"
+                            }}
                         >
-                            <div className="flex items-center justify-between">
-                                <span className="font-semibold text-[#fdfbf7]">Earthy Calm</span>
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+                                <span style={{ fontWeight: "600", color: "var(--color-text, #fff)" }}>Earthy Calm</span>
                                 {!isUnlocked ? (
-                                    <LockIcon className="text-text-muted" />
+                                    <span style={{ color: "var(--color-text-muted, #94a3b8)" }}><LockIcon /></span>
                                 ) : user.selectedTheme === "earthy_calm" ? (
-                                    <span className="text-xs font-bold text-[#6B8E6B] bg-[#6B8E6B]/10 px-2 py-1 rounded-md">Active</span>
+                                    <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#6B8E6B", background: "rgba(107, 142, 107, 0.1)", padding: "2px 6px", borderRadius: "6px" }}>Active</span>
                                 ) : null}
                             </div>
-                            <p className="text-sm text-text-muted mt-1">Warm off-white and sage green tones for a grounding, natural experience.</p>
+                            <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--color-text-muted, #94a3b8)", lineHeight: "1.4" }}>Warm off-white and sage green tones for a grounding, natural experience.</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 
