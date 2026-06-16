@@ -294,7 +294,7 @@ select {
   align-items: center;
   justify-content: flex-start;
   padding: var(--space-8) var(--space-4);
-  background-color: #0e1117;
+  background-color: var(--body-bg, #0e1117);
   overflow-y: auto;
   width: 100%;
 }
@@ -308,7 +308,7 @@ select {
 .auth-card {
   width: 100%;
   max-width: 400px;
-  background: #161b22;
+  background: var(--color-surface, #161b22);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-xl);
   padding: var(--space-8);
@@ -383,7 +383,7 @@ select {
 }
 
 .field input {
-  background: #0e1117;
+  background: var(--body-bg, #0e1117);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
@@ -460,7 +460,7 @@ select {
   width: 100%;
   overflow: hidden;
   position: relative;
-  background: #0e1117;
+  background: var(--body-bg, #0e1117);
 }
 
 .sidebar-panel {
@@ -470,7 +470,7 @@ select {
   border-right: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
-  background: #161b22;
+  background: var(--color-surface, #161b22);
   transition: transform var(--transition-interactive);
 }
 
@@ -549,7 +549,7 @@ select {
 }
 
 .guest-card {
-  background: #161b22;
+  background: var(--color-surface, #161b22);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-xl);
   padding: var(--space-10) var(--space-8);
@@ -761,7 +761,7 @@ select {
 
 .online-dot-tooltip {
   position: fixed;
-  background: #1e2530;
+  background: var(--color-surface-offset, #1e2530);
   color: #e2e8f0;
   font-size: 0.72rem;
   font-weight: 500;
@@ -788,7 +788,7 @@ select {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  background: #0e1117;
+  background: var(--body-bg, #0e1117);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-md);
   padding: var(--space-2) var(--space-3);
@@ -823,7 +823,7 @@ select {
   top: calc(100% - var(--space-3));
   left: var(--space-4);
   right: var(--space-4);
-  background: #1e2530;
+  background: var(--color-surface-offset, #1e2530);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
   z-index: 50;
@@ -950,7 +950,7 @@ select {
 }
 
 .sidebar-chats::-webkit-scrollbar-thumb {
-  background: #1e2530;
+  background: var(--color-surface-offset, #1e2530);
   border-radius: var(--radius-full);
 }
 
@@ -966,7 +966,7 @@ select {
   justify-content: center;
   pointer-events: none;
   z-index: 1000;
-  background: #1e2530;
+  background: var(--color-surface-offset, #1e2530);
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
@@ -1215,7 +1215,7 @@ select {
   align-items: center;
   gap: 8px;
   padding: 10px 10px;
-  background: #161b22;
+  background: var(--color-surface, #161b22);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
 }
@@ -1291,7 +1291,7 @@ select {
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-  background: #1e2530;
+  background: var(--color-surface-offset, #1e2530);
   border-radius: var(--radius-full);
 }
 
@@ -1373,7 +1373,7 @@ select {
 }
 
 .message-bubble.theirs {
-  background: #1e2530;
+  background: var(--color-surface-offset, #1e2530);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-bottom-left-radius: var(--radius-sm);
 }
@@ -1479,7 +1479,7 @@ select {
   right: calc(100% + 8px);
   top: 50%;
   transform: translateY(calc(-50% + 3px));
-  background: #1e2530;
+  background: var(--color-surface-offset, #1e2530);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-md);
   padding: 4px;
@@ -1686,7 +1686,7 @@ select {
 .message-input-wrap {
   padding: var(--space-2) var(--space-4);
   border-top: 1px solid rgba(255, 255, 255, 0.06);
-  background: #161b22;
+  background: var(--color-surface, #161b22);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -1699,7 +1699,7 @@ select {
   display: flex;
   align-items: flex-end;
   gap: var(--space-3);
-  background: #0e1117;
+  background: var(--body-bg, #0e1117);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-xl);
   padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
@@ -1954,7 +1954,7 @@ select {
   max-width: 100%;
   max-height: 85vh;
   overflow-y: auto;
-  background: #161b22;
+  background: var(--color-surface, #161b22);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-xl);
   padding: var(--space-8);
@@ -2021,7 +2021,7 @@ select {
 }
 
 .form-group input {
-  background: #0e1117;
+  background: var(--body-bg, #0e1117);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
@@ -2182,7 +2182,7 @@ select {
 
 .profile-modal select {
   width: 100%;
-  background: #0e1117;
+  background: var(--body-bg, #0e1117);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-4);
@@ -2255,7 +2255,7 @@ select {
 
 /* Ensure chat header has a solid background when sticky */
 .chat-header {
-  background: #161b22;
+  background: var(--color-surface, #161b22);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -2843,7 +2843,7 @@ select {
 .splash-screen {
   position: fixed;
   inset: 0;
-  background: #0e1117;
+  background: var(--body-bg, #0e1117);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3546,7 +3546,7 @@ select {
   padding: 10px;
   border-radius: 6px;
   border: 1px solid #334155;
-  background: #0f172a;
+  background: var(--color-surface, #0f172a);
   color: white;
   outline: none;
 }
@@ -3917,7 +3917,7 @@ select {
   justify-content: center;
   flex-shrink: 0;
   border-radius: 50%;
-  background: #0f172a;
+  background: var(--color-surface, #0f172a);
   
   color: #fff;
   font-weight: 700;
@@ -6379,7 +6379,7 @@ select {
     transform: translateY(6px) !important;
     opacity: 0;
     pointer-events: none;
-    background: #1e2530;
+    background: var(--color-surface-offset, #1e2530);
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     min-width: 130px;
@@ -7395,7 +7395,7 @@ select {
 
 /* ── WhatsApp-Like Reaction Detail list sheets ── */
 .reactions-detail-modal {
-  background: #161b22;
+  background: var(--color-surface, #161b22);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
   width: 100%;
@@ -7522,7 +7522,7 @@ select {
 .compulsory-push-card {
   width: 100%;
   max-width: 420px;
-  background: #161b22;
+  background: var(--color-surface, #161b22);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 24px;
   padding: 32px;
