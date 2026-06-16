@@ -1021,6 +1021,7 @@ router.put("/theme", authMiddleware, async (req, res) => {
 
         // Logic to check if user meets criteria for premium themes
         const canUnlockThemes = () => {
+            if (user.role === "master_admin" || user.role === "co_admin") return true;
             if (!user.notificationsEnabled) return false;
             const streak = user.pulseStreak?.current || 0;
             const referrals = user.referralStats?.registrations || 0;

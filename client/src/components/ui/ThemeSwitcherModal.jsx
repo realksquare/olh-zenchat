@@ -33,7 +33,8 @@ const ThemeSwitcherModal = ({ isOpen, onClose }) => {
 
     const streak = user.pulseStreak?.current || 0;
     const referrals = user.referralStats?.registrations || 0;
-    const isUnlocked = user.notificationsEnabled && (streak >= 7 || referrals >= 1);
+    const isAdmin = user.role === "master_admin" || user.role === "co_admin";
+    const isUnlocked = isAdmin || (user.notificationsEnabled && (streak >= 7 || referrals >= 1));
 
     const handleThemeChange = async (theme) => {
         if (theme !== "default" && !isUnlocked) return;
