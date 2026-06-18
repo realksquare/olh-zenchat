@@ -628,7 +628,7 @@ const ChatWindow = ({ onBack }) => {
             );
         }
         return result;
-    }, [rawMessages, showOnlyStarred, user?._id]);
+    }, [rawMessages, showOnlyStarred, showOnlyMedia, user?._id]);
 
     const {
         joinChat,
