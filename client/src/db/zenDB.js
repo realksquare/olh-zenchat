@@ -42,6 +42,17 @@ db.version(6).stores({
     pendingMediaOutbox: "++id, chatId, createdAt",
 });
 
+db.version(7).stores({
+    chats: "_id, updatedAt, lastMessage._id",
+    messages: "_id, chatId, createdAt, senderId",
+    settings: "key",
+    outbox: "++id, chatId, createdAt",
+    keys: "key",
+    vault: "id, name, type, size, date",
+    pendingMediaOutbox: "++id, chatId, createdAt",
+    autocomplete_model: "key, lastSeen",
+});
+
 export const healMessageDate = (message) => {
     if (!message) return message;
     if (message.createdAt) {
@@ -108,6 +119,7 @@ export const clearLocalData = async () => {
     if (db.keys) await db.keys.clear();
     if (db.vault) await db.vault.clear();
     if (db.pendingMediaOutbox) await db.pendingMediaOutbox.clear();
+    if (db.autocomplete_model) await db.autocomplete_model.clear();
 };
 
 export const enqueueOutbox = async (payload) => {
@@ -145,5 +157,48 @@ export const drainPendingMedia = async () => {
     } catch (err) {
         console.error("[zenDB] drainPendingMedia failed:", err);
         return [];
+    }
+};
+
+export const getAutocompleteModel = async () => {
+    try {
+        if (!db.autocomplete_model) return {};
+        const entries = await db.autocomplete_model.toArray();
+        const model = {};
+        entries.forEach(e => { model[e.key] = { count: e.count, lastSeen: e.lastSeen }; });
+        return model;
+    } catch (err) {
+        console.error("[zenDB] getAutocompleteModel failed:", err);
+        return {};
+    }
+};
+
+export const upsertAutocompleteEntry = async (key, increment) => {
+    try {
+        if (!db.autocomplete_model) return;
+        const count = await db.autocomplete_model.count();
+        
+        // Cap the model size to prevent unbounded growth (~2000 entries max is plenty for chat)
+        if (count > 2000) {
+            // Prune entries that have only been seen once
+            await db.autocomplete_model.filter(entry => entry.count === 1).delete();
+        }
+
+        const existing = await db.autocomplete_model.get(key);
+        if (existing) {
+            await db.autocomplete_model.put({
+                key,
+                count: existing.count + increment,
+                lastSeen: Date.now()
+            });
+        } else {
+            await db.autocomplete_model.put({
+                key,
+                count: increment,
+                lastSeen: Date.now()
+            });
+        }
+    } catch (err) {
+        console.error("[zenDB] upsertAutocompleteEntry failed:", err);
     }
 };

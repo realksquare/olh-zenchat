@@ -580,6 +580,7 @@ const ChatWindow = ({ onBack }) => {
     const hasActiveMoment = useMomentStore((s) => s.hasActiveMoment);
 
     const [showOnlyStarred, setShowOnlyStarred] = useState(false);
+    const [showOnlyMedia, setShowOnlyMedia] = useState(false);
     const rawMessages = useChatStore((s) =>
         activeChat && s.messages[activeChat._id] ? s.messages[activeChat._id] : EMPTY_MESSAGES
     );
@@ -615,6 +616,16 @@ const ChatWindow = ({ onBack }) => {
         let result = visible;
         if (showOnlyStarred) {
             result = visible.filter(m => m.starredBy?.includes(user?._id));
+        } else if (showOnlyMedia) {
+            result = visible.filter(m => 
+                m.type === 'image' || 
+                m.type === 'video' || 
+                m.type === 'gif' || 
+                m.type === 'voice' || 
+                m.type === 'file' || 
+                m.type === 'sticker' || 
+                (m.type === 'text' && m.content && /https?:\/\/\S+/i.test(m.content))
+            );
         }
         return result;
     }, [rawMessages, showOnlyStarred, user?._id]);
@@ -1090,6 +1101,7 @@ const ChatWindow = ({ onBack }) => {
         setEditingMessage(null);
         setReplyingTo(null);
         setDeletingMessage(null);
+        setShowOnlyMedia(false);
         zenExitTimeoutCountRef.current = 0;
         clearZenTimers();
         setOfflineCountdown(null);
@@ -1292,18 +1304,22 @@ const ChatWindow = ({ onBack }) => {
                 <div className="chat-header-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '12px', alignItems: 'center', flexShrink: 0 }}>
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                         <button
-                            className="header-action-btn"
-                            disabled
-                            title="Coming soon!"
-                            style={{ flexShrink: 0, opacity: 0.35, cursor: 'not-allowed', pointerEvents: 'none' }}
+                            className={`header-action-btn ${showOnlyMedia ? 'active' : ''}`}
+                            onClick={() => {
+                                setShowOnlyStarred(false);
+                                setShowOnlyMedia(prev => !prev);
+                            }}
+                            title={showOnlyMedia ? "Show all messages" : "Show media and files only"}
+                            style={{ flexShrink: 0 }}
                         >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="12" cy="12" r="10" />
-                                <polyline points="12 6 12 12 16 14" />
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill={showOnlyMedia ? "var(--color-primary)" : "none"} stroke={showOnlyMedia ? "var(--color-primary)" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
                             </svg>
                         </button>
 
-                        {showDisappearingMenu && (
+                        {false && showDisappearingMenu && (
                             <div className="message-action-dropdown disappearing-menu" style={{ position: 'absolute', right: 0, top: '100%', marginTop: '6px', minWidth: '135px', background: "var(--color-surface, #161b22)", border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', flexDirection: 'column', padding: '4px' }}>
                                 {[
                                     { value: 'off', label: 'Off' },
@@ -1342,7 +1358,10 @@ const ChatWindow = ({ onBack }) => {
 
                     <button
                         className={`header-action-btn ${showOnlyStarred ? 'active' : ''}`}
-                        onClick={() => setShowOnlyStarred(!showOnlyStarred)}
+                        onClick={() => {
+                            setShowOnlyMedia(false);
+                            setShowOnlyStarred(!showOnlyStarred);
+                        }}
                         title={showOnlyStarred ? "Show all messages" : "Show only starred messages"}
                         style={{ flexShrink: 0 }}
                     >
@@ -1354,7 +1373,7 @@ const ChatWindow = ({ onBack }) => {
             </div>
 
             <div className="chat-messages" ref={messagesContainerRef} onScroll={handleScroll} style={{ position: "relative", zIndex: 1, background: "transparent" }}>
-                {!isZenMode && (hasMoreMessages[activeChat?._id] || isLoadingOlderMessages) && !isLoadingMessages && (!showOnlyStarred || messages.length > 18) && (
+                {!isZenMode && (hasMoreMessages[activeChat?._id] || isLoadingOlderMessages) && !isLoadingMessages && (!showOnlyStarred || messages.length > 18) && !showOnlyMedia && (
                     <div style={{ display: 'flex', justifyContent: 'center', padding: '8px 0 4px' }}>
                         <button
                             className="load-more-btn"
@@ -1400,7 +1419,7 @@ const ChatWindow = ({ onBack }) => {
 
                 {!isLoadingMessages && messages.length === 0 && (
                     <div className="messages-empty">
-                        <span>{showOnlyStarred ? 'No messages marked as "Fav"' : 'No messages yet - say Hi!'}</span>
+                        <span>{showOnlyStarred ? 'No messages marked as "Fav"' : showOnlyMedia ? 'No media or files in this conversation yet.' : 'No messages yet - say Hi!'}</span>
                     </div>
                 )}
                 {messages.map((msg, idx) => {

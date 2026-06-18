@@ -10,6 +10,7 @@ import { enqueuePendingMedia } from "../../db/zenDB";
 import { generateLQIP } from "../../utils/lqip";
 import GifPicker from "./GifPicker";
 import VoiceRecorder from "./VoiceRecorder";
+import { loadModel, trainOnMessage, getSmartStart, getWordSuggestion, getNextWordSuggestion } from "../../utils/autocomplete";
 
 const ACCEPTED_IMAGE = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const ACCEPTED_VIDEO = ["video/mp4", "video/quicktime", "video/webm", "video/mpeg", "video/x-msvideo"];
@@ -268,6 +269,8 @@ const MediaPreview = ({ files, onRemove, onToggleQuality }) => {
 
 const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCancelReply, disabled = false, disabledPlaceholder = "Sending disabled..." }) => {
     const [content, setContent] = useState("");
+    const [acModel, setAcModel] = useState(null);
+    const [suggestion, setSuggestion] = useState('');
     const [isViewOnce, setIsViewOnce] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [showMediaPopup, setShowMediaPopup] = useState(false);
@@ -299,8 +302,53 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const textareaRef = useRef(null);
     const typingTimeoutRef = useRef(null);
     const isTypingRef = useRef(false);
+    const contentRef = useRef(content);
+    const editingRef = useRef(editingMessage);
+    const touchStartRef = useRef(null);
 
     useEffect(() => {
+        contentRef.current = content;
+        editingRef.current = editingMessage;
+    }, [content, editingMessage]);
+
+    useEffect(() => {
+        loadModel().then(setAcModel);
+    }, []);
+
+    useEffect(() => {
+        if (!editingRef.current) {
+            const draft = localStorage.getItem(`zc_draft_${chatId}`);
+            if (draft) setContent(draft);
+        }
+        
+        // Smart Start check on new chat
+        const checkSmartStart = () => {
+            if (editingRef.current || contentRef.current) return;
+            const activeChat = useChatStore.getState().activeChat;
+            if (activeChat && activeChat.messages && activeChat.messages.length > 0) {
+                const msgs = activeChat.messages.filter(m => !m.deletedForEveryone);
+                const lastMsg = msgs[msgs.length - 1];
+                if (lastMsg && lastMsg.type === 'text' && lastMsg.senderId !== userId && lastMsg.senderId?._id !== userId) {
+                    const smartReply = getSmartStart(lastMsg.content);
+                    if (smartReply) setSuggestion(smartReply);
+                }
+            }
+        };
+        setTimeout(checkSmartStart, 300);
+
+        return () => {
+            if (!editingRef.current) {
+                const currentText = contentRef.current || '';
+                const key = `zc_draft_${chatId}`;
+                if (currentText.trim()) {
+                    localStorage.setItem(key, currentText);
+                } else {
+                    localStorage.removeItem(key);
+                }
+            }
+            setSuggestion('');
+        };
+    }, [chatId, userId]);
         const controller = new AbortController();
         const timeoutId = setTimeout(async () => {
             if (!content.trim()) {
@@ -428,6 +476,26 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
         const val = e.target.value;
         setContent(val);
         if (!editingMessage) handleTypingStart(val);
+        
+        // Autocomplete
+        if (acModel && !editingMessage) {
+            if (!val.trim()) {
+                setSuggestion('');
+                return;
+            }
+            const words = val.split(/\s+/);
+            const lastWord = words[words.length - 1];
+            const endsWithSpace = val.endsWith(' ');
+            
+            if (endsWithSpace && words.length >= 2) {
+                const prev = words[words.length - 2];
+                setSuggestion(getNextWordSuggestion(prev, acModel) || '');
+            } else if (lastWord.length >= 3) {
+                setSuggestion(getWordSuggestion(lastWord, acModel) || '');
+            } else {
+                setSuggestion('');
+            }
+        }
     };
 
     const filterOffensive = (text) => {
@@ -634,6 +702,9 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             const replyToId = replyingTo?._id;
             const isViewOnceVal = isViewOnce;
             setContent("");
+            localStorage.removeItem(`zc_draft_${chatId}`);
+            setSuggestion('');
+            if (filteredContent) trainOnMessage(filteredContent).then(loadModel).then(setAcModel);
             setStagedFiles([]);
             setIsViewOnce(false);
             onCancelReply();
@@ -683,9 +754,12 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             sendMessage(chatId, filteredContent, "text", "", replyingTo?._id, false, tempId, isZen);
             if (soundEnabled) playSendSound();
             onCancelReply();
+            if (filteredContent) trainOnMessage(filteredContent).then(loadModel).then(setAcModel);
         }
 
         setContent("");
+        localStorage.removeItem(`zc_draft_${chatId}`);
+        setSuggestion('');
         setIsViewOnce(false);
         clearTyping();
         textareaRef.current?.focus();
@@ -716,11 +790,27 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     };
 
     const handleKeyDown = (e) => {
+        if ((e.key === 'Tab' || e.key === 'ArrowRight') && suggestion) {
+            e.preventDefault();
+            const endsWithSpace = content.endsWith(' ');
+            const words = content.split(/\s+/);
+            if (endsWithSpace) {
+                setContent(content + suggestion + ' ');
+            } else {
+                words[words.length - 1] = suggestion;
+                setContent(words.join(' ') + ' ');
+            }
+            setSuggestion('');
+            return;
+        }
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSend();
         }
-        if (e.key === "Escape" && editingMessage) onCancelEdit();
+        if (e.key === "Escape") {
+            if (editingMessage) onCancelEdit();
+            if (suggestion) setSuggestion('');
+        }
     };
 
     const getFileCategory = (file) => {
@@ -891,7 +981,51 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     </button>
                 )}
 
-                {!voiceActive && <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0, minHeight: '36px' }}>
+                {!voiceActive && <div 
+                    style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', minWidth: 0, minHeight: '36px' }}
+                    onTouchStart={(e) => {
+                        if (suggestion) touchStartRef.current = e.touches[0].clientX;
+                    }}
+                    onTouchEnd={(e) => {
+                        if (!suggestion || touchStartRef.current === null) return;
+                        const endX = e.changedTouches[0].clientX;
+                        if (endX - touchStartRef.current > 40) { // Swipe right to accept
+                            const endsWithSpace = content.endsWith(' ');
+                            const words = content.split(/\s+/);
+                            if (endsWithSpace) {
+                                setContent(content + suggestion + ' ');
+                            } else {
+                                words[words.length - 1] = suggestion;
+                                setContent(words.join(' ') + ' ');
+                            }
+                            setSuggestion('');
+                        }
+                        touchStartRef.current = null;
+                    }}
+                >
+                    {suggestion && !disabled && (
+                        <div
+                            aria-hidden="true"
+                            style={{
+                                position: 'absolute',
+                                left: 0,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                padding: '8px 14px',
+                                fontSize: '0.93rem',
+                                lineHeight: '1.4',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                                color: 'transparent',
+                                pointerEvents: 'none',
+                                zIndex: 1,
+                                width: '100%',
+                                fontFamily: 'inherit'
+                            }}
+                        >
+                            {content}<span style={{ color: '#94a3b8', opacity: 0.6 }}>{suggestion}</span>
+                        </div>
+                    )}
                     <textarea
                         ref={textareaRef}
                         className="message-textarea"
@@ -971,6 +1105,9 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                     {editingMessage ? " · Esc to cancel" : ""}
                 </span>
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    {!editingMessage && content.trim() && localStorage.getItem(`zc_draft_${chatId}`) && (
+                        <span className="input-hint" style={{ color: '#eab308', fontWeight: 600 }}>Draft</span>
+                    )}
                     {isViewOnce && (
                         <span className="input-hint">View Once active</span>
                     )}
