@@ -349,6 +349,8 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             setSuggestion('');
         };
     }, [chatId, userId]);
+
+    useEffect(() => {
         const controller = new AbortController();
         const timeoutId = setTimeout(async () => {
             if (!content.trim()) {
