@@ -37,16 +37,31 @@ export const PRESEEDED_BIGRAMS = {
     // English
     "sounds": "good",
     "let": "me",
+    "hey": "there",
+    "how": "are",
+    "are": "you",
+    "see": "you",
+    "talk": "to",
+    "on": "my",
+    "my": "way",
+    "no": "problem",
+    "thank": "you",
     // Tanglish
     "enna": "achu",
     "sari": "vidu",
+    "epdi": "irukka",
+    "enga": "irukka",
+    "nalla": "iruken",
     // Hinglish
     "kya": "hua",
     "theek": "hai",
+    "kaise": "ho",
     // Tenglish
     "emi": "ledu",
     "sare": "le",
+    "ela": "unnav",
     // Benglish
     "ki": "holo",
-    "theek": "ache"
+    "theek": "ache",
+    "kemon": "achis"
 };
