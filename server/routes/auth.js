@@ -206,6 +206,13 @@ router.post(
                 return res.status(409).json({ message: "Username or email already taken" });
             }
 
+            // Check for disposable email domains
+            const disposableDomains = require("disposable-email-domains");
+            const domain = email.split("@")[1]?.toLowerCase();
+            if (disposableDomains.includes(domain)) {
+                return res.status(400).json({ message: "Registration from temporary or disposable email providers is not allowed" });
+            }
+
             const user = await User.create({ username, email, password });
             
             if (referredBy) {
