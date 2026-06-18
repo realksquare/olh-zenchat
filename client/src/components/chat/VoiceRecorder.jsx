@@ -217,8 +217,10 @@ const VoiceRecorder = ({ onSend, onCancel, isMobile, onModeChange }) => {
             const blob = new Blob(chunksRef.current, { type: mimeType });
 
             if (sendMode === "send") {
-                if (!blob.size) {
-                    // Nothing recorded (e.g. micro-tap) — discard silently
+                const actualTime = startTimeRef.current ? Date.now() - startTimeRef.current : 0;
+                // Discard very short or empty blobs to prevent Cloudinary 400 Bad Request
+                if (!blob.size || blob.size < 1000 || actualTime < 500) {
+                    // Nothing recorded or too short — discard silently
                     setModeSync("idle"); setElapsed(0); setIsLocked(false); isHoldModeRef.current = false;
                 } else {
                     const wf = await extractWaveform(blob);
@@ -263,8 +265,9 @@ const VoiceRecorder = ({ onSend, onCancel, isMobile, onModeChange }) => {
 
     // ── startRecording ────────────────────────────────────────────────────────
     const startRecording = useCallback(async () => {
-        if (modeRef.current === "recording") return;
+        if (modeRef.current === "recording" || modeRef.current === "initializing") return;
         pendingStopRef.current = null;
+        setModeSync("initializing");
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             if (pendingStopRef.current) {
@@ -513,8 +516,8 @@ const VoiceRecorder = ({ onSend, onCancel, isMobile, onModeChange }) => {
 
     const isWarning = elapsed >= WARNING_AT_S;
 
-    // ── Idle: just the mic button ─────────────────────────────────────────────
-    if (mode === "idle") {
+    // ── Idle/Initializing: just the mic button ────────────────────────────────
+    if (mode === "idle" || mode === "initializing") {
         return (
             <button
                 className="voice-mic-btn"
@@ -525,13 +528,21 @@ const VoiceRecorder = ({ onSend, onCancel, isMobile, onModeChange }) => {
                 onClick={!isMobile ? handleMicClick : undefined}
                 title={isMobile ? "Hold to record · swipe up to lock" : "Click to record · hold Space"}
                 aria-label="Record voice message"
-                style={{ touchAction: "none", flexShrink: 0 }}
+                style={{ touchAction: "none", flexShrink: 0, opacity: mode === "initializing" ? 0.5 : 1 }}
             >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                    <line x1="12" y1="19" x2="12" y2="22"/>
-                </svg>
+                {mode === "initializing" ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" strokeDasharray="30" strokeDashoffset="15">
+                            <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite" />
+                        </circle>
+                    </svg>
+                ) : (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                        <line x1="12" y1="19" x2="12" y2="22"/>
+                    </svg>
+                )}
             </button>
         );
     }
