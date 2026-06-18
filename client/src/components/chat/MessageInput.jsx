@@ -318,7 +318,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     useEffect(() => {
         if (!editingRef.current) {
             const draft = localStorage.getItem(`zc_draft_${chatId}`);
-            if (draft) setContent(draft);
+            setContent(draft || "");
         }
         
         // Smart Start check on new chat
