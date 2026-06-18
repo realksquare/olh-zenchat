@@ -32,7 +32,89 @@
     <title>ZenChat</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Inline pre-splash: renders instantly from SW cache before JS loads. React replaces this on mount. -->
+      <div id="zc-preload" aria-hidden="true">
+        <style>
+          #zc-preload {
+            position: fixed;
+            inset: 0;
+            background: #0e1117;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          }
+          #zc-preload-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            text-align: center;
+          }
+          #zc-preload-logo {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            filter: drop-shadow(0 0 16px rgba(61,165,217,0.45));
+          }
+          #zc-preload-glow {
+            position: absolute;
+            inset: -20px;
+            background: radial-gradient(circle, rgba(61,165,217,0.18) 0%, transparent 70%);
+            animation: zcPulse 2s ease-in-out infinite;
+            border-radius: 50%;
+          }
+          #zc-preload-title {
+            font-size: 1.9rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #3da5d9 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+            margin: 0;
+          }
+          #zc-preload-dots {
+            display: flex;
+            gap: 6px;
+          }
+          #zc-preload-dots span {
+            width: 8px;
+            height: 8px;
+            background: #3da5d9;
+            border-radius: 50%;
+            animation: zcDots 1.4s infinite ease-in-out both;
+          }
+          #zc-preload-dots span:nth-child(1) { animation-delay: -0.32s; }
+          #zc-preload-dots span:nth-child(2) { animation-delay: -0.16s; }
+          @keyframes zcDots {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+          }
+          @keyframes zcPulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.85; }
+          }
+        </style>
+        <div id="zc-preload-inner">
+          <div id="zc-preload-logo">
+            <div id="zc-preload-glow"></div>
+            <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="80" height="80" rx="22" fill="#1e2530"/>
+              <line x1="20" y1="27" x2="60" y2="27" stroke="#3da5d9" stroke-width="5.5" stroke-linecap="round"/>
+              <line x1="20" y1="40" x2="50" y2="40" stroke="#3da5d9" stroke-width="5.5" stroke-linecap="round"/>
+              <line x1="20" y1="53" x2="52" y2="53" stroke="#3da5d9" stroke-width="5.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h1 id="zc-preload-title">ZenChat</h1>
+          <div id="zc-preload-dots">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
