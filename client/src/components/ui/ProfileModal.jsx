@@ -634,7 +634,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                     </button>
                 </div>
 
-                <div style={{ padding: '24px' }}>
+                <div style={{ padding: '12px 24px 24px' }}>
                     <div className="profile-tabs-container">
                         <button 
                             type="button"

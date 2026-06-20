@@ -8917,6 +8917,10 @@ select {
 }
 
 /* Profile Modal Restructuring */
+.profile-modal .moments-aura-header {
+  padding-bottom: 12px;
+}
+
 .profile-tabs-container {
   display: flex;
   background: rgba(255, 255, 255, 0.02);
