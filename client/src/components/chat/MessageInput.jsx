@@ -410,6 +410,10 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const adjustHeight = () => {
         const el = textareaRef.current;
         if (!el) return;
+        if (!content) {
+            el.style.height = "36px";
+            return;
+        }
         el.style.height = "auto";
         el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
     };

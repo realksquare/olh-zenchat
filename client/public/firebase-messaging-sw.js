@@ -88,53 +88,9 @@ try {
 
         const tag = payload.data?.tag || payload.notification?.tag || 'zenchat-notif';
 
-        if (tag.startsWith('chat-')) {
-            const notifications = await self.registration.getNotifications({ tag });
-            if (notifications.length > 0) {
-                let senders = new Set([newTitle]);
-                let existingBodies = [];
-                let totalMessages = 1;
-                
-                notifications.forEach(n => {
-                    if (n.data?.senderName) {
-                        senders.add(n.data.senderName);
-                    } else {
-                        senders.add(n.title);
-                    }
-                    
-                    if (n.data?.messages) {
-                        existingBodies = existingBodies.concat(n.data.messages);
-                    } else {
-                        existingBodies.push(n.body);
-                    }
-                    
-                    totalMessages += (n.data?.msgCount || 1);
-                    n.close();
-                });
-
-                existingBodies.push(newBody);
-                
-                const finalTitle = Array.from(senders)[0] || newTitle;
-                const finalBody = existingBodies.slice(-4).join('\n');
-                
-                return self.registration.showNotification(finalTitle, {
-                    body: finalBody,
-                    icon: '/logo192.png',
-                    badge: '/logo192.png',
-                    tag: tag,
-                    renotify: true,
-                    silent: false,
-                    data: {
-                        url: payload.fcmOptions?.link || payload.data?.url || '/',
-                        senderName: finalTitle,
-                        messages: existingBodies,
-                        msgCount: totalMessages,
-                        chatId: payload.data?.chatId,
-                        type: payload.data?.type
-                    }
-                });
-            }
-        }
+        // Close any existing notification with the same tag to collapse/group them under a single card
+        const notifications = await self.registration.getNotifications({ tag });
+        notifications.forEach(n => n.close());
 
         const notificationOptions = {
             body: newBody,
@@ -152,6 +108,11 @@ try {
                 type: payload.data?.type || payload.data?.tag
             }
         };
+
+        // Add quick-reply action button only for text messages
+        if (payload.data?.type === "new_message" && payload.data?.chatId) {
+            notificationOptions.actions = [{ action: "reply", title: "Open & Reply" }];
+        }
 
         return self.registration.showNotification(newTitle, notificationOptions);
     });

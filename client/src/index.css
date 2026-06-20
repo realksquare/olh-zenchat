@@ -1744,7 +1744,6 @@ select {
 .message-textarea::placeholder {
   color: #64748b;
   line-height: 1.4;
-  vertical-align: middle;
 }
 
 .send-btn {
