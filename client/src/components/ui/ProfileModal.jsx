@@ -602,6 +602,20 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const isSubscribedInBrowser = typeof window.Notification !== 'undefined' && window.Notification.permission === "granted" && 
                                    user?.fcmTokens?.some(t => t.deviceType === currentDeviceType);
 
+    const getNotificationStatus = () => {
+        if (typeof window === 'undefined' || !('Notification' in window)) {
+            return { className: "profile-badge-red", text: "Push Unsupported" };
+        }
+        if (window.Notification.permission === "denied") {
+            return { className: "profile-badge-red", text: "Push Blocked" };
+        }
+        if (isSubscribedInBrowser) {
+            return { className: "profile-badge-green", text: "Push Alerts On" };
+        }
+        return { className: "profile-badge-grey", text: "Push Alerts Off" };
+    };
+    const notifStatus = getNotificationStatus();
+
     const hasChanges = useMemo(() => {
         if (!user) return false;
         const norm = (val) => val === undefined || val === null ? "" : String(val).trim();
@@ -693,11 +707,9 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 </div>
 
                                 <div className="profile-status-badges">
-                                    <div className={`profile-badge ${localKeysMissing ? "profile-badge-amber" : user?.publicKey ? "profile-badge-green" : "profile-badge-red"}`}>
+                                    <div className={`profile-badge ${notifStatus.className}`}>
                                         <span className="profile-badge-indicator" />
-                                        <span>
-                                            {localKeysMissing ? "E2EE Sync Required" : user?.publicKey ? "E2EE Secure" : "E2EE Inactive"}
-                                        </span>
+                                        <span>{notifStatus.text}</span>
                                     </div>
 
                                     <div className={`profile-badge ${is2faEnabled ? "profile-badge-green" : "profile-badge-grey"}`}>
