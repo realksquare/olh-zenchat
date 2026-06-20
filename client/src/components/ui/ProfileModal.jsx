@@ -188,6 +188,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const { chats } = useChatStore();
     const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
 
+    const [activeTab, setActiveTab] = useState("profile");
     const [username, setUsername] = useState(user?.username || "");
     const [fullName, setFullName] = useState(user?.fullName || "");
     const [email, setEmail] = useState(user?.email || "");
@@ -268,6 +269,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
 
     useEffect(() => {
         if (isOpen && user) {
+            setActiveTab("profile");
             setUsername(user.username || "");
             setFullName(user.fullName || "");
             setEmail(user.email || "");
@@ -633,9 +635,92 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 </div>
 
                 <div style={{ padding: '24px' }}>
+                    <div className="profile-tabs-container">
+                        <button 
+                            type="button"
+                            className={`profile-tab-button ${activeTab === "profile" ? "active" : ""}`}
+                            onClick={() => setActiveTab("profile")}
+                        >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            Profile
+                        </button>
+                        <button 
+                            type="button"
+                            className={`profile-tab-button ${activeTab === "settings" ? "active" : ""}`}
+                            onClick={() => setActiveTab("settings")}
+                        >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="3" />
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.5 1z" />
+                            </svg>
+                            Settings
+                        </button>
+                    </div>
 
+                    {activeTab === "profile" && (
+                        <div className="profile-view-layout">
+                            <div className="profile-view-avatar-wrap">
+                                <div className="profile-view-avatar">
+                                    {(avatarPreview && !imageError) ? (
+                                        <img
+                                            src={avatarPreview}
+                                            alt="Avatar"
+                                            onError={() => setImageError(true)}
+                                        />
+                                    ) : (
+                                        <span>{getInitials(username || user?.username || "??")}</span>
+                                    )}
+                                </div>
+                            </div>
 
-                <form onSubmit={handleSubmit} className="profile-form">
+                            <div className="profile-view-details">
+                                <h3 className="profile-view-name">{fullName || username || user?.username}</h3>
+                                <p className="profile-view-username">@{username || user?.username}</p>
+                                
+                                <div className="profile-view-bio-box">
+                                    {bio.trim() ? bio : "No bio written yet..."}
+                                </div>
+
+                                <div className="profile-view-email-box">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                        <polyline points="22,6 12,13 2,6" />
+                                    </svg>
+                                    <span>{email || user?.email}</span>
+                                </div>
+
+                                <div className="profile-status-badges">
+                                    <div className={`profile-badge ${localKeysMissing ? "profile-badge-amber" : user?.publicKey ? "profile-badge-green" : "profile-badge-red"}`}>
+                                        <span className="profile-badge-indicator" />
+                                        <span>
+                                            {localKeysMissing ? "E2EE Sync Required" : user?.publicKey ? "E2EE Secure" : "E2EE Inactive"}
+                                        </span>
+                                    </div>
+
+                                    <div className={`profile-badge ${is2faEnabled ? "profile-badge-green" : "profile-badge-grey"}`}>
+                                        <span className="profile-badge-indicator" />
+                                        <span>{is2faEnabled ? "2FA Protected" : "2FA Disabled"}</span>
+                                    </div>
+
+                                    <div className={`profile-badge ${isLowBandwidth ? "profile-badge-amber" : "profile-badge-grey"}`}>
+                                        <span className="profile-badge-indicator" />
+                                        <span>{isLowBandwidth ? "SmartPayload Active" : "SmartPayload Off"}</span>
+                                    </div>
+
+                                    <div className={`profile-badge ${soundEnabled ? "profile-badge-green" : "profile-badge-grey"}`}>
+                                        <span className="profile-badge-indicator" />
+                                        <span>{soundEnabled ? "Sounds On" : "Sounds Muted"}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === "settings" && (
+                        <form onSubmit={handleSubmit} className="profile-form">
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem', marginTop: '0.25rem' }}>
                         <div className="profile-avatar-container">
                             <div
@@ -1284,6 +1369,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                         {isLoading ? "Saving..." : "Save Changes"}
                     </button>
                 </form>
+                )}
                 </div>
             </div>
         </div>,
