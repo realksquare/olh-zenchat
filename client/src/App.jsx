@@ -392,7 +392,7 @@ const App = () => {
                 }).catch(console.error);
             } else {
                 setServerReady(true);
-                await checkAuth();
+                checkAuth().catch(console.error);
             }
         };
         initialize();
@@ -470,16 +470,6 @@ const App = () => {
         if (document.visibilityState === "visible") {
             clearNotifications();
         }
-
-        const checkHealth = () => {
-            if (!navigator.onLine) return;
-            axiosInstance.get("/messages/health").catch(() => {
-                setTimeout(async () => {
-                    try { await axiosInstance.get("/messages/health"); } catch (_) {}
-                }, 5000);
-            });
-        };
-        checkHealth();
 
         const prime = () => { primeAudioContext(); };
         window.addEventListener('touchstart', prime, { once: true });

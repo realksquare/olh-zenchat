@@ -4,7 +4,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-com
 
 importScripts('https://unpkg.com/dexie@4.0.8/dist/dexie.js');
 
-const CACHE_NAME = 'zenchat-v2.2';
+const CACHE_NAME = 'zenchat-v2.3';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDuPbl1-IEdxnDctJgELm_VAQoSrLvWEM8",
@@ -200,16 +200,42 @@ self.addEventListener('fetch', (event) => {
 
     // Never intercept API or socket calls
     if (url.pathname.startsWith('/api') || url.pathname.startsWith('/socket.io')) return;
-    // Never intercept cross-origin requests (Firebase, Cloudinary, etc.)
-    if (url.origin !== self.location.origin) return;
-    // Never intercept/cache local development assets to prevent stale static assets and HMR bugs
+    // Never intercept local development assets to prevent stale static assets and HMR bugs
     if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') return;
+
+    // Cache font requests from Google Fonts and Fontshare (cross-origin)
+    const isFontRequest = 
+        url.hostname === 'fonts.gstatic.com' ||
+        url.hostname === 'cdn.fontshare.com' ||
+        url.hostname === 'api.fontshare.com' ||
+        (url.hostname === 'fonts.googleapis.com' && url.pathname.startsWith('/css'));
+
+    if (isFontRequest) {
+        // Cache-First for fonts: they are versioned/stable resources
+        event.respondWith(
+            caches.match(event.request).then((cached) => {
+                if (cached) return cached;
+                return fetch(event.request).then((response) => {
+                    if (response && response.status === 200) {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+                    }
+                    return response;
+                }).catch(() => new Response('', { status: 503 }));
+            })
+        );
+        return;
+    }
+
+    // Never intercept other cross-origin requests (Firebase, Cloudinary, etc.)
+    if (url.origin !== self.location.origin) return;
 
     const isNavigation = event.request.mode === 'navigate';
     const isStaticAsset = url.pathname.startsWith('/assets/') ||
         url.pathname.endsWith('.js') ||
         url.pathname.endsWith('.css') ||
         url.pathname.endsWith('.woff2') ||
+        url.pathname.endsWith('.woff') ||
         url.pathname.endsWith('.svg') ||
         url.pathname.endsWith('.png') ||
         url.pathname.endsWith('.webp');
@@ -231,17 +257,32 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Network-First for navigation + other same-origin requests, fall back to cache
+    if (isNavigation) {
+        // Stale-While-Revalidate for navigation: serve cached shell instantly, update cache in background
+        event.respondWith(
+            caches.match(event.request).then((cached) => {
+                const networkFetch = fetch(event.request).then((response) => {
+                    if (response && response.status === 200) {
+                        const clone = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+                    }
+                    return response;
+                }).catch(() => null);
+
+                // If we have a cached shell, serve it immediately and update in background
+                if (cached) return cached;
+                // No cache yet — wait for the network (first ever load)
+                return networkFetch.then((res) => res || caches.match('/') || new Response('Offline', { status: 503 }));
+            })
+        );
+        return;
+    }
+
+    // Network-First for other same-origin requests, fall back to cache
     event.respondWith(
         fetch(event.request)
-            .then((response) => {
-                if (response && response.status === 200 && isNavigation) {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-                }
-                return response;
-            })
-            .catch(() => caches.match(event.request).then((res) => res || caches.match('/') || new Response('Offline', { status: 503 })))
+            .then((response) => response)
+            .catch(() => caches.match(event.request).then((res) => res || new Response('Offline', { status: 503 })))
     );
 });
 
