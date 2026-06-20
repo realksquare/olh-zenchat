@@ -1038,7 +1038,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                         placeholder={
                             disabled ? disabledPlaceholder :
                                 uploading ? "Uploading..." :
-                                    hasMedia ? "Add a caption (optional)..." :
+                                    hasMedia ? "Add a caption..." :
                                         isViewOnce ? "Upload a file to send view-once media..." :
                                             editingMessage ? "Edit your message..." :
                                                 "Type a message..."

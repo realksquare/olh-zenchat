@@ -1744,6 +1744,9 @@ select {
 .message-textarea::placeholder {
   color: #64748b;
   line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .send-btn {
@@ -8839,12 +8842,14 @@ select {
   border-radius: 12px;
   font-size: 0.85rem;
   text-align: center;
-  margin: 12px 20px 0 20px;
+  margin: 12px 20px 12px 20px;
   font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  position: relative;
+  z-index: 10;
 }
 
 /* History Item Hover */
