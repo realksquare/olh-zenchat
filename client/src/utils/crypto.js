@@ -384,3 +384,152 @@ export const encryptPrivateKeyWithRecoveryKey = async (privateKey, recoveryKey, 
 
     return await encryptAES(privateKeyBytes, recoveryKeyDerived);
 };
+
+/**
+ * Performs Multi-Recipient Hybrid Encryption (RSA-OAEP + AES-GCM 256):
+ * 1. Generates an ephemeral AES-GCM 256-bit key.
+ * 2. Encrypts the plaintext using the ephemeral key.
+ * 3. Encrypts the raw ephemeral key using each recipient's RSA-OAEP public key.
+ * Returns ciphertext, encryptedKeys map, and iv.
+ */
+export const encryptForMultipleRecipients = async (plaintext, recipientPublicKeysMap) => {
+    const encoder = new TextEncoder();
+    const plaintextBytes = encoder.encode(plaintext);
+
+    // 1. Generate ephemeral symmetric AES-GCM key
+    const ephemeralKey = await window.crypto.subtle.generateKey(
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+    );
+    const rawEphemeralKey = await window.crypto.subtle.exportKey("raw", ephemeralKey);
+
+    // 2. Encrypt the plaintext using the symmetric key
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    const encryptedContent = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        ephemeralKey,
+        plaintextBytes
+    );
+
+    // 3. Encrypt the symmetric key for each recipient
+    const encryptedKeys = {};
+    for (const [userId, publicKeyJWK] of Object.entries(recipientPublicKeysMap)) {
+        if (!publicKeyJWK) continue;
+        try {
+            const publicKey = await window.crypto.subtle.importKey(
+                "jwk",
+                publicKeyJWK,
+                {
+                    name: "RSA-OAEP",
+                    hash: "SHA-256"
+                },
+                false,
+                ["encrypt"]
+            );
+            const encKey = await window.crypto.subtle.encrypt(
+                { name: "RSA-OAEP" },
+                publicKey,
+                rawEphemeralKey
+            );
+            encryptedKeys[userId] = bytesToHex(new Uint8Array(encKey));
+        } catch (err) {
+            console.error(`[Crypto] Multi-encrypt failed for user ${userId}:`, err);
+        }
+    }
+
+    return {
+        ciphertext: bytesToHex(new Uint8Array(encryptedContent)),
+        encryptedKeys,
+        iv: bytesToHex(iv)
+    };
+};
+
+/**
+ * Performs Multi-Recipient Hybrid Decryption:
+ * 1. Finds the wrapped symmetric key for the current user.
+ * 2. Decrypts it using the local private RSA key.
+ * 3. Decrypts the ciphertext using the symmetric key.
+ */
+export const decryptForMultipleRecipients = async (ciphertext, encryptedKeysMap, iv, privateKey, currentUserId) => {
+    const ourEncryptedKeyHex = encryptedKeysMap[currentUserId] || encryptedKeysMap.get?.(currentUserId);
+    if (!ourEncryptedKeyHex) {
+        throw new Error("Symmetric key not encrypted for this user.");
+    }
+
+    // 1. Decrypt the symmetric key using local RSA private key
+    const rawSymmetricKey = await window.crypto.subtle.decrypt(
+        { name: "RSA-OAEP" },
+        privateKey,
+        hexToBytes(ourEncryptedKeyHex)
+    );
+
+    // 2. Import the symmetric key
+    const symmetricKey = await window.crypto.subtle.importKey(
+        "raw",
+        rawSymmetricKey,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["decrypt"]
+    );
+
+    // 3. Decrypt the ciphertext
+    const decryptedBytes = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: hexToBytes(iv) },
+        symmetricKey,
+        hexToBytes(ciphertext)
+    );
+
+    const decoder = new TextDecoder();
+    return decoder.decode(decryptedBytes);
+};
+
+/**
+ * Encrypts a binary File/Blob using AES-GCM 256.
+ * Returns the encrypted Blob, the key in hex, and the IV in hex.
+ */
+export const encryptFileAES = async (fileBlob) => {
+    const key = await window.crypto.subtle.generateKey(
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+    );
+    const rawKey = await window.crypto.subtle.exportKey("raw", key);
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
+    
+    const arrayBuffer = await fileBlob.arrayBuffer();
+    const encrypted = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv },
+        key,
+        arrayBuffer
+    );
+
+    return {
+        encryptedBlob: new Blob([encrypted], { type: "application/octet-stream" }),
+        keyHex: bytesToHex(new Uint8Array(rawKey)),
+        ivHex: bytesToHex(iv)
+    };
+};
+
+/**
+ * Decrypts an AES-GCM 256 encrypted File/Blob.
+ * Returns the decrypted Blob with its original MIME type.
+ */
+export const decryptFileAES = async (encryptedBlob, keyHex, ivHex, originalType) => {
+    const key = await window.crypto.subtle.importKey(
+        "raw",
+        hexToBytes(keyHex),
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["decrypt"]
+    );
+
+    const arrayBuffer = await encryptedBlob.arrayBuffer();
+    const decrypted = await window.crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: hexToBytes(ivHex) },
+        key,
+        arrayBuffer
+    );
+
+    return new Blob([decrypted], { type: originalType || "image/jpeg" });
+};

@@ -7,6 +7,8 @@ import { useSocket } from "../../context/SocketContext";
 import { formatDistanceToNow } from "date-fns";
 import { getAudioContext } from "../../utils/audio";
 import axiosInstance from "../../utils/axios";
+import { decryptForMultipleRecipients, decryptFileAES } from "../../utils/crypto";
+import { getLocalE2EEKeys } from "../../utils/e2eeHelper";
 
 const FILTER_STYLES = {
     none: {},
@@ -64,9 +66,95 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
 
     const currentMoment = moments[currentIndex];
 
+    const [decryptedData, setDecryptedData] = useState(null);
+    const [decryptedMediaUrl, setDecryptedMediaUrl] = useState("");
+    const [isDecrypting, setIsDecrypting] = useState(false);
+    const [decryptionError, setDecryptionError] = useState(false);
+
+    const isDecryptingRef = useRef(false);
+    isDecryptingRef.current = isDecrypting || decryptionError;
+
+    const displayType = currentMoment?.isEncrypted ? (decryptedData?.type || "text") : currentMoment?.type;
+    const displayMediaUrl = currentMoment?.isEncrypted ? decryptedMediaUrl : currentMoment?.mediaUrl;
+    const displayContent = currentMoment?.isEncrypted ? (decryptedData?.content || "") : currentMoment?.content;
+    const displayCaption = currentMoment?.isEncrypted ? (decryptedData?.caption || "") : currentMoment?.caption;
+    const displayLocationTag = currentMoment?.isEncrypted ? (decryptedData?.locationTag || "") : currentMoment?.locationTag;
+    const displayFilter = currentMoment?.isEncrypted ? (decryptedData?.filter || "none") : currentMoment?.filter;
+    const displayMusic = currentMoment?.isEncrypted ? decryptedData?.music : currentMoment?.music;
+
     useEffect(() => {
         setIsMomentMediaLoaded(false);
     }, [currentIndex, currentMoment?._id]);
+
+    useEffect(() => {
+        let active = true;
+        if (decryptedMediaUrl) {
+            URL.revokeObjectURL(decryptedMediaUrl);
+            setDecryptedMediaUrl("");
+        }
+        setDecryptedData(null);
+        setDecryptionError(false);
+
+        if (!isOpen || !currentMoment) return;
+
+        if (!currentMoment.isEncrypted) {
+            return;
+        }
+
+        const performDecryption = async () => {
+            setIsDecrypting(true);
+            try {
+                const keys = await getLocalE2EEKeys();
+                if (!keys || !keys.privateKey) {
+                    throw new Error("Private key missing");
+                }
+                const encryptedKeysMap = currentMoment.encryptedKeys instanceof Map
+                    ? Object.fromEntries(currentMoment.encryptedKeys)
+                    : currentMoment.encryptedKeys || {};
+
+                const decryptedPayloadStr = await decryptForMultipleRecipients(
+                    currentMoment.encryptedPayload,
+                    encryptedKeysMap,
+                    currentMoment.iv,
+                    keys.privateKey,
+                    currentUserId
+                );
+                const payload = JSON.parse(decryptedPayloadStr);
+                if (!active) return;
+                setDecryptedData(payload);
+
+                if (payload.mediaUrl && payload.fileKey && payload.fileIv) {
+                    const res = await fetch(payload.mediaUrl);
+                    if (!res.ok) throw new Error("Failed to fetch media file");
+                    const encryptedBlob = await res.blob();
+                    const decryptedBlob = await decryptFileAES(
+                        encryptedBlob,
+                        payload.fileKey,
+                        payload.fileIv,
+                        payload.type === "video" ? "video/mp4" : "image/jpeg"
+                    );
+                    if (!active) return;
+                    const objectUrl = URL.createObjectURL(decryptedBlob);
+                    setDecryptedMediaUrl(objectUrl);
+                }
+            } catch (err) {
+                console.error("[MomentViewer] Decryption failed:", err);
+                if (active) {
+                    setDecryptionError(true);
+                }
+            } finally {
+                if (active) {
+                    setIsDecrypting(false);
+                }
+            }
+        };
+
+        performDecryption();
+
+        return () => {
+            active = false;
+        };
+    }, [currentMoment?._id, isOpen, currentUserId]);
 
     useEffect(() => {
         const measure = () => {
@@ -80,13 +168,13 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             setLocMarqueeDist(scrollDist > 0 ? -(scrollDist + 10) : 0);
         };
 
-        if (isOpen && currentMoment?.locationTag) {
+        if (isOpen && displayLocationTag) {
             const timer = setTimeout(measure, 150);
             return () => clearTimeout(timer);
         } else {
             setLocMarqueeDist(0);
         }
-    }, [currentMoment?.locationTag, currentIndex, isOpen]);
+    }, [displayLocationTag, currentIndex, isOpen]);
 
     // Handle array shrinking (deletion)
     useEffect(() => {
@@ -131,7 +219,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     };
 
     useEffect(() => {
-        if (!isOpen || !currentMoment?.music) {
+        if (!isOpen || !displayMusic) {
             setShowMusicInfo(false);
             return;
         }
@@ -139,7 +227,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             setShowMusicInfo(prev => !prev);
         }, 5000);
         return () => clearInterval(interval);
-    }, [isOpen, currentIndex, currentMoment?.music]);
+    }, [isOpen, currentIndex, displayMusic]);
 
     const confirmDelete = async (e) => {
         if (e) e.stopPropagation();
@@ -167,15 +255,15 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     useEffect(() => {
         if (isOpen && currentMoment) {
             let duration = 10;
-            if (currentMoment.type === "video") {
+            if (displayType === "video") {
                 // Will be updated by onLoadedMetadata
-            } else if (currentMoment.music && currentMoment.music.duration) {
-                duration = currentMoment.music.duration;
+            } else if (displayMusic && displayMusic.duration) {
+                duration = displayMusic.duration;
             }
             setTotalDuration(duration);
             setTimeLeft(duration);
         }
-    }, [currentIndex, isOpen, currentMoment?._id]);
+    }, [currentIndex, isOpen, currentMoment?._id, displayType, displayMusic]);
 
     // Timer effect that respects input focus (pausing)
     useEffect(() => {
@@ -185,9 +273,9 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         setShowMusicInfo(false);
         useMomentStore.getState().viewMoment(currentMoment._id, currentUserId);
 
-        if (currentMoment.music?.trackId || currentMoment.music?.previewUrl || currentMoment.music?.title) {
+        if (displayMusic?.trackId || displayMusic?.previewUrl || displayMusic?.title) {
             let cancelled = false;
-            const startTime = currentMoment.music.startTime || 0;
+            const startTime = displayMusic.startTime || 0;
 
             const setupAudio = async () => {
                 let cancelled = false;
@@ -202,26 +290,28 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
 
                     audio.addEventListener("error", async (e) => {
                         console.warn("Moment audio load error:", e.target?.error?.message || e);
-                        if (!cancelled && url === currentMoment.music.previewUrl) {
+                        if (!cancelled && url === displayMusic.previewUrl) {
                             await fetchAndPlay();
                         }
                     });
 
                     audio.load();
                     audioRef.current = audio;
-                    audio.play().catch(() => { });
+                    if (!isDecryptingRef.current) {
+                        audio.play().catch(() => { });
+                    }
                 };
 
                 const fetchAndPlay = async () => {
                     let freshUrl = null;
-                    if (currentMoment.music.trackId) {
+                    if (displayMusic.trackId) {
                         try {
-                            const res = await axiosInstance.get(`/music/preview?id=${encodeURIComponent(currentMoment.music.trackId)}`);
+                            const res = await axiosInstance.get(`/music/preview?id=${encodeURIComponent(displayMusic.trackId)}`);
                             if (res.data?.previewUrl) freshUrl = res.data.previewUrl;
                         } catch { }
                     }
-                    if (!freshUrl && currentMoment.music.title) {
-                        const q = [currentMoment.music.title, currentMoment.music.artist].filter(Boolean).join(' ');
+                    if (!freshUrl && displayMusic.title) {
+                        const q = [displayMusic.title, displayMusic.artist].filter(Boolean).join(' ');
                         try {
                             const res = await axiosInstance.get(`/music/preview?q=${encodeURIComponent(q)}`);
                             if (res.data?.previewUrl) freshUrl = res.data.previewUrl;
@@ -232,18 +322,20 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                     }
                 };
 
-                if (currentMoment.music.previewUrl) {
-                    const cachedUrl = currentMoment.music.previewUrl.replace(/^http:\/\//i, 'https://');
+                if (displayMusic.previewUrl) {
+                    const cachedUrl = displayMusic.previewUrl.replace(/^http:\/\//i, 'https://');
                     playUrl(cachedUrl);
                 } else {
                     await fetchAndPlay();
                 }
             };
 
-            setupAudio();
+            if (!isDecrypting) {
+                setupAudio();
+            }
 
             const interval = setInterval(() => {
-                if (isInputFocusedRef.current) return;
+                if (isInputFocusedRef.current || isDecryptingRef.current) return;
                 setTimeLeft(prev => {
                     if (prev <= 1) { clearInterval(interval); handleNext(); return 0; }
                     return prev - 1;
@@ -258,7 +350,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         }
 
         const interval = setInterval(() => {
-            if (isInputFocusedRef.current) return;
+            if (isInputFocusedRef.current || isDecryptingRef.current) return;
             setTimeLeft(prev => {
                 if (prev <= 1) { clearInterval(interval); handleNext(); return 0; }
                 return prev - 1;
@@ -269,7 +361,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             clearInterval(interval);
             stopAudio();
         };
-    }, [currentIndex, isOpen, currentMoment?._id, showDeleteConfirm]);
+    }, [currentIndex, isOpen, currentMoment?._id, showDeleteConfirm, isDecrypting]);
 
     // Handle audio/video pausing while user is typing a reply
     useEffect(() => {
@@ -406,27 +498,27 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
 
     const user = currentMoment.userId;
     // Fix display logic: media should ALWAYS show if mediaUrl exists
-    const hasMedia = !!currentMoment.mediaUrl;
-    const hasText = !!currentMoment.content;
+    const hasMedia = !!displayMediaUrl;
+    const hasText = !!displayContent;
     const isOwn = (user?._id || user) === currentUserId;
 
-    const bgStyle = (currentMoment.music?.coverUrl && !hasMedia) ? {
-        '--vibe-bg': `url(${currentMoment.music.coverUrl})`,
-        background: `linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.4)), url(${currentMoment.music.coverUrl})`,
+    const bgStyle = (displayMusic?.coverUrl && !hasMedia) ? {
+        '--vibe-bg': `url(${displayMusic.coverUrl})`,
+        background: `linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.4)), url(${displayMusic.coverUrl})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center'
     } : {};
 
-    const songMetadata = currentMoment.music ? `${currentMoment.music.title} • ${currentMoment.music.artist}` : "";
+    const songMetadata = displayMusic ? `${displayMusic.title} • ${displayMusic.artist}` : "";
     const isLongMetadata = songMetadata.length > 20;
 
     return createPortal(
         <div className={`modal-overlay moments-aura-viewer-overlay ${isClosing ? 'fading-out' : ''}`} onClick={triggerUnlockPlay} onTouchStart={triggerUnlockPlay}>
             <div className="moments-aura-viewer-content" onClick={(e) => { e.stopPropagation(); triggerUnlockPlay(); }} onTouchStart={triggerUnlockPlay} style={bgStyle}>
-                {currentMoment.mediaUrl && (
+                {displayMediaUrl && (
                     <div
                         className="aura-blur-backdrop"
-                        style={{ backgroundImage: `url(${currentMoment.mediaUrl})` }}
+                        style={{ backgroundImage: `url(${displayMediaUrl})` }}
                     />
                 )}
                 <div className="aura-progress-bars" style={{ display: 'flex', gap: '4px', position: 'absolute', top: '12px', left: '12px', right: '12px', zIndex: 1100 }}>
@@ -558,10 +650,23 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                 </div>
 
                 <div className="aura-viewer-media">
-                    {currentMoment.type === "video" ? (
+                    {isDecrypting ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '12px', color: '#cbd5e1' }}>
+                            <div className="aura-mini-spinner" style={{ width: '28px', height: '28px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--color-primary, #3b82f6)', borderRadius: '50%', animation: 'aura-spin 1s linear infinite' }} />
+                            <span style={{ fontSize: '0.8rem', fontWeight: '500', color: '#94a3b8' }}>Decrypting secure #moment...</span>
+                        </div>
+                    ) : decryptionError ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '12px', color: '#f43f5e', padding: '24px', textAlign: 'center' }}>
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                            <span style={{ fontSize: '0.85rem', fontWeight: '600' }}>Decryption failed</span>
+                            <span style={{ fontSize: '0.72rem', color: '#64748b' }}>This moment is E2EE secured and your key is unavailable.</span>
+                        </div>
+                    ) : displayType === "video" ? (
                         <video
                             ref={videoRef}
-                            src={currentMoment.mediaUrl}
+                            src={displayMediaUrl}
                             autoPlay
                             muted={isMuted}
                             playsInline
@@ -587,12 +692,12 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                 />
                             )}
                             <img
-                                src={currentMoment.mediaUrl}
+                                src={displayMediaUrl}
                                 alt="Moment"
                                 className="viewer-main-media"
                                 onLoad={() => setIsMomentMediaLoaded(true)}
                                 style={{
-                                    ...(FILTER_STYLES[currentMoment.filter] || FILTER_STYLES.none),
+                                    ...(FILTER_STYLES[displayFilter] || FILTER_STYLES.none),
                                     opacity: isMomentMediaLoaded ? 1 : (currentMoment.lqip ? 0 : 1),
                                     transition: 'opacity 0.4s ease-in-out',
                                     position: 'relative',
@@ -600,33 +705,33 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                 }}
                             />
 
-                            {currentMoment.caption && currentMoment.caption.trim().length >= 3 && (
+                            {displayCaption && displayCaption.trim().length >= 3 && (
                                 <div className="aura-image-caption-pill">
-                                    {currentMoment.caption}
+                                    {displayCaption}
                                 </div>
                             )}
                             {hasText && (
                                 <div className="aura-content-overlay">
-                                    <p className="aura-overlay-text">{currentMoment.content}</p>
+                                    <p className="aura-overlay-text">{displayContent}</p>
                                 </div>
                             )}
                         </div>
                     ) : (
                         <div className="aura-text-only-bg">
-                            {currentMoment.music && !hasText && (
+                            {displayMusic && !hasText && (
                                 <div className="aura-music-focus">
-                                    <img src={currentMoment.music.coverUrl} alt="Art" className="focus-art" />
+                                    <img src={displayMusic.coverUrl} alt="Art" className="focus-art" />
                                     <div className="music-visualizer centered">
                                         <div className="v-bar"></div><div className="v-bar"></div><div className="v-bar"></div><div className="v-bar"></div><div className="v-bar"></div>
                                     </div>
                                     <div className="music-focus-info">
-                                        <h2>{currentMoment.music.title}</h2>
-                                        <p>{currentMoment.music.artist}</p>
+                                        <h2>{displayMusic.title}</h2>
+                                        <p>{displayMusic.artist}</p>
                                     </div>
                                 </div>
                             )}
                             {hasText && (
-                                <p className="aura-text-content centered">{currentMoment.content}</p>
+                                <p className="aura-text-content centered">{displayContent}</p>
                             )}
                         </div>
                     )}

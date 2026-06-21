@@ -5,6 +5,8 @@ import { useAuthStore } from "../../stores/authStore";
 import MusicSearch from "./MusicSearch";
 import axios from "axios";
 import { generateLQIP } from "../../utils/lqip";
+import axiosInstance from "../../utils/axios";
+import { encryptForMultipleRecipients, encryptFileAES } from "../../utils/crypto";
 
 const FILTER_PRESETS = [
     { id: "none", name: "Original", style: {} },
@@ -252,23 +254,42 @@ const MomentCreator = ({ isOpen, onClose }) => {
         abortControllerRef.current = controller;
 
         try {
+            // 1. Gather all recipient user IDs
+            const recipientIds = Array.from(new Set([
+                userId,
+                ...contacts.map(c => (c.userId?._id || c.userId || '').toString()),
+                ...selectedTaggedUsers.map(String)
+            ])).filter(Boolean);
+
+            // 2. Fetch all public keys for these recipients in bulk
+            const keysRes = await axiosInstance.post("/auth/users/public-keys", { userIds: recipientIds });
+            const publicKeysMap = keysRes.data?.publicKeys || {};
+
+            let fileKey = "";
+            let fileIv = "";
             let uploadedUrl = "";
             let lqip = "";
             
-            // Upload image to Cloudinary if it's an image moment
+            // 3. Encrypt file if image moment and upload as raw binary
             if (!isText && selectedFile) {
                 const cloudName = "du4nvei7j";
                 const uploadPreset = "ml_default";
                 const formData = new FormData();
                 let fileToUpload = selectedFile;
                 if (imageQuality === "standard") fileToUpload = await compressImage(selectedFile);
-                formData.append("file", fileToUpload);
+
+                // Perform client-side file encryption
+                const { encryptedBlob, keyHex, ivHex } = await encryptFileAES(fileToUpload);
+                fileKey = keyHex;
+                fileIv = ivHex;
+
+                formData.append("file", encryptedBlob, "encrypted_moment.bin");
                 formData.append("upload_preset", uploadPreset);
 
                 lqip = await generateLQIP(selectedFile);
 
                 const res = await axios.post(
-                    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+                    `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`,
                     formData,
                     {
                         signal: controller.signal,
@@ -281,7 +302,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 uploadedUrl = res.data.secure_url;
             }
 
-            const momentPayload = {
+            // 4. Construct plaintext metadata payload
+            const metadataPayload = {
                 type: isText ? (music ? "music" : "text") : "image",
                 content: isText ? content : "",
                 mediaUrl: uploadedUrl,
@@ -289,9 +311,6 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 caption: !isText ? caption : "",
                 filter: !isText ? activeFilter : "none",
                 locationTag: (!isText && showLocationPill) ? locationText : "",
-                disappearAfterHours: disappearHours,
-                isCaptured,
-                taggedUsers: selectedTaggedUsers,
                 music: music ? {
                     trackId: music.id || null,
                     source: music.source || null,
@@ -301,7 +320,26 @@ const MomentCreator = ({ isOpen, onClose }) => {
                     coverUrl: music.coverUrl,
                     duration,
                     startTime
-                } : null
+                } : null,
+                fileKey,
+                fileIv
+            };
+
+            // 5. Encrypt metadata payload string for all recipients
+            const { ciphertext, encryptedKeys, iv } = await encryptForMultipleRecipients(
+                JSON.stringify(metadataPayload),
+                publicKeysMap
+            );
+
+            // 6. Submit E2EE envelope to server
+            const momentPayload = {
+                isEncrypted: true,
+                encryptedPayload: ciphertext,
+                encryptedKeys,
+                iv,
+                disappearAfterHours: disappearHours,
+                isCaptured,
+                taggedUsers: selectedTaggedUsers
             };
 
             await createMoment(momentPayload, controller.signal);
@@ -315,6 +353,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
             if (axios.isCancel(err)) {
                 console.log("[MomentCreator] Upload cancelled by user");
             } else {
+                console.error("[MomentCreator] Share failed:", err);
                 showToast("Failed to share, please try again");
             }
         } finally { 

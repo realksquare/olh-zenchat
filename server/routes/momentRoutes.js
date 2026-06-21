@@ -8,7 +8,7 @@ const { onlineUsers } = require("../socket/handlers");
 
 router.post("/", protect, async (req, res) => {
     try {
-        const { type, content, mediaUrl, music, caption, locationTag, filter, disappearAfterHours, taggedUsers, lqip, isCaptured } = req.body;
+        const { type, content, mediaUrl, music, caption, locationTag, filter, disappearAfterHours, taggedUsers, lqip, isCaptured, isEncrypted, encryptedPayload, encryptedKeys, iv } = req.body;
         const hours = disappearAfterHours ? Number(disappearAfterHours) : 24;
         const expiresAt = (isCaptured === true || isCaptured === "true") ? null : new Date(Date.now() + hours * 60 * 60 * 1000);
 
@@ -25,7 +25,11 @@ router.post("/", protect, async (req, res) => {
             disappearAfterHours: hours,
             expiresAt,
             isCaptured: isCaptured === true || isCaptured === "true",
-            taggedUsers: Array.isArray(taggedUsers) ? taggedUsers : []
+            taggedUsers: Array.isArray(taggedUsers) ? taggedUsers : [],
+            isEncrypted: isEncrypted === true || isEncrypted === "true",
+            encryptedPayload: encryptedPayload || "",
+            encryptedKeys: encryptedKeys || {},
+            iv: iv || ""
         });
 
         const populated = await Moment.findById(moment._id)

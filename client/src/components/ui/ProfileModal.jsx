@@ -6,7 +6,8 @@ import { requestNotificationPermission } from "../../utils/firebase";
 import axiosInstance from "../../utils/axios";
 import LoadingOverlay from "./LoadingOverlay";
 import { db } from "../../db/zenDB";
-import { generateRecoveryKey, rotateUserRecoveryKey, setupE2EEForUser } from "../../utils/e2eeHelper";
+import { generateRecoveryKey, rotateUserRecoveryKey, setupE2EEForUser, getLocalE2EEKeys } from "../../utils/e2eeHelper";
+import { decryptForMultipleRecipients, decryptFileAES } from "../../utils/crypto";
 
 // Phone parser and country codes removed in favor of Email 2FA
 
@@ -327,21 +328,94 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     }, [avatarPreview]);
 
     useEffect(() => {
+        let active = true;
+        const localBlobUrls = [];
+
         if (isOpen) {
             const fetchCapturedMoments = async () => {
                 setLoadingMoments(true);
                 try {
                     const { data } = await axiosInstance.get("/moments/captured");
-                    setCapturedMoments(data);
+                    if (!active) return;
+
+                    const decryptedMoments = await Promise.all(
+                        data.map(async (mom) => {
+                            if (!mom.isEncrypted) return mom;
+                            try {
+                                const keys = await getLocalE2EEKeys();
+                                if (!keys || !keys.privateKey) return mom;
+
+                                const encryptedKeysMap = mom.encryptedKeys instanceof Map
+                                    ? Object.fromEntries(mom.encryptedKeys)
+                                    : mom.encryptedKeys || {};
+
+                                const decryptedPayloadStr = await decryptForMultipleRecipients(
+                                    mom.encryptedPayload,
+                                    encryptedKeysMap,
+                                    mom.iv,
+                                    keys.privateKey,
+                                    user?._id
+                                );
+
+                                const payload = JSON.parse(decryptedPayloadStr);
+                                let decryptedMediaUrl = mom.mediaUrl;
+
+                                if (payload.mediaUrl && payload.fileKey && payload.fileIv) {
+                                    const res = await fetch(payload.mediaUrl);
+                                    if (res.ok) {
+                                        const encryptedBlob = await res.blob();
+                                        const decryptedBlob = await decryptFileAES(
+                                            encryptedBlob,
+                                            payload.fileKey,
+                                            payload.fileIv,
+                                            payload.type === "video" ? "video/mp4" : "image/jpeg"
+                                        );
+                                        const objectUrl = URL.createObjectURL(decryptedBlob);
+                                        localBlobUrls.push(objectUrl);
+                                        decryptedMediaUrl = objectUrl;
+                                    }
+                                }
+
+                                return {
+                                    ...mom,
+                                    ...payload,
+                                    mediaUrl: decryptedMediaUrl
+                                };
+                            } catch (decErr) {
+                                console.error("[ProfileModal] Captured moment decryption failed:", decErr);
+                                return {
+                                    ...mom,
+                                    content: "[Decryption failed]",
+                                    caption: "",
+                                    mediaUrl: ""
+                                };
+                            }
+                        })
+                    );
+
+                    if (active) {
+                        setCapturedMoments(decryptedMoments);
+                    }
                 } catch (err) {
                     console.error("Failed to fetch captured moments:", err);
                 } finally {
-                    setLoadingMoments(false);
+                    if (active) {
+                        setLoadingMoments(false);
+                    }
                 }
             };
             fetchCapturedMoments();
         }
-    }, [isOpen]);
+
+        return () => {
+            active = false;
+            localBlobUrls.forEach((url) => {
+                if (url.startsWith("blob:")) {
+                    URL.revokeObjectURL(url);
+                }
+            });
+        };
+    }, [isOpen, user?._id]);
 
     if (!isOpen) return null;
 

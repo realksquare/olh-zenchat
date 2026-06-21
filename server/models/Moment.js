@@ -85,6 +85,22 @@ const momentSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        isEncrypted: {
+            type: Boolean,
+            default: false,
+        },
+        encryptedPayload: {
+            type: String,
+            default: "",
+        },
+        encryptedKeys: {
+            type: Map,
+            of: String,
+        },
+        iv: {
+            type: String,
+            default: "",
+        },
     },
     { timestamps: true }
 );

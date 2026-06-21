@@ -4,7 +4,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-com
 
 importScripts('https://unpkg.com/dexie@4.0.8/dist/dexie.js');
 
-const CACHE_NAME = 'zenchat-v2.3';
+const CACHE_NAME = 'zenchat-v2.4';
 
 const firebaseConfig = {
     apiKey: "AIzaSyDuPbl1-IEdxnDctJgELm_VAQoSrLvWEM8",
@@ -121,7 +121,7 @@ try {
 }
 
 
-const SHELL_URLS = ['/', '/manifest.json', '/favicon.svg'];
+const SHELL_URLS = ['/', '/index.html', '/manifest.json', '/favicon.svg'];
 
 // Pre-cache app shell on install for instant first paint
 self.addEventListener('install', (event) => {

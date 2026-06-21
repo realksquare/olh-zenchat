@@ -951,6 +951,29 @@ router.get("/users/:id/public-key", authMiddleware, async (req, res) => {
     }
 });
 
+// @route   POST /api/auth/users/public-keys
+// @desc    Get E2EE public keys for multiple users in bulk
+// @access  Private
+router.post("/users/public-keys", authMiddleware, async (req, res) => {
+    try {
+        const { userIds } = req.body;
+        if (!userIds || !Array.isArray(userIds)) {
+            return res.status(400).json({ message: "userIds array is required" });
+        }
+        const users = await User.find({ _id: { $in: userIds } }, "_id publicKey");
+        const keysMap = {};
+        users.forEach(u => {
+            if (u.publicKey) {
+                keysMap[u._id.toString()] = u.publicKey;
+            }
+        });
+        res.json({ publicKeys: keysMap });
+    } catch (err) {
+        console.error("[GetPublicKeysBulk] Error:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+});
+
 // @route   PUT /api/auth/keys-backup
 // @desc    Update E2EE private key backup using a rotated recovery key
 // @access  Private
