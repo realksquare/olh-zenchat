@@ -79,8 +79,9 @@ If we build this, we must build it the "ZenChat way." Here is how we crush the c
 > * **The 8 AM Hard Reset:** Even if active all night, everything wipes at 8 AM. At 7:30 AM, a live countdown (`"⏳ 30m until automatic cleanup"`) appears in the header, adding urgency to save notes.
 
 > [!NOTE]
-> **Opt-In Only Isolation**
+> **Opt-In Only Isolation & Unread Indicator**
 > `#ZenVoice` is deliberately hidden inside the Hamburger menu. It requires active effort to enter, ensuring that the core ZenChat experience remains pure and distraction-free. 
+> * **Orange Dot Indicator**: To let users know when there is active campus chat without sending noisy push notifications, a subtle orange dot indicator is rendered over the top-level Hamburger menu button on the main screen. Inside the menu itself, a matching orange dot is displayed next to the `#ZenVoice` menu entry. This dot lights up whenever a new message is posted in the university GC, regardless of whether the user has unmuted the chat notifications, ensuring they are aware of activity without their direct messaging flow being disrupted.
 
 > [!TIP]
 > **Attention-Shielding Notifications (Philosophy of Focus)**
