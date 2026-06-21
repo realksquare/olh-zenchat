@@ -220,6 +220,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [capturedMoments, setCapturedMoments] = useState([]);
     const [loadingMoments, setLoadingMoments] = useState(false);
+    const [momentToDelete, setMomentToDelete] = useState(null);
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 768);
         window.addEventListener("resize", handleResize);
@@ -727,6 +728,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     }, [username, fullName, bio, email, password, avatarFile, avatarPreview, onlineVisibility, nameVisibility, avatarVisibility, is2faEnabled, user]);
 
     return createPortal(
+        <>
         <div className="modal-overlay moments-aura-overlay" style={{ zIndex: 10000 }}>
             {toast && <div className="zen-toast zen-toast-info" style={{ pointerEvents: 'none' }}>{toast}</div>}
             {isSubscribing && <LoadingOverlay message="Subscribing..." subMessage="Setting up your secure connection" />}
@@ -904,16 +906,9 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                         
                                                         {/* Delete Button */}
                                                         <button
-                                                            onClick={async (e) => {
+                                                            onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                if (confirm("Delete this captured moment?")) {
-                                                                    try {
-                                                                        await axiosInstance.delete(`/moments/${mom._id}`);
-                                                                        setCapturedMoments(prev => prev.filter(m => m._id !== mom._id));
-                                                                    } catch (err) {
-                                                                        console.error("Failed to delete captured moment:", err);
-                                                                    }
-                                                                }
+                                                                setMomentToDelete(mom);
                                                             }}
                                                             style={{
                                                                 position: "absolute",
@@ -1601,7 +1596,75 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 )}
                 </div>
             </div>
-        </div>,
+        </div>
+        {momentToDelete && (
+            isMobile ? (
+                <div className="mobile-bottom-sheet-overlay" style={{ zIndex: 200000 }} onClick={() => setMomentToDelete(null)}>
+                    <div className="mobile-bottom-sheet" onClick={(e) => e.stopPropagation()} style={{ padding: "20px 0 32px" }}>
+                        <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#f8fafc", marginBottom: "8px", textAlign: "center", padding: "0 20px" }}>Delete Captured Moment</h3>
+                        <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "24px", lineHeight: "1.5", textAlign: "center", padding: "0 20px" }}>Are you sure you want to delete this captured moment? This action is permanent and cannot be undone.</p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%", padding: "0 20px", boxSizing: "border-box" }}>
+                            <button
+                                className="btn"
+                                onClick={async () => {
+                                    const momId = momentToDelete._id;
+                                    setMomentToDelete(null);
+                                    try {
+                                        await axiosInstance.delete(`/moments/${momId}`);
+                                        setCapturedMoments(prev => prev.filter(m => m._id !== momId));
+                                    } catch (err) {
+                                        console.error("Failed to delete captured moment:", err);
+                                    }
+                                }}
+                                style={{ width: "100%", padding: "12px", borderRadius: "12px", background: "#ef4444", border: "none", color: "var(--color-text, #fff)", cursor: "pointer", fontWeight: "600", fontSize: "0.95rem" }}
+                            >
+                                Delete Moment
+                            </button>
+                            <button
+                                className="btn"
+                                onClick={() => setMomentToDelete(null)}
+                                style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "transparent", color: "#cbd5e1", cursor: "pointer", fontSize: "0.95rem" }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div className="modal-backdrop" style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.4)", zIndex: 200000 }} onClick={() => setMomentToDelete(null)}>
+                    <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "380px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "var(--color-surface, rgba(15, 23, 42, 0.9))", backdropFilter: "blur(20px)", padding: "24px", borderRadius: "16px", textAlign: "center" }}>
+                        <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#f8fafc", marginBottom: "12px" }}>Delete Captured Moment</h3>
+                        <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "24px", lineHeight: "1.5" }}>Are you sure you want to delete this captured moment? This action is permanent and cannot be undone.</p>
+                        <div style={{ display: "flex", gap: "12px" }}>
+                            <button
+                                className="btn"
+                                onClick={() => setMomentToDelete(null)}
+                                style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "transparent", color: "#cbd5e1", cursor: "pointer" }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="btn"
+                                onClick={async () => {
+                                    const momId = momentToDelete._id;
+                                    setMomentToDelete(null);
+                                    try {
+                                        await axiosInstance.delete(`/moments/${momId}`);
+                                        setCapturedMoments(prev => prev.filter(m => m._id !== momId));
+                                    } catch (err) {
+                                        console.error("Failed to delete captured moment:", err);
+                                    }
+                                }}
+                                style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "#ef4444", border: "none", color: "var(--color-text, #fff)", cursor: "pointer", fontWeight: "600" }}
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )
+        )}
+        </>,
         document.body
     );
 };
