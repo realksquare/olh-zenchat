@@ -79,14 +79,14 @@ If we build this, we must build it the "ZenChat way." Here is how we crush the c
 > * **The 8 AM Hard Reset:** Even if active all night, everything wipes at 8 AM. At 7:30 AM, a live countdown (`"⏳ 30m until automatic cleanup"`) appears in the header, adding urgency to save notes.
 
 > [!NOTE]
-> **Opt-In Only Isolation & Unread Indicator**
+> **Opt-In Only Isolation**
 > `#ZenVoice` is deliberately hidden inside the Hamburger menu. It requires active effort to enter, ensuring that the core ZenChat experience remains pure and distraction-free. 
-> * **Orange Dot Indicator**: To let users know when there is active campus chat without sending noisy push notifications, a subtle orange dot indicator is rendered over the top-level Hamburger menu button on the main screen. Inside the menu itself, a matching orange dot is displayed next to the `#ZenVoice` menu entry. This dot lights up whenever a new message is posted in the university GC, regardless of whether the user has unmuted the chat notifications, ensuring they are aware of activity without their direct messaging flow being disrupted.
 
 > [!TIP]
 > **Attention-Shielding Notifications (Philosophy of Focus)**
 > To prevent notification spam and protect user focus, `#ZenVoice` GCs implement highly specific alert boundaries:
 > * **Muted by Default:** All group chats are silent out-of-the-box. Users must manually unmute notifications, with a master toggle in the user dashboard to enforce default muting for all new chats.
+> * **Passive Unread Indicator:** Even if muted, users need a way to know there's activity without being interrupted. A subtle, non-intrusive **orange dot indicator** (`#f59e0b`) appears over the main hamburger menu and specifically on the `#ZenVoice` option within the menu when there are new unread messages in the general chat. This runs silently in the background via socket events, without conflicting with other UI states.
 > * **User-Specific Notifications:** Users can subscribe to notifications *only* for specific people in the group (e.g., getting alerted only when the professor, group leader, or a close study partner posts, while ignoring the rest of the chatter).
 > * **Scheduled DND:** Built-in manual or scheduled Do-Not-Disturb modes to completely block out late-night alerts, reinforcing digital wellness and healthy boundaries.
 
