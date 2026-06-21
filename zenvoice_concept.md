@@ -5,13 +5,41 @@ The idea of `#ZenVoice`—an exclusive, anonymous, yet verified general chat spa
 ## 1. Feature Explanation & Implementation Strategy
 
 ### Core Loop
-1. **Verification Wall (SheerID Integration):** A user links their university credentials via SheerID (an enterprise API that instantly verifies current student status via university single sign-on). Because SheerID is purely B2B and paid, ZenChat would need a startup/developer tier or fall back to native `.edu` email verification to keep costs zero.
+1. **Verification Wall (Multi-Method Verification):** Since enterprise validation services (e.g., SheerID, ID.me) are paid commercial APIs, `#ZenVoice` implements three separate zero-cost verification channels:
+   * **Method A: GitHub Student Developer OAuth (Immediate)**: Users authorize their GitHub account. The API retrieves their list of verified student email addresses from GitHub, leveraging the fact that GitHub has already done the heavy verification work to grant them the GitHub Student Developer Pack.
+   * **Method B: Student Email OTP (Automated / Manual Request)**: Students enter their university email. If the domain is whitelisted in our database, an OTP is sent. If the domain is unrecognized, the student submits a whitelist request for manual admin review.
+   * **Method C: Student ID Card Scanning (OCR + Manual Review)**: Students take a photo of their student ID card. A client-side OCR library (`Tesseract.js`) parses the text locally on their device to identify their name, college, and enrollment validity date. If the OCR scan fails or is inconclusive, it falls back to a secure admin review queue.
 2. **Pseudonym Generation:** Once verified, the app completely detaches the real identity to ensure anonymity. The user is assigned a random, anonymous handle (e.g., *BlueFalcon42*).
 3. **The Access Point:** `#ZenVoice` is tucked away inside the Hamburger Menu. This deliberate user friction guarantees that the core messenger remains completely clean and distraction-free. You have to actively *want* to go to the social feed.
 4. **The Chat Room:** Users enter `#ZenVoice`—a localized, text-and-voice general chat room restricted entirely to users from their specific university.
 
-### Technical Implementation Idea
-To maintain ZenChat's strict privacy rules, we would use **Blind Signatures** or **Zero-Knowledge Proofs (ZKPs)**. This means the server can mathematically verify "Yes, this person is a student at NYU via SheerID," but the server *cannot* link the anonymous `#ZenVoice` messages back to their main ZenChat account.
+### Technical Implementation & Codebase Integration
+
+#### 1. Database Model Integration
+To maintain ZenChat's zero-knowledge principles, student identity is stored in a separate table, completely detached from the anonymous session keys.
+In the database, we define a lightweight verification schema or attach a status flag to the existing `User` model:
+```javascript
+// server/models/User.js (or as a separate collection StudentVerification)
+isStudentVerified: {
+    type: Boolean,
+    default: false
+},
+studentVerificationMethod: {
+    type: String,
+    enum: ["github", "domain_otp", "id_ocr", "manual", "none"],
+    default: "none"
+},
+studentCollegeName: {
+    type: String,
+    default: ""
+}
+```
+
+#### 2. Verification Workflows & API Endpoints
+* **OAuth Flow**: A new endpoint `GET /api/auth/github-student` handles OAuth redirection. It parses emails using `axios` against `https://api.github.com/user/emails` to confirm academic whitelisting.
+* **OTP Mailer**: Reuses our existing email service wrapper (`server/utils/mailService.js`) to dispatch 6-digit OTP codes, utilizing existing SMTP or Mailgun free-tier mail loops.
+* **Moderator Control**: Integrates directly into the existing React-based admin portal (`client/src/components/ui/AdminPanel.jsx` and `server/routes/analytics.js` for metrics). A new section, "Student Approvals", is rendered for master and co-admins to instantly approve/deny card scans and domain whitelist request queues.
+* **ZKP / Token-Based Session Signing**: Upon successful validation, the server generates a cryptographically signed token certifying: `"This is a verified student at [CollegeName]"`. The student's app presents this token to the chat server along with their random pseudonym, meaning the chat logs only ever see the signature of validity and the pseudonym, making it impossible to link posts to the main user account.
 
 ## 2. Existing Mainstream Models
 
