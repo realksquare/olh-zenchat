@@ -1,17 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ZenChat - Messaging Without the Time Sink</title>
-  <meta name="description" content="ZenChat is a privacy-first, distraction-free messaging app. No ads, no tracking, and no algorithmic scrolling. Built for focused conversations, even on 2G." />
+  <meta name="description"
+    content="ZenChat is a privacy-first, distraction-free messaging app. No ads, no tracking, and no algorithmic scrolling. Built for focused conversations, even on 2G." />
   <meta property="og:title" content="ZenChat - Messaging Without the Time Sink" />
-  <meta property="og:description" content="No ads. No tracking. No feeds. ZenChat keeps your chats encrypted by default and respects your time." />
+  <meta property="og:description"
+    content="No ads. No tracking. No feeds. ZenChat keeps your chats encrypted by default and respects your time." />
+  <meta property="og:image" content="/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="/og-image.png" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://api.fontshare.com" />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     :root {
       --primary: #3da5d9;
@@ -22,7 +36,7 @@
       --bg: #0d1117;
       --surface: #161b22;
       --surface-2: #1e2530;
-      --border: rgba(255,255,255,0.07);
+      --border: rgba(255, 255, 255, 0.07);
       --text: #e2e8f0;
       --text-muted: #8b9cb0;
       --text-faint: #4a5568;
@@ -35,7 +49,9 @@
       --ease: cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    html { scroll-behavior: smooth; }
+    html {
+      scroll-behavior: smooth;
+    }
 
     body {
       font-family: var(--font);
@@ -51,9 +67,9 @@
       position: fixed;
       inset: 0;
       background:
-        radial-gradient(ellipse 70% 50% at 10% 5%, rgba(61,165,217,0.07) 0%, transparent 55%),
-        radial-gradient(ellipse 55% 45% at 88% 18%, rgba(99,102,241,0.06) 0%, transparent 50%),
-        radial-gradient(ellipse 45% 35% at 50% 95%, rgba(61,165,217,0.04) 0%, transparent 55%);
+        radial-gradient(ellipse 70% 50% at 10% 5%, rgba(61, 165, 217, 0.07) 0%, transparent 55%),
+        radial-gradient(ellipse 55% 45% at 88% 18%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse 45% 35% at 50% 95%, rgba(61, 165, 217, 0.04) 0%, transparent 55%);
       pointer-events: none;
       z-index: 0;
     }
@@ -66,12 +82,14 @@
       position: relative;
       z-index: 1;
     }
+
     .gradient-text {
       background: linear-gradient(125deg, var(--primary) 0%, #7dd3f5 45%, var(--accent) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
+
     .tag {
       display: inline-flex;
       align-items: center;
@@ -86,6 +104,7 @@
       border-radius: 999px;
       padding: 5px 14px;
     }
+
     .tag-dot {
       width: 6px;
       height: 6px;
@@ -118,26 +137,42 @@
       outline: none;
       white-space: nowrap;
     }
+
     .btn-ghost {
       background: transparent;
       color: var(--text-muted);
       padding: 8px 18px;
     }
-    .btn-ghost:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+
+    .btn-ghost:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
     .btn-primary {
       background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
       color: #fff;
       padding: 10px 22px;
-      box-shadow: 0 4px 20px rgba(61,165,217,0.3);
+      box-shadow: 0 4px 20px rgba(61, 165, 217, 0.3);
     }
+
     .btn-primary:hover {
       background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-      box-shadow: 0 6px 30px rgba(61,165,217,0.5);
+      box-shadow: 0 6px 30px rgba(61, 165, 217, 0.5);
       transform: translateY(-1.5px);
       filter: brightness(1.08);
     }
-    .btn-primary:active { transform: translateY(0); }
-    .btn-lg { font-size: 1rem; padding: 14px 34px; border-radius: var(--radius-lg); }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-lg {
+      font-size: 1rem;
+      padding: 14px 34px;
+      border-radius: var(--radius-lg);
+    }
+
     .btn-outline {
       background: transparent;
       color: var(--text);
@@ -146,19 +181,32 @@
       border-radius: var(--radius-lg);
       font-size: 1rem;
     }
-    .btn-outline:hover { border-color: rgba(255,255,255,0.22); background: rgba(255,255,255,0.04); transform: translateY(-1px); }
+
+    .btn-outline:hover {
+      border-color: rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.04);
+      transform: translateY(-1px);
+    }
+
     .btn-open {
       background: linear-gradient(135deg, var(--primary), var(--accent));
       color: #fff;
       padding: 10px 22px;
-      box-shadow: 0 0 18px rgba(61,165,217,0.22);
+      box-shadow: 0 0 18px rgba(61, 165, 217, 0.22);
     }
-    .btn-open:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 0 28px rgba(99,102,241,0.4); }
+
+    .btn-open:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 0 28px rgba(99, 102, 241, 0.4);
+    }
 
     /* â”€â”€ Navbar â”€â”€ */
     nav {
       position: fixed;
-      top: 0; left: 0; right: 0;
+      top: 0;
+      left: 0;
+      right: 0;
       z-index: 100;
       height: 66px;
       display: flex;
@@ -170,6 +218,7 @@
       border-bottom: 1px solid var(--border);
       transition: background 300ms ease;
     }
+
     .nav-inner {
       max-width: 1160px;
       margin: 0 auto;
@@ -178,6 +227,7 @@
       align-items: center;
       justify-content: space-between;
     }
+
     .nav-logo {
       display: flex;
       align-items: center;
@@ -188,12 +238,14 @@
       font-size: 1.15rem;
       letter-spacing: -0.02em;
     }
+
     .nav-links {
       display: flex;
       align-items: center;
       gap: 36px;
       list-style: none;
     }
+
     .nav-links a {
       color: var(--text-muted);
       text-decoration: none;
@@ -201,12 +253,17 @@
       font-weight: 500;
       transition: color 180ms ease;
     }
-    .nav-links a:hover { color: var(--text); }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
     .nav-cta {
       display: flex;
       align-items: center;
       gap: 10px;
     }
+
     .hamburger {
       display: none;
       flex-direction: column;
@@ -216,9 +273,11 @@
       border: none;
       padding: 4px;
     }
+
     .hamburger span {
       display: block;
-      width: 24px; height: 2px;
+      width: 24px;
+      height: 2px;
       background: var(--text);
       border-radius: 2px;
       transition: all 250ms ease;
@@ -228,8 +287,10 @@
     .mobile-nav {
       display: none;
       position: fixed;
-      top: 66px; left: 0; right: 0;
-      background: rgba(13,17,23,0.98);
+      top: 66px;
+      left: 0;
+      right: 0;
+      background: rgba(13, 17, 23, 0.98);
       backdrop-filter: blur(18px);
       border-bottom: 1px solid var(--border);
       z-index: 99;
@@ -237,7 +298,11 @@
       flex-direction: column;
       gap: 4px;
     }
-    .mobile-nav.open { display: flex; }
+
+    .mobile-nav.open {
+      display: flex;
+    }
+
     .mobile-nav a:not(.btn) {
       color: var(--text-muted);
       text-decoration: none;
@@ -247,9 +312,21 @@
       border-bottom: 1px solid var(--border);
       transition: color 150ms ease;
     }
-    .mobile-nav a:not(.btn):last-of-type { border-bottom: none; }
-    .mobile-nav a:not(.btn):hover { color: var(--text); }
-    .mobile-nav-btns { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+
+    .mobile-nav a:not(.btn):last-of-type {
+      border-bottom: none;
+    }
+
+    .mobile-nav a:not(.btn):hover {
+      color: var(--text);
+    }
+
+    .mobile-nav-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+    }
 
     /* â”€â”€ Hero â”€â”€ */
     .hero {
@@ -258,13 +335,18 @@
       align-items: center;
       padding: 110px 0 90px;
     }
+
     .hero-inner {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 72px;
       align-items: center;
     }
-    .hero-badge { margin-bottom: 22px; }
+
+    .hero-badge {
+      margin-bottom: 22px;
+    }
+
     .hero-headline {
       font-size: clamp(2.2rem, 4.5vw, 3.8rem);
       font-weight: 700;
@@ -272,6 +354,7 @@
       letter-spacing: -0.03em;
       margin-bottom: 20px;
     }
+
     .hero-sub {
       font-size: clamp(0.98rem, 1.4vw, 1.12rem);
       color: var(--text-muted);
@@ -279,7 +362,13 @@
       margin-bottom: 36px;
       max-width: 470px;
     }
-    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
     .hero-stats {
       display: flex;
       gap: 36px;
@@ -287,13 +376,24 @@
       padding-top: 32px;
       border-top: 1px solid var(--border);
     }
-    .stat-item { display: flex; flex-direction: column; gap: 3px; }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
     .stat-num {
       font-size: 1.4rem;
       font-weight: 700;
       letter-spacing: -0.02em;
     }
-    .stat-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; }
+
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
 
     /* â”€â”€ Chat Mockup â”€â”€ */
     .hero-visual {
@@ -302,52 +402,89 @@
       align-items: center;
       position: relative;
     }
+
     .mockup-glow {
       position: absolute;
-      width: 380px; height: 380px;
-      background: radial-gradient(circle, rgba(61,165,217,0.16) 0%, transparent 70%);
+      width: 380px;
+      height: 380px;
+      background: radial-gradient(circle, rgba(61, 165, 217, 0.16) 0%, transparent 70%);
       border-radius: 50%;
       animation: pulse-glow 4.5s ease-in-out infinite;
       pointer-events: none;
     }
+
     @keyframes pulse-glow {
-      0%,100% { transform: scale(1); opacity: 0.7; }
-      50% { transform: scale(1.08); opacity: 1; }
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 0.7;
+      }
+
+      50% {
+        transform: scale(1.08);
+        opacity: 1;
+      }
     }
+
     .chat-mockup {
       width: 310px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       overflow: hidden;
-      box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
       animation: float 7s ease-in-out infinite;
       position: relative;
       z-index: 1;
     }
+
     @keyframes float {
-      0%,100% { transform: translateY(0px) rotate(-0.8deg); }
-      50% { transform: translateY(-14px) rotate(0.8deg); }
+
+      0%,
+      100% {
+        transform: translateY(0px) rotate(-0.8deg);
+      }
+
+      50% {
+        transform: translateY(-14px) rotate(0.8deg);
+      }
     }
+
     .mockup-header {
-      background: rgba(255,255,255,0.03);
+      background: rgba(255, 255, 255, 0.03);
       border-bottom: 1px solid var(--border);
       padding: 13px 15px;
       display: flex;
       align-items: center;
       gap: 10px;
     }
+
     .mockup-avatar {
-      width: 34px; height: 34px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--primary), var(--accent));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.78rem; font-weight: 700; color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #fff;
       flex-shrink: 0;
-      border: 1.5px solid rgba(255,255,255,0.12);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
     }
-    .mockup-header-info { flex: 1; min-width: 0; }
-    .mockup-name { font-size: 0.87rem; font-weight: 600; }
+
+    .mockup-header-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .mockup-name {
+      font-size: 0.87rem;
+      font-weight: 600;
+    }
+
     .mockup-status {
       font-size: 0.7rem;
       color: var(--green);
@@ -355,14 +492,28 @@
       align-items: center;
       gap: 4px;
     }
+
     .mockup-status::before {
       content: "";
-      width: 5px; height: 5px;
+      width: 5px;
+      height: 5px;
       background: var(--green);
       border-radius: 50%;
       animation: blink 2s ease-in-out infinite;
     }
-    @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.3
+      }
+    }
+
     .mockup-e2ee {
       display: flex;
       align-items: center;
@@ -370,20 +521,57 @@
       font-size: 0.65rem;
       color: var(--text-faint);
     }
-    .mockup-e2ee svg { width: 11px; height: 11px; stroke: var(--primary); fill: none; stroke-width: 2; flex-shrink: 0; }
-    .mockup-body { padding: 14px 14px 8px; display: flex; flex-direction: column; gap: 10px; }
-    .msg { display: flex; gap: 8px; align-items: flex-end; }
-    .msg.sent { flex-direction: row-reverse; }
+
+    .mockup-e2ee svg {
+      width: 11px;
+      height: 11px;
+      stroke: var(--primary);
+      fill: none;
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+
+    .mockup-body {
+      padding: 14px 14px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .msg {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    .msg.sent {
+      flex-direction: row-reverse;
+    }
+
     .msg-avatar {
-      width: 24px; height: 24px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       background: linear-gradient(135deg, #475569, #64748b);
       flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.6rem; font-weight: 700; color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: #fff;
     }
-    .msg-content { display: flex; flex-direction: column; gap: 3px; }
-    .msg.sent .msg-content { align-items: flex-end; }
+
+    .msg-content {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .msg.sent .msg-content {
+      align-items: flex-end;
+    }
+
     .msg-bubble {
       max-width: 190px;
       padding: 8px 12px;
@@ -391,70 +579,120 @@
       font-size: 0.8rem;
       line-height: 1.4;
     }
+
     /* Message color status: ash=sent, sapphire=delivered, teal=seen */
     .msg.received .msg-bubble {
-      background: rgba(255,255,255,0.07);
+      background: rgba(255, 255, 255, 0.07);
       border-bottom-left-radius: 3px;
     }
+
     .msg.sent.status-sent .msg-bubble {
-      background: rgba(100,116,139,0.55); /* ash = sent */
+      background: rgba(100, 116, 139, 0.55);
+      /* ash = sent */
       border-bottom-right-radius: 3px;
     }
+
     .msg.sent.status-delivered .msg-bubble {
-      background: rgba(61,107,217,0.8); /* sapphire = delivered */
+      background: rgba(61, 107, 217, 0.8);
+      /* sapphire = delivered */
       border-bottom-right-radius: 3px;
     }
+
     .msg.sent.status-seen .msg-bubble {
-      background: linear-gradient(135deg, #0ea5a0, #3da5d9); /* teal/emerald = seen */
+      background: linear-gradient(135deg, #0ea5a0, #3da5d9);
+      /* teal/emerald = seen */
       border-bottom-right-radius: 3px;
     }
-    .msg-time { font-size: 0.62rem; color: var(--text-faint); }
+
+    .msg-time {
+      font-size: 0.62rem;
+      color: var(--text-faint);
+    }
+
     .mockup-view-once {
       display: flex;
       align-items: center;
       gap: 7px;
-      background: rgba(99,102,241,0.1);
-      border: 1px solid rgba(99,102,241,0.2);
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
       border-radius: 10px;
       padding: 8px 11px;
       font-size: 0.77rem;
       color: #a5b4fc;
     }
-    .mockup-view-once svg { width: 14px; height: 14px; stroke: #a5b4fc; fill: none; stroke-width: 2; flex-shrink: 0; }
-    .view-once-label { font-weight: 600; }
-    .view-once-sub { font-size: 0.65rem; color: var(--text-faint); }
+
+    .mockup-view-once svg {
+      width: 14px;
+      height: 14px;
+      stroke: #a5b4fc;
+      fill: none;
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+
+    .view-once-label {
+      font-weight: 600;
+    }
+
+    .view-once-sub {
+      font-size: 0.65rem;
+      color: var(--text-faint);
+    }
+
     .mockup-typing {
       display: flex;
       align-items: center;
       gap: 8px;
       padding: 0 4px 8px;
     }
+
     .typing-avatar {
-      width: 22px; height: 22px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--primary), var(--accent));
       flex-shrink: 0;
     }
+
     .typing-indicator {
       display: flex;
       gap: 3px;
       align-items: center;
     }
+
     .typing-dot {
-      width: 5px; height: 5px;
+      width: 5px;
+      height: 5px;
       background: var(--text-faint);
       border-radius: 50%;
       animation: typing-bounce 1.2s ease-in-out infinite;
     }
-    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes typing-bounce {
-      0%,100%{ transform: translateY(0); opacity: 0.4; }
-      50%{ transform: translateY(-4px); opacity: 1; }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.2s;
     }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes typing-bounce {
+
+      0%,
+      100% {
+        transform: translateY(0);
+        opacity: 0.4;
+      }
+
+      50% {
+        transform: translateY(-4px);
+        opacity: 1;
+      }
+    }
+
     .mockup-input {
       margin: 0 12px 13px;
-      background: rgba(255,255,255,0.04);
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border);
       border-radius: 22px;
       padding: 8px 13px;
@@ -462,15 +700,29 @@
       align-items: center;
       gap: 8px;
     }
-    .mockup-input-text { flex: 1; font-size: 0.78rem; color: var(--text-faint); }
+
+    .mockup-input-text {
+      flex: 1;
+      font-size: 0.78rem;
+      color: var(--text-faint);
+    }
+
     .mockup-send {
-      width: 26px; height: 26px;
+      width: 26px;
+      height: 26px;
       background: var(--primary);
       border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
     }
-    .mockup-send svg { width: 12px; height: 12px; fill: #fff; }
+
+    .mockup-send svg {
+      width: 12px;
+      height: 12px;
+      fill: #fff;
+    }
 
     /* Floating badges */
     .float-badge {
@@ -485,37 +737,57 @@
       font-size: 0.76rem;
       font-weight: 600;
       color: var(--text);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
       z-index: 2;
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
     }
-    .float-badge-dot { width: 8px; height: 8px; border-radius: 50%; }
-    .badge-1 { top: 8%; right: -18px; animation: float-badge 5.5s ease-in-out infinite; }
-    .badge-2 { bottom: 22%; left: -28px; animation: float-badge 5.5s ease-in-out infinite 1.8s; }
+
+    .float-badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .badge-1 {
+      top: 8%;
+      right: -18px;
+      animation: float-badge 5.5s ease-in-out infinite;
+    }
+
+    .badge-2 {
+      bottom: 22%;
+      left: -28px;
+      animation: float-badge 5.5s ease-in-out infinite 1.8s;
+    }
+
     @keyframes float-badge {
-      0%,100% { transform: translateY(0); }
-      50% { transform: translateY(-8px); }
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-8px);
+      }
     }
 
     /* â”€â”€ Section â”€â”€ */
-    section { position: relative; z-index: 1; }
-    section:not(:last-of-type)::after {
-      content: "";
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60%;
-      max-width: 300px;
-      height: 1px;
-      background: linear-gradient(to right, transparent, rgba(255,255,255,0.08), transparent);
+    section {
+      position: relative;
+      z-index: 1;
     }
+
     .section-header {
       text-align: center;
       margin-bottom: 64px;
     }
-    .section-header .tag { margin-bottom: 18px; }
+
+    .section-header .tag {
+      margin-bottom: 18px;
+    }
+
     .section-title {
       font-size: clamp(1.75rem, 3.2vw, 2.75rem);
       font-weight: 700;
@@ -523,6 +795,7 @@
       line-height: 1.15;
       margin-bottom: 16px;
     }
+
     .section-sub {
       font-size: 1rem;
       color: var(--text-muted);
@@ -532,21 +805,28 @@
     }
 
     /* â”€â”€ Features â”€â”€ */
-    .features { padding: 100px 0; }
+    .features {
+      padding: 100px 0;
+    }
+
     .features-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 18px;
     }
+
     .feature-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 30px 26px;
       transition: border-color 300ms ease, box-shadow 300ms ease, transform 300ms var(--ease);
+      opacity: 0;
+      transform: translateY(22px);
       position: relative;
       overflow: hidden;
     }
+
     .feature-card::after {
       content: "";
       position: absolute;
@@ -556,25 +836,50 @@
       transition: opacity 300ms ease;
       pointer-events: none;
     }
-    .feature-card:hover::after { opacity: 1; }
+
+    .feature-card:hover::after {
+      opacity: 1;
+    }
+
     .feature-card:hover {
       border-color: var(--primary-border);
       transform: translateY(-4px);
-      box-shadow: 0 18px 40px rgba(0,0,0,0.3);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);
     }
+
+    .feature-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 600ms var(--ease), transform 600ms var(--ease), border-color 300ms ease, box-shadow 300ms ease;
+    }
+
     .feature-icon {
-      width: 46px; height: 46px;
+      width: 46px;
+      height: 46px;
       border-radius: 13px;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin-bottom: 18px;
     }
-    .feature-icon svg { width: 23px; height: 23px; }
+
+    .feature-icon svg {
+      width: 23px;
+      height: 23px;
+    }
+
     .feature-name {
       font-size: 1rem;
       font-weight: 600;
       margin-bottom: 9px;
     }
-    .feature-desc { font-size: 0.875rem; color: var(--text-muted); line-height: 1.65; }
+
+    .feature-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
     .feature-badge {
       display: inline-flex;
       align-items: center;
@@ -590,13 +895,18 @@
     }
 
     /* â”€â”€ How it works â”€â”€ */
-    .how { padding: 100px 0; background: rgba(255,255,255,0.01); }
+    .how {
+      padding: 100px 0;
+      background: rgba(255, 255, 255, 0.01);
+    }
+
     .steps {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 0;
       position: relative;
     }
+
     .steps::before {
       content: "";
       position: absolute;
@@ -607,17 +917,29 @@
       background: linear-gradient(to right, var(--primary), var(--accent));
       opacity: 0.35;
     }
+
     .step {
       text-align: center;
       padding: 0 28px;
+      opacity: 0;
+      transform: translateY(18px);
       transition: all 550ms var(--ease);
     }
+
+    .step.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     .step-num {
-      width: 76px; height: 76px;
+      width: 76px;
+      height: 76px;
       border-radius: 50%;
       background: var(--surface);
       border: 2px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin: 0 auto 26px;
       font-size: 1.4rem;
       font-weight: 700;
@@ -626,48 +948,91 @@
       z-index: 1;
       transition: all 280ms ease;
     }
+
     .step:hover .step-num {
       border-color: var(--primary);
       background: var(--primary-dim);
-      box-shadow: 0 0 0 8px rgba(61,165,217,0.07);
+      box-shadow: 0 0 0 8px rgba(61, 165, 217, 0.07);
     }
-    .step-title { font-size: 1.05rem; font-weight: 600; margin-bottom: 10px; }
-    .step-desc { font-size: 0.875rem; color: var(--text-muted); line-height: 1.65; }
+
+    .step-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .step-desc {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
 
     /* â”€â”€ ZenChat vs Giants â”€â”€ */
-    .compare { padding: 100px 0; }
+    .compare {
+      padding: 100px 0;
+    }
+
     .compare-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 20px;
     }
+
     .compare-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 30px 28px;
+      opacity: 0;
+      transform: translateY(22px);
       transition: all 600ms var(--ease);
     }
+
     .compare-card.zenchat-card {
-      background: linear-gradient(135deg, rgba(61,165,217,0.08) 0%, rgba(99,102,241,0.06) 100%);
+      background: linear-gradient(135deg, rgba(61, 165, 217, 0.08) 0%, rgba(99, 102, 241, 0.06) 100%);
       border-color: var(--primary-border);
       grid-column: 1 / -1;
     }
+
+    .compare-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     .compare-card-header {
       display: flex;
       align-items: center;
       gap: 12px;
       margin-bottom: 20px;
     }
+
     .compare-app-icon {
-      width: 40px; height: 40px;
+      width: 40px;
+      height: 40px;
       border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
     }
-    .compare-app-name { font-size: 1rem; font-weight: 700; }
-    .compare-app-tagline { font-size: 0.78rem; color: var(--text-muted); }
-    .compare-points { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+    .compare-app-name {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .compare-app-tagline {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .compare-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
     .compare-points li {
       display: flex;
       align-items: flex-start;
@@ -676,49 +1041,90 @@
       color: var(--text-muted);
       line-height: 1.55;
     }
+
     .compare-icon {
-      width: 18px; height: 18px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
       margin-top: 1px;
     }
-    .compare-icon.check { background: rgba(74,222,128,0.12); }
-    .compare-icon.cross { background: rgba(239,68,68,0.12); }
-    .compare-icon.check svg { stroke: #4ade80; }
-    .compare-icon.cross svg { stroke: #ef4444; }
-    .compare-icon svg { width: 10px; height: 10px; fill: none; stroke-width: 3; }
+
+    .compare-icon.check {
+      background: rgba(74, 222, 128, 0.12);
+    }
+
+    .compare-icon.cross {
+      background: rgba(239, 68, 68, 0.12);
+    }
+
+    .compare-icon.check svg {
+      stroke: #4ade80;
+    }
+
+    .compare-icon.cross svg {
+      stroke: #ef4444;
+    }
+
+    .compare-icon svg {
+      width: 10px;
+      height: 10px;
+      fill: none;
+      stroke-width: 3;
+    }
+
     .compare-zenchat-cols {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 14px;
     }
-    .compare-zenchat-cols .compare-points { gap: 8px; }
+
+    .compare-zenchat-cols .compare-points {
+      gap: 8px;
+    }
+
     .source-note {
       margin-top: 28px;
       padding: 14px 18px;
-      background: rgba(255,255,255,0.03);
+      background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
       font-size: 0.78rem;
       color: var(--text-faint);
       line-height: 1.7;
     }
-    .source-note a { color: var(--text-muted); text-decoration: underline; text-underline-offset: 3px; }
-    .source-note a:hover { color: var(--text); }
+
+    .source-note a {
+      color: var(--text-muted);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .source-note a:hover {
+      color: var(--text);
+    }
 
     /* â”€â”€ Security â”€â”€ */
-    .security { padding: 100px 0; background: rgba(255,255,255,0.01); }
+    .security {
+      padding: 100px 0;
+      background: rgba(255, 255, 255, 0.01);
+    }
+
     .security-inner {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 80px;
       align-items: center;
     }
+
     .security-visual {
       display: flex;
       justify-content: center;
     }
+
     .security-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -726,48 +1132,103 @@
       padding: 32px;
       width: 100%;
       max-width: 340px;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
     }
+
     .security-card-header {
       display: flex;
       align-items: center;
       gap: 13px;
       margin-bottom: 26px;
     }
+
     .lock-icon {
-      width: 48px; height: 48px;
-      background: linear-gradient(135deg, rgba(61,165,217,0.18), rgba(99,102,241,0.18));
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, rgba(61, 165, 217, 0.18), rgba(99, 102, 241, 0.18));
       border: 1px solid var(--primary-border);
       border-radius: 15px;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .lock-icon svg { width: 24px; height: 24px; stroke: var(--primary); fill: none; stroke-width: 2; }
-    .security-card-title { font-size: 1.05rem; font-weight: 600; }
-    .security-card-sub { font-size: 0.8rem; color: var(--text-muted); }
-    .otp-display { display: flex; gap: 7px; margin-bottom: 18px; }
+
+    .lock-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--primary);
+      fill: none;
+      stroke-width: 2;
+    }
+
+    .security-card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .security-card-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .otp-display {
+      display: flex;
+      gap: 7px;
+      margin-bottom: 18px;
+    }
+
     .otp-digit {
       flex: 1;
       aspect-ratio: 1;
-      background: rgba(61,165,217,0.08);
+      background: rgba(61, 165, 217, 0.08);
       border: 1px solid var(--primary-border);
       border-radius: 9px;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 1.2rem;
       font-weight: 700;
       color: var(--primary);
       animation: digit-appear 0.5s ease forwards;
       opacity: 0;
     }
-    .otp-digit:nth-child(1){animation-delay:0.1s}
-    .otp-digit:nth-child(2){animation-delay:0.2s}
-    .otp-digit:nth-child(3){animation-delay:0.3s}
-    .otp-digit:nth-child(4){animation-delay:0.4s}
-    .otp-digit:nth-child(5){animation-delay:0.5s}
-    .otp-digit:nth-child(6){animation-delay:0.6s}
-    @keyframes digit-appear {
-      from{opacity:0;transform:translateY(5px)}
-      to{opacity:1;transform:translateY(0)}
+
+    .otp-digit:nth-child(1) {
+      animation-delay: 0.1s
     }
+
+    .otp-digit:nth-child(2) {
+      animation-delay: 0.2s
+    }
+
+    .otp-digit:nth-child(3) {
+      animation-delay: 0.3s
+    }
+
+    .otp-digit:nth-child(4) {
+      animation-delay: 0.4s
+    }
+
+    .otp-digit:nth-child(5) {
+      animation-delay: 0.5s
+    }
+
+    .otp-digit:nth-child(6) {
+      animation-delay: 0.6s
+    }
+
+    @keyframes digit-appear {
+      from {
+        opacity: 0;
+        transform: translateY(5px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
     .security-timer {
       display: flex;
       align-items: center;
@@ -776,34 +1237,58 @@
       color: var(--text-muted);
       margin-bottom: 12px;
     }
+
     .timer-bar {
       height: 3px;
-      background: rgba(255,255,255,0.07);
+      background: rgba(255, 255, 255, 0.07);
       border-radius: 3px;
       margin-bottom: 18px;
       overflow: hidden;
     }
+
     .timer-fill {
       height: 100%;
       background: linear-gradient(to right, var(--primary), var(--accent));
       border-radius: 3px;
       animation: drain 5s linear infinite;
     }
-    @keyframes drain { from{width:100%} to{width:0%} }
+
+    @keyframes drain {
+      from {
+        width: 100%
+      }
+
+      to {
+        width: 0%
+      }
+    }
+
     .security-verified {
       display: flex;
       align-items: center;
       gap: 9px;
-      background: rgba(74,222,128,0.08);
-      border: 1px solid rgba(74,222,128,0.2);
+      background: rgba(74, 222, 128, 0.08);
+      border: 1px solid rgba(74, 222, 128, 0.2);
       border-radius: 9px;
       padding: 9px 13px;
       font-size: 0.83rem;
       color: var(--green);
       font-weight: 500;
     }
-    .security-verified svg { width: 16px; height: 16px; stroke: var(--green); fill: none; stroke-width: 2.5; flex-shrink: 0; }
-    .security-content .tag { margin-bottom: 18px; }
+
+    .security-verified svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--green);
+      fill: none;
+      stroke-width: 2.5;
+      flex-shrink: 0;
+    }
+
+    .security-content .tag {
+      margin-bottom: 18px;
+    }
+
     .security-title {
       font-size: clamp(1.5rem, 2.8vw, 2.3rem);
       font-weight: 700;
@@ -811,8 +1296,21 @@
       line-height: 1.15;
       margin-bottom: 16px;
     }
-    .security-desc { font-size: 0.96rem; color: var(--text-muted); line-height: 1.8; margin-bottom: 28px; }
-    .security-points { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+
+    .security-desc {
+      font-size: 0.96rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+      margin-bottom: 28px;
+    }
+
+    .security-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     .security-points li {
       display: flex;
       align-items: center;
@@ -820,201 +1318,96 @@
       font-size: 0.9rem;
       color: var(--text-muted);
     }
+
     .sec-check {
-      width: 20px; height: 20px;
-      border-radius: 50%;
-      background: rgba(61,165,217,0.1);
-      border: 1px solid var(--primary-border);
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .sec-check svg { width: 10px; height: 10px; stroke: var(--primary); fill: none; stroke-width: 3; }
-
-    /* â”€â”€ Voice Notes Section â”€â”€ */
-    .voice { padding: 100px 0; }
-    .voice-inner {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 80px;
-      align-items: center;
-    }
-    .voice-visual {
-      display: flex;
-      justify-content: center;
-    }
-    .voice-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      padding: 32px;
-      width: 100%;
-      max-width: 340px;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.4);
-      position: relative;
-    }
-    .voice-card-header {
-      display: flex;
-      align-items: center;
-      gap: 13px;
-      margin-bottom: 26px;
-    }
-    .mic-icon {
-      width: 48px; height: 48px;
-      background: linear-gradient(135deg, rgba(61,165,217,0.18), rgba(99,102,241,0.18));
-      border: 1px solid var(--primary-border);
-      border-radius: 15px;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--primary);
-    }
-    .mic-icon svg { width: 24px; height: 24px; }
-    .voice-card-title { font-size: 1.05rem; font-weight: 600; }
-    .voice-card-sub { font-size: 0.8rem; color: var(--text-muted); }
-    
-    .voice-player {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 16px;
-      margin-bottom: 26px;
-    }
-    .voice-player-btn {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      background: var(--primary);
-      color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      border: none;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: transform 0.2s;
-    }
-    .voice-player-btn:hover { transform: scale(1.08); }
-    .voice-player-btn svg { width: 14px; height: 14px; }
-    
-    .voice-waveform-animation {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      flex: 1;
-      height: 24px;
-    }
-    .vbar {
-      width: 3px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 1.5px;
-      height: 60%;
-      transition: height 0.3s ease;
-    }
-    
-    .voice-card:hover .vbar {
-      background: var(--primary);
-      animation: vbar-dance 1.2s ease-in-out infinite alternate;
-    }
-    .voice-card:hover .vbar-1  { animation-delay: 0.1s; height: 30%; }
-    .voice-card:hover .vbar-2  { animation-delay: 0.3s; height: 75%; }
-    .voice-card:hover .vbar-3  { animation-delay: 0.2s; height: 45%; }
-    .voice-card:hover .vbar-4  { animation-delay: 0.5s; height: 90%; }
-    .voice-card:hover .vbar-5  { animation-delay: 0.4s; height: 60%; }
-    .voice-card:hover .vbar-6  { animation-delay: 0.6s; height: 35%; }
-    .voice-card:hover .vbar-7  { animation-delay: 0.1s; height: 80%; }
-    .voice-card:hover .vbar-8  { animation-delay: 0.3s; height: 50%; }
-    .voice-card:hover .vbar-9  { animation-delay: 0.2s; height: 70%; }
-    .voice-card:hover .vbar-10 { animation-delay: 0.4s; height: 40%; }
-    .voice-card:hover .vbar-11 { animation-delay: 0.5s; height: 85%; }
-    .voice-card:hover .vbar-12 { animation-delay: 0.3s; height: 55%; }
-    .voice-card:hover .vbar-13 { animation-delay: 0.6s; height: 95%; }
-    .voice-card:hover .vbar-14 { animation-delay: 0.2s; height: 30%; }
-    .voice-card:hover .vbar-15 { animation-delay: 0.1s; height: 65%; }
-
-    @keyframes vbar-dance {
-      0% { transform: scaleY(0.4); }
-      100% { transform: scaleY(1.1); }
-    }
-    
-    .voice-player-duration {
-      font-family: monospace;
-      font-size: 0.72rem;
-      color: var(--text-muted);
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    
-    .voice-status {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      background: rgba(61, 165, 217, 0.08);
-      border: 1px solid var(--primary-border);
-      border-radius: var(--radius-md);
-      padding: 12px 16px;
-      font-size: 0.85rem;
-      color: var(--primary);
-      font-weight: 600;
-    }
-    .voice-status svg { width: 15px; height: 15px; stroke: var(--primary); fill: none; stroke-width: 2.5; }
-    
-    .voice-content .tag { margin-bottom: 18px; }
-    .voice-title {
-      font-size: clamp(1.5rem, 2.8vw, 2.3rem);
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      line-height: 1.15;
-      margin-bottom: 16px;
-    }
-    .voice-desc { font-size: 0.96rem; color: var(--text-muted); line-height: 1.8; margin-bottom: 28px; }
-    .voice-points { list-style: none; display: flex; flex-direction: column; gap: 12px; }
-    .voice-points li {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      font-size: 0.9rem;
-      color: var(--text-muted);
-    }
-    .voice-check {
-      width: 20px; height: 20px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
       background: rgba(61, 165, 217, 0.1);
       border: 1px solid var(--primary-border);
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
     }
-    .voice-check svg { width: 10px; height: 10px; stroke: var(--primary); fill: none; stroke-width: 3; }
-    
-    @media (max-width: 900px) {
-      .voice-inner { grid-template-columns: 1fr; gap: 52px; }
-      .voice-visual { order: -1; }
+
+    .sec-check svg {
+      width: 10px;
+      height: 10px;
+      stroke: var(--primary);
+      fill: none;
+      stroke-width: 3;
     }
 
     /* â”€â”€ Roadmap â”€â”€ */
-    .roadmap { padding: 100px 0; background: rgba(255,255,255,0.01); }
+    .roadmap {
+      padding: 100px 0;
+      background: rgba(255, 255, 255, 0.01);
+    }
+
     .roadmap-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 18px;
     }
+
     .roadmap-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 28px 24px;
+      opacity: 0;
+      transform: translateY(20px);
       transition: all 600ms var(--ease);
       position: relative;
       overflow: hidden;
     }
+
     .roadmap-card::before {
       content: "";
       position: absolute;
-      top: 0; left: 0; right: 0;
+      top: 0;
+      left: 0;
+      right: 0;
       height: 2px;
       border-radius: 2px 2px 0 0;
     }
-    .roadmap-card.color-blue::before { background: linear-gradient(to right, var(--primary), #7dd3f5); }
-    .roadmap-card.color-purple::before { background: linear-gradient(to right, var(--accent), #a5b4fc); }
-    .roadmap-card.color-gold::before { background: linear-gradient(to right, #eab308, #fbbf24); }
-    .roadmap-card:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-4px); box-shadow: 0 16px 36px rgba(0,0,0,0.3); }
+
+    .roadmap-card.color-blue::before {
+      background: linear-gradient(to right, var(--primary), #7dd3f5);
+    }
+
+    .roadmap-card.color-purple::before {
+      background: linear-gradient(to right, var(--accent), #a5b4fc);
+    }
+
+    .roadmap-card.color-gold::before {
+      background: linear-gradient(to right, #eab308, #fbbf24);
+    }
+
+    .roadmap-card:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+      transform: translateY(-4px);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+    }
+
+    .roadmap-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .roadmap-card:nth-child(1) {
+      transition-delay: 0ms
+    }
+
+    .roadmap-card:nth-child(2) {
+      transition-delay: 100ms
+    }
+
+    .roadmap-card:nth-child(3) {
+      transition-delay: 200ms
+    }
+
     .roadmap-eta {
       display: inline-flex;
       align-items: center;
@@ -1027,24 +1420,62 @@
       padding: 3px 10px;
       margin-bottom: 16px;
     }
-    .roadmap-eta.blue { color: var(--primary); background: var(--primary-dim); }
-    .roadmap-eta.purple { color: #a5b4fc; background: rgba(99,102,241,0.12); }
-    .roadmap-eta.gold { color: #fbbf24; background: rgba(234,179,8,0.1); }
+
+    .roadmap-eta.blue {
+      color: var(--primary);
+      background: var(--primary-dim);
+    }
+
+    .roadmap-eta.purple {
+      color: #a5b4fc;
+      background: rgba(99, 102, 241, 0.12);
+    }
+
+    .roadmap-eta.gold {
+      color: #fbbf24;
+      background: rgba(234, 179, 8, 0.1);
+    }
+
     .roadmap-icon {
-      width: 42px; height: 42px;
+      width: 42px;
+      height: 42px;
       border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin-bottom: 16px;
     }
-    .roadmap-icon svg { width: 21px; height: 21px; }
-    .roadmap-name { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
-    .roadmap-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
-    @media (max-width: 900px) { .roadmap-grid { grid-template-columns: 1fr; } }
+
+    .roadmap-icon svg {
+      width: 21px;
+      height: 21px;
+    }
+
+    .roadmap-name {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .roadmap-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    @media (max-width: 900px) {
+      .roadmap-grid {
+        grid-template-columns: 1fr;
+      }
+    }
 
     /* â”€â”€ CTA Banner â”€â”€ */
-    .cta-section { padding: 100px 0; }
+    .cta-section {
+      padding: 100px 0;
+    }
+
     .cta-card {
-      background: linear-gradient(135deg, rgba(61,165,217,0.1) 0%, rgba(99,102,241,0.07) 100%);
+      background: linear-gradient(135deg, rgba(61, 165, 217, 0.1) 0%, rgba(99, 102, 241, 0.07) 100%);
       border: 1px solid var(--primary-border);
       border-radius: var(--radius-xl);
       padding: 80px 48px;
@@ -1052,21 +1483,26 @@
       position: relative;
       overflow: hidden;
     }
+
     .cta-card::before {
       content: "";
       position: absolute;
-      top: -60px; left: 50%;
+      top: -60px;
+      left: 50%;
       transform: translateX(-50%);
-      width: 400px; height: 200px;
-      background: radial-gradient(circle, rgba(61,165,217,0.13) 0%, transparent 70%);
+      width: 400px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(61, 165, 217, 0.13) 0%, transparent 70%);
       pointer-events: none;
     }
+
     .cta-title {
       font-size: clamp(1.8rem, 3.5vw, 2.9rem);
       font-weight: 700;
       letter-spacing: -0.025em;
       margin-bottom: 14px;
     }
+
     .cta-sub {
       font-size: 1rem;
       color: var(--text-muted);
@@ -1076,7 +1512,14 @@
       margin-right: auto;
       line-height: 1.75;
     }
-    .cta-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+    .cta-actions {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
     .cta-note {
       margin-top: 20px;
       font-size: 0.8rem;
@@ -1090,6 +1533,7 @@
       position: relative;
       z-index: 1;
     }
+
     .footer-inner {
       max-width: 1160px;
       margin: 0 auto;
@@ -1099,7 +1543,13 @@
       gap: 24px;
       flex-wrap: wrap;
     }
-    .footer-brand { display: flex; flex-direction: column; gap: 6px; }
+
+    .footer-brand {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
     .footer-logo {
       display: flex;
       align-items: center;
@@ -1109,12 +1559,40 @@
       font-weight: 700;
       font-size: 1rem;
     }
-    .footer-tagline { font-size: 0.8rem; color: var(--text-faint); }
-    .footer-credit { font-size: 0.76rem; color: var(--text-faint); margin-top: 2px; }
-    .footer-links { display: flex; gap: 20px 28px; list-style: none; flex-wrap: wrap; }
-    .footer-links a { font-size: 0.85rem; color: var(--text-muted); text-decoration: none; transition: color 150ms ease; }
-    .footer-links a:hover { color: var(--text); }
-    .footer-copy { font-size: 0.78rem; color: var(--text-faint); }
+
+    .footer-tagline {
+      font-size: 0.8rem;
+      color: var(--text-faint);
+    }
+
+    .footer-credit {
+      font-size: 0.76rem;
+      color: var(--text-faint);
+      margin-top: 2px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px 28px;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 150ms ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--text);
+    }
+
+    .footer-copy {
+      font-size: 0.78rem;
+      color: var(--text-faint);
+    }
 
     /* â”€â”€ Mobile Header Actions â”€â”€ */
     .mobile-header-actions {
@@ -1122,6 +1600,7 @@
       align-items: center;
       gap: 10px;
     }
+
     .mobile-icon-btn {
       width: 38px;
       height: 38px;
@@ -1135,27 +1614,32 @@
       transition: all 180ms var(--ease);
       text-decoration: none;
     }
+
     .mobile-icon-btn:hover {
       color: var(--text);
       border-color: rgba(255, 255, 255, 0.15);
       background: rgba(255, 255, 255, 0.05);
     }
+
     .mobile-icon-btn.btn-signup-icon {
       color: var(--primary);
       border-color: var(--primary-border);
       background: var(--primary-dim);
     }
+
     .mobile-icon-btn.btn-signup-icon:hover {
       color: #fff;
       background: var(--primary);
       border-color: var(--primary);
       box-shadow: 0 0 12px rgba(61, 165, 217, 0.25);
     }
+
     .mobile-icon-btn.btn-open-icon {
       color: var(--accent);
       border-color: rgba(99, 102, 241, 0.25);
       background: rgba(99, 102, 241, 0.1);
     }
+
     .mobile-icon-btn.btn-open-icon:hover {
       color: #fff;
       background: var(--accent);
@@ -1163,24 +1647,38 @@
       box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
     }
 
+    /* ── Scroll reveal ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 700ms var(--ease), transform 700ms var(--ease);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     /* ── Stagger delays ── */
-    .feature-card:nth-child(1){transition-delay:0ms}
-    .feature-card:nth-child(2){transition-delay:70ms}
-    .feature-card:nth-child(3){transition-delay:140ms}
-    .feature-card:nth-child(4){transition-delay:210ms}
-    .feature-card:nth-child(5){transition-delay:280ms}
-    .feature-card:nth-child(6){transition-delay:350ms}
-    .feature-card:nth-child(7){transition-delay:420ms}
-    .feature-card:nth-child(8){transition-delay:490ms}
-    .feature-card:nth-child(9){transition-delay:560ms}
-    .feature-card:nth-child(10){transition-delay:630ms}
-    .feature-card:nth-child(11){transition-delay:700ms}
-    .feature-card:nth-child(12){transition-delay:770ms}
-    .step:nth-child(1){transition-delay:0ms}
-    .step:nth-child(2){transition-delay:140ms}
-    .step:nth-child(3){transition-delay:280ms}
-    .compare-card:nth-child(2){transition-delay:80ms}
-    .compare-card:nth-child(3){transition-delay:160ms}
+    .step:nth-child(1) {
+      transition-delay: 0ms
+    }
+
+    .step:nth-child(2) {
+      transition-delay: 140ms
+    }
+
+    .step:nth-child(3) {
+      transition-delay: 280ms
+    }
+
+    .compare-card:nth-child(2) {
+      transition-delay: 80ms
+    }
+
+    .compare-card:nth-child(3) {
+      transition-delay: 160ms
+    }
 
     /* ── Themed Grid ── */
     .themes-grid {
@@ -1189,6 +1687,7 @@
       gap: 24px;
       margin-bottom: 40px;
     }
+
     .theme-column {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -1201,6 +1700,7 @@
       position: relative;
       overflow: hidden;
     }
+
     .theme-column::after {
       content: "";
       position: absolute;
@@ -1210,44 +1710,62 @@
       transition: opacity 300ms ease;
       pointer-events: none;
     }
-    .theme-column:hover::after { opacity: 1; }
+
+    .theme-column:hover::after {
+      opacity: 1;
+    }
+
     .theme-column:hover {
       border-color: var(--theme-accent-border);
       transform: translateY(-4px);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
     }
+
     .theme-header {
       display: flex;
       flex-direction: column;
       gap: 12px;
     }
+
     .theme-icon-wrapper {
-      width: 48px; height: 48px;
+      width: 48px;
+      height: 48px;
       border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin-bottom: 6px;
     }
-    .theme-icon-wrapper svg { width: 24px; height: 24px; }
+
+    .theme-icon-wrapper svg {
+      width: 24px;
+      height: 24px;
+    }
+
     .theme-title {
       font-size: 1.25rem;
       font-weight: 700;
       letter-spacing: -0.01em;
     }
+
     .theme-subtitle {
       font-size: 0.85rem;
       color: var(--text-muted);
       line-height: 1.5;
     }
+
     .theme-features-list {
       display: flex;
       flex-direction: column;
       gap: 20px;
     }
+
     .theme-feature-item {
       display: flex;
       gap: 14px;
       align-items: flex-start;
     }
+
     .theme-feature-bullet {
       display: flex;
       align-items: center;
@@ -1259,28 +1777,40 @@
       flex-shrink: 0;
       margin-top: 2px;
     }
-    .theme-feature-bullet svg { width: 11px; height: 11px; stroke: var(--theme-accent); fill: none; stroke-width: 3; }
+
+    .theme-feature-bullet svg {
+      width: 11px;
+      height: 11px;
+      stroke: var(--theme-accent);
+      fill: none;
+      stroke-width: 3;
+    }
+
     .theme-feature-name {
       font-size: 0.95rem;
       font-weight: 600;
       margin-bottom: 4px;
       color: var(--text);
     }
+
     .theme-feature-desc {
       font-size: 0.82rem;
       color: var(--text-muted);
       line-height: 1.6;
     }
+
     #theme-privacy {
       --theme-accent: var(--primary);
       --theme-accent-dim: var(--primary-dim);
       --theme-accent-border: var(--primary-border);
     }
+
     #theme-focus {
       --theme-accent: var(--accent);
       --theme-accent-dim: rgba(99, 102, 241, 0.12);
       --theme-accent-border: rgba(99, 102, 241, 0.25);
     }
+
     #theme-speed {
       --theme-accent: #fb923c;
       --theme-accent-dim: rgba(251, 146, 60, 0.12);
@@ -1288,24 +1818,35 @@
     }
 
     /* ── Scenario Section ── */
-    .scenario { padding: 100px 0; background: rgba(255,255,255,0.015); position: relative; }
+    .scenario {
+      padding: 100px 0;
+      background: rgba(255, 255, 255, 0.015);
+      position: relative;
+    }
+
     .scenario::before {
       content: "";
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at 80% 50%, rgba(99,102,241,0.04) 0%, transparent 60%);
+      background: radial-gradient(circle at 80% 50%, rgba(99, 102, 241, 0.04) 0%, transparent 60%);
       pointer-events: none;
     }
+
     .scenario-inner {
       display: grid;
       grid-template-columns: 1.15fr 0.85fr;
       gap: 64px;
       align-items: center;
     }
+
     .scenario-content {
       max-width: 540px;
     }
-    .scenario-content .tag { margin-bottom: 18px; }
+
+    .scenario-content .tag {
+      margin-bottom: 18px;
+    }
+
     .scenario-title {
       font-size: clamp(1.8rem, 3.2vw, 2.6rem);
       font-weight: 700;
@@ -1313,18 +1854,21 @@
       line-height: 1.15;
       margin-bottom: 20px;
     }
+
     .scenario-desc {
       font-size: 0.98rem;
       color: var(--text-muted);
       line-height: 1.8;
       margin-bottom: 32px;
     }
+
     .scenario-points {
       list-style: none;
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
+
     .scenario-points li {
       display: flex;
       align-items: flex-start;
@@ -1333,21 +1877,34 @@
       color: var(--text-muted);
       line-height: 1.6;
     }
+
     .scenario-icon {
-      width: 22px; height: 22px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       background: var(--primary-dim);
       border: 1px solid var(--primary-border);
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
       margin-top: 2px;
     }
-    .scenario-icon svg { width: 11px; height: 11px; stroke: var(--primary); fill: none; stroke-width: 3; }
+
+    .scenario-icon svg {
+      width: 11px;
+      height: 11px;
+      stroke: var(--primary);
+      fill: none;
+      stroke-width: 3;
+    }
+
     .scenario-visual {
       display: flex;
       justify-content: center;
       align-items: center;
     }
+
     .scenario-card {
       width: 100%;
       max-width: 360px;
@@ -1355,61 +1912,88 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       overflow: hidden;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.03);
       position: relative;
     }
+
     .scenario-card-header {
-      background: rgba(255,255,255,0.02);
+      background: rgba(255, 255, 255, 0.02);
       border-bottom: 1px solid var(--border);
       padding: 16px 20px;
       display: flex;
       align-items: center;
       gap: 12px;
     }
+
     .scenario-avatar {
-      width: 36px; height: 36px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--accent), var(--primary));
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; color: #fff; font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #fff;
+      font-size: 0.85rem;
     }
-    .scenario-title-text { font-size: 0.9rem; font-weight: 600; }
-    .scenario-meta { font-size: 0.72rem; color: var(--text-muted); }
+
+    .scenario-title-text {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .scenario-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
     .scenario-chat-body {
       padding: 20px;
       display: flex;
       flex-direction: column;
       gap: 14px;
     }
+
     .scenario-msg {
       display: flex;
       flex-direction: column;
       gap: 4px;
       max-width: 85%;
     }
+
     .scenario-msg.self {
       align-self: flex-end;
       align-items: flex-end;
     }
+
     .scenario-msg-bubble {
       padding: 10px 14px;
       font-size: 0.82rem;
       line-height: 1.45;
       border-radius: 14px;
     }
+
     .scenario-msg:not(.self) .scenario-msg-bubble {
-      background: rgba(255,255,255,0.05);
+      background: rgba(255, 255, 255, 0.05);
       border-bottom-left-radius: 3px;
     }
+
     .scenario-msg.self .scenario-msg-bubble {
       background: var(--primary-dim);
       border: 1px solid var(--primary-border);
       color: var(--text);
       border-bottom-right-radius: 3px;
     }
-    .scenario-msg-time { font-size: 0.65rem; color: var(--text-faint); margin: 0 4px; }
+
+    .scenario-msg-time {
+      font-size: 0.65rem;
+      color: var(--text-faint);
+      margin: 0 4px;
+    }
+
     .scenario-vault-link {
-      background: rgba(255,255,255,0.03);
+      background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 10px 14px;
@@ -1421,20 +2005,41 @@
       cursor: pointer;
       transition: all 180ms ease;
     }
+
     .scenario-vault-link:hover {
-      background: rgba(61,165,217,0.08);
+      background: rgba(61, 165, 217, 0.08);
       border-color: var(--primary-border);
     }
+
     .scenario-vault-icon {
-      width: 32px; height: 32px;
+      width: 32px;
+      height: 32px;
       background: var(--primary-dim);
       border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
     }
-    .scenario-vault-icon svg { width: 16px; height: 16px; stroke: var(--primary); fill: none; stroke-width: 2.5; }
-    .vault-filename { font-size: 0.8rem; font-weight: 600; color: var(--text); }
-    .vault-filesize { font-size: 0.68rem; color: var(--text-muted); }
+
+    .scenario-vault-icon svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--primary);
+      fill: none;
+      stroke-width: 2.5;
+    }
+
+    .vault-filename {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .vault-filesize {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
 
     /* ── Comparison Table ── */
     .compare-table-wrapper {
@@ -1444,8 +2049,9 @@
       border-radius: var(--radius-lg);
       border: 1px solid var(--border);
       background: var(--surface);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     }
+
     .compare-table {
       width: 100%;
       border-collapse: collapse;
@@ -1453,32 +2059,41 @@
       font-size: 0.9rem;
       min-width: 600px;
     }
-    .compare-table th, .compare-table td {
+
+    .compare-table th,
+    .compare-table td {
       padding: 18px 24px;
       border-bottom: 1px solid var(--border);
     }
+
     .compare-table th {
-      background: rgba(255,255,255,0.02);
+      background: rgba(255, 255, 255, 0.02);
       font-weight: 700;
       color: var(--text);
       font-size: 0.95rem;
       letter-spacing: -0.01em;
     }
-    .compare-table tr:last-child th, .compare-table tr:last-child td {
+
+    .compare-table tr:last-child th,
+    .compare-table tr:last-child td {
       border-bottom: none;
     }
+
     .compare-table td {
       color: var(--text-muted);
       line-height: 1.5;
     }
+
     .compare-highlight {
-      background: rgba(61,165,217,0.03);
+      background: rgba(61, 165, 217, 0.03);
       border-left: 1px solid var(--primary-border);
       border-right: 1px solid var(--primary-border);
     }
+
     th.compare-highlight {
-      background: rgba(61,165,217,0.05);
+      background: rgba(61, 165, 217, 0.05);
     }
+
     .compare-table-app {
       display: flex;
       align-items: center;
@@ -1486,7 +2101,11 @@
       font-weight: 700;
       color: var(--text);
     }
-    .compare-table-app svg { flex-shrink: 0; }
+
+    .compare-table-app svg {
+      flex-shrink: 0;
+    }
+
     .compare-check {
       color: var(--green);
       font-weight: 600;
@@ -1494,6 +2113,7 @@
       align-items: center;
       gap: 8px;
     }
+
     .compare-cross {
       color: #ef4444;
       font-weight: 500;
@@ -1501,24 +2121,30 @@
       align-items: center;
       gap: 8px;
     }
-    .compare-check svg, .compare-cross svg {
-      width: 16px; height: 16px;
+
+    .compare-check svg,
+    .compare-cross svg {
+      width: 16px;
+      height: 16px;
       border-radius: 50%;
       padding: 3px;
       flex-shrink: 0;
     }
+
     .compare-check svg {
-      background: rgba(74,222,128,0.12);
+      background: rgba(74, 222, 128, 0.12);
       stroke: var(--green);
       stroke-width: 3.5;
       fill: none;
     }
+
     .compare-cross svg {
-      background: rgba(239,68,68,0.12);
+      background: rgba(239, 68, 68, 0.12);
       stroke: #ef4444;
       stroke-width: 3;
       fill: none;
     }
+
     .compare-table sup {
       color: var(--primary);
       font-weight: 600;
@@ -1531,25 +2157,82 @@
 
     /* ── Responsive ── */
     @media (max-width: 900px) {
-      .mobile-header-actions { display: flex; }
-      .nav-links, .nav-cta { display: none; }
-      .hamburger { display: flex; }
-      .hero-inner { grid-template-columns: 1fr; gap: 52px; }
-      .hero-visual { order: -1; }
-      .badge-1, .badge-2 { display: none; }
-      .themes-grid { grid-template-columns: 1fr; gap: 20px; }
-      .scenario-inner { grid-template-columns: 1fr; gap: 48px; }
-      .scenario-visual { order: -1; }
-      .steps { grid-template-columns: 1fr; gap: 40px; }
-      .steps::before { display: none; }
-      .security-inner { grid-template-columns: 1fr; gap: 52px; }
-      .security-visual { order: -1; }
+      .mobile-header-actions {
+        display: flex;
+      }
+
+      .nav-links,
+      .nav-cta {
+        display: none;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .hero-inner {
+        grid-template-columns: 1fr;
+        gap: 52px;
+      }
+
+      .hero-visual {
+        order: -1;
+      }
+
+      .badge-1,
+      .badge-2 {
+        display: none;
+      }
+
+      .themes-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .scenario-inner {
+        grid-template-columns: 1fr;
+        gap: 48px;
+      }
+
+      .scenario-visual {
+        order: -1;
+      }
+
+      .steps {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+
+      .steps::before {
+        display: none;
+      }
+
+      .security-inner {
+        grid-template-columns: 1fr;
+        gap: 52px;
+      }
+
+      .security-visual {
+        order: -1;
+      }
     }
+
     @media (max-width: 600px) {
-      .features-grid { grid-template-columns: 1fr; }
-      .hero-stats { gap: 20px; flex-wrap: wrap; }
-      .cta-card { padding: 48px 22px; }
-      .footer-inner { flex-direction: column; align-items: flex-start; gap: 28px; }
+      .hero-stats {
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .cta-card {
+        padding: 48px 22px;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 28px;
+      }
+
       .footer-links {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -1559,6 +2242,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <!-- â”€â”€ Navbar â”€â”€ -->
@@ -1566,8 +2250,8 @@
     <div class="nav-inner">
       <a href="#" class="nav-logo" id="nav-logo-link">
         <svg class="logo-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="36" height="36" rx="11" fill="#1e2530"/>
-          <path d="M9 11.5h18M9 18h11.5M9 24.5h14.5" stroke="#3da5d9" stroke-width="2.5" stroke-linecap="round"/>
+          <rect width="36" height="36" rx="11" fill="#1e2530" />
+          <path d="M9 11.5h18M9 18h11.5M9 24.5h14.5" stroke="#3da5d9" stroke-width="2.5" stroke-linecap="round" />
         </svg>
         ZenChat
       </a>
@@ -1614,11 +2298,12 @@
             <span class="tag"><span class="tag-dot"></span>Made for 2G. Built for everyone.</span>
           </div>
           <h1 class="hero-headline">
-            Messaging without<br/>
+            Messaging without<br />
             <span class="gradient-text">the time sink.</span>
           </h1>
           <p class="hero-sub">
-            No ads. No algorithmic feeds. No distraction. Just end-to-end encrypted texts and voice messages that work even on 2G, helping you say what you need and get back to life.
+            No ads. No algorithmic feeds. No distraction. Just end-to-end encrypted chats that work even on 2G, helping
+            you say what you need and get back to life.
           </p>
           <div class="hero-actions" id="hero-actions">
             <!-- Rendered by JS -->
@@ -1648,7 +2333,9 @@
             E2EE Active
           </div>
           <div class="float-badge badge-2">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3da5d9" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3da5d9" stroke-width="2.5">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
             SP-OP Mode On
           </div>
 
@@ -1660,7 +2347,10 @@
                 <div class="mockup-status">Active now</div>
               </div>
               <div class="mockup-e2ee">
-                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <svg viewBox="0 0 24 24">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
                 E2EE
               </div>
             </div>
@@ -1683,33 +2373,17 @@
                 <div class="msg-avatar">A</div>
                 <div class="msg-content">
                   <div class="mockup-view-once">
-                    <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                    <svg viewBox="0 0 24 24">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                      <line x1="2" y1="2" x2="22" y2="22" />
+                    </svg>
                     <div>
                       <div class="view-once-label">View-once Photo</div>
                       <div class="view-once-sub">Tap to open - disappears after</div>
                     </div>
                   </div>
                   <div class="msg-time">3:14 PM</div>
-                </div>
-              </div>
-              <div class="msg received">
-                <div class="msg-avatar">A</div>
-                <div class="msg-content">
-                  <div class="msg-bubble" style="display:flex;align-items:center;gap:6px;padding:6px 10px;min-width:150px;background:rgba(255,255,255,0.07);border-radius:14px;border-bottom-left-radius:3px;">
-                    <div style="width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="color:#fff;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:1.5px;flex:1;height:12px;">
-                      <span style="height:6px;width:1.5px;background:#3da5d9;border-radius:1px;"></span>
-                      <span style="height:10px;width:1.5px;background:#3da5d9;border-radius:1px;"></span>
-                      <span style="height:12px;width:1.5px;background:#3da5d9;border-radius:1px;"></span>
-                      <span style="height:8px;width:1.5px;background:rgba(255,255,255,0.2);border-radius:1px;"></span>
-                      <span style="height:4px;width:1.5px;background:rgba(255,255,255,0.2);border-radius:1px;"></span>
-                      <span style="height:9px;width:1.5px;background:rgba(255,255,255,0.2);border-radius:1px;"></span>
-                    </div>
-                    <span style="font-size:8px;font-family:monospace;color:rgba(255,255,255,0.6);">(0:03/0:10)</span>
-                  </div>
-                  <div class="msg-time">3:15 PM</div>
                 </div>
               </div>
             </div>
@@ -1724,7 +2398,9 @@
             <div class="mockup-input">
               <span class="mockup-input-text">Message Alex...</span>
               <div class="mockup-send">
-                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                <svg viewBox="0 0 24 24">
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                </svg>
               </div>
             </div>
           </div>
@@ -1733,7 +2409,7 @@
     </div>
   </section>
 
-  <!-- ── Core pillars ── -->
+  <!-- â”€â”€ Features â”€â”€ -->
   <section class="features" id="features">
     <div class="container">
       <div class="section-header reveal">
@@ -1747,38 +2423,53 @@
         <div class="theme-column" id="theme-privacy">
           <div class="theme-header">
             <div class="theme-icon-wrapper" style="background:var(--primary-dim)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
             </div>
             <h3 class="theme-title">Privacy by design</h3>
             <p class="theme-subtitle">Complete ownership of your footprint, built directly into the protocol.</p>
           </div>
           <div class="theme-features-list">
             <div class="theme-feature-item">
-              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               <div>
                 <h4 class="theme-feature-name">E2EE by Default</h4>
-                <p class="theme-feature-desc">All texts and voice messages are end-to-end encrypted instantly. Your chats stay yours.</p>
+                <p class="theme-feature-desc">All messages and media are end-to-end encrypted instantly. Your chats stay
+                  yours.</p>
               </div>
             </div>
             <div class="theme-feature-item">
-              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               <div>
                 <h4 class="theme-feature-name">ZenVault</h4>
-                <p class="theme-feature-desc">Browser-encrypted local storage. Heavy files stay on your device, never in the cloud.</p>
+                <p class="theme-feature-desc">Browser-encrypted local storage. Heavy files stay on your device, never in
+                  the cloud.</p>
               </div>
             </div>
             <div class="theme-feature-item">
-              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               <div>
                 <h4 class="theme-feature-name">View-Once Media</h4>
-                <p class="theme-feature-desc">Vanishing photos and videos that self-destruct immediately after viewing.</p>
+                <p class="theme-feature-desc">Vanishing photos and videos that self-destruct immediately after viewing.
+                </p>
               </div>
             </div>
             <div class="theme-feature-item">
-              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               <div>
                 <h4 class="theme-feature-name">No PII Required</h4>
-                <p class="theme-feature-desc">Register with a simple username. No tracking phone numbers or address books.</p>
+                <p class="theme-feature-desc">Register with a simple username. No tracking phone numbers or address
+                  books.</p>
               </div>
             </div>
           </div>
@@ -1788,38 +2479,55 @@
         <div class="theme-column" id="theme-focus">
           <div class="theme-header">
             <div class="theme-icon-wrapper" style="background:rgba(99,102,241,0.12)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"
+                stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="6" />
+                <circle cx="12" cy="12" r="2" />
+              </svg>
             </div>
             <h3 class="theme-title">Deep focus</h3>
             <p class="theme-subtitle">Reclaim your attention. Built to help you communicate, then get back to life.</p>
           </div>
           <div class="theme-features-list">
             <div class="theme-feature-item">
-              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               <div>
                 <h4 class="theme-feature-name">#ZenMode</h4>
-                <p class="theme-feature-desc">A minimal interface option that strips away all UI chrome, leaving only your conversation.</p>
+                <p class="theme-feature-desc">A minimal interface option that strips away all UI chrome, leaving only
+                  your conversation.</p>
               </div>
             </div>
             <div class="theme-feature-item">
-              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               <div>
                 <h4 class="theme-feature-name">YourTime Insights</h4>
-                <p class="theme-feature-desc">Monitor active communication time directly in the sidebar to avoid screen fatigue.</p>
+                <p class="theme-feature-desc">Monitor active communication time directly in the sidebar to avoid screen
+                  fatigue.</p>
               </div>
             </div>
             <div class="theme-feature-item">
-              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               <div>
                 <h4 class="theme-feature-name">Quiet #Moments</h4>
-                <p class="theme-feature-desc">Share updates and music track previews in a feed that doesn't track or scroll endlessly.</p>
+                <p class="theme-feature-desc">Share updates and music track previews in a feed that doesn't track or
+                  scroll endlessly.</p>
               </div>
             </div>
             <div class="theme-feature-item">
-              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               <div>
                 <h4 class="theme-feature-name">Priority Pinning</h4>
-                <p class="theme-feature-desc">Dock your most important conversations to the top of your inbox for quick access.</p>
+                <p class="theme-feature-desc">Dock your most important conversations to the top of your inbox for quick
+                  access.</p>
               </div>
             </div>
           </div>
@@ -1829,38 +2537,54 @@
         <div class="theme-column" id="theme-speed">
           <div class="theme-header">
             <div class="theme-icon-wrapper" style="background:rgba(251,146,60,0.12)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2.5" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
             </div>
             <h3 class="theme-title">Optimized speed</h3>
-            <p class="theme-subtitle">Snappy, lightweight synchronization that adapts dynamically to your environment.</p>
+            <p class="theme-subtitle">Snappy, lightweight synchronization that adapts dynamically to your environment.
+            </p>
           </div>
           <div class="theme-features-list">
             <div class="theme-feature-item">
-              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               <div>
                 <h4 class="theme-feature-name">#SP-OP Protocol</h4>
-                <p class="theme-feature-desc">Adapts to low-bandwidth connections (2G/3G) by prioritizing texts and queuing heavy media.</p>
+                <p class="theme-feature-desc">Adapts to low-bandwidth connections (2G/3G) by prioritizing texts and
+                  queuing heavy media.</p>
               </div>
             </div>
             <div class="theme-feature-item">
-              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               <div>
                 <h4 class="theme-feature-name">Real-Time Core</h4>
-                <p class="theme-feature-desc">Bidirectional message sync via WebSockets, ensuring instant delivery without lag.</p>
+                <p class="theme-feature-desc">Bidirectional message sync via WebSockets, ensuring instant delivery
+                  without lag.</p>
               </div>
             </div>
             <div class="theme-feature-item">
-              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               <div>
                 <h4 class="theme-feature-name">Silent Syncing</h4>
-                <p class="theme-feature-desc">Background event synchronization to ensure your dashboard is updated before you open it.</p>
+                <p class="theme-feature-desc">Background event synchronization to ensure your dashboard is updated
+                  before you open it.</p>
               </div>
             </div>
             <div class="theme-feature-item">
-              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="theme-feature-bullet"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               <div>
                 <h4 class="theme-feature-name">FCM Notifications</h4>
-                <p class="theme-feature-desc">Stay updated on new messages instantly with lightweight browser push alerts.</p>
+                <p class="theme-feature-desc">Stay updated on new messages instantly with lightweight browser push
+                  alerts.</p>
               </div>
             </div>
           </div>
@@ -1876,23 +2600,28 @@
       <div class="section-header reveal">
         <span class="tag"><span class="tag-dot"></span>Simple setup</span>
         <h2 class="section-title">Sign up, say it, sign off.</h2>
-        <p class="section-sub">No verification loops, no unnecessary permissions. Just sign up and start communicating.</p>
+        <p class="section-sub">No verification loops, no unnecessary permissions. Just sign up and start communicating.
+        </p>
       </div>
       <div class="steps">
         <div class="step" id="step-1">
           <div class="step-num">1</div>
           <div class="step-title">Claim your alias</div>
-          <div class="step-desc">Enter an email and pick a username. No phone numbers, verification loops, or metadata tracking.</div>
+          <div class="step-desc">Ditch the phone number requirement. Pick a unique handle and jump right in. Your
+            identity stays completely yours with zero metadata mining.</div>
         </div>
         <div class="step" id="step-2">
           <div class="step-num">2</div>
-          <div class="step-title">Connect quietly</div>
-          <div class="step-desc">Search by username and send a request. No contacts uploading, no active/seen notifications pressure.</div>
+          <div class="step-title">Connect intentionally</div>
+          <div class="step-desc">No invasive contact syncing. Send requests by username and keep strict control over
+            exactly who gets access to your inbox.</div>
         </div>
         <div class="step" id="step-3">
           <div class="step-num">3</div>
           <div class="step-title">Message &amp; move on</div>
-          <div class="step-desc">Encrypted text and media sync instantly. Local file sharing, zero distraction, zero time wasted.</div>
+          <div class="step-desc">Send encrypted texts, voice notes, media, and light files instantly. Say what you need,
+            then
+            close the app and get back to real life.</div>
         </div>
       </div>
     </div>
@@ -1905,30 +2634,42 @@
         <!-- Left Column: Copy -->
         <div class="scenario-content reveal">
           <span class="tag"><span class="tag-dot"></span>Real-World Use Case</span>
-          <h2 class="scenario-title">Designed for coordination.<br/><span class="gradient-text">Not endless scrolling.</span></h2>
+          <h2 class="scenario-title">Designed for coordination.<br /><span class="gradient-text">Not endless
+              scrolling.</span></h2>
           <p class="scenario-desc">
-            ZenChat is built for students, builders, and teams who need a reliable communication tool without the cognitive payload of traditional social platforms.
+            ZenChat is built for students, builders, and teams who need a reliable communication tool without the
+            cognitive payload of traditional social platforms.
           </p>
           <ul class="scenario-points">
             <li>
-              <div class="scenario-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="scenario-icon"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               <div>
                 <strong>Zero-Distraction Projects</strong>
-                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">No typing indicator anxiety, no status feeds, and no notifications loops to hook your focus.</p>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">No algorithmic feeds, and no
+                  endless notification loops to hook your focus. Work in peace.</p>
               </div>
             </li>
             <li>
-              <div class="scenario-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="scenario-icon"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               <div>
-                <strong>Local-First File Exchange</strong>
-                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">Share project assets and code repositories locally. Files are encrypted on-device and never stored in the cloud.</p>
+                <strong>Secure File Sharing</strong>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">Exchange project assets and code
+                  repositories. Files are end-to-end encrypted before upload, ensuring complete privacy.</p>
               </div>
             </li>
             <li>
-              <div class="scenario-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="scenario-icon"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               <div>
                 <strong>Low-Signal Synchronization</strong>
-                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">Coordinate on campus Wi-Fi or basement labs. Texts arrive instantly, and large files sync automatically when connection improves.</p>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">Coordinate on campus Wi-Fi or
+                  basement labs. Texts arrive instantly, and large files sync automatically when connection improves.
+                </p>
               </div>
             </li>
           </ul>
@@ -1938,38 +2679,103 @@
         <div class="scenario-visual reveal">
           <div class="scenario-card">
             <div class="scenario-card-header">
-              <div class="scenario-avatar">OLH</div>
+              <div class="scenario-avatar">AX</div>
               <div>
-                <div class="scenario-title-text">ECE-302 Lab Team</div>
-                <div class="scenario-meta">3 members • E2EE active</div>
+                <div class="scenario-title-text">Alex</div>
+                <div class="scenario-meta">1-on-1 • E2EE active</div>
               </div>
             </div>
             <div class="scenario-chat-body">
               <div class="scenario-msg">
                 <span class="scenario-msg-time" style="color:var(--primary);font-weight:600;">Alex</span>
-                <div class="scenario-msg-bubble">Hey! Did anyone finish the ECE-302 report draft? Need to review before class.</div>
+                <div class="scenario-msg-bubble">Hey! Did you finish the ECE-302 report? Need to review before class.
+                </div>
                 <span class="scenario-msg-time">4:02 PM</span>
               </div>
               <div class="scenario-msg self">
                 <span class="scenario-msg-time" style="color:var(--accent);font-weight:600;">You</span>
-                <div class="scenario-msg-bubble">Yeah, just built the PDF. Sharing via ZenVault.</div>
+                <div class="scenario-msg-bubble">Yeah, just finished the PDF. Sending it over securely.</div>
                 <span class="scenario-msg-time">4:04 PM</span>
               </div>
               <div class="scenario-vault-link">
                 <div class="scenario-vault-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="12" y1="18" x2="12" y2="12" />
+                    <line x1="9" y1="15" x2="15" y2="15" />
+                  </svg>
                 </div>
                 <div style="flex:1;">
                   <div class="vault-filename">ece_302_lab_report_v2.pdf</div>
-                  <div class="vault-filesize">2.4 MB • Encrypted Local File</div>
+                  <div class="vault-filesize">2.4 MB • Encrypted Upload</div>
                 </div>
               </div>
               <div class="scenario-msg">
                 <span class="scenario-msg-time" style="color:var(--primary);font-weight:600;">Alex</span>
-                <div class="scenario-msg-bubble">Awesome, downloaded instantly. Thanks! No distractions, let's get to class. 👍</div>
+                <div class="scenario-msg-bubble">Got it instantly. No distractions, let's get to class. 👍</div>
                 <span class="scenario-msg-time">4:05 PM</span>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Zen(N)Gram Section ── -->
+  <section class="scenario" id="zenngram" style="padding-top: 40px;">
+    <div class="container">
+      <div class="scenario-inner" style="align-items: center;">
+        <div class="scenario-content reveal">
+          <span class="tag"><span class="tag-dot"></span>Lightning Fast</span>
+          <h2 class="scenario-title">Type faster with <br /><span class="gradient-text">#Zen(N)Gram.</span></h2>
+          <p class="scenario-desc">
+            A 100% local, on-device word predictor. No cloud API calls. No data harvesting. It learns your unique typing
+            style completely offline.
+          </p>
+          <ul class="scenario-points">
+            <li>
+              <div class="scenario-icon">
+                <svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <div>
+                <strong>Zero Latency</strong>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">Suggestions appear instantly as you
+                  type because everything happens right on your device.</p>
+              </div>
+            </li>
+            <li>
+              <div class="scenario-icon">
+                <svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <div>
+                <strong>Absolute Privacy</strong>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">Your keystrokes never leave your
+                  browser. Period.</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="scenario-visual reveal"
+          style="padding: 40px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: 0 40px 80px rgba(0,0,0,0.4);">
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">Message
+            Output</div>
+          <div
+            style="display: flex; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 20px; padding: 12px 16px;">
+            <span style="color: var(--text);">I will be there in </span>
+            <span
+              style="color: rgba(61,165,217,0.7); background: rgba(61,165,217,0.1); padding: 2px 6px; border-radius: 6px; margin-left: 6px; font-size: 0.85rem;">5
+              mins</span>
+            <span
+              style="color: var(--text-faint); margin-left: auto; font-size: 0.75rem; border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px;">Tab
+              -</span>
           </div>
         </div>
       </div>
@@ -1982,7 +2788,8 @@
       <div class="section-header reveal">
         <span class="tag"><span class="tag-dot"></span>vs. Others</span>
         <h2 class="section-title">Why ZenChat is different</h2>
-        <p class="section-sub">The "giants" carry trade-offs most users never see. By filling those gaps, ZenChat provides a sensible and focus-based communication experience.</p>
+        <p class="section-sub">With giants pushing paid "Plus" plans, ZenChat stands firm as the no-nonsense, free,
+          safe, and lightning-fast alternative to the giant chat "social media" apps.</p>
       </div>
 
       <!-- ZenChat card first -->
@@ -1999,22 +2806,58 @@
           </thead>
           <tbody>
             <tr>
+              <td><strong>Pricing Model</strong></td>
+              <td class="compare-highlight">
+                <span class="compare-check">
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  100% Free Forever
+                </span>
+              </td>
+              <td>
+                <span class="compare-cross">
+                  <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                  WhatsApp Plus (Paid)
+                </span>
+              </td>
+              <td>
+                <span class="compare-cross">
+                  <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                  Telegram Premium (Paid)
+                </span>
+              </td>
+            </tr>
+            <tr>
               <td><strong>Default Chat Encryption</strong></td>
               <td class="compare-highlight">
                 <span class="compare-check">
-                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                   E2EE by Default
                 </span>
               </td>
               <td>
                 <span class="compare-check">
-                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                   E2EE by Default
                 </span>
               </td>
               <td>
                 <span class="compare-cross">
-                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                   Plain Text on Server<sup>[4]</sup>
                 </span>
               </td>
@@ -2023,19 +2866,27 @@
               <td><strong>Account Requirements</strong></td>
               <td class="compare-highlight">
                 <span class="compare-check">
-                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                   Username Only
                 </span>
               </td>
               <td>
                 <span class="compare-cross">
-                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                   Phone Number Required
                 </span>
               </td>
               <td>
                 <span class="compare-cross">
-                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                   Phone Number Required
                 </span>
               </td>
@@ -2044,19 +2895,27 @@
               <td><strong>Metadata Harvesting</strong></td>
               <td class="compare-highlight">
                 <span class="compare-check">
-                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                   Zero ads or tracking
                 </span>
               </td>
               <td>
                 <span class="compare-cross">
-                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                   Shared with Meta<sup>[1]</sup>
                 </span>
               </td>
               <td>
                 <span class="compare-cross">
-                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                   Logs IP &amp; Contacts<sup>[3]</sup>
                 </span>
               </td>
@@ -2065,19 +2924,27 @@
               <td><strong>Backup Security</strong></td>
               <td class="compare-highlight">
                 <span class="compare-check">
-                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                   Local Encrypted ZenVault
                 </span>
               </td>
               <td>
                 <span class="compare-cross">
-                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                   Unencrypted by Default<sup>[2]</sup>
                 </span>
               </td>
               <td>
                 <span class="compare-cross">
-                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                   Server-Side Cloud Backups<sup>[4]</sup>
                 </span>
               </td>
@@ -2086,19 +2953,27 @@
               <td><strong>Focus Environment</strong></td>
               <td class="compare-highlight">
                 <span class="compare-check">
-                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                   #ZenMode (Zero chrome)
                 </span>
               </td>
               <td>
                 <span class="compare-cross">
-                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                   Status Feeds &amp; Businesses
                 </span>
               </td>
               <td>
                 <span class="compare-cross">
-                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                   Public Channels &amp; Ads
                 </span>
               </td>
@@ -2108,86 +2983,18 @@
       </div>
 
       <div class="source-note reveal">
-        <strong>Sources &amp; Citations:</strong><br/>
-        [1] WhatsApp Privacy Policy updates detailing data sharing with Meta companies: 
-        <a href="https://www.whatsapp.com/legal/privacy-policy" target="_blank" rel="noopener">WhatsApp Privacy Policy</a>.<br/>
-        [2] WhatsApp documentation on E2EE backups requiring manual opt-in: 
-        <a href="https://faq.whatsapp.com/1151608935749718" target="_blank" rel="noopener">WhatsApp Help Center</a>.<br/>
-        [3] Telegram Privacy Policy on collecting IP addresses and telephone numbers: 
-        <a href="https://telegram.org/privacy" target="_blank" rel="noopener">Telegram Privacy Policy</a>.<br/>
-        [4] ESET and Privacy Guides analysis of Telegram default cloud chat storage on central servers: 
-        <a href="https://www.privacyguides.org/en/real-time-communication/" target="_blank" rel="noopener">Privacy Guides</a>.
-      </div>
-    </div>
-  </section>
-
-  <!-- â”€â”€ E2EE Voice Messages â”€â”€ -->
-  <section class="voice" id="voice">
-    <div class="container">
-      <div class="voice-inner">
-        <div class="voice-content reveal">
-          <span class="tag"><span class="tag-dot"></span>Now Live</span>
-          <h2 class="voice-title">End-to-End Encrypted<br/><span class="gradient-text">Voice Messages.</span></h2>
-          <p class="voice-desc">Say it securely. Your voice notes are end-to-end encrypted on your device before they ever hit the network, ensuring absolute privacy. Only you and the receiver can listen.</p>
-          <ul class="voice-points">
-            <li>
-              <div class="voice-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-              Zero server-side access to audio data
-            </li>
-            <li>
-              <div class="voice-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-              Dynamic responsive waveforms that adapt to your screen
-            </li>
-            <li>
-              <div class="voice-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-              Real-time seek tracking and interactive playback control
-            </li>
-          </ul>
-        </div>
-        <div class="voice-visual reveal">
-          <div class="voice-card">
-            <div class="voice-card-header">
-              <div class="mic-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-              </div>
-              <div>
-                <div class="voice-card-title">Encrypted Audio</div>
-                <div class="voice-card-sub">Secure E2EE Voice note</div>
-              </div>
-            </div>
-            
-            <div class="voice-player">
-              <button class="voice-player-btn" aria-label="Play sample voice note">
-                <svg class="play-svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-              </button>
-              
-              <div class="voice-waveform-animation">
-                <span class="vbar vbar-1"></span>
-                <span class="vbar vbar-2"></span>
-                <span class="vbar vbar-3"></span>
-                <span class="vbar vbar-4"></span>
-                <span class="vbar vbar-5"></span>
-                <span class="vbar vbar-6"></span>
-                <span class="vbar vbar-7"></span>
-                <span class="vbar vbar-8"></span>
-                <span class="vbar vbar-9"></span>
-                <span class="vbar vbar-10"></span>
-                <span class="vbar vbar-11"></span>
-                <span class="vbar vbar-12"></span>
-                <span class="vbar vbar-13"></span>
-                <span class="vbar vbar-14"></span>
-                <span class="vbar vbar-15"></span>
-              </div>
-              
-              <span class="voice-player-duration">(0:12/0:34)</span>
-            </div>
-            
-            <div class="voice-status">
-              <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              End-to-End Encrypted
-            </div>
-          </div>
-        </div>
+        <strong>Sources &amp; Citations:</strong><br />
+        [1] WhatsApp Privacy Policy updates detailing data sharing with Meta companies:
+        <a href="https://www.whatsapp.com/legal/privacy-policy" target="_blank" rel="noopener">WhatsApp Privacy
+          Policy</a>.<br />
+        [2] WhatsApp documentation on E2EE backups requiring manual opt-in:
+        <a href="https://faq.whatsapp.com/1151608935749718" target="_blank" rel="noopener">WhatsApp Help
+          Center</a>.<br />
+        [3] Telegram Privacy Policy on collecting IP addresses and telephone numbers:
+        <a href="https://telegram.org/privacy" target="_blank" rel="noopener">Telegram Privacy Policy</a>.<br />
+        [4] ESET and Privacy Guides analysis of Telegram default cloud chat storage on central servers:
+        <a href="https://www.privacyguides.org/en/real-time-communication/" target="_blank" rel="noopener">Privacy
+          Guides</a>.
       </div>
     </div>
   </section>
@@ -2200,7 +3007,10 @@
           <div class="security-card">
             <div class="security-card-header">
               <div class="lock-icon">
-                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <svg viewBox="0 0 24 24">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
               </div>
               <div>
                 <div class="security-card-title">Email 2FA</div>
@@ -2219,40 +3029,57 @@
               <span>Expires in</span>
               <span style="color:var(--primary);font-weight:600">4:47</span>
             </div>
-            <div class="timer-bar"><div class="timer-fill"></div></div>
+            <div class="timer-bar">
+              <div class="timer-fill"></div>
+            </div>
             <div class="security-verified">
-              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
               Identity verified
             </div>
           </div>
         </div>
         <div class="security-content reveal">
           <span class="tag"><span class="tag-dot"></span>Security First</span>
-          <h2 class="security-title">Your account,<br/><span class="gradient-text">locked tight.</span></h2>
-          <p class="security-desc">Layered security, zero complexity. Enable 2FA from your profile - every login then requires an email OTP.</p>
+          <h2 class="security-title">Your account,<br /><span class="gradient-text">locked tight.</span></h2>
+          <p class="security-desc">Layered security, zero complexity. Enable 2FA from your profile - every login then
+            requires an email OTP.</p>
           <ul class="security-points">
             <li>
-              <div class="sec-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-              E2EE active on all texts and voice messages from day one
+              <div class="sec-check"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
+              E2EE active on all chats from day one
             </li>
             <li>
-              <div class="sec-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="sec-check"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               Email OTP with 5-minute expiry and 1-minute resend cooldown
             </li>
             <li>
-              <div class="sec-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="sec-check"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               ZenVault - browser-encrypted local file storage, never uploaded
             </li>
             <li>
-              <div class="sec-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="sec-check"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               16-character offline recovery key mathematically secures E2EE keys on new devices
             </li>
             <li>
-              <div class="sec-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="sec-check"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               JWT-based sessions with configurable expiry
             </li>
             <li>
-              <div class="sec-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="sec-check"><svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg></div>
               Passwords hashed with bcrypt - never stored in plain text
             </li>
           </ul>
@@ -2261,7 +3088,7 @@
     </div>
   </section>
 
-  <!-- ── Roadmap ── -->
+  <!-- â”€â”€ Roadmap â”€â”€ -->
   <section class="roadmap" id="roadmap">
     <div class="container">
       <div class="section-header reveal">
@@ -2271,43 +3098,63 @@
       </div>
       <div class="roadmap-grid">
 
-        <div class="roadmap-card color-purple reveal" id="rm-2">
-          <div class="roadmap-eta purple">Q3 2026</div>
-          <div class="roadmap-icon" style="background:rgba(99,102,241,0.12)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><rect x="8" y="13" width="8" height="6" rx="1"/><path d="M10 13v-2a2 2 0 0 1 4 0v2"/></svg>
+        <div class="roadmap-card color-blue reveal" id="rm-1">
+          <div class="roadmap-eta blue">July 16th, 2026</div>
+          <div class="roadmap-icon" style="background:rgba(61,165,217,0.12)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#3da5d9" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M4 9h16" />
+              <path d="M4 15h16" />
+              <path d="M10 3L8 21" />
+              <path d="M16 3l-2 18" />
+            </svg>
           </div>
-          <div class="roadmap-name">ZenCrypt</div>
-          <div class="roadmap-desc">Send sensitive text like passwords or confidential credentials that automatically vanish for both sides after opening. Once the receiver taps to open, a copy button is shown and the message vanishes within seconds. These messages cannot be favorited, edited, or visible in replies (shown in replies as "ZenCrypted text").</div>
+          <div class="roadmap-name">#ZenVoice</div>
+          <div class="roadmap-desc">An exclusive, anonymous, yet verified general chat space for college students. Pure
+            real-time conversation with zero metrics.</div>
         </div>
 
-        <div class="roadmap-card color-blue reveal" id="rm-1">
-          <div class="roadmap-eta blue">Q4 2026</div>
-          <div class="roadmap-icon" style="background:rgba(61,165,217,0.12)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#3da5d9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><rect x="3" y="11" width="18" height="11" rx="2"/></svg>
+        <div class="roadmap-card color-purple reveal" id="rm-2">
+          <div class="roadmap-eta purple">Q4 2026</div>
+          <div class="roadmap-icon" style="background:rgba(99,102,241,0.12)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
           </div>
           <div class="roadmap-name">E2EE Group Chats</div>
-          <div class="roadmap-desc">Full end-to-end encryption for group conversations - the same uncompromising privacy you get in 1-on-1 chats, extended to groups.</div>
+          <div class="roadmap-desc">Full end-to-end encryption for group conversations in the core messenger - the same
+            uncompromising privacy you get in 1-on-1 chats, extended to groups.</div>
         </div>
 
         <div class="roadmap-card color-gold reveal" id="rm-3">
-          <div class="roadmap-eta gold">Q4 2026</div>
+          <div class="roadmap-eta gold">Q1 2027</div>
           <div class="roadmap-icon" style="background:rgba(234,179,8,0.08)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+              <line x1="12" y1="18" x2="12.01" y2="18" />
+            </svg>
           </div>
-          <div class="roadmap-name">#Moments Streaks &amp; Leaderboard</div>
-          <div class="roadmap-desc">Gamified #Moments with daily streaks and a contact leaderboard. Keep your streak going to unlock exclusive themes and UI customizations.</div>
+          <div class="roadmap-name">Native Mobile Apps</div>
+          <div class="roadmap-desc">Dedicated, hyper-optimized native applications for Android and iOS, bringing better
+            performance and deeper OS integration.</div>
         </div>
 
       </div>
     </div>
   </section>
 
-  <!-- ── CTA Banner ── -->
+  <!-- —— CTA Banner —— -->
   <section class="cta-section" id="cta">
     <div class="container">
       <div class="cta-card reveal">
         <h2 class="cta-title">Focused messaging. Zero noise.</h2>
-        <p class="cta-sub">No paywalls. No premium tiers. Just a tool built to help you communicate, secure your files, and move on.</p>
+        <p class="cta-sub">No paywalls. No premium tiers. Just a tool built to help you communicate, secure your files,
+          and move on.</p>
         <div class="cta-actions" id="cta-actions">
           <!-- Rendered by JS -->
         </div>
@@ -2316,14 +3163,14 @@
     </div>
   </section>
 
-  <!-- â”€â”€ Footer â”€â”€ -->
+  <!-- —— Footer —— -->
   <footer>
     <div class="footer-inner">
       <div class="footer-brand">
         <a href="#" class="footer-logo">
           <svg class="logo-icon" style="width:30px;height:30px" viewBox="0 0 36 36" fill="none">
-            <rect width="36" height="36" rx="11" fill="#1e2530"/>
-            <path d="M9 11.5h18M9 18h11.5M9 24.5h14.5" stroke="#3da5d9" stroke-width="2.5" stroke-linecap="round"/>
+            <rect width="36" height="36" rx="11" fill="#1e2530" />
+            <path d="M9 11.5h18M9 18h11.5M9 24.5h14.5" stroke="#3da5d9" stroke-width="2.5" stroke-linecap="round" />
           </svg>
           ZenChat
         </a>
@@ -2378,11 +3225,11 @@
           if (layout === "nav") {
             el.innerHTML = `
               <a href="/login" class="btn btn-ghost" id="${id}-login">Log In</a>
-              <a href="/register?ref=krish" class="btn btn-primary" id="${id}-signup">Sign Up</a>
+              <a href="/register?ref=krish_camon" class="btn btn-primary" id="${id}-signup">Sign Up</a>
             `;
           } else if (layout === "hero") {
             el.innerHTML = `
-              <a href="/register?ref=krish" class="btn btn-primary btn-lg" id="${id}-signup">Sign Up Free</a>
+              <a href="/register?ref=krish_camon" class="btn btn-primary btn-lg" id="${id}-signup">Sign Up Free</a>
               <a href="#features" class="btn btn-outline" id="${id}-explore">Explore Features</a>
             `;
           } else if (layout === "mobile-header") {
@@ -2394,7 +3241,7 @@
                   <line x1="15" y1="12" x2="3" y2="12"></line>
                 </svg>
               </a>
-              <a href="/register?ref=krish" class="mobile-icon-btn btn-signup-icon" id="${id}-signup" title="Sign Up">
+              <a href="/register?ref=krish_camon" class="mobile-icon-btn btn-signup-icon" id="${id}-signup" title="Sign Up">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                   <circle cx="8.5" cy="7" r="4"></circle>
@@ -2405,7 +3252,7 @@
             `;
           } else {
             el.innerHTML = `
-              <a href="/register?ref=krish" class="btn btn-primary btn-lg" id="${id}-signup">Sign Up Free</a>
+              <a href="/register?ref=krish_camon" class="btn btn-primary btn-lg" id="${id}-signup">Sign Up Free</a>
               <a href="/login" class="btn btn-outline" id="${id}-login">Log In</a>
             `;
           }
@@ -2439,6 +3286,18 @@
     });
     mobileNav.querySelectorAll("a").forEach(a => a.addEventListener("click", () => mobileNav.classList.remove("open")));
 
+    // â”€â”€ IntersectionObserver scroll reveal â”€â”€
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: "0px 0px -36px 0px" });
+
+    document.querySelectorAll(".reveal, .feature-card, .step, .compare-card, .roadmap-card").forEach(el => observer.observe(el));
+
     // â”€â”€ Navbar on scroll â”€â”€
     const nav = document.getElementById("navbar");
     window.addEventListener("scroll", () => {
@@ -2448,5 +3307,5 @@
     }, { passive: true });
   </script>
 </body>
-</html>
 
+</html>
