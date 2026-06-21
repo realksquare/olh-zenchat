@@ -217,6 +217,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [resendLockTimeLeft, setResendLockTimeLeft] = useState(0); // 1 minute rate-limit
 
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    const [capturedMoments, setCapturedMoments] = useState([]);
+    const [loadingMoments, setLoadingMoments] = useState(false);
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth <= 768);
         window.addEventListener("resize", handleResize);
@@ -323,6 +325,23 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             }
         };
     }, [avatarPreview]);
+
+    useEffect(() => {
+        if (isOpen) {
+            const fetchCapturedMoments = async () => {
+                setLoadingMoments(true);
+                try {
+                    const { data } = await axiosInstance.get("/moments/captured");
+                    setCapturedMoments(data);
+                } catch (err) {
+                    console.error("Failed to fetch captured moments:", err);
+                } finally {
+                    setLoadingMoments(false);
+                }
+            };
+            fetchCapturedMoments();
+        }
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -726,6 +745,130 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                         <span className="profile-badge-indicator" />
                                         <span>{soundEnabled ? "Sounds On" : "Sounds Muted"}</span>
                                     </div>
+                                </div>
+
+                                <div className="captured-moments-section" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "16px", marginTop: "20px", textAlign: "left" }}>
+                                    <h4 style={{ margin: "0 0 12px 0", color: "#cbd5e1", fontSize: "0.85rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+                                        </svg>
+                                        Captured Moments
+                                    </h4>
+                                    
+                                    {loadingMoments ? (
+                                        <div style={{ display: "flex", justifyContent: "center", padding: "16px" }}>
+                                            <div className="spinner" style={{ width: "20px", height: "20px", border: "2px solid rgba(61, 165, 217, 0.2)", borderTopColor: "var(--color-primary)", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                                        </div>
+                                    ) : capturedMoments.length === 0 ? (
+                                        <div style={{ textAlign: "center", padding: "16px", color: "#64748b", fontSize: "0.78rem", background: "rgba(255,255,255,0.01)", borderRadius: "10px", border: "1px dashed var(--color-border, rgba(255,255,255,0.08))" }}>
+                                            No captured moments yet. Toggle "Captured Moment" when sharing to save it here!
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", maxHeight: "200px", overflowY: "auto", paddingRight: "4px" }} className="filter-scroll-strip">
+                                            {capturedMoments.map((mom) => {
+                                                const filterStyles = {
+                                                    none: {},
+                                                    warm: { filter: "sepia(0.3) saturate(1.2) contrast(1.1)" },
+                                                    cold: { filter: "hue-rotate(180deg) saturate(1.1) contrast(1.05)" },
+                                                    vivid: { filter: "saturate(1.6) contrast(1.15)" },
+                                                    fade: { filter: "brightness(1.1) contrast(0.95) saturate(0.9)" },
+                                                    bw: { filter: "grayscale(1) contrast(1.2)" }
+                                                };
+
+                                                return (
+                                                    <div 
+                                                        key={mom._id} 
+                                                        style={{ 
+                                                            position: "relative", 
+                                                            height: "90px", 
+                                                            borderRadius: "10px", 
+                                                            overflow: "hidden", 
+                                                            border: "1px solid var(--color-border, rgba(255,255,255,0.08))",
+                                                            background: "linear-gradient(135deg, rgba(61,165,217,0.06) 0%, rgba(168,85,247,0.06) 100%)",
+                                                            transition: "transform 0.2s, box-shadow 0.2s"
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            e.currentTarget.style.transform = "translateY(-2px)";
+                                                            e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            e.currentTarget.style.transform = "translateY(0)";
+                                                            e.currentTarget.style.boxShadow = "none";
+                                                        }}
+                                                    >
+                                                        {mom.type === "image" ? (
+                                                            <>
+                                                                <img 
+                                                                    src={mom.mediaUrl} 
+                                                                    alt="" 
+                                                                    style={{ 
+                                                                        width: "100%", 
+                                                                        height: "100%", 
+                                                                        objectFit: "cover", 
+                                                                        ...filterStyles[mom.filter || "none"] 
+                                                                    }} 
+                                                                />
+                                                                {mom.caption && (
+                                                                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.6)", padding: "4px 8px", fontSize: "0.65rem", color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                                        {mom.caption}
+                                                                    </div>
+                                                                )}
+                                                            </>
+                                                        ) : (
+                                                            <div style={{ padding: "10px", display: "flex", flexDirection: "column", height: "100%", justifyContent: "space-between", boxSizing: "border-box" }}>
+                                                                <div style={{ fontSize: "0.72rem", color: "#cbd5e1", overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", lineClamp: 3, wordBreak: "break-word", lineHeight: "1.3" }}>
+                                                                    {mom.content}
+                                                                </div>
+                                                                {mom.music && (
+                                                                    <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "0.6rem", color: "var(--color-primary)", width: "100%" }}>
+                                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ flexShrink: 0 }}><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
+                                                                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{mom.music.title}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                        
+                                                        {/* Delete Button */}
+                                                        <button
+                                                            onClick={async (e) => {
+                                                                e.stopPropagation();
+                                                                if (confirm("Delete this captured moment?")) {
+                                                                    try {
+                                                                        await axiosInstance.delete(`/moments/${mom._id}`);
+                                                                        setCapturedMoments(prev => prev.filter(m => m._id !== mom._id));
+                                                                    } catch (err) {
+                                                                        console.error("Failed to delete captured moment:", err);
+                                                                    }
+                                                                }
+                                                            }}
+                                                            style={{
+                                                                position: "absolute",
+                                                                top: "6px",
+                                                                right: "6px",
+                                                                background: "rgba(15, 23, 42, 0.75)",
+                                                                border: "1px solid rgba(255,255,255,0.1)",
+                                                                borderRadius: "50%",
+                                                                width: "20px",
+                                                                height: "20px",
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                color: "#ef4444",
+                                                                cursor: "pointer",
+                                                                zIndex: 10,
+                                                                padding: 0
+                                                            }}
+                                                            title="Delete captured moment"
+                                                        >
+                                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                                                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

@@ -258,21 +258,19 @@ self.addEventListener('fetch', (event) => {
     }
 
     if (isNavigation) {
-        // Stale-While-Revalidate for navigation: serve cached shell instantly, update cache in background
+        // Navigation requests always serve the cached /index.html (App Shell) offline
         event.respondWith(
-            caches.match(event.request).then((cached) => {
+            caches.match('/index.html').then((cached) => {
                 const networkFetch = fetch(event.request).then((response) => {
                     if (response && response.status === 200) {
                         const clone = response.clone();
-                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+                        caches.open(CACHE_NAME).then((cache) => cache.put('/index.html', clone));
                     }
                     return response;
                 }).catch(() => null);
 
-                // If we have a cached shell, serve it immediately and update in background
                 if (cached) return cached;
-                // No cache yet — wait for the network (first ever load)
-                return networkFetch.then((res) => res || caches.match('/') || new Response('Offline', { status: 503 }));
+                return networkFetch.then((res) => res || new Response('Offline', { status: 503 }));
             })
         );
         return;

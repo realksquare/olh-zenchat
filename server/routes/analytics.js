@@ -12,7 +12,8 @@ const mongoose = require("mongoose");
 // @access  Private
 router.get("/my-time", authMiddleware, async (req, res) => {
     try {
-        const userId = req.user._id;
+        const userIdStr = req.user._id;
+        const userId = new mongoose.Types.ObjectId(userIdStr);
         const user = await User.findById(userId).populate("contacts.userId", "username avatar activeTimeMinutes");
 
         if (!user) {

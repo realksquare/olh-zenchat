@@ -8,9 +8,9 @@ const { onlineUsers } = require("../socket/handlers");
 
 router.post("/", protect, async (req, res) => {
     try {
-        const { type, content, mediaUrl, music, caption, locationTag, filter, disappearAfterHours, taggedUsers, lqip } = req.body;
+        const { type, content, mediaUrl, music, caption, locationTag, filter, disappearAfterHours, taggedUsers, lqip, isCaptured } = req.body;
         const hours = disappearAfterHours ? Number(disappearAfterHours) : 24;
-        const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000);
+        const expiresAt = (isCaptured === true || isCaptured === "true") ? null : new Date(Date.now() + hours * 60 * 60 * 1000);
 
         const moment = await Moment.create({
             userId: req.user._id,
@@ -24,6 +24,7 @@ router.post("/", protect, async (req, res) => {
             filter: filter || "none",
             disappearAfterHours: hours,
             expiresAt,
+            isCaptured: isCaptured === true || isCaptured === "true",
             taggedUsers: Array.isArray(taggedUsers) ? taggedUsers : []
         });
 
@@ -143,6 +144,10 @@ router.get("/", protect, async (req, res) => {
                 { userId: { $in: contactIds } },
                 { taggedUsers: req.user._id },
                 { taggedUsers: { $in: contactIds } }
+            ],
+            $or: [
+                { expiresAt: { $gt: new Date() } },
+                { isCaptured: true, createdAt: { $gt: new Date(Date.now() - 24 * 60 * 60 * 1000) } }
             ]
         })
         .populate("userId", "username avatar fullName")
@@ -165,6 +170,23 @@ router.get("/", protect, async (req, res) => {
         res.json(filteredMoments);
     } catch (err) {
         console.error(`[moments] Fetch error:`, err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+router.get("/captured", protect, async (req, res) => {
+    try {
+        const moments = await Moment.find({
+            userId: req.user._id,
+            isCaptured: true
+        })
+        .populate("userId", "username avatar fullName")
+        .populate("taggedUsers", "username avatar fullName")
+        .sort({ createdAt: -1 });
+
+        res.json(moments);
+    } catch (err) {
+        console.error("[moments] Captured fetch error:", err);
         res.status(500).json({ message: "Server error" });
     }
 });

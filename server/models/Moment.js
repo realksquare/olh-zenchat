@@ -81,6 +81,10 @@ const momentSchema = new mongoose.Schema(
             ref: "Moment",
             default: null,
         },
+        isCaptured: {
+            type: Boolean,
+            default: false,
+        },
     },
     { timestamps: true }
 );

@@ -63,6 +63,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const [filePreview, setFilePreview] = useState("");
     const [activeFilter, setActiveFilter] = useState("none");
     const [disappearHours, setDisappearHours] = useState(24);
+    const [isCaptured, setIsCaptured] = useState(false);
     
     // Geolocation States
     const [locationText, setLocationText] = useState("");
@@ -289,6 +290,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 filter: !isText ? activeFilter : "none",
                 locationTag: (!isText && showLocationPill) ? locationText : "",
                 disappearAfterHours: disappearHours,
+                isCaptured,
                 taggedUsers: selectedTaggedUsers,
                 music: music ? {
                     trackId: music.id || null,
@@ -338,6 +340,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
         setUploadProgress(0);
         setImageQuality("standard");
         setIsUploading(false);
+        setIsCaptured(false);
         setSelectedTaggedUsers([]);
     };
 
@@ -536,10 +539,28 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                             maxLength={49} 
                                             disabled={isUploading}
                                         />
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginTop: 4 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginTop: 4, marginBottom: 12 }}>
                                             <span>Min 3 characters</span>
                                             <span>{content.length}/49</span>
                                         </div>
+
+                                        {/* Captured Toggle for Text Moment */}
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--color-overlay, rgba(255, 255, 255, 0.01))', border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))', padding: '8px 12px', borderRadius: '12px', marginBottom: '14px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#cbd5e1' }}>Mark as Captured #Moment</span>
+                                                <span style={{ fontSize: '0.65rem', color: '#64748b' }}>Permanently save to your profile tab</span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                className={`toggle-btn ${isCaptured ? "toggle-on" : ""}`}
+                                                onClick={() => setIsCaptured(!isCaptured)}
+                                                disabled={isUploading}
+                                                style={{ opacity: isUploading ? 0.5 : 1 }}
+                                            >
+                                                <span className="toggle-thumb" />
+                                            </button>
+                                        </div>
+
                                         {renderTagContactsSection()}
                                     </div>
                                 </>
@@ -735,35 +756,54 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                 </div>
                                             </div>
 
-                                            {/* Disappear Timer CONTROL */}
+                                            {/* Captured Moment Toggle */}
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--color-overlay, rgba(255, 255, 255, 0.01))', border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))', padding: '8px 12px', borderRadius: '12px', marginBottom: '14px' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                    <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#cbd5e1' }}>Select how long this moment stays visible</span>
+                                                    <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#cbd5e1' }}>Mark as Captured #Moment</span>
+                                                    <span style={{ fontSize: '0.65rem', color: '#64748b' }}>Permanently save to your profile tab</span>
                                                 </div>
-                                                <div style={{ display: 'flex', gap: '6px', background: 'rgba(0,0,0,0.2)', padding: '2px', borderRadius: '8px' }}>
-                                                    {[7, 18, 24].map((h) => (
-                                                        <button 
-                                                            key={h}
-                                                            onClick={() => setDisappearHours(h)}
-                                                            disabled={isUploading}
-                                                            style={{
-                                                                background: disappearHours === h ? 'rgba(255,255,255,0.08)' : 'none',
-                                                                border: 'none',
-                                                                color: disappearHours === h ? 'var(--color-primary)' : '#94a3b8',
-                                                                padding: '4px 10px',
-                                                                borderRadius: '6px',
-                                                                fontSize: '0.7rem',
-                                                                fontWeight: 'bold',
-                                                                cursor: isUploading ? 'not-allowed' : 'pointer',
-                                                                transition: 'all 0.15s ease',
-                                                                opacity: isUploading ? 0.5 : 1
-                                                            }}
-                                                        >
-                                                            {h}h
-                                                        </button>
-                                                    ))}
-                                                </div>
+                                                <button
+                                                    type="button"
+                                                    className={`toggle-btn ${isCaptured ? "toggle-on" : ""}`}
+                                                    onClick={() => setIsCaptured(!isCaptured)}
+                                                    disabled={isUploading}
+                                                    style={{ opacity: isUploading ? 0.5 : 1 }}
+                                                >
+                                                    <span className="toggle-thumb" />
+                                                </button>
                                             </div>
+
+                                            {!isCaptured && (
+                                                /* Disappear Timer CONTROL */
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--color-overlay, rgba(255, 255, 255, 0.01))', border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))', padding: '8px 12px', borderRadius: '12px', marginBottom: '14px' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                        <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#cbd5e1' }}>Select how long this moment stays visible</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '6px', background: 'rgba(0,0,0,0.2)', padding: '2px', borderRadius: '8px' }}>
+                                                        {[7, 18, 24].map((h) => (
+                                                            <button 
+                                                                key={h}
+                                                                onClick={() => setDisappearHours(h)}
+                                                                disabled={isUploading}
+                                                                style={{
+                                                                    background: disappearHours === h ? 'rgba(255,255,255,0.08)' : 'none',
+                                                                    border: 'none',
+                                                                    color: disappearHours === h ? 'var(--color-primary)' : '#94a3b8',
+                                                                    padding: '4px 10px',
+                                                                    borderRadius: '6px',
+                                                                    fontSize: '0.7rem',
+                                                                    fontWeight: 'bold',
+                                                                    cursor: isUploading ? 'not-allowed' : 'pointer',
+                                                                    transition: 'all 0.15s ease',
+                                                                    opacity: isUploading ? 0.5 : 1
+                                                                }}
+                                                            >
+                                                                {h}h
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                             {renderTagContactsSection()}
                                         </div>
                                     )}
