@@ -1647,599 +1647,599 @@
       box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
     }
 
-      /* ── Scroll reveal ── */
-      .reveal {
-        opacity: 0;
-        transform: translateY(24px);
-        transition: opacity 700ms var(--ease), transform 700ms var(--ease);
+    /* ── Scroll reveal ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 700ms var(--ease), transform 700ms var(--ease);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Stagger delays ── */
+    .step:nth-child(1) {
+      transition-delay: 0ms
+    }
+
+    .step:nth-child(2) {
+      transition-delay: 140ms
+    }
+
+    .step:nth-child(3) {
+      transition-delay: 280ms
+    }
+
+    .compare-card:nth-child(2) {
+      transition-delay: 80ms
+    }
+
+    .compare-card:nth-child(3) {
+      transition-delay: 160ms
+    }
+
+    /* ── Themed Grid ── */
+    .themes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .theme-column {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 36px 30px;
+      transition: border-color 300ms ease, box-shadow 300ms ease, transform 300ms var(--ease);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .theme-column::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top left, var(--theme-accent-dim) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 300ms ease;
+      pointer-events: none;
+    }
+
+    .theme-column:hover::after {
+      opacity: 1;
+    }
+
+    .theme-column:hover {
+      border-color: var(--theme-accent-border);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    .theme-header {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .theme-icon-wrapper {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+
+    .theme-icon-wrapper svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .theme-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .theme-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .theme-features-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .theme-feature-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .theme-feature-bullet {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--theme-accent-dim);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .theme-feature-bullet svg {
+      width: 11px;
+      height: 11px;
+      stroke: var(--theme-accent);
+      fill: none;
+      stroke-width: 3;
+    }
+
+    .theme-feature-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .theme-feature-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    #theme-privacy {
+      --theme-accent: var(--primary);
+      --theme-accent-dim: var(--primary-dim);
+      --theme-accent-border: var(--primary-border);
+    }
+
+    #theme-focus {
+      --theme-accent: var(--accent);
+      --theme-accent-dim: rgba(99, 102, 241, 0.12);
+      --theme-accent-border: rgba(99, 102, 241, 0.25);
+    }
+
+    #theme-speed {
+      --theme-accent: #fb923c;
+      --theme-accent-dim: rgba(251, 146, 60, 0.12);
+      --theme-accent-border: rgba(251, 146, 60, 0.25);
+    }
+
+    /* ── Scenario Section ── */
+    .scenario {
+      padding: 100px 0;
+      background: rgba(255, 255, 255, 0.015);
+      position: relative;
+    }
+
+    .scenario::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 80% 50%, rgba(99, 102, 241, 0.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .scenario-inner {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    .scenario-content {
+      max-width: 540px;
+    }
+
+    .scenario-content .tag {
+      margin-bottom: 18px;
+    }
+
+    .scenario-title {
+      font-size: clamp(1.8rem, 3.2vw, 2.6rem);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+
+    .scenario-desc {
+      font-size: 0.98rem;
+      color: var(--text-muted);
+      line-height: 1.8;
+      margin-bottom: 32px;
+    }
+
+    .scenario-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .scenario-points li {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .scenario-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--primary-dim);
+      border: 1px solid var(--primary-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .scenario-icon svg {
+      width: 11px;
+      height: 11px;
+      stroke: var(--primary);
+      fill: none;
+      stroke-width: 3;
+    }
+
+    .scenario-visual {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .scenario-card {
+      width: 100%;
+      max-width: 360px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.03);
+      position: relative;
+    }
+
+    .scenario-card-header {
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .scenario-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--primary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #fff;
+      font-size: 0.85rem;
+    }
+
+    .scenario-title-text {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .scenario-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .scenario-chat-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .scenario-msg {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-width: 85%;
+    }
+
+    .scenario-msg.self {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+
+    .scenario-msg-bubble {
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      border-radius: 14px;
+    }
+
+    .scenario-msg:not(.self) .scenario-msg-bubble {
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom-left-radius: 3px;
+    }
+
+    .scenario-msg.self .scenario-msg-bubble {
+      background: var(--primary-dim);
+      border: 1px solid var(--primary-border);
+      color: var(--text);
+      border-bottom-right-radius: 3px;
+    }
+
+    .scenario-msg-time {
+      font-size: 0.65rem;
+      color: var(--text-faint);
+      margin: 0 4px;
+    }
+
+    .scenario-vault-link {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      align-self: flex-end;
+      max-width: 85%;
+      cursor: pointer;
+      transition: all 180ms ease;
+    }
+
+    .scenario-vault-link:hover {
+      background: rgba(61, 165, 217, 0.08);
+      border-color: var(--primary-border);
+    }
+
+    .scenario-vault-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--primary-dim);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .scenario-vault-icon svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--primary);
+      fill: none;
+      stroke-width: 2.5;
+    }
+
+    .vault-filename {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .vault-filesize {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    /* ── Comparison Table ── */
+    .compare-table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 40px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+      min-width: 600px;
+    }
+
+    .compare-table th,
+    .compare-table td {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .compare-table th {
+      background: rgba(255, 255, 255, 0.02);
+      font-weight: 700;
+      color: var(--text);
+      font-size: 0.95rem;
+      letter-spacing: -0.01em;
+    }
+
+    .compare-table tr:last-child th,
+    .compare-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .compare-table td {
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .compare-highlight {
+      background: rgba(61, 165, 217, 0.03);
+      border-left: 1px solid var(--primary-border);
+      border-right: 1px solid var(--primary-border);
+    }
+
+    th.compare-highlight {
+      background: rgba(61, 165, 217, 0.05);
+    }
+
+    .compare-table-app {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .compare-table-app svg {
+      flex-shrink: 0;
+    }
+
+    .compare-check {
+      color: var(--green);
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .compare-cross {
+      color: #ef4444;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .compare-check svg,
+    .compare-cross svg {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      padding: 3px;
+      flex-shrink: 0;
+    }
+
+    .compare-check svg {
+      background: rgba(74, 222, 128, 0.12);
+      stroke: var(--green);
+      stroke-width: 3.5;
+      fill: none;
+    }
+
+    .compare-cross svg {
+      background: rgba(239, 68, 68, 0.12);
+      stroke: #ef4444;
+      stroke-width: 3;
+      fill: none;
+    }
+
+    .compare-table sup {
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 0.7rem;
+      margin-left: 2px;
+      top: -0.3em;
+      position: relative;
+      vertical-align: baseline;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .mobile-header-actions {
+        display: flex;
       }
 
-      .reveal.visible {
-        opacity: 1;
-        transform: translateY(0);
+      .nav-links,
+      .nav-cta {
+        display: none;
       }
 
-      /* ── Stagger delays ── */
-      .step:nth-child(1) {
-        transition-delay: 0ms
+      .hamburger {
+        display: flex;
       }
 
-      .step:nth-child(2) {
-        transition-delay: 140ms
+      .hero-inner {
+        grid-template-columns: 1fr;
+        gap: 52px;
       }
 
-      .step:nth-child(3) {
-        transition-delay: 280ms
+      .hero-visual {
+        order: -1;
       }
 
-      .compare-card:nth-child(2) {
-        transition-delay: 80ms
+      .badge-1,
+      .badge-2 {
+        display: none;
       }
 
-      .compare-card:nth-child(3) {
-        transition-delay: 160ms
-      }
-
-      /* ── Themed Grid ── */
       .themes-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
-        margin-bottom: 40px;
-      }
-
-      .theme-column {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: 36px 30px;
-        transition: border-color 300ms ease, box-shadow 300ms ease, transform 300ms var(--ease);
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .theme-column::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at top left, var(--theme-accent-dim) 0%, transparent 60%);
-        opacity: 0;
-        transition: opacity 300ms ease;
-        pointer-events: none;
-      }
-
-      .theme-column:hover::after {
-        opacity: 1;
-      }
-
-      .theme-column:hover {
-        border-color: var(--theme-accent-border);
-        transform: translateY(-4px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
-      }
-
-      .theme-header {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .theme-icon-wrapper {
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 6px;
-      }
-
-      .theme-icon-wrapper svg {
-        width: 24px;
-        height: 24px;
-      }
-
-      .theme-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-      }
-
-      .theme-subtitle {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-        line-height: 1.5;
-      }
-
-      .theme-features-list {
-        display: flex;
-        flex-direction: column;
+        grid-template-columns: 1fr;
         gap: 20px;
       }
 
-      .theme-feature-item {
-        display: flex;
-        gap: 14px;
-        align-items: flex-start;
-      }
-
-      .theme-feature-bullet {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: var(--theme-accent-dim);
-        flex-shrink: 0;
-        margin-top: 2px;
-      }
-
-      .theme-feature-bullet svg {
-        width: 11px;
-        height: 11px;
-        stroke: var(--theme-accent);
-        fill: none;
-        stroke-width: 3;
-      }
-
-      .theme-feature-name {
-        font-size: 0.95rem;
-        font-weight: 600;
-        margin-bottom: 4px;
-        color: var(--text);
-      }
-
-      .theme-feature-desc {
-        font-size: 0.82rem;
-        color: var(--text-muted);
-        line-height: 1.6;
-      }
-
-      #theme-privacy {
-        --theme-accent: var(--primary);
-        --theme-accent-dim: var(--primary-dim);
-        --theme-accent-border: var(--primary-border);
-      }
-
-      #theme-focus {
-        --theme-accent: var(--accent);
-        --theme-accent-dim: rgba(99, 102, 241, 0.12);
-        --theme-accent-border: rgba(99, 102, 241, 0.25);
-      }
-
-      #theme-speed {
-        --theme-accent: #fb923c;
-        --theme-accent-dim: rgba(251, 146, 60, 0.12);
-        --theme-accent-border: rgba(251, 146, 60, 0.25);
-      }
-
-      /* ── Scenario Section ── */
-      .scenario {
-        padding: 100px 0;
-        background: rgba(255, 255, 255, 0.015);
-        position: relative;
-      }
-
-      .scenario::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at 80% 50%, rgba(99, 102, 241, 0.04) 0%, transparent 60%);
-        pointer-events: none;
-      }
-
       .scenario-inner {
-        display: grid;
-        grid-template-columns: 1.15fr 0.85fr;
-        gap: 64px;
-        align-items: center;
-      }
-
-      .scenario-content {
-        max-width: 540px;
-      }
-
-      .scenario-content .tag {
-        margin-bottom: 18px;
-      }
-
-      .scenario-title {
-        font-size: clamp(1.8rem, 3.2vw, 2.6rem);
-        font-weight: 700;
-        letter-spacing: -0.025em;
-        line-height: 1.15;
-        margin-bottom: 20px;
-      }
-
-      .scenario-desc {
-        font-size: 0.98rem;
-        color: var(--text-muted);
-        line-height: 1.8;
-        margin-bottom: 32px;
-      }
-
-      .scenario-points {
-        list-style: none;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .scenario-points li {
-        display: flex;
-        align-items: flex-start;
-        gap: 14px;
-        font-size: 0.9rem;
-        color: var(--text-muted);
-        line-height: 1.6;
-      }
-
-      .scenario-icon {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: var(--primary-dim);
-        border: 1px solid var(--primary-border);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        margin-top: 2px;
-      }
-
-      .scenario-icon svg {
-        width: 11px;
-        height: 11px;
-        stroke: var(--primary);
-        fill: none;
-        stroke-width: 3;
+        grid-template-columns: 1fr;
+        gap: 48px;
       }
 
       .scenario-visual {
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        order: -1;
       }
 
-      .scenario-card {
-        width: 100%;
-        max-width: 360px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-xl);
-        overflow: hidden;
-        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.03);
-        position: relative;
+      .steps {
+        grid-template-columns: 1fr;
+        gap: 40px;
       }
 
-      .scenario-card-header {
-        background: rgba(255, 255, 255, 0.02);
-        border-bottom: 1px solid var(--border);
-        padding: 16px 20px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
+      .steps::before {
+        display: none;
       }
 
-      .scenario-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, var(--accent), var(--primary));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        color: #fff;
-        font-size: 0.85rem;
+      .security-inner {
+        grid-template-columns: 1fr;
+        gap: 52px;
       }
 
-      .scenario-title-text {
-        font-size: 0.9rem;
-        font-weight: 600;
+      .security-visual {
+        order: -1;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .hero-stats {
+        gap: 20px;
+        flex-wrap: wrap;
       }
 
-      .scenario-meta {
-        font-size: 0.72rem;
-        color: var(--text-muted);
+      .cta-card {
+        padding: 48px 22px;
       }
 
-      .scenario-chat-body {
-        padding: 20px;
-        display: flex;
+      .footer-inner {
         flex-direction: column;
-        gap: 14px;
+        align-items: flex-start;
+        gap: 28px;
       }
 
-      .scenario-msg {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        max-width: 85%;
-      }
-
-      .scenario-msg.self {
-        align-self: flex-end;
-        align-items: flex-end;
-      }
-
-      .scenario-msg-bubble {
-        padding: 10px 14px;
-        font-size: 0.82rem;
-        line-height: 1.45;
-        border-radius: 14px;
-      }
-
-      .scenario-msg:not(.self) .scenario-msg-bubble {
-        background: rgba(255, 255, 255, 0.05);
-        border-bottom-left-radius: 3px;
-      }
-
-      .scenario-msg.self .scenario-msg-bubble {
-        background: var(--primary-dim);
-        border: 1px solid var(--primary-border);
-        color: var(--text);
-        border-bottom-right-radius: 3px;
-      }
-
-      .scenario-msg-time {
-        font-size: 0.65rem;
-        color: var(--text-faint);
-        margin: 0 4px;
-      }
-
-      .scenario-vault-link {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 10px 14px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        align-self: flex-end;
-        max-width: 85%;
-        cursor: pointer;
-        transition: all 180ms ease;
-      }
-
-      .scenario-vault-link:hover {
-        background: rgba(61, 165, 217, 0.08);
-        border-color: var(--primary-border);
-      }
-
-      .scenario-vault-icon {
-        width: 32px;
-        height: 32px;
-        background: var(--primary-dim);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-      }
-
-      .scenario-vault-icon svg {
-        width: 16px;
-        height: 16px;
-        stroke: var(--primary);
-        fill: none;
-        stroke-width: 2.5;
-      }
-
-      .vault-filename {
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: var(--text);
-      }
-
-      .vault-filesize {
-        font-size: 0.68rem;
-        color: var(--text-muted);
-      }
-
-      /* ── Comparison Table ── */
-      .compare-table-wrapper {
+      .footer-links {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px 24px;
         width: 100%;
-        overflow-x: auto;
-        margin-top: 40px;
-        border-radius: var(--radius-lg);
-        border: 1px solid var(--border);
-        background: var(--surface);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
       }
-
-      .compare-table {
-        width: 100%;
-        border-collapse: collapse;
-        text-align: left;
-        font-size: 0.9rem;
-        min-width: 600px;
-      }
-
-      .compare-table th,
-      .compare-table td {
-        padding: 18px 24px;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .compare-table th {
-        background: rgba(255, 255, 255, 0.02);
-        font-weight: 700;
-        color: var(--text);
-        font-size: 0.95rem;
-        letter-spacing: -0.01em;
-      }
-
-      .compare-table tr:last-child th,
-      .compare-table tr:last-child td {
-        border-bottom: none;
-      }
-
-      .compare-table td {
-        color: var(--text-muted);
-        line-height: 1.5;
-      }
-
-      .compare-highlight {
-        background: rgba(61, 165, 217, 0.03);
-        border-left: 1px solid var(--primary-border);
-        border-right: 1px solid var(--primary-border);
-      }
-
-      th.compare-highlight {
-        background: rgba(61, 165, 217, 0.05);
-      }
-
-      .compare-table-app {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 700;
-        color: var(--text);
-      }
-
-      .compare-table-app svg {
-        flex-shrink: 0;
-      }
-
-      .compare-check {
-        color: var(--green);
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .compare-cross {
-        color: #ef4444;
-        font-weight: 500;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .compare-check svg,
-      .compare-cross svg {
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        padding: 3px;
-        flex-shrink: 0;
-      }
-
-      .compare-check svg {
-        background: rgba(74, 222, 128, 0.12);
-        stroke: var(--green);
-        stroke-width: 3.5;
-        fill: none;
-      }
-
-      .compare-cross svg {
-        background: rgba(239, 68, 68, 0.12);
-        stroke: #ef4444;
-        stroke-width: 3;
-        fill: none;
-      }
-
-      .compare-table sup {
-        color: var(--primary);
-        font-weight: 600;
-        font-size: 0.7rem;
-        margin-left: 2px;
-        top: -0.3em;
-        position: relative;
-        vertical-align: baseline;
-      }
-
-      /* ── Responsive ── */
-      @media (max-width: 900px) {
-        .mobile-header-actions {
-          display: flex;
-        }
-
-        .nav-links,
-        .nav-cta {
-          display: none;
-        }
-
-        .hamburger {
-          display: flex;
-        }
-
-        .hero-inner {
-          grid-template-columns: 1fr;
-          gap: 52px;
-        }
-
-        .hero-visual {
-          order: -1;
-        }
-
-        .badge-1,
-        .badge-2 {
-          display: none;
-        }
-
-        .themes-grid {
-          grid-template-columns: 1fr;
-          gap: 20px;
-        }
-
-        .scenario-inner {
-          grid-template-columns: 1fr;
-          gap: 48px;
-        }
-
-        .scenario-visual {
-          order: -1;
-        }
-
-        .steps {
-          grid-template-columns: 1fr;
-          gap: 40px;
-        }
-
-        .steps::before {
-          display: none;
-        }
-
-        .security-inner {
-          grid-template-columns: 1fr;
-          gap: 52px;
-        }
-
-        .security-visual {
-          order: -1;
-        }
-      }
-
-      @media (max-width: 600px) {
-        .hero-stats {
-          gap: 20px;
-          flex-wrap: wrap;
-        }
-
-        .cta-card {
-          padding: 48px 22px;
-        }
-
-        .footer-inner {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 28px;
-        }
-
-        .footer-links {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px 24px;
-          width: 100%;
-        }
-      }
+    }
   </style>
 </head>
 
@@ -2607,19 +2607,21 @@
         <div class="step" id="step-1">
           <div class="step-num">1</div>
           <div class="step-title">Claim your alias</div>
-          <div class="step-desc">Enter an email and pick a username. No phone numbers, verification loops, or metadata
-            tracking.</div>
+          <div class="step-desc">Ditch the phone number requirement. Pick a unique handle and jump right in. Your
+            identity stays completely yours with zero metadata mining.</div>
         </div>
         <div class="step" id="step-2">
           <div class="step-num">2</div>
-          <div class="step-title">Connect quietly</div>
-          <div class="step-desc">Search by username and send a request. No contacts uploading, and you are in control of
-            who can message you.</div>
+          <div class="step-title">Connect intentionally</div>
+          <div class="step-desc">No invasive contact syncing. Send requests by username and keep strict control over
+            exactly who gets access to your inbox.</div>
         </div>
         <div class="step" id="step-3">
           <div class="step-num">3</div>
           <div class="step-title">Message &amp; move on</div>
-          <div class="step-desc">Encrypted text, voice notes, and media sync instantly. Share files securely, zero distraction, zero time wasted.</div>
+          <div class="step-desc">Send encrypted texts, voice notes, media, and light files instantly. Say what you need,
+            then
+            close the app and get back to real life.</div>
         </div>
       </div>
     </div>
@@ -2686,7 +2688,8 @@
             <div class="scenario-chat-body">
               <div class="scenario-msg">
                 <span class="scenario-msg-time" style="color:var(--primary);font-weight:600;">Alex</span>
-                <div class="scenario-msg-bubble">Hey! Did you finish the ECE-302 report? Need to review before class.</div>
+                <div class="scenario-msg-bubble">Hey! Did you finish the ECE-302 report? Need to review before class.
+                </div>
                 <span class="scenario-msg-time">4:02 PM</span>
               </div>
               <div class="scenario-msg self">
@@ -2696,7 +2699,13 @@
               </div>
               <div class="scenario-vault-link">
                 <div class="scenario-vault-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="12" y1="18" x2="12" y2="12" />
+                    <line x1="9" y1="15" x2="15" y2="15" />
+                  </svg>
                 </div>
                 <div style="flex:1;">
                   <div class="vault-filename">ece_302_lab_report_v2.pdf</div>
@@ -2723,36 +2732,50 @@
           <span class="tag"><span class="tag-dot"></span>Lightning Fast</span>
           <h2 class="scenario-title">Type faster with <br /><span class="gradient-text">#Zen(N)Gram.</span></h2>
           <p class="scenario-desc">
-            A 100% local, on-device word predictor. No cloud API calls. No data harvesting. It learns your unique typing style completely offline.
+            A 100% local, on-device word predictor. No cloud API calls. No data harvesting. It learns your unique typing
+            style completely offline.
           </p>
           <ul class="scenario-points">
             <li>
               <div class="scenario-icon">
-                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
+                <svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
               </div>
               <div>
                 <strong>Zero Latency</strong>
-                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">Suggestions appear instantly as you type because everything happens right on your device.</p>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">Suggestions appear instantly as you
+                  type because everything happens right on your device.</p>
               </div>
             </li>
             <li>
               <div class="scenario-icon">
-                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
+                <svg viewBox="0 0 24 24">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
               </div>
               <div>
                 <strong>Absolute Privacy</strong>
-                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">Your keystrokes never leave your browser. Period.</p>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:2px;">Your keystrokes never leave your
+                  browser. Period.</p>
               </div>
             </li>
           </ul>
         </div>
-        
-        <div class="scenario-visual reveal" style="padding: 40px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: 0 40px 80px rgba(0,0,0,0.4);">
-          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">Message Output</div>
-          <div style="display: flex; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 20px; padding: 12px 16px;">
+
+        <div class="scenario-visual reveal"
+          style="padding: 40px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: 0 40px 80px rgba(0,0,0,0.4);">
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; font-weight: 600;">Message
+            Output</div>
+          <div
+            style="display: flex; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 20px; padding: 12px 16px;">
             <span style="color: var(--text);">I will be there in </span>
-            <span style="color: rgba(61,165,217,0.7); background: rgba(61,165,217,0.1); padding: 2px 6px; border-radius: 6px; margin-left: 6px; font-size: 0.85rem;">5 mins</span>
-            <span style="color: var(--text-faint); margin-left: auto; font-size: 0.75rem; border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px;">Tab -</span>
+            <span
+              style="color: rgba(61,165,217,0.7); background: rgba(61,165,217,0.1); padding: 2px 6px; border-radius: 6px; margin-left: 6px; font-size: 0.85rem;">5
+              mins</span>
+            <span
+              style="color: var(--text-faint); margin-left: auto; font-size: 0.75rem; border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px;">Tab
+              -</span>
           </div>
         </div>
       </div>
@@ -2765,7 +2788,8 @@
       <div class="section-header reveal">
         <span class="tag"><span class="tag-dot"></span>vs. Others</span>
         <h2 class="section-title">Why ZenChat is different</h2>
-        <p class="section-sub">With giants pushing paid "Plus" plans, ZenChat stands firm as the no-nonsense, free, safe, and lightning-fast alternative to the giant chat "social media" apps.</p>
+        <p class="section-sub">With giants pushing paid "Plus" plans, ZenChat stands firm as the no-nonsense, free,
+          safe, and lightning-fast alternative to the giant chat "social media" apps.</p>
       </div>
 
       <!-- ZenChat card first -->
@@ -2785,19 +2809,27 @@
               <td><strong>Pricing Model</strong></td>
               <td class="compare-highlight">
                 <span class="compare-check">
-                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12" /></svg>
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                   100% Free Forever
                 </span>
               </td>
               <td>
                 <span class="compare-cross">
-                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                  <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                   WhatsApp Plus (Paid)
                 </span>
               </td>
               <td>
                 <span class="compare-cross">
-                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                  <svg viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                   Telegram Premium (Paid)
                 </span>
               </td>
@@ -3069,7 +3101,8 @@
         <div class="roadmap-card color-blue reveal" id="rm-1">
           <div class="roadmap-eta blue">July 16th, 2026</div>
           <div class="roadmap-icon" style="background:rgba(61,165,217,0.12)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#3da5d9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#3da5d9" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
               <path d="M4 9h16" />
               <path d="M4 15h16" />
               <path d="M10 3L8 21" />
@@ -3077,13 +3110,15 @@
             </svg>
           </div>
           <div class="roadmap-name">#ZenVoice</div>
-          <div class="roadmap-desc">An exclusive, anonymous, yet verified general chat space for college students. Pure real-time conversation with zero metrics.</div>
+          <div class="roadmap-desc">An exclusive, anonymous, yet verified general chat space for college students. Pure
+            real-time conversation with zero metrics.</div>
         </div>
 
         <div class="roadmap-card color-purple reveal" id="rm-2">
           <div class="roadmap-eta purple">Q4 2026</div>
           <div class="roadmap-icon" style="background:rgba(99,102,241,0.12)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
               <circle cx="9" cy="7" r="4" />
               <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -3091,19 +3126,22 @@
             </svg>
           </div>
           <div class="roadmap-name">E2EE Group Chats</div>
-          <div class="roadmap-desc">Full end-to-end encryption for group conversations in the core messenger - the same uncompromising privacy you get in 1-on-1 chats, extended to groups.</div>
+          <div class="roadmap-desc">Full end-to-end encryption for group conversations in the core messenger - the same
+            uncompromising privacy you get in 1-on-1 chats, extended to groups.</div>
         </div>
 
         <div class="roadmap-card color-gold reveal" id="rm-3">
           <div class="roadmap-eta gold">Q1 2027</div>
           <div class="roadmap-icon" style="background:rgba(234,179,8,0.08)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
               <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
               <line x1="12" y1="18" x2="12.01" y2="18" />
             </svg>
           </div>
           <div class="roadmap-name">Native Mobile Apps</div>
-          <div class="roadmap-desc">Dedicated, hyper-optimized native applications for Android and iOS, bringing better performance and deeper OS integration.</div>
+          <div class="roadmap-desc">Dedicated, hyper-optimized native applications for Android and iOS, bringing better
+            performance and deeper OS integration.</div>
         </div>
 
       </div>
