@@ -333,6 +333,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
             // 6. Submit E2EE envelope to server
             const momentPayload = {
+                type: isText ? (music ? "music" : "text") : "image",
                 isEncrypted: true,
                 encryptedPayload: ciphertext,
                 encryptedKeys,
