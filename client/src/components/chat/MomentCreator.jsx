@@ -63,6 +63,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const [caption, setCaption] = useState(""); // image moment caption
     const [selectedFile, setSelectedFile] = useState(null);
     const [filePreview, setFilePreview] = useState("");
+    const [videoDuration, setVideoDuration] = useState(0);
     const [activeFilter, setActiveFilter] = useState("none");
     const [disappearHours, setDisappearHours] = useState(24);
     const [isCaptured, setIsCaptured] = useState(false);
@@ -212,14 +213,39 @@ const MomentCreator = ({ isOpen, onClose }) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (file.size > 5 * 1024 * 1024) {
-            showToast("File size exceeds 5MB limit");
+        const isVideo = file.type.startsWith("video/");
+        const maxSize = isVideo ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+
+        if (file.size > maxSize) {
+            showToast(`File size exceeds ${isVideo ? "10MB" : "5MB"} limit`);
             return;
         }
 
-        setSelectedFile(file);
-        setFilePreview(URL.createObjectURL(file));
-        setActiveFilter("none");
+        if (isVideo) {
+            const videoElement = document.createElement('video');
+            videoElement.preload = 'metadata';
+            videoElement.onloadedmetadata = () => {
+                window.URL.revokeObjectURL(videoElement.src);
+                const duration = videoElement.duration;
+                if (duration > 60) {
+                    showToast("Videos cannot exceed 1 minute");
+                    return;
+                }
+                setVideoDuration(duration);
+                setSelectedFile(file);
+                setFilePreview(URL.createObjectURL(file));
+                setActiveFilter("none");
+            };
+            videoElement.onerror = () => {
+                showToast("Invalid video file");
+            };
+            videoElement.src = URL.createObjectURL(file);
+        } else {
+            setVideoDuration(0);
+            setSelectedFile(file);
+            setFilePreview(URL.createObjectURL(file));
+            setActiveFilter("none");
+        }
     };
 
     // Share moment to server
@@ -303,8 +329,10 @@ const MomentCreator = ({ isOpen, onClose }) => {
             }
 
             // 4. Construct plaintext metadata payload
+            const actualType = isText ? (music ? "music" : "text") : (selectedFile?.type?.startsWith("video/") ? "video" : "image");
+
             const metadataPayload = {
-                type: isText ? (music ? "music" : "text") : "image",
+                type: actualType,
                 content: isText ? content : "",
                 mediaUrl: uploadedUrl,
                 lqip,
@@ -333,7 +361,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
             // 6. Submit E2EE envelope to server
             const momentPayload = {
-                type: isText ? (music ? "music" : "text") : "image",
+                type: actualType,
                 isEncrypted: true,
                 encryptedPayload: ciphertext,
                 encryptedKeys,
@@ -680,8 +708,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                         Library
                                                     </button>
                                                 </div>
-                                                <input type="file" ref={cameraInputRef} accept="image/*" capture="environment" style={{ display: 'none' }} onChange={handleFileChange} />
-                                                <input type="file" ref={fileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
+                                                <input type="file" ref={cameraInputRef} accept="image/*,video/mp4,video/webm" capture="environment" style={{ display: 'none' }} onChange={handleFileChange} />
+                                                <input type="file" ref={fileInputRef} accept="image/*,video/mp4,video/webm" style={{ display: 'none' }} onChange={handleFileChange} />
                                                 <span style={{ fontSize: '0.68rem', color: '#64748b' }}>Max size limit: 5MB</span>
                                             </div>
                                         )}
@@ -919,9 +947,15 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                     )}
 
                                     {/* Tone music prefill suggest pill */}
-                                    {suggestedGenre && !music && !isMusicSearchOpen && (
+                                    {suggestedGenre && !music && !isMusicSearchOpen && videoDuration <= 30 && (
                                         <div 
-                                            onClick={isUploading ? undefined : () => setIsMusicSearchOpen(true)}
+                                            onClick={isUploading ? undefined : () => {
+                                                if (videoDuration > 30) {
+                                                    showToast("Songs can only be added to videos under 30 seconds");
+                                                } else {
+                                                    setIsMusicSearchOpen(true);
+                                                }
+                                            }}
                                             style={{
                                                 background: 'rgba(61,165,217,0.06)',
                                                 border: '1px dashed rgba(61,165,217,0.3)',

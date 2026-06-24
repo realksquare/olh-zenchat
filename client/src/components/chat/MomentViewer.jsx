@@ -44,6 +44,10 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const isInputFocusedRef = useRef(false);
     isInputFocusedRef.current = isInputFocused;
 
+    const [isPaused, setIsPaused] = useState(false);
+    const isPausedRef = useRef(false);
+    isPausedRef.current = isPaused;
+
     const locationContainerRef = useRef(null);
     const locationContentRef = useRef(null);
     const [locMarqueeDist, setLocMarqueeDist] = useState(0);
@@ -335,7 +339,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             }
 
             const interval = setInterval(() => {
-                if (isInputFocusedRef.current || isDecryptingRef.current) return;
+                if (isInputFocusedRef.current || isDecryptingRef.current || isPausedRef.current) return;
                 setTimeLeft(prev => {
                     if (prev <= 1) { clearInterval(interval); handleNext(); return 0; }
                     return prev - 1;
@@ -350,7 +354,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         }
 
         const interval = setInterval(() => {
-            if (isInputFocusedRef.current || isDecryptingRef.current) return;
+            if (isInputFocusedRef.current || isDecryptingRef.current || isPausedRef.current) return;
             setTimeLeft(prev => {
                 if (prev <= 1) { clearInterval(interval); handleNext(); return 0; }
                 return prev - 1;
@@ -363,23 +367,23 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         };
     }, [currentIndex, isOpen, currentMoment?._id, showDeleteConfirm, isDecrypting]);
 
-    // Handle audio/video pausing while user is typing a reply
+    // Handle audio/video pausing while user is typing a reply or holding pause
     useEffect(() => {
         if (videoRef.current) {
-            if (isInputFocused) {
+            if (isInputFocused || isPaused) {
                 videoRef.current.pause();
             } else {
                 videoRef.current.play().catch(() => { });
             }
         }
         if (audioRef.current) {
-            if (isInputFocused) {
+            if (isInputFocused || isPaused) {
                 audioRef.current.pause();
             } else {
                 audioRef.current.play().catch(() => { });
             }
         }
-    }, [isInputFocused]);
+    }, [isInputFocused, isPaused]);
 
     useEffect(() => {
         if (audioRef.current) audioRef.current.muted = isMuted;
@@ -668,7 +672,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                             ref={videoRef}
                             src={displayMediaUrl}
                             autoPlay
-                            muted={isMuted}
+                            muted={isMuted || !!displayMusic}
                             playsInline
                             onLoadedMetadata={(e) => {
                                 const dur = Math.ceil(e.target.duration);
@@ -738,6 +742,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                 </div>
 
                 <div className="aura-nav-zone left" onClick={handlePrev} />
+                <div className="aura-nav-zone center" onClick={() => setIsPaused(!isPaused)} />
                 <div className="aura-nav-zone right" onClick={handleNext} />
 
                 {showDeleteConfirm && (

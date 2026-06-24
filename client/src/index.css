@@ -5374,17 +5374,23 @@ select {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 40%;
   z-index: 50;
   cursor: pointer;
 }
 
 .aura-nav-zone.left {
   left: 0;
+  width: 30%;
+}
+
+.aura-nav-zone.center {
+  left: 30%;
+  width: 40%;
 }
 
 .aura-nav-zone.right {
   right: 0;
+  width: 30%;
 }
 
 .aura-music-search-container {
