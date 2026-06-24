@@ -309,7 +309,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 fileKey = keyHex;
                 fileIv = ivHex;
 
-                formData.append("file", encryptedBlob, "encrypted_moment.bin");
+                const ext = fileToUpload?.type?.startsWith("video/") ? "mp4" : "jpg";
+                formData.append("file", encryptedBlob, `encrypted_moment.${ext}`);
                 formData.append("upload_preset", uploadPreset);
 
                 lqip = await generateLQIP(selectedFile);
