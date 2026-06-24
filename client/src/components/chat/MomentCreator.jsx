@@ -575,7 +575,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                         </svg>
                                     </div>
                                     <span style={{ fontWeight: 600, color: '#f1f5f9', fontSize: '0.95rem' }}>Share a Photo/Video</span>
-                                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Post a captured photo with filters</span>
+                                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Post a captured photo or video with filters</span>
                                 </div>
                             </div>
                         </div>
