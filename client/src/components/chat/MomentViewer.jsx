@@ -12,11 +12,11 @@ import { getLocalE2EEKeys } from "../../utils/e2eeHelper";
 
 const FILTER_STYLES = {
     none: {},
-    warm: { filter: "sepia(0.3) saturate(1.2) contrast(1.1)" },
-    cold: { filter: "hue-rotate(180deg) saturate(1.1) contrast(1.05)" },
-    vivid: { filter: "saturate(1.6) contrast(1.15)" },
-    fade: { filter: "brightness(1.1) contrast(0.95) saturate(0.9)" },
-    bw: { filter: "grayscale(1) contrast(1.2)" }
+    cyber: { filter: "hue-rotate(-45deg) saturate(1.8) contrast(1.15)" },
+    dream: { filter: "blur(0.8px) brightness(1.1) contrast(0.9) saturate(1.1)" },
+    retro: { filter: "sepia(0.5) hue-rotate(-30deg) saturate(1.2) contrast(0.9) brightness(1.1)" },
+    midnight: { filter: "grayscale(0.8) contrast(1.3) brightness(0.8) sepia(0.2) hue-rotate(180deg)" },
+    euphoria: { filter: "hue-rotate(270deg) saturate(1.5) contrast(1.1)" }
 };
 
 const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
@@ -679,6 +679,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                 setTotalDuration(dur);
                                 setTimeLeft(dur);
                             }}
+                            style={{ ...(FILTER_STYLES[displayFilter] || FILTER_STYLES.none) }}
                         />
                     ) : hasMedia ? (
                         <div className="aura-media-content" key={currentMoment._id} style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>

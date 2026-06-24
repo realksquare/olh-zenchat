@@ -10,11 +10,11 @@ import { encryptForMultipleRecipients, encryptFileAES } from "../../utils/crypto
 
 const FILTER_PRESETS = [
     { id: "none", name: "Original", style: {} },
-    { id: "warm", name: "Warm", style: { filter: "sepia(0.3) saturate(1.2) contrast(1.1)" } },
-    { id: "cold", name: "Cold", style: { filter: "hue-rotate(180deg) saturate(1.1) contrast(1.05)" } },
-    { id: "vivid", name: "Vivid", style: { filter: "saturate(1.6) contrast(1.15)" } },
-    { id: "fade", name: "Fade", style: { filter: "brightness(1.1) contrast(0.95) saturate(0.9)" } },
-    { id: "bw", name: "B&W", style: { filter: "grayscale(1) contrast(1.2)" } }
+    { id: "cyber", name: "Cyberpunk", style: { filter: "hue-rotate(-45deg) saturate(1.8) contrast(1.15)" } },
+    { id: "dream", name: "Dreamy", style: { filter: "blur(0.8px) brightness(1.1) contrast(0.9) saturate(1.1)" } },
+    { id: "retro", name: "Retro", style: { filter: "sepia(0.5) hue-rotate(-30deg) saturate(1.2) contrast(0.9) brightness(1.1)" } },
+    { id: "midnight", name: "Midnight", style: { filter: "grayscale(0.8) contrast(1.3) brightness(0.8) sepia(0.2) hue-rotate(180deg)" } },
+    { id: "euphoria", name: "Euphoria", style: { filter: "hue-rotate(270deg) saturate(1.5) contrast(1.1)" } }
 ];
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -573,7 +573,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                             <polyline points="21 15 16 10 5 21" />
                                         </svg>
                                     </div>
-                                    <span style={{ fontWeight: 600, color: '#f1f5f9', fontSize: '0.95rem' }}>Share a photo</span>
+                                    <span style={{ fontWeight: 600, color: '#f1f5f9', fontSize: '0.95rem' }}>Share a Photo/Video</span>
                                     <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Post a captured photo with filters</span>
                                 </div>
                             </div>
