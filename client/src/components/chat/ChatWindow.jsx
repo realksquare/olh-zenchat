@@ -673,6 +673,48 @@ const ChatWindow = ({ onBack }) => {
     const bioContentRef = useRef(null);
     const [bioMarqueeDist, setBioMarqueeDist] = useState(0);
 
+    const [keyboardOffset, setKeyboardOffset] = useState(0);
+    useEffect(() => {
+        if (!window.visualViewport) return;
+        const handleResize = () => {
+            const offset = window.innerHeight - window.visualViewport.height;
+            setKeyboardOffset(offset > 0 ? offset : 0);
+        };
+        // Run once on mount
+        handleResize();
+        window.visualViewport.addEventListener("resize", handleResize);
+        window.visualViewport.addEventListener("scroll", handleResize);
+        return () => {
+            window.visualViewport.removeEventListener("resize", handleResize);
+            window.visualViewport.removeEventListener("scroll", handleResize);
+        };
+    }, []);
+
+    const [swipeBackOffset, setSwipeBackOffset] = useState(0);
+    const swipeStartRef = useRef(null);
+
+    const handleWindowTouchStart = (e) => {
+        // Only trigger swipe back if starting near the left edge (e.g. 30px)
+        if (e.touches[0].clientX < 30) {
+            swipeStartRef.current = e.touches[0].clientX;
+        }
+    };
+    const handleWindowTouchMove = (e) => {
+        if (swipeStartRef.current !== null) {
+            const deltaX = Math.max(0, e.touches[0].clientX - swipeStartRef.current);
+            setSwipeBackOffset(deltaX);
+        }
+    };
+    const handleWindowTouchEnd = () => {
+        if (swipeStartRef.current !== null) {
+            if (swipeBackOffset > 80 && onBack) {
+                onBack();
+            }
+            setSwipeBackOffset(0);
+            swipeStartRef.current = null;
+        }
+    };
+
     useEffect(() => {
         const measure = () => {
             if (!bioContainerRef.current || !bioContentRef.current) {
@@ -1212,7 +1254,19 @@ const ChatWindow = ({ onBack }) => {
     }
 
     return (
-        <div className={`chat-window ${isDeleted ? 'user-deleted-mode' : ''} ${isZenMode ? 'zen-active' : ''}`} style={{ position: 'relative' }}>
+        <div 
+            className={`chat-window ${isDeleted ? 'user-deleted-mode' : ''} ${isZenMode ? 'zen-active' : ''}`} 
+            style={{ 
+                position: 'relative',
+                paddingBottom: keyboardOffset ? `${keyboardOffset}px` : undefined,
+                transform: swipeBackOffset > 0 ? `translateX(${swipeBackOffset}px)` : 'none',
+                transition: swipeStartRef.current === null ? 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)' : 'none',
+                touchAction: swipeStartRef.current !== null ? 'none' : 'auto'
+            }}
+            onTouchStart={handleWindowTouchStart}
+            onTouchMove={handleWindowTouchMove}
+            onTouchEnd={handleWindowTouchEnd}
+        >
             <div className="chat-header" style={{ position: 'sticky', top: 0, zIndex: 50 }}>
                 <button className="chat-back-btn" onClick={handleBackClick} aria-label="Back to chats">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

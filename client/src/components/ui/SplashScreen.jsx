@@ -25,7 +25,6 @@ const SplashScreen = ({ isReady }) => {
                         <line x1="20" y1="40" x2="50" y2="40" stroke="#3da5d9" strokeWidth="5.5" strokeLinecap="round" />
                         <line x1="20" y1="53" x2="52" y2="53" stroke="#3da5d9" strokeWidth="5.5" strokeLinecap="round" />
                     </svg>
-                    <div className="splash-glow"></div>
                 </div>
                 <h1 className="splash-title">ZenChat</h1>
                 <div className="splash-status">

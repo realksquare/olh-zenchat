@@ -26,6 +26,38 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const [isClosing, setIsClosing] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    
+    // Swipe down to close
+    const [swipeYOffset, setSwipeYOffset] = useState(0);
+    const swipeStartRef = useRef(null);
+
+    const handleTouchStart = (e) => {
+        swipeStartRef.current = e.touches[0].clientY;
+        // Logic for unlocking interaction could be placed here if needed
+    };
+
+    const handleTouchMove = (e) => {
+        if (swipeStartRef.current !== null) {
+            const currentY = e.touches[0].clientY;
+            const deltaY = currentY - swipeStartRef.current;
+            // Only allow dragging down
+            if (deltaY > 0) {
+                setSwipeYOffset(deltaY);
+            }
+        }
+    };
+
+    const handleTouchEnd = () => {
+        if (swipeStartRef.current !== null) {
+            if (swipeYOffset > 100) {
+                onClose();
+            } else {
+                setSwipeYOffset(0);
+            }
+            swipeStartRef.current = null;
+        }
+    };
+
     const [showMusicInfo, setShowMusicInfo] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     const [likeLoading, setLikeLoading] = useState(false);
@@ -396,7 +428,8 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             if (ctx && ctx.state === "suspended") ctx.resume().catch(() => { });
         } catch (err) { }
 
-        if (!isMuted) {
+        // Only play if not paused and not muted
+        if (!isPausedRef.current && !isMuted) {
             if (audioRef.current && !audioRef.current.error) {
                 audioRef.current.play().catch(() => { });
             }
@@ -409,11 +442,9 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     useEffect(() => {
         if (isOpen) {
             window.addEventListener("click", triggerUnlockPlay);
-            window.addEventListener("touchstart", triggerUnlockPlay);
         }
         return () => {
             window.removeEventListener("click", triggerUnlockPlay);
-            window.removeEventListener("touchstart", triggerUnlockPlay);
         };
     }, [currentIndex, isOpen, isMuted]);
 
@@ -517,8 +548,19 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const isLongMetadata = songMetadata.length > 20;
 
     return createPortal(
-        <div className={`modal-overlay moments-aura-viewer-overlay ${isClosing ? 'fading-out' : ''}`} onClick={triggerUnlockPlay} onTouchStart={triggerUnlockPlay}>
-            <div className="moments-aura-viewer-content" onClick={(e) => { e.stopPropagation(); triggerUnlockPlay(); }} onTouchStart={triggerUnlockPlay} style={bgStyle}>
+        <div className={`modal-overlay moments-aura-viewer-overlay ${isClosing ? 'fading-out' : ''}`} onClick={triggerUnlockPlay}>
+            <div 
+                className="moments-aura-viewer-content" 
+                onClick={(e) => { e.stopPropagation(); triggerUnlockPlay(); }} 
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{
+                    ...bgStyle,
+                    transform: swipeYOffset > 0 ? `translateY(${swipeYOffset}px)` : 'translateY(0)',
+                    transition: swipeStartRef.current === null ? 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)' : 'none'
+                }}
+            >
                 {displayMediaUrl && (
                     <div
                         className="aura-blur-backdrop"
@@ -743,7 +785,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                 </div>
 
                 <div className="aura-nav-zone left" onClick={handlePrev} />
-                <div className="aura-nav-zone center" onClick={() => setIsPaused(!isPaused)} />
+                <div className="aura-nav-zone center" onClick={(e) => { e.stopPropagation(); setIsPaused(prev => !prev); }} />
                 <div className="aura-nav-zone right" onClick={handleNext} />
 
                 {showDeleteConfirm && (

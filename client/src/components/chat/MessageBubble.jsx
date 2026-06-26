@@ -176,8 +176,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const [showReplyIcon, setShowReplyIcon] = useState(false);
     
     const reactionsTimeoutRef = useRef(null);
-    const lastTapRef = useRef(0);
-    const tapTimeoutRef = useRef(null);
+    const longPressTimerRef = useRef(null);
     const imgRef = useRef(null);
     const outerRef = useRef(null);
     const desktopMenuRef = useRef(null);
@@ -247,6 +246,14 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         setSwipeOffset(0);
         setShowReplyIcon(false);
         preventClickRef.current = false;
+
+        // Start long-press timer
+        if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = setTimeout(() => {
+            if (navigator.vibrate) navigator.vibrate(50);
+            preventClickRef.current = true;
+            setMobileSheet(true);
+        }, 500);
     };
 
     const handleTouchMove = (e) => {
@@ -257,6 +264,10 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         
         if (diffX > 15 || diffY > 15) {
             // Movement detected - cancel any pending actions
+            if (longPressTimerRef.current) {
+                clearTimeout(longPressTimerRef.current);
+                longPressTimerRef.current = null;
+            }
         }
 
         if (diffY < 30 && diffX > 10) {
@@ -272,6 +283,11 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
 
     const handleTouchEnd = (e) => {
         if (!isMobile) return;
+
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
 
         if (touchStartRef.current.validSwipe) {
             if (showReplyIcon && canReply && onEdit) {
@@ -289,27 +305,13 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
             e.stopPropagation();
             return;
         }
-
-        const touchDuration = Date.now() - touchStartRef.current.time;
-        if (touchDuration < 300) {
-            const now = Date.now();
-            if (now - lastTapRef.current < 300) {
-                // Double-tap: open options bottom sheet
-                if (tapTimeoutRef.current) {
-                    clearTimeout(tapTimeoutRef.current);
-                    tapTimeoutRef.current = null;
-                }
-                e.preventDefault();
-                e.stopPropagation();
-                if (navigator.vibrate) navigator.vibrate(50);
-                setMobileSheet(true);
-            } else {
-                lastTapRef.current = now;
-            }
-        }
     };
 
     const handleTouchCancel = () => {
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
         setSwipeOffset(0);
         setShowReplyIcon(false);
         preventClickRef.current = false;
