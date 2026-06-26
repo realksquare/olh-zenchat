@@ -109,7 +109,7 @@ router.post("/suspend/:userId", authMiddleware, adminCheck, async (req, res) => 
             io.to(targetUser._id.toString()).emit("force_logout", { reason: "account_suspended" });
         }
 
-        res.json({ user: targetUser.toPublicJSON() });
+        res.json({ user: { ...targetUser.toPublicJSON(), isSuspended: targetUser.isSuspended } });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }
