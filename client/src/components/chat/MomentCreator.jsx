@@ -214,10 +214,10 @@ const MomentCreator = ({ isOpen, onClose }) => {
         if (!file) return;
 
         const isVideo = file.type.startsWith("video/");
-        const maxSize = isVideo ? 10 * 1024 * 1024 : 5 * 1024 * 1024;
+        const maxSize = isVideo ? 30 * 1024 * 1024 : 5 * 1024 * 1024;
 
         if (file.size > maxSize) {
-            showToast(`File size exceeds ${isVideo ? "10MB" : "5MB"} limit`);
+            showToast(`File size exceeds ${isVideo ? "30MB" : "5MB"} limit`);
             return;
         }
 

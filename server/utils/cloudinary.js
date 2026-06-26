@@ -12,7 +12,7 @@ const upload = multer({ storage });
 
 const uploadMedia = multer({
   storage,
-  limits: { fileSize: 20 * 1024 * 1024 }
+  limits: { fileSize: 35 * 1024 * 1024 }
 });
 
 module.exports = { cloudinary, upload, uploadMedia };
