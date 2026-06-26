@@ -120,7 +120,11 @@ router.post("/", async (req, res) => {
             return res.status(400).json({ message: "Cannot chat with yourself" });
         }
 
-        const targetUser = await User.findById(userId);
+        const [me, targetUser] = await Promise.all([
+            User.findById(req.user._id),
+            User.findById(userId)
+        ]);
+        
         if (!targetUser) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -151,20 +155,14 @@ router.post("/", async (req, res) => {
 
             let blockStatus = null;
             if (!freshChat.isGroup) {
-                const otherParticipant = freshChat.participants.find(p => p._id.toString() !== req.user._id.toString());
-                const otherParticipantId = otherParticipant?._id || otherParticipant;
-                if (otherParticipantId) {
-                    const me = await User.findById(req.user._id);
-                    const other = await User.findById(otherParticipantId);
-                    blockStatus = {
-                        iBlocked: !!(me?.blockedUsers?.some(u => u.userId.toString() === otherParticipantId.toString())),
-                        theyBlocked: !!(other?.blockedUsers?.some(u => u.userId.toString() === req.user._id.toString()))
-                    };
-                }
+                blockStatus = {
+                    iBlocked: !!(me?.blockedUsers?.some(u => u.userId.toString() === userId.toString())),
+                    theyBlocked: !!(targetUser?.blockedUsers?.some(u => u.userId.toString() === req.user._id.toString()))
+                };
             }
             const freshObj = freshChat.toObject();
             freshObj.blockStatus = blockStatus;
-            return res.json({ chat: sanitizeChatParticipants(freshObj, await User.findById(req.user._id)) });
+            return res.json({ chat: sanitizeChatParticipants(freshObj, me) });
         }
 
         const newChat = await Chat.create({
@@ -181,25 +179,15 @@ router.post("/", async (req, res) => {
 
         let blockStatus = null;
         if (!populated.isGroup) {
-            const otherParticipant = populated.participants.find(p => p._id.toString() !== req.user._id.toString());
-            const otherParticipantId = otherParticipant?._id || otherParticipant;
-            if (otherParticipantId) {
-                const me = await User.findById(req.user._id);
-                const other = await User.findById(otherParticipantId);
-                
-                const iBlockedThem = me?.blockedUsers?.some(u => u.userId.toString() === otherParticipantId.toString());
-                const theyBlockedMe = other?.blockedUsers?.some(u => u.userId.toString() === req.user._id.toString());
-                
-                blockStatus = {
-                    iBlocked: !!iBlockedThem,
-                    theyBlocked: !!theyBlockedMe
-                };
-            }
+            blockStatus = {
+                iBlocked: !!(me?.blockedUsers?.some(u => u.userId.toString() === userId.toString())),
+                theyBlocked: !!(targetUser?.blockedUsers?.some(u => u.userId.toString() === req.user._id.toString()))
+            };
         }
 
         const populatedObj = populated.toObject();
         populatedObj.blockStatus = blockStatus;
-        const sanitizedChat = sanitizeChatParticipants(populatedObj, await User.findById(req.user._id));
+        const sanitizedChat = sanitizeChatParticipants(populatedObj, me);
 
         const io = req.app.get("io");
         if (io) {
