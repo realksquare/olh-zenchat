@@ -49,8 +49,12 @@ if ('serviceWorker' in navigator) {
     });
 
     let refreshing = false;
+    // Check if there was already a service worker controlling the page on load
+    const hadController = !!navigator.serviceWorker.controller;
+
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!refreshing) {
+      // Only reload if the page was already controlled (i.e. this is an update, not first install)
+      if (!refreshing && hadController) {
         refreshing = true;
         // Graceful reload to apply the new update automatically
         window.location.reload();

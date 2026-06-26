@@ -673,22 +673,8 @@ const ChatWindow = ({ onBack }) => {
     const bioContentRef = useRef(null);
     const [bioMarqueeDist, setBioMarqueeDist] = useState(0);
 
-    const [keyboardOffset, setKeyboardOffset] = useState(0);
-    useEffect(() => {
-        if (!window.visualViewport) return;
-        const handleResize = () => {
-            const offset = window.innerHeight - window.visualViewport.height;
-            setKeyboardOffset(offset > 0 ? offset : 0);
-        };
-        // Run once on mount
-        handleResize();
-        window.visualViewport.addEventListener("resize", handleResize);
-        window.visualViewport.addEventListener("scroll", handleResize);
-        return () => {
-            window.visualViewport.removeEventListener("resize", handleResize);
-            window.visualViewport.removeEventListener("scroll", handleResize);
-        };
-    }, []);
+    // Native Android Chrome and iOS Safari PWA already handle viewport resizing, 
+    // so we don't need a manual visualViewport offset here.
 
     const [swipeBackOffset, setSwipeBackOffset] = useState(0);
     const swipeStartRef = useRef(null);
@@ -1258,7 +1244,6 @@ const ChatWindow = ({ onBack }) => {
             className={`chat-window ${isDeleted ? 'user-deleted-mode' : ''} ${isZenMode ? 'zen-active' : ''}`} 
             style={{ 
                 position: 'relative',
-                paddingBottom: keyboardOffset ? `${keyboardOffset}px` : undefined,
                 transform: swipeBackOffset > 0 ? `translateX(${swipeBackOffset}px)` : 'none',
                 transition: swipeStartRef.current === null ? 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)' : 'none',
                 touchAction: swipeStartRef.current !== null ? 'none' : 'auto'
