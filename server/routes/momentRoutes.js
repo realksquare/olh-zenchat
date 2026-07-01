@@ -159,7 +159,7 @@ router.get("/", protect, async (req, res) => {
         .sort({ createdAt: -1 });
 
         const filteredMoments = moments.map(m => {
-            const momentObj = m.toObject();
+            const momentObj = m.toJSON();
             const isOwner = (momentObj.userId?._id || momentObj.userId)?.toString() === req.user._id.toString();
             if (!isOwner) {
                 const hasLiked = momentObj.likes?.some(id => id.toString() === req.user._id.toString());
