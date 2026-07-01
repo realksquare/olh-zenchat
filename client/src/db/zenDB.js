@@ -50,6 +50,16 @@ db.version(7).stores({
     keys: "key",
     vault: "id, name, type, size, date",
     pendingMediaOutbox: "++id, chatId, createdAt",
+});
+
+db.version(8).stores({
+    chats: "_id, updatedAt, lastMessage._id",
+    messages: "_id, chatId, createdAt, senderId",
+    settings: "key",
+    outbox: "++id, chatId, createdAt",
+    keys: "key",
+    vault: "id, name, type, size, date",
+    pendingMediaOutbox: "++id, chatId, createdAt",
     autocomplete_model: "key, lastSeen",
 });
 
