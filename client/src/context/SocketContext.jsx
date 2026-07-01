@@ -12,7 +12,6 @@ import { decompressPacket, compressPacket } from "../utils/packetCompressor";
 import { packMessage, unpackMessage, isBinaryPacket, hexToBytes, bytesToHex } from "../utils/binaryPacker";
 
 
-
 const publicKeyCache = new Map();
 
 const getCachedPublicKey = async (userId) => {
@@ -182,6 +181,17 @@ export const SocketProvider = ({ children }) => {
             if (!isFromMe) {
                 const { soundEnabled } = useAuthStore.getState();
                 if (soundEnabled) playReceiveSound();
+                
+                if (activeChat?._id?.toString() !== decompressed.chatId?.toString()) {
+                    const senderName = existingChat?.isGroup ? existingChat.groupName : (existingChat?.participants?.find(p => p._id === decompressed.senderId || p._id?._id === decompressed.senderId)?.username || "New message");
+                    let previewText = "Sent a message";
+                    if (decompressed.type === "image") previewText = "Sent an image";
+                    else if (decompressed.type === "video") previewText = "Sent a video";
+                    else if (decompressed.type === "voice") previewText = "Sent a voice message";
+                    else if (decompressed.content) previewText = decompressed.content.substring(0, 30) + (decompressed.content.length > 30 ? "..." : "");
+                    
+                    showZenToast('info', `${senderName}: ${previewText}`);
+                }
             }
         };
 

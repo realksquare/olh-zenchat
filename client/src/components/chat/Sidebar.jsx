@@ -22,7 +22,7 @@ import { usePulseStore } from "../../stores/pulseStore";
 import { useMomentStore } from "../../stores/momentStore";
 import { VerifiedTick, AdminIcon, HelpIcon, InviteIcon } from "../ui/Icons";
 
-const Sidebar = ({ onChatSelect }) => {
+const Sidebar = ({ onChatSelect, insideSheet = false }) => {
     const user = useAuthStore((s) => s.user);
     const logout = useAuthStore((s) => s.logout);
     const { hasActiveMoment, getHaloColor } = useMomentStore.getState();
@@ -92,14 +92,15 @@ const Sidebar = ({ onChatSelect }) => {
     }, []);
 
     const handleTouchStart = useCallback((e) => {
+        if (insideSheet) return;
         if (chatsRef.current?.scrollTop === 0) {
             pullStartY.current = e.touches[0].clientY;
             isPulling.current = true;
         }
-    }, []);
+    }, [insideSheet]);
 
     const handleTouchMove = useCallback((e) => {
-        if (!isPulling.current) return;
+        if (insideSheet || !isPulling.current) return;
         const delta = e.touches[0].clientY - pullStartY.current;
         if (delta > 0 && chatsRef.current?.scrollTop === 0) {
             if (e.cancelable) e.preventDefault();
@@ -110,7 +111,7 @@ const Sidebar = ({ onChatSelect }) => {
     }, []);
 
     const handleTouchEnd = useCallback(async () => {
-        if (!isPulling.current) return;
+        if (insideSheet || !isPulling.current) return;
         isPulling.current = false;
         if (pullY >= PULL_THRESHOLD) {
             setIsRefreshing(true);

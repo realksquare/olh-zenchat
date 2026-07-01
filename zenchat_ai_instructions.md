@@ -27,4 +27,4 @@ These are the core operating principles and coding standards to be followed for 
 
 ## 6. Version Control Protocol
 - **Perfectly synced codebase:** Make sure new changes or additions are synced and work together well across all relevant files.
-- **Comprehensive Commits:** After completing changes or building new features, run `npm run build` to ensure no errors, and all files are ready and staged before pushing. Always use `git add .` (or `git add -A`) to ensure no newly created files or subtle changes are left behind before committing (`git commit -m` based on the changes done) and finally pushing to GitHub (`git push origin main`) to the repo `github.com/realksquare/olh-zenchat.git`. 
+- **Comprehensive Commits:** After completing changes or building new features, run `npm run build` to ensure no errors, and all files are ready and staged before pushing. Always use `git add .` (or `git add -A`) to ensure no newly created files or subtle changes are left behind before committing (`git commit -m` based on the changes done) and finally pushing to GitHub (`git push origin main`) to the repo `github.com/realksquare/olh-zenchat.git`- all on Command Prompt.

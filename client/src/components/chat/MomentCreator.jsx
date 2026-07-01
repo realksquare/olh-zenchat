@@ -214,10 +214,10 @@ const MomentCreator = ({ isOpen, onClose }) => {
         if (!file) return;
 
         const isVideo = file.type.startsWith("video/");
-        const maxSize = isVideo ? 30 * 1024 * 1024 : 5 * 1024 * 1024;
+        const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
 
         if (file.size > maxSize) {
-            showToast(`File size exceeds ${isVideo ? "30MB" : "5MB"} limit`);
+            showToast(`File size exceeds ${isVideo ? "50MB" : "5MB"} limit`);
             return;
         }
 
@@ -639,11 +639,22 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                     <div className="aura-preview-container image-preview-wrapper" style={{ position: 'relative', height: '240px', background: '#0a0d14', borderRadius: '16px', margin: '0 28px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         {filePreview ? (
                                             <>
-                                                <img 
-                                                    src={filePreview} 
-                                                    alt="Preview" 
-                                                    style={{ width: '100%', height: '100%', objectFit: 'cover', ...getPreviewFilterStyle() }}
-                                                />
+                                                {selectedFile?.type?.startsWith('video/') ? (
+                                                    <video 
+                                                        src={filePreview} 
+                                                        controls
+                                                        autoPlay
+                                                        muted
+                                                        loop
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover', ...getPreviewFilterStyle() }}
+                                                    />
+                                                ) : (
+                                                    <img 
+                                                        src={filePreview} 
+                                                        alt="Preview" 
+                                                        style={{ width: '100%', height: '100%', objectFit: 'cover', ...getPreviewFilterStyle() }}
+                                                    />
+                                                )}
                                                 
                                                 {/* Caption Overlay */}
                                                 {caption.trim().length > 0 && (

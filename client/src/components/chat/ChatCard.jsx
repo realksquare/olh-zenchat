@@ -3,9 +3,25 @@ import { createPortal } from "react-dom";
 import { useChatStore } from "../../stores/chatStore";
 import { useAuthStore } from "../../stores/authStore";
 import { useMomentStore } from "../../stores/momentStore";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format, isToday, isThisWeek, isThisYear } from "date-fns";
 import { VerifiedTick } from "../ui/Icons";
 import axiosInstance from "../../utils/axios";
+
+const ACCENT_PALETTE = ['#3da5d9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16'];
+const getAccentColor = (username) => {
+  if (!username) return ACCENT_PALETTE[0];
+  const hash = Array.from(username).reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return ACCENT_PALETTE[hash % ACCENT_PALETTE.length];
+};
+
+const formatAbsoluteTime = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isToday(d)) return format(d, 'HH:mm');
+  if (isThisWeek(d)) return format(d, 'EEE'); // Mon, Tue...
+  if (isThisYear(d)) return format(d, 'MMM d'); // Jun 28
+  return format(d, 'dd/MM/yy');
+};
 
 const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     // ── Store subscriptions ───────────────────────────────────────────────────
@@ -232,6 +248,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         alignItems: "center", gap: "6px",
     };
 
+    const accentColor = getAccentColor(displayName);
+
     // ── Render ─────────────────────────────────────────────────────────────────
     return (
         <>
@@ -246,19 +264,28 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                 onMouseLeave={handleMouseLeave}
                 role="button"
                 tabIndex={0}
-                style={{ position: "relative", opacity: isBlocked ? 0.65 : 1 }}
+                style={{ 
+                    "--accent": accentColor,
+                    position: "relative", 
+                    opacity: isBlocked ? 0.65 : 1 
+                }}
             >
-                {/* Avatar */}
-                <div className="chat-card-avatar-wrap">
-                    <div
-                        className={`avatar avatar-md ${hasMoments ? "moments-halo" : ""}`}
-                        style={hasMoments ? { "--halo-color": useMomentStore.getState().getHaloColor(otherUserId, user?._id) } : {}}
-                    >
-                        {otherUser?.avatar
-                            ? <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
-                            : <span>{isDeleted ? "?" : otherUser?.username?.slice(0, 2).toUpperCase()}</span>
-                        }
-                    </div>
+                {/* Left accent bar */}
+                <div className="chat-card-accent-bar" />
+
+                {/* Square Monogram */}
+                <div 
+                    className={`chat-card-monogram ${hasMoments ? "has-moment" : ""}`} 
+                    style={{ 
+                        background: `${accentColor}22`, 
+                        color: accentColor,
+                        ...(hasMoments ? { "--halo-color": useMomentStore.getState().getHaloColor(otherUserId, user?._id) } : {})
+                    }}
+                >
+                    {otherUser?.avatar
+                        ? <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
+                        : <span>{isDeleted ? "?" : otherUser?.username?.slice(0, 2).toUpperCase()}</span>
+                    }
                     {isOnline && <span className={`online-dot${isSPOp ? ' online-dot--amber' : ''}`} />}
                 </div>
 
@@ -298,15 +325,15 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                             </div>
                         </div>
                         <span className="chat-card-time">
-                            {liveChat.updatedAt ? formatDistanceToNow(new Date(liveChat.updatedAt), { addSuffix: false }) : ""}
+                            {formatAbsoluteTime(liveChat.updatedAt)}
                         </span>
                     </div>
                     <div className="chat-card-bottom-row">
                         <span className={`chat-card-preview ${isTyping ? "preview-typing" : ""} ${hasUnread ? "preview-unread" : ""}`}>
                             {preview.text}
                         </span>
-                        {hasUnread && !showMenu && (
-                            <span className="unread-badge">{displayUnreadCount > 3 ? "3+" : displayUnreadCount}</span>
+                        {hasUnread && !showMenu && displayUnreadCount > 1 && (
+                            <span className="unread-badge">{displayUnreadCount > 9 ? "9+" : displayUnreadCount}</span>
                         )}
                     </div>
                 </div>
