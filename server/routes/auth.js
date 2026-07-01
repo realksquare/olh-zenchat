@@ -353,6 +353,34 @@ router.post(
     }
 );
 
+router.post("/resend-mfa", async (req, res) => {
+    try {
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ message: "userId is required" });
+
+        const user = await User.findById(userId);
+        if (!user || !user.is2faEnabled) {
+            return res.status(400).json({ message: "Invalid user or MFA not enabled" });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        await send2faEmail(user.email, user.username, otp);
+
+        user.verificationSession = {
+            otpCode: otp,
+            otpExpires: new Date(Date.now() + 5 * 60 * 1000)
+        };
+        await user.save();
+
+        res.json({ success: true, message: "Verification code resent." });
+    } catch (err) {
+        console.error("[Resend MFA] error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+
 router.get("/me", authMiddleware, async (req, res) => {
     try {
         const user = await User.findById(req.user._id)

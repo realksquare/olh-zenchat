@@ -215,7 +215,30 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [otpCode, setOtpCode] = useState("");
     const [otpSent, setOtpSent] = useState(false);
     const [expiryTimeLeft, setExpiryTimeLeft] = useState(300); // 5 minutes countdown
-    const [resendLockTimeLeft, setResendLockTimeLeft] = useState(0); // 1 minute rate-limit
+    const [resendLockTimeLeft, setResendLockTimeLeft] = useState(0); // 30 second rate-limit
+    const [resendCount, setResendCount] = useState(0);
+    const [isLocked, setIsLocked] = useState(false);
+
+    useEffect(() => {
+        const stateStr = localStorage.getItem("setup_mfa_resend");
+        if (stateStr) {
+            const state = JSON.parse(stateStr);
+            const now = Date.now();
+            if (state.lockUntil && now < state.lockUntil) {
+                setIsLocked(true);
+                setResendLockTimeLeft(Math.ceil((state.lockUntil - now) / 1000));
+            } else if (state.lockUntil && now >= state.lockUntil) {
+                setIsLocked(false);
+                setResendCount(0);
+                localStorage.removeItem("setup_mfa_resend");
+            } else {
+                setResendCount(state.count || 0);
+                if (state.lastResend && now - state.lastResend < 30000) {
+                    setResendLockTimeLeft(Math.ceil((30000 - (now - state.lastResend)) / 1000));
+                }
+            }
+        }
+    }, []);
 
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [capturedMoments, setCapturedMoments] = useState([]);
@@ -249,19 +272,17 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         let timer = null;
         if (resendLockTimeLeft > 0) {
             timer = setInterval(() => {
-                setResendLockTimeLeft((prev) => {
-                    if (prev <= 1) {
-                        clearInterval(timer);
-                        return 0;
-                    }
-                    return prev - 1;
-                });
+                setResendLockTimeLeft((prev) => prev - 1);
             }, 1000);
+        } else if (isLocked && resendLockTimeLeft <= 0) {
+            setIsLocked(false);
+            setResendCount(0);
+            localStorage.removeItem("setup_mfa_resend");
         }
         return () => {
             if (timer) clearInterval(timer);
         };
-    }, [resendLockTimeLeft]);
+    }, [resendLockTimeLeft, isLocked]);
 
     const fileInputRef = useRef(null);
     const importInputRef = useRef(null);
@@ -492,13 +513,32 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             showToast("Please enter a valid email address.");
             return;
         }
+        if (resendLockTimeLeft > 0 || isLocked) return;
+
+        let newCount = resendCount + 1;
+        let lockUntil = null;
+        let newCooldown = 30; // 30 seconds
+        
+        if (newCount >= 3) {
+            lockUntil = Date.now() + 60 * 60 * 1000; // 1 hour
+            newCooldown = 3600;
+            setIsLocked(true);
+        }
+        
+        setResendCount(newCount);
+        setResendLockTimeLeft(newCooldown);
+        localStorage.setItem("setup_mfa_resend", JSON.stringify({
+            count: newCount,
+            lastResend: Date.now(),
+            lockUntil
+        }));
+
         setIsE2EELoading(true);
         try {
             const { data } = await axiosInstance.post("/auth/2fa/setup/request");
             showToast(data.message || "Verification code sent to your email.");
             setOtpSent(true);
             setExpiryTimeLeft(300); // 5 minutes countdown
-            setResendLockTimeLeft(60); // 1 minute resend rate-limit
         } catch (err) {
             showToast(err.response?.data?.message || "Failed to initiate verification.");
         } finally {
@@ -1191,18 +1231,23 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                 <button
                                                     type="button"
                                                     onClick={handleSendVerificationCode}
-                                                    disabled={resendLockTimeLeft > 0}
+                                                    disabled={resendLockTimeLeft > 0 || isLocked}
                                                     style={{
                                                         background: "none",
                                                         border: "none",
-                                                        color: resendLockTimeLeft > 0 ? "#64748b" : "var(--color-primary)",
-                                                        cursor: resendLockTimeLeft > 0 ? "not-allowed" : "pointer",
+                                                        color: (resendLockTimeLeft > 0 || isLocked) ? "#64748b" : "var(--color-primary)",
+                                                        cursor: (resendLockTimeLeft > 0 || isLocked) ? "not-allowed" : "pointer",
                                                         fontSize: "0.75rem",
                                                         textDecoration: "underline",
                                                         fontWeight: "600"
                                                     }}
                                                 >
-                                                    {resendLockTimeLeft > 0 ? `Resend Code (${resendLockTimeLeft}s)` : "Resend Code"}
+                                                    {isLocked 
+                                                        ? `Too many attempts. Try again in ${Math.floor(resendLockTimeLeft / 60)}m ${resendLockTimeLeft % 60}s`
+                                                        : resendLockTimeLeft > 0 
+                                                            ? `Resend Code in ${resendLockTimeLeft}s` 
+                                                            : "Resend Code"
+                                                    }
                                                 </button>
                                             </div>
                                             <div style={{ display: "flex", gap: "10px", width: "100%", justifyContent: "center", marginTop: "8px" }}>

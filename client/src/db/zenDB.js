@@ -202,3 +202,14 @@ export const upsertAutocompleteEntry = async (key, increment) => {
         console.error("[zenDB] upsertAutocompleteEntry failed:", err);
     }
 };
+
+// Handle schema mismatches automatically to prevent UpgradeError from locking users out
+db.open().catch(async (err) => {
+    if (err.name === 'UpgradeError') {
+        console.warn("[zenDB] Schema mismatch, recreating DB to avoid DatabaseClosedError.");
+        await db.delete();
+        await db.open();
+    } else {
+        console.error("[zenDB] Failed to open Dexie:", err);
+    }
+});

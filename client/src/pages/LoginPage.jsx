@@ -34,6 +34,10 @@ const LoginPage = () => {
     const [recoveryKey, setRecoveryKey] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
 
+    const [resendCount, setResendCount] = useState(0);
+    const [resendCooldown, setResendCooldown] = useState(0);
+    const [isLocked, setIsLocked] = useState(false);
+
     const otpInputRef = useRef(null);
     const recoveryInputRef = useRef(null);
 
@@ -41,6 +45,40 @@ const LoginPage = () => {
         resetMfaState();
         clearError();
     }, [resetMfaState, clearError]);
+
+    useEffect(() => {
+        const stateStr = localStorage.getItem("login_mfa_resend");
+        if (stateStr) {
+            const state = JSON.parse(stateStr);
+            const now = Date.now();
+            if (state.lockUntil && now < state.lockUntil) {
+                setIsLocked(true);
+                setResendCooldown(Math.ceil((state.lockUntil - now) / 1000));
+            } else if (state.lockUntil && now >= state.lockUntil) {
+                setIsLocked(false);
+                setResendCount(0);
+                localStorage.removeItem("login_mfa_resend");
+            } else {
+                setResendCount(state.count || 0);
+                if (state.lastResend && now - state.lastResend < 30000) {
+                    setResendCooldown(Math.ceil((30000 - (now - state.lastResend)) / 1000));
+                }
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        let timer;
+        if (resendCooldown > 0) {
+            timer = setInterval(() => setResendCooldown(p => p - 1), 1000);
+        } else if (isLocked && resendCooldown <= 0) {
+            setIsLocked(false);
+            setResendCount(0);
+            localStorage.removeItem("login_mfa_resend");
+        }
+        return () => clearInterval(timer);
+    }, [resendCooldown, isLocked]);
+
 
     useEffect(() => {
         if (mfaRequired && otpInputRef.current) {
@@ -98,6 +136,36 @@ const LoginPage = () => {
             navigate("/");
         }
     };
+
+    const handleResendMfa = async () => {
+        if (resendCooldown > 0 || isLocked) return;
+        
+        let newCount = resendCount + 1;
+        let lockUntil = null;
+        let newCooldown = 30; // 30 seconds
+        
+        if (newCount >= 3) {
+            lockUntil = Date.now() + 60 * 60 * 1000; // 1 hour
+            newCooldown = 3600;
+            setIsLocked(true);
+        }
+        
+        setResendCount(newCount);
+        setResendCooldown(newCooldown);
+        localStorage.setItem("login_mfa_resend", JSON.stringify({
+            count: newCount,
+            lastResend: Date.now(),
+            lockUntil
+        }));
+
+        const result = await useAuthStore.getState().resendMfaOtp(mfaUserId);
+        if (result.success) {
+            setSuccessMessage("Verification code resent.");
+        } else {
+            setPwError(result.message);
+        }
+    };
+
 
     const handleBackToLogin = () => {
         setShowRecoveryBypass(false);
@@ -171,6 +239,30 @@ const LoginPage = () => {
                                     {isLoading ? "Verifying..." : "Verify Code"}
                                 </button>
                             </form>
+                            
+                            <div style={{ marginTop: "16px", textAlign: "center" }}>
+                                <button
+                                    type="button"
+                                    onClick={handleResendMfa}
+                                    disabled={resendCooldown > 0 || isLocked}
+                                    style={{
+                                        background: "none",
+                                        border: "none",
+                                        color: (resendCooldown > 0 || isLocked) ? "#64748b" : "var(--color-primary)",
+                                        cursor: (resendCooldown > 0 || isLocked) ? "not-allowed" : "pointer",
+                                        fontSize: "0.9rem",
+                                        fontWeight: "500"
+                                    }}
+                                >
+                                    {isLocked 
+                                        ? `Too many attempts. Try again in ${Math.floor(resendCooldown / 60)}m ${resendCooldown % 60}s`
+                                        : resendCooldown > 0 
+                                            ? `Resend Code in ${resendCooldown}s` 
+                                            : "Resend Code"
+                                    }
+                                </button>
+                            </div>
+
 
                             <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "10px" }}>
                                 <button

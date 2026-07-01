@@ -148,6 +148,19 @@ export const useAuthStore = create(
         });
     },
 
+    resendMfaOtp: async (userId) => {
+        set({ isLoading: true, error: null });
+        try {
+            const { data } = await axiosInstance.post("/auth/resend-mfa", { userId });
+            set({ isLoading: false });
+            return { success: true, message: data.message };
+        } catch (err) {
+            const message = err.response?.data?.message || "Failed to resend code";
+            set({ error: message, isLoading: false });
+            return { success: false, message };
+        }
+    },
+
     triggerChallenge: async (userId, recoveryKey) => {
         set({ isLoading: true, error: null });
         try {

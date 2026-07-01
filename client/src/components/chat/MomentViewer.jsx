@@ -26,38 +26,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const [isClosing, setIsClosing] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    
-    // Swipe down to close
-    const [swipeYOffset, setSwipeYOffset] = useState(0);
-    const swipeStartRef = useRef(null);
-
-    const handleTouchStart = (e) => {
-        swipeStartRef.current = e.touches[0].clientY;
-        // Logic for unlocking interaction could be placed here if needed
-    };
-
-    const handleTouchMove = (e) => {
-        if (swipeStartRef.current !== null) {
-            const currentY = e.touches[0].clientY;
-            const deltaY = currentY - swipeStartRef.current;
-            // Only allow dragging down
-            if (deltaY > 0) {
-                setSwipeYOffset(deltaY);
-            }
-        }
-    };
-
-    const handleTouchEnd = () => {
-        if (swipeStartRef.current !== null) {
-            if (swipeYOffset > 100) {
-                onClose();
-            } else {
-                setSwipeYOffset(0);
-            }
-            swipeStartRef.current = null;
-        }
-    };
-
     const [showMusicInfo, setShowMusicInfo] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
     const [likeLoading, setLikeLoading] = useState(false);
@@ -144,16 +112,29 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                 if (!keys || !keys.privateKey) {
                     throw new Error("Private key missing");
                 }
-                const encryptedKeysMap = currentMoment.encryptedKeys instanceof Map
+                
+                const rawEncryptedKeysMap = currentMoment.encryptedKeys instanceof Map
                     ? Object.fromEntries(currentMoment.encryptedKeys)
                     : currentMoment.encryptedKeys || {};
+                
+                // Ensure case-insensitive match for uploader's ObjectId
+                const userIdStr = currentUserId?.toString().toLowerCase();
+                const matchedKey = Object.keys(rawEncryptedKeysMap).find(k => k.toLowerCase() === userIdStr);
+                const ourEncryptedKeyHex = matchedKey ? rawEncryptedKeysMap[matchedKey] : null;
+
+                if (!ourEncryptedKeyHex) {
+                    throw new Error("Symmetric key not encrypted for this user.");
+                }
+
+                // Create a temporary map strictly for decryption
+                const encryptedKeysMap = { [currentUserId?.toString()]: ourEncryptedKeyHex };
 
                 const decryptedPayloadStr = await decryptForMultipleRecipients(
                     currentMoment.encryptedPayload,
                     encryptedKeysMap,
                     currentMoment.iv,
                     keys.privateKey,
-                    currentUserId
+                    currentUserId?.toString()
                 );
                 const payload = JSON.parse(decryptedPayloadStr);
                 if (!active) return;
@@ -428,8 +409,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             if (ctx && ctx.state === "suspended") ctx.resume().catch(() => { });
         } catch (err) { }
 
-        // Only play if not paused and not muted
-        if (!isPausedRef.current && !isMuted) {
+        if (!isMuted) {
             if (audioRef.current && !audioRef.current.error) {
                 audioRef.current.play().catch(() => { });
             }
@@ -442,9 +422,11 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     useEffect(() => {
         if (isOpen) {
             window.addEventListener("click", triggerUnlockPlay);
+            window.addEventListener("touchstart", triggerUnlockPlay);
         }
         return () => {
             window.removeEventListener("click", triggerUnlockPlay);
+            window.removeEventListener("touchstart", triggerUnlockPlay);
         };
     }, [currentIndex, isOpen, isMuted]);
 
@@ -548,19 +530,8 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const isLongMetadata = songMetadata.length > 20;
 
     return createPortal(
-        <div className={`modal-overlay moments-aura-viewer-overlay ${isClosing ? 'fading-out' : ''}`} onClick={triggerUnlockPlay}>
-            <div 
-                className="moments-aura-viewer-content" 
-                onClick={(e) => { e.stopPropagation(); triggerUnlockPlay(); }} 
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                style={{
-                    ...bgStyle,
-                    transform: swipeYOffset > 0 ? `translateY(${swipeYOffset}px)` : 'translateY(0)',
-                    transition: swipeStartRef.current === null ? 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)' : 'none'
-                }}
-            >
+        <div className={`modal-overlay moments-aura-viewer-overlay ${isClosing ? 'fading-out' : ''}`} onClick={triggerUnlockPlay} onTouchStart={triggerUnlockPlay}>
+            <div className="moments-aura-viewer-content" onClick={(e) => { e.stopPropagation(); triggerUnlockPlay(); }} onTouchStart={triggerUnlockPlay} style={bgStyle}>
                 {displayMediaUrl && (
                     <div
                         className="aura-blur-backdrop"
@@ -704,7 +675,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                     ) : decryptionError ? (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '12px', color: '#f43f5e', padding: '24px', textAlign: 'center' }}>
                             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
                             </svg>
                             <span style={{ fontSize: '0.85rem', fontWeight: '600' }}>Decryption failed</span>
                             <span style={{ fontSize: '0.72rem', color: '#64748b' }}>This moment is E2EE secured and your key is unavailable.</span>
@@ -785,7 +756,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                 </div>
 
                 <div className="aura-nav-zone left" onClick={handlePrev} />
-                <div className="aura-nav-zone center" onClick={(e) => { e.stopPropagation(); setIsPaused(prev => !prev); }} />
+                <div className="aura-nav-zone center" onClick={() => setIsPaused(!isPaused)} />
                 <div className="aura-nav-zone right" onClick={handleNext} />
 
                 {showDeleteConfirm && (
