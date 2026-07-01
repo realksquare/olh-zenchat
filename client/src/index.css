@@ -1096,18 +1096,20 @@ select {
   height: 100%;
   position: absolute;
   left: 0; top: 0;
-  background: transparent;
-  transition: width 150ms ease, background 150ms ease;
+  background: var(--accent);
+  opacity: 0.3;
+  transition: width 150ms ease, opacity 150ms ease, background 150ms ease;
   flex-shrink: 0;
 }
 
 .chat-card.unread .chat-card-accent-bar {
-  background: var(--accent);
-  width: 4px;
+  opacity: 1;
+  width: 6px;
 }
 
 .chat-card.active .chat-card-accent-bar {
   background: var(--color-primary);
+  opacity: 1;
   width: 4px;
 }
 

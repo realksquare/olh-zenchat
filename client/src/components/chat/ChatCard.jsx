@@ -282,10 +282,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                         ...(hasMoments ? { "--halo-color": useMomentStore.getState().getHaloColor(otherUserId, user?._id) } : {})
                     }}
                 >
-                    {otherUser?.avatar
-                        ? <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
-                        : <span>{isDeleted ? "?" : otherUser?.username?.slice(0, 2).toUpperCase()}</span>
-                    }
+                    <span>{isDeleted ? "?" : displayName.slice(0, 2).toUpperCase()}</span>
                     {isOnline && <span className={`online-dot${isSPOp ? ' online-dot--amber' : ''}`} />}
                 </div>
 
