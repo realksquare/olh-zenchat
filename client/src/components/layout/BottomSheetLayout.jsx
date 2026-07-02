@@ -172,7 +172,10 @@ const BottomSheetLayout = () => {
     // If active chat changes (e.g. from handle), collapse
     useEffect(() => {
         if (activeChat) {
-            snapTo('collapsed');
+            const t = setTimeout(() => {
+                snapTo('collapsed');
+            }, 80);
+            return () => clearTimeout(t);
         }
     }, [activeChat]);
 

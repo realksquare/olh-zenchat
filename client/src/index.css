@@ -9274,6 +9274,9 @@ select {
 }
 
 .mobile-header-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--color-text, #ffffff);
@@ -9283,7 +9286,7 @@ select {
 .mobile-header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .mobile-header-btn {
@@ -9312,7 +9315,7 @@ select {
   height: 92dvh;
   background: var(--color-surface, #161b22);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  transform: translateY(calc(92dvh - 72px)); 
+  transform: translateY(calc(92dvh - 58px)); 
   transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
   will-change: transform;
   display: flex;
@@ -9444,5 +9447,5 @@ select {
   gap: 12px;
   color: var(--color-text-faint, #64748b);
   font-size: var(--text-sm);
-  padding-bottom: 80px; 
+  padding-bottom: 20px; 
 }

@@ -231,14 +231,18 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
             useChatStore.getState().setActiveChat(data.chat);
             setSearch("");
             setSearchResults([]);
-            onChatSelect();
+            setTimeout(() => {
+                onChatSelect();
+            }, 80);
         } catch (_) { }
     };
 
     const handleSelectChat = (chat) => {
         const freshChat = useChatStore.getState().chats.find((c) => c._id === chat._id) || chat;
         setActiveChat(freshChat);
-        onChatSelect();
+        setTimeout(() => {
+            onChatSelect();
+        }, 80);
     };
 
     // Handle notification deep-link: open chat when user taps "Open & Reply" on a push notification

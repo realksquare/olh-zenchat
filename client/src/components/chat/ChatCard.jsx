@@ -225,17 +225,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const triggerDelete = (e) => {
         if (e) e.stopPropagation();
         setShowMenu(false);
-        const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-        const isMobile = window.innerWidth <= 768;
-
-        if (isMobile && isPWA) {
-            const confirmed = window.confirm("Are you sure you want to delete this conversation? This action cannot be undone.");
-            if (confirmed) {
-                handleDelete();
-            }
-        } else {
-            setShowDeletePrompt(true);
-        }
+        setShowDeletePrompt(true);
     };
 
     const handleToggleContact = async (e) => {

@@ -63,27 +63,31 @@ router.get("/my-time", authMiddleware, async (req, res) => {
 
         // --- 2. Moments Stats ---
         // Moments created by user
-        const momentsShared = await Moment.countDocuments({ userId });
+        const activeShared = await Moment.countDocuments({ userId });
+        const momentsShared = Math.max(user.momentsStats?.shared || 0, activeShared);
         
         // Likes received on own moments
         const myMoments = await Moment.find({ userId }).select("likes");
-        let likesReceived = 0;
+        let activeLikesReceived = 0;
         myMoments.forEach(m => {
-            if (m.likes) likesReceived += m.likes.length;
+            if (m.likes) activeLikesReceived += m.likes.length;
         });
+        const likesReceived = Math.max(user.momentsStats?.likesReceived || 0, activeLikesReceived);
 
         // Moments viewed by user (excluding own moments)
         const viewedMoments = await Moment.find({ 
             "viewedBy.userId": userId,
             userId: { $ne: userId }
         });
-        const momentsViewed = viewedMoments.length;
+        const activeViewed = viewedMoments.length;
+        const momentsViewed = Math.max(user.momentsStats?.viewed || 0, activeViewed);
 
         // Moments liked by user
-        const momentsLiked = await Moment.countDocuments({ 
+        const activeLiked = await Moment.countDocuments({ 
             likes: userId,
             userId: { $ne: userId }
         });
+        const momentsLiked = Math.max(user.momentsStats?.liked || 0, activeLiked);
 
         // --- 3. Data Saved ---
         // ZenChat Data Formula Estimate

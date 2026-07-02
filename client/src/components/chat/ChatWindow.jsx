@@ -787,13 +787,6 @@ const ChatWindow = ({ onBack }) => {
     // Toast state
     const [localToast, setLocalToast] = useState(null);
     const showToast = useCallback((msg, type = 'info') => {
-        const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile && isPWA) {
-            window.alert(msg);
-            return;
-        }
-
         setLocalToast({ msg, type });
         setTimeout(() => setLocalToast(null), 3000);
     }, []);

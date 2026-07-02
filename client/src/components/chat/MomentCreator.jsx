@@ -10,11 +10,11 @@ import { encryptForMultipleRecipients, encryptFileAES } from "../../utils/crypto
 
 const FILTER_PRESETS = [
     { id: "none",      name: "Original" },
-    { id: "datetime", name: "Date & Time" },
-    { id: "encrypted",name: "Encrypted" },
-    { id: "zenmode",  name: "Zen Mode" },
-    { id: "network",  name: "ZenNetwork" },
-    { id: "moment",   name: "#Moment" },
+    { id: "datetime",  name: "Date & Time" },
+    { id: "encrypted", name: "Encrypted" },
+    { id: "zenmode",   name: "Zen Mode" },
+    { id: "layout",    name: "Layout" },
+    { id: "moment",    name: "#Moment" },
 ];
 
 const getFilterImageStyle = (filterId) => {
@@ -22,6 +22,87 @@ const getFilterImageStyle = (filterId) => {
         case 'zenmode': return { filter: 'brightness(0.82) contrast(1.05)' };
         default: return {};
     }
+};
+
+const stitchLayoutImages = async (images, spaces, baseWidth = 1080, baseHeight = 1080) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = baseWidth;
+    canvas.height = baseHeight;
+    const ctx = canvas.getContext("2d");
+    
+    // Fill black background
+    ctx.fillStyle = "#0a0d14";
+    ctx.fillRect(0, 0, baseWidth, baseHeight);
+
+    const loadImage = (file) => new Promise((resolve) => {
+        if (!file) {
+            resolve(null);
+            return;
+        }
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = URL.createObjectURL(file);
+    });
+
+    const loadedImgs = await Promise.all(images.slice(0, spaces).map(loadImage));
+
+    const drawCover = (img, x, y, w, h) => {
+        if (!img) {
+            // Draw a grey placeholder with a plus icon style if missing
+            ctx.fillStyle = "#1e293b";
+            ctx.fillRect(x, y, w, h);
+            ctx.fillStyle = "#475569";
+            ctx.font = "bold 40px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("+", x + w/2, y + h/2);
+            return;
+        }
+        const imgRatio = img.width / img.height;
+        const targetRatio = w / h;
+        let sx, sy, sw, sh;
+        if (imgRatio > targetRatio) {
+            sh = img.height;
+            sw = sh * targetRatio;
+            sx = (img.width - sw) / 2;
+            sy = 0;
+        } else {
+            sw = img.width;
+            sh = sw / targetRatio;
+            sx = 0;
+            sy = (img.height - sh) / 2;
+        }
+        ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+    };
+
+    if (spaces === 2) {
+        drawCover(loadedImgs[0], 0, 0, baseWidth / 2, baseHeight);
+        drawCover(loadedImgs[1], baseWidth / 2, 0, baseWidth / 2, baseHeight);
+    } else if (spaces === 3) {
+        drawCover(loadedImgs[0], 0, 0, baseWidth / 2, baseHeight);
+        drawCover(loadedImgs[1], baseWidth / 2, 0, baseWidth / 2, baseHeight / 2);
+        drawCover(loadedImgs[2], baseWidth / 2, baseHeight / 2, baseWidth / 2, baseHeight / 2);
+    } else if (spaces === 4) {
+        drawCover(loadedImgs[0], 0, 0, baseWidth / 2, baseHeight / 2);
+        drawCover(loadedImgs[1], baseWidth / 2, 0, baseWidth / 2, baseHeight / 2);
+        drawCover(loadedImgs[2], 0, baseHeight / 2, baseWidth / 2, baseHeight / 2);
+        drawCover(loadedImgs[3], baseWidth / 2, baseHeight / 2, baseWidth / 2, baseHeight / 2);
+    } else if (spaces === 5) {
+        // Left column
+        drawCover(loadedImgs[0], 0, 0, baseWidth / 2, baseHeight / 2);
+        drawCover(loadedImgs[1], 0, baseHeight / 2, baseWidth / 2, baseHeight / 2);
+        // Right column
+        drawCover(loadedImgs[2], baseWidth / 2, 0, baseWidth / 2, baseHeight / 3);
+        drawCover(loadedImgs[3], baseWidth / 2, baseHeight / 3, baseWidth / 2, baseHeight / 3);
+        drawCover(loadedImgs[4], baseWidth / 2, (2 * baseHeight) / 3, baseWidth / 2, baseHeight / 3);
+    }
+
+    return new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+            resolve(new File([blob], "layout_moment.jpg", { type: "image/jpeg" }));
+        }, "image/jpeg", 0.85);
+    });
 };
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -61,6 +142,94 @@ const suggestMoodGenre = (text) => {
     return "";
 };
 
+const LayoutGridPreview = ({ images, spaces, onSlotClick }) => {
+    const renderSlot = (idx, height = "100%", width = "100%") => {
+        const file = images[idx];
+        const previewUrl = file ? URL.createObjectURL(file) : null;
+
+        return (
+            <div
+                key={idx}
+                onClick={(e) => { e.stopPropagation(); onSlotClick(idx); }}
+                style={{
+                    height,
+                    width,
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px dashed rgba(255,255,255,0.15)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s ease',
+                    boxSizing: 'border-box'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--color-primary, #3da5d9)'}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'}
+            >
+                {previewUrl ? (
+                    <img 
+                        src={previewUrl} 
+                        alt={`Slot ${idx + 1}`} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                    />
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', color: '#64748b' }}>
+                        <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>+</span>
+                        <span style={{ fontSize: '0.55rem', fontWeight: '600' }}>Slot {idx + 1}</span>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    return (
+        <div style={{ width: '100%', height: '100%', display: 'flex', overflow: 'hidden', borderRadius: '16px', background: '#0a0d14' }}>
+            {spaces === 2 && (
+                <>
+                    {renderSlot(0, "100%", "50%")}
+                    {renderSlot(1, "100%", "50%")}
+                </>
+            )}
+            {spaces === 3 && (
+                <>
+                    {renderSlot(0, "100%", "50%")}
+                    <div style={{ width: '50%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        {renderSlot(1, "50%", "100%")}
+                        {renderSlot(2, "50%", "100%")}
+                    </div>
+                </>
+            )}
+            {spaces === 4 && (
+                <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ height: '50%', display: 'flex' }}>
+                        {renderSlot(0, "100%", "50%")}
+                        {renderSlot(1, "100%", "50%")}
+                    </div>
+                    <div style={{ height: '50%', display: 'flex' }}>
+                        {renderSlot(2, "100%", "50%")}
+                        {renderSlot(3, "100%", "50%")}
+                    </div>
+                </div>
+            )}
+            {spaces === 5 && (
+                <>
+                    <div style={{ width: '50%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        {renderSlot(0, "50%", "100%")}
+                        {renderSlot(1, "50%", "100%")}
+                    </div>
+                    <div style={{ width: '50%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        {renderSlot(2, "33.3%", "100%")}
+                        {renderSlot(3, "33.3%", "100%")}
+                        {renderSlot(4, "33.4%", "100%")}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
+
 const MomentCreator = ({ isOpen, onClose }) => {
     const [creatorStep, setCreatorStep] = useState("select"); // "select" | "create"
     const [momentType, setMomentType] = useState("text"); // "text" | "image"
@@ -97,6 +266,12 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const [imageQuality, setImageQuality] = useState("standard"); // "standard" | "og"
     const [selectedTaggedUsers, setSelectedTaggedUsers] = useState([]);
     
+    // Layout collage states & refs
+    const [layoutImages, setLayoutImages] = useState([null, null, null, null, null]);
+    const [layoutSpaces, setLayoutSpaces] = useState(2);
+    const slotFileInputRef = useRef(null);
+    const activeSlotIndexRef = useRef(null);
+    
     const audioRef = useRef(null);
     const seekTimeoutRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -107,13 +282,6 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const userId = useAuthStore((s) => s.user?._id);
 
     const showToast = (message) => {
-        const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile && isPWA) {
-            window.alert(message);
-            return;
-        }
-
         setToast(message);
         setTimeout(() => setToast(null), 3000);
     };
@@ -224,13 +392,14 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
     // File Selection Gating
     const handleFileChange = (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
 
-        const isVideo = file.type.startsWith("video/");
+        const first = files[0];
+        const isVideo = first.type.startsWith("video/");
         const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
 
-        if (file.size > maxSize) {
+        if (first.size > maxSize) {
             showToast(`File size exceeds ${isVideo ? "50MB" : "5MB"} limit`);
             return;
         }
@@ -246,20 +415,58 @@ const MomentCreator = ({ isOpen, onClose }) => {
                     return;
                 }
                 setVideoDuration(duration);
-                setSelectedFile(file);
-                setFilePreview(URL.createObjectURL(file));
+                setSelectedFile(first);
+                setFilePreview(URL.createObjectURL(first));
                 setActiveFilter("none");
+                setLayoutImages([null, null, null, null, null]);
             };
             videoElement.onerror = () => {
                 showToast("Invalid video file");
             };
-            videoElement.src = URL.createObjectURL(file);
+            videoElement.src = URL.createObjectURL(first);
         } else {
             setVideoDuration(0);
-            setSelectedFile(file);
-            setFilePreview(URL.createObjectURL(file));
+            setSelectedFile(first);
+            setFilePreview(URL.createObjectURL(first));
             setActiveFilter("none");
+
+            const newLayout = [first, null, null, null, null];
+            let slotIndex = 1;
+            for (let i = 1; i < files.length; i++) {
+                if (slotIndex >= 5) break;
+                const f = files[i];
+                if (f.type.startsWith("image/") && f.size <= 5 * 1024 * 1024) {
+                    newLayout[slotIndex] = f;
+                    slotIndex++;
+                }
+            }
+            setLayoutImages(newLayout);
         }
+    };
+
+    const handleSlotFileChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) {
+            showToast("File size exceeds 5MB limit");
+            return;
+        }
+
+        if (activeSlotIndexRef.current !== null) {
+            const idx = activeSlotIndexRef.current;
+            setLayoutImages(prev => {
+                const next = [...prev];
+                next[idx] = file;
+                return next;
+            });
+            if (idx === 0) {
+                setSelectedFile(file);
+                setFilePreview(URL.createObjectURL(file));
+            }
+        }
+        activeSlotIndexRef.current = null;
+        e.target.value = "";
     };
 
     // Share moment to server
@@ -316,7 +523,11 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 const uploadPreset = "ml_default";
                 const formData = new FormData();
                 let fileToUpload = selectedFile;
-                if (imageQuality === "standard") fileToUpload = await compressImage(selectedFile);
+                if (activeFilter === 'layout') {
+                    fileToUpload = await stitchLayoutImages(layoutImages, layoutSpaces);
+                } else if (imageQuality === "standard") {
+                    fileToUpload = await compressImage(selectedFile);
+                }
 
                 // Perform client-side file encryption
                 const { encryptedBlob, keyHex, ivHex } = await encryptFileAES(fileToUpload);
@@ -327,7 +538,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                 formData.append("file", encryptedBlob, `encrypted_moment.${ext}`);
                 formData.append("upload_preset", uploadPreset);
 
-                lqip = await generateLQIP(selectedFile);
+                lqip = await generateLQIP(fileToUpload);
 
                 const res = await axios.post(
                     `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`,
@@ -425,6 +636,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
         setIsUploading(false);
         setIsCaptured(false);
         setSelectedTaggedUsers([]);
+        setLayoutImages([null, null, null, null, null]);
+        setLayoutSpaces(2);
     };
 
     const handleClose = () => {
@@ -440,7 +653,12 @@ const MomentCreator = ({ isOpen, onClose }) => {
         onClose();
     };
 
-    const getPreviewFilterStyle = () => getFilterImageStyle(activeFilter);
+    const getPreviewFilterStyle = () => {
+        if (activeFilter === 'encrypted') {
+            return { filter: 'blur(3px) brightness(0.85)', transition: 'filter 0.3s ease' };
+        }
+        return getFilterImageStyle(activeFilter);
+    };
 
     const user = useAuthStore((s) => s.user);
     const contacts = user?.contacts || [];
@@ -650,7 +868,16 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                     <div className="aura-preview-container image-preview-wrapper" style={{ position: 'relative', height: '240px', background: '#0a0d14', borderRadius: '16px', margin: '0 28px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         {filePreview ? (
                                             <>
-                                                {selectedFile?.type?.startsWith('video/') ? (
+                                                {activeFilter === 'layout' ? (
+                                                    <LayoutGridPreview 
+                                                        images={layoutImages} 
+                                                        spaces={layoutSpaces} 
+                                                        onSlotClick={(idx) => {
+                                                            activeSlotIndexRef.current = idx;
+                                                            slotFileInputRef.current?.click();
+                                                        }}
+                                                    />
+                                                ) : selectedFile?.type?.startsWith('video/') ? (
                                                     <video 
                                                         src={filePreview} 
                                                         controls
@@ -669,24 +896,26 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                 
                                                 {/* ZenChat-branded overlay filters */}
                                                 {activeFilter === 'datetime' && (
-                                                    <>
-                                                        {/* Time - big centered bold clock */}
-                                                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -55%)', color: '#ffffff', fontSize: '2.6rem', fontWeight: '900', fontFamily: '"Outfit", "Space Grotesk", -apple-system, sans-serif', letterSpacing: '-0.03em', textShadow: '0 2px 12px rgba(0,0,0,0.6)', pointerEvents: 'none', userSelect: 'none', zIndex: 10, lineHeight: 1 }}>
+                                                    <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', flexDirection: 'column', gap: '2px', color: '#ffffff', textShadow: '0 2px 8px rgba(0,0,0,0.6)', pointerEvents: 'none', userSelect: 'none', zIndex: 10 }}>
+                                                        <span style={{ fontSize: '1.8rem', fontWeight: '300', fontFamily: '"Outfit", sans-serif', lineHeight: 1 }}>
                                                             {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).replace(/^0/, '')}
-                                                        </div>
-                                                        {/* Date - small stamp below */}
-                                                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, 40%)', color: 'rgba(255,255,255,0.85)', fontSize: '0.78rem', fontWeight: '700', fontFamily: '"Space Grotesk", monospace', textTransform: 'uppercase', letterSpacing: '0.12em', textShadow: '0 1px 4px rgba(0,0,0,0.5)', pointerEvents: 'none', userSelect: 'none', zIndex: 10 }}>
+                                                        </span>
+                                                        <span style={{ fontSize: '0.62rem', fontWeight: '700', fontFamily: '"Space Grotesk", monospace', textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.85 }}>
                                                             {new Date().toLocaleDateString([], { weekday: 'short', month: 'short', day: '2-digit' }).toUpperCase()}
-                                                        </div>
-                                                    </>
+                                                        </span>
+                                                    </div>
                                                 )}
                                                 {activeFilter === 'encrypted' && (
-                                                    <div style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(13, 148, 136, 0.92)', color: '#ffffff', fontSize: '0.72rem', fontWeight: '800', fontFamily: '"Space Grotesk", monospace', padding: '5px 12px', borderRadius: '6px', letterSpacing: '0.08em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: '5px', pointerEvents: 'none', userSelect: 'none', zIndex: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.15)' }}>
-                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                                        </svg>
-                                                        E2EE Encrypted
-                                                    </div>
+                                                    <>
+                                                        <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(3px) brightness(0.85)', zIndex: 8, pointerEvents: 'none' }} />
+                                                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', color: '#ffffff', padding: '12px 18px', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', zIndex: 10, pointerEvents: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}>
+                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                                            </svg>
+                                                            <span style={{ fontSize: '0.72rem', fontWeight: '800', fontFamily: '"Space Grotesk", monospace', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#2dd4bf' }}>E2EE Secured</span>
+                                                        </div>
+                                                    </>
                                                 )}
                                                 {activeFilter === 'zenmode' && (
                                                     <>
@@ -694,16 +923,6 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                         <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%)', pointerEvents: 'none', zIndex: 9 }} />
                                                         <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', color: 'rgba(255,255,255,0.92)', fontSize: '0.78rem', fontWeight: '800', fontFamily: '"Space Grotesk", monospace', letterSpacing: '0.28em', textTransform: 'uppercase', textShadow: '0 1px 6px rgba(0,0,0,0.6)', pointerEvents: 'none', userSelect: 'none', zIndex: 10, whiteSpace: 'nowrap' }}>
                                                             ZEN MODE
-                                                        </div>
-                                                    </>
-                                                )}
-                                                {activeFilter === 'network' && (
-                                                    <>
-                                                        {/* Dot-grid pattern overlay */}
-                                                        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(61,165,217,0.18) 1px, transparent 1px)', backgroundSize: '20px 20px', pointerEvents: 'none', zIndex: 9 }} />
-                                                        <div style={{ position: 'absolute', bottom: '12px', right: '12px', color: 'rgba(255,255,255,0.9)', fontSize: '0.65rem', fontWeight: '800', fontFamily: '"Space Grotesk", monospace', letterSpacing: '0.1em', textTransform: 'uppercase', textShadow: '0 1px 4px rgba(0,0,0,0.5)', pointerEvents: 'none', userSelect: 'none', zIndex: 10, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/><line x1="7" y1="19" x2="17" y2="19"/></svg>
-                                                            ZenChat
                                                         </div>
                                                     </>
                                                 )}
@@ -778,8 +997,9 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                     </button>
                                                 </div>
                                                 <input type="file" ref={cameraInputRef} accept="image/*,video/mp4,video/webm" capture="environment" style={{ display: 'none' }} onChange={handleFileChange} />
-                                                <input type="file" ref={fileInputRef} accept="image/*,video/mp4,video/webm" style={{ display: 'none' }} onChange={handleFileChange} />
-                                                <span style={{ fontSize: '0.68rem', color: '#64748b' }}>Max size limit: 5MB</span>
+                                                <input type="file" ref={fileInputRef} accept="image/*,video/mp4,video/webm" style={{ display: 'none' }} onChange={handleFileChange} multiple />
+                                                <input type="file" ref={slotFileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleSlotFileChange} />
+                                                <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted, #64748b)', fontWeight: '500', letterSpacing: '0.02em', marginTop: '4px', fontFamily: '"Space Grotesk", monospace' }}>Max size: 5MB for images, 50MB for videos</span>
                                             </div>
                                         )}
                                     </div>
@@ -790,28 +1010,40 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
                                                 <span style={{ fontSize: '0.72rem', fontWeight: 'bold', color: '#64748b' }}>Filters</span>
                                                 <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', width: '100%' }} className="filter-scroll-strip">
-                                                    {FILTER_PRESETS.map((f) => (
-                                                        <button 
-                                                            key={f.id}
-                                                            onClick={() => setActiveFilter(f.id)}
-                                                            disabled={isUploading}
-                                                            style={{
-                                                                flexShrink: 0,
-                                                                background: activeFilter === f.id ? 'rgba(61,165,217,0.15)' : 'var(--color-border, rgba(255, 255, 255, 0.08))',
-                                                                border: activeFilter === f.id ? '1px solid var(--color-primary)' : '1px solid var(--color-border, rgba(255, 255, 255, 0.08))',
-                                                                color: activeFilter === f.id ? 'var(--color-primary)' : '#94a3b8',
-                                                                padding: '6px 12px',
-                                                                borderRadius: '16px',
-                                                                fontSize: '0.72rem',
-                                                                fontWeight: '600',
-                                                                cursor: isUploading ? 'not-allowed' : 'pointer',
-                                                                transition: 'all 0.15s ease',
-                                                                opacity: isUploading ? 0.5 : 1
-                                                            }}
-                                                        >
-                                                            {f.name}
-                                                        </button>
-                                                    ))}
+                                                    {FILTER_PRESETS
+                                                        .filter(f => !(f.id === 'layout' && selectedFile?.type?.startsWith("video/")))
+                                                        .map((f) => (
+                                                            <button 
+                                                                key={f.id}
+                                                                onClick={() => {
+                                                                    if (f.id === 'layout') {
+                                                                        if (activeFilter === 'layout') {
+                                                                            setLayoutSpaces(prev => prev === 5 ? 2 : prev + 1);
+                                                                        } else {
+                                                                            setActiveFilter('layout');
+                                                                        }
+                                                                    } else {
+                                                                        setActiveFilter(f.id);
+                                                                    }
+                                                                }}
+                                                                disabled={isUploading}
+                                                                style={{
+                                                                    flexShrink: 0,
+                                                                    background: activeFilter === f.id ? 'rgba(61,165,217,0.15)' : 'var(--color-border, rgba(255, 255, 255, 0.08))',
+                                                                    border: activeFilter === f.id ? '1px solid var(--color-primary)' : '1px solid var(--color-border, rgba(255, 255, 255, 0.08))',
+                                                                    color: activeFilter === f.id ? 'var(--color-primary)' : '#94a3b8',
+                                                                    padding: '6px 12px',
+                                                                    borderRadius: '16px',
+                                                                    fontSize: '0.72rem',
+                                                                    fontWeight: '600',
+                                                                    cursor: isUploading ? 'not-allowed' : 'pointer',
+                                                                    transition: 'all 0.15s ease',
+                                                                    opacity: isUploading ? 0.5 : 1
+                                                                }}
+                                                            >
+                                                                {f.id === 'layout' && activeFilter === 'layout' ? `Layout (${layoutSpaces})` : f.name}
+                                                            </button>
+                                                        ))}
                                                 </div>
                                             </div>
 

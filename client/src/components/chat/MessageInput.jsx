@@ -287,13 +287,6 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
     const { sendMessage, startTyping, stopTyping, editMessage, socket } = useSocket();
 
     const showToast = (msg) => {
-        const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile && isPWA) {
-            window.alert(msg);
-            return;
-        }
-
         setToast(msg);
         setTimeout(() => setToast(null), 3000);
     };

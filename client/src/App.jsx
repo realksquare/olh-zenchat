@@ -206,104 +206,7 @@ const App = () => {
   const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
   const isMobile = window.innerWidth <= 768;
 
-  // OS-native prompt hooks for Mobile PWA
-  useEffect(() => {
-    if (!(isMobile && isPWA)) return;
-    if (incomingZenInvite) {
-      const confirmed = window.confirm(`@${incomingZenInvite.senderName || "User"} wants to connect in #ZenMode with you. Messages will be end-to-end encrypted and completely erased after session. Connect?`);
-      if (confirmed) {
-        clearZenTimers();
-        if (socket) {
-          socket.emit("zen_invite_respond", { chatId: incomingZenInvite.chatId, responderId: user._id, requesterId: incomingZenInvite.senderId, accepted: true });
-        }
-        const openChat = async () => {
-          const chatList = useChatStore.getState().chats;
-          let target = chatList.find(c => c._id === incomingZenInvite.chatId);
-          if (!target) {
-            await useChatStore.getState().fetchChats();
-            target = useChatStore.getState().chats.find(c => c._id === incomingZenInvite.chatId);
-          }
-          if (target) {
-            useChatStore.getState().setActiveChat(target);
-          }
-        };
-        openChat();
-      } else {
-        clearZenTimers();
-        if (socket) {
-          socket.emit("zen_invite_respond", { chatId: incomingZenInvite.chatId, responderId: user._id, requesterId: incomingZenInvite.senderId, accepted: false });
-        }
-      }
-      setIncomingZenInvite(null);
-    }
-  }, [incomingZenInvite, socket, user, isMobile, isPWA, clearZenTimers, setIncomingZenInvite]);
 
-  useEffect(() => {
-    if (!(isMobile && isPWA)) return;
-    if (incomingZenExit) {
-      const confirmed = window.confirm(`@${incomingZenExit.senderName || "User"} wants to end the #ZenMode session. All messages will be permanently cleared from both devices. End session?`);
-      if (confirmed) {
-        clearZenTimers();
-        if (socket) {
-          socket.emit("zen_exit_respond", { chatId: incomingZenExit.chatId, responderId: user._id, requesterId: incomingZenExit.senderId, accepted: true });
-        }
-      } else {
-        clearZenTimers();
-        if (socket) {
-          socket.emit("zen_exit_respond", { chatId: incomingZenExit.chatId, responderId: user._id, requesterId: incomingZenExit.senderId, accepted: false });
-        }
-      }
-      setIncomingZenExit(null);
-    }
-  }, [incomingZenExit, socket, user, isMobile, isPWA, clearZenTimers, setIncomingZenExit]);
-
-  useEffect(() => {
-    if (!(isMobile && isPWA)) return;
-    if (showExitConfirm) {
-      const confirmed = window.confirm("Are you sure you want to end this Zen session? All messages will be permanently cleared from both devices.");
-      if (confirmed) {
-        const currentUserId = user?._id;
-        const otherParticipant = activeChat?.participants?.find(p => (p._id || p) !== currentUserId);
-        const otherParticipantId = otherParticipant?._id || otherParticipant;
-        if (socket && activeChat && otherParticipantId) {
-          socket.emit("zen_exit_request", {
-            chatId: activeChat._id,
-            senderId: currentUserId,
-            receiverId: otherParticipantId
-          });
-          setZenWaitingState("exit-waiting");
-          startZenTimer("exit-waiting", activeChat._id, currentUserId, otherParticipantId);
-        }
-      }
-      setShowExitConfirm(false);
-    }
-  }, [showExitConfirm, socket, user, activeChat, isMobile, isPWA, setShowExitConfirm, setZenWaitingState, startZenTimer]);
-
-  useEffect(() => {
-    if (!(isMobile && isPWA)) return;
-    if (showCancelConfirm) {
-      const confirmed = window.confirm("Are you sure you want to cancel the connection request?");
-      if (confirmed) {
-        clearZenTimers();
-        setZenWaitingState(null);
-        if (socket && activeChat) {
-          const otherParticipant = activeChat.participants?.find(p => {
-            const pid = p?._id?.toString() || p?.toString();
-            return pid && pid !== user?._id?.toString();
-          });
-          const otherParticipantId = otherParticipant?._id || otherParticipant;
-          socket.emit("zen_invite_respond", { 
-            chatId: activeChat._id, 
-            responderId: user._id, 
-            requesterId: user._id, 
-            receiverId: otherParticipantId?.toString(),
-            accepted: false 
-          });
-        }
-      }
-      setShowCancelConfirm(false);
-    }
-  }, [showCancelConfirm, socket, user, activeChat, isMobile, isPWA, clearZenTimers, setZenWaitingState]);
 
   useEffect(() => {
     const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
@@ -723,7 +626,7 @@ const App = () => {
       })()}
 
       {/* 2. Custom Cancel Confirmation Prompt */}
-      {showCancelConfirm && !(isMobile && isPWA) && (
+      {showCancelConfirm && (
         <div className="zen-modal-overlay">
           <div className="zen-modal-container" onClick={(e) => e.stopPropagation()}>
             <h3 className="zen-modal-title">Cancel Zen Request?</h3>
@@ -767,7 +670,7 @@ const App = () => {
       )}
 
       {/* 3. Global Incoming Zen Invite Overlay */}
-      {incomingZenInvite && !(isMobile && isPWA) && (
+      {incomingZenInvite && (
         <div className="zen-modal-overlay">
           <div className="zen-modal-container" onClick={(e) => e.stopPropagation()}>
             <div className="zen-waiting-loader">
@@ -823,7 +726,7 @@ const App = () => {
       )}
 
       {/* 4. Global Incoming Zen Exit Overlay */}
-      {incomingZenExit && !(isMobile && isPWA) && (
+      {incomingZenExit && (
         <div className="zen-modal-overlay">
           <div className="zen-modal-container" onClick={(e) => e.stopPropagation()}>
             <div className="zen-waiting-loader">
@@ -858,7 +761,7 @@ const App = () => {
       )}
 
       {/* 5. Custom Exit Confirmation Prompt */}
-      {showExitConfirm && !(isMobile && isPWA) && (
+      {showExitConfirm && (
         <div className="zen-modal-overlay">
           <div className="zen-modal-container" onClick={(e) => e.stopPropagation()}>
             <h3 className="zen-modal-title">End Zen Session?</h3>

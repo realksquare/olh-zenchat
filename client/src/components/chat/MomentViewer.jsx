@@ -13,46 +13,41 @@ import { getLocalE2EEKeys } from "../../utils/e2eeHelper";
 const FILTER_STYLES = {
     none: {},
     datetime: {},
-    encrypted: {},
+    encrypted: { filter: 'blur(3px) brightness(0.85)', transition: 'filter 0.3s ease' },
     zenmode: { filter: 'brightness(0.82) contrast(1.05)' },
-    network: {},
+    layout: {},
     moment: {}
 };
 
 const MomentOverlays = ({ filter, createdAt, locationTag }) => (
     <>
         {filter === 'datetime' && (
-            <>
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -55%)', color: '#ffffff', fontSize: '2.6rem', fontWeight: '900', fontFamily: '"Outfit", "Space Grotesk", -apple-system, sans-serif', letterSpacing: '-0.03em', textShadow: '0 2px 12px rgba(0,0,0,0.6)', pointerEvents: 'none', userSelect: 'none', zIndex: 10, lineHeight: 1 }}>
+            <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', flexDirection: 'column', gap: '2px', color: '#ffffff', textShadow: '0 2px 8px rgba(0,0,0,0.6)', pointerEvents: 'none', userSelect: 'none', zIndex: 10 }}>
+                <span style={{ fontSize: '1.8rem', fontWeight: '300', fontFamily: '"Outfit", sans-serif', lineHeight: 1 }}>
                     {new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).replace(/^0/, '')}
-                </div>
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, 40%)', color: 'rgba(255,255,255,0.85)', fontSize: '0.78rem', fontWeight: '700', fontFamily: '"Space Grotesk", monospace', textTransform: 'uppercase', letterSpacing: '0.12em', textShadow: '0 1px 4px rgba(0,0,0,0.5)', pointerEvents: 'none', userSelect: 'none', zIndex: 10 }}>
+                </span>
+                <span style={{ fontSize: '0.62rem', fontWeight: '700', fontFamily: '"Space Grotesk", monospace', textTransform: 'uppercase', letterSpacing: '0.15em', opacity: 0.85 }}>
                     {new Date(createdAt).toLocaleDateString([], { weekday: 'short', month: 'short', day: '2-digit' }).toUpperCase()}
-                </div>
-            </>
+                </span>
+            </div>
         )}
         {filter === 'encrypted' && (
-            <div style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(13, 148, 136, 0.92)', color: '#ffffff', fontSize: '0.72rem', fontWeight: '800', fontFamily: '"Space Grotesk", monospace', padding: '5px 12px', borderRadius: '6px', letterSpacing: '0.08em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: '5px', pointerEvents: 'none', userSelect: 'none', zIndex: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.15)' }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                E2EE Encrypted
-            </div>
+            <>
+                <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(3px) brightness(0.85)', zIndex: 8, pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -55%)', background: 'rgba(15, 23, 42, 0.75)', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', color: '#ffffff', padding: '12px 18px', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', zIndex: 10, pointerEvents: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                    <span style={{ fontSize: '0.72rem', fontWeight: '800', fontFamily: '"Space Grotesk", monospace', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#2dd4bf' }}>E2EE Secured</span>
+                </div>
+            </>
         )}
         {filter === 'zenmode' && (
             <>
                 <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%)', pointerEvents: 'none', zIndex: 9 }} />
                 <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', color: 'rgba(255,255,255,0.92)', fontSize: '0.78rem', fontWeight: '800', fontFamily: '"Space Grotesk", monospace', letterSpacing: '0.28em', textTransform: 'uppercase', textShadow: '0 1px 6px rgba(0,0,0,0.6)', pointerEvents: 'none', userSelect: 'none', zIndex: 10, whiteSpace: 'nowrap' }}>
                     ZEN MODE
-                </div>
-            </>
-        )}
-        {filter === 'network' && (
-            <>
-                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(61,165,217,0.18) 1px, transparent 1px)', backgroundSize: '20px 20px', pointerEvents: 'none', zIndex: 9 }} />
-                <div style={{ position: 'absolute', bottom: '12px', right: '12px', color: 'rgba(255,255,255,0.9)', fontSize: '0.65rem', fontWeight: '800', fontFamily: '"Space Grotesk", monospace', letterSpacing: '0.1em', textTransform: 'uppercase', textShadow: '0 1px 4px rgba(0,0,0,0.5)', pointerEvents: 'none', userSelect: 'none', zIndex: 10, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/><line x1="7" y1="19" x2="17" y2="19"/></svg>
-                    ZenChat
                 </div>
             </>
         )}
@@ -805,9 +800,9 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                     )}
                 </div>
 
-                <div className="aura-nav-zone left" onClick={handlePrev} />
-                <div className="aura-nav-zone center" onClick={() => setIsPaused(!isPaused)} />
-                <div className="aura-nav-zone right" onClick={handleNext} />
+                <div className="aura-nav-zone left" onClick={(e) => { e.stopPropagation(); handlePrev(); }} />
+                <div className="aura-nav-zone center" onClick={(e) => { e.stopPropagation(); setIsPaused(!isPaused); }} />
+                <div className="aura-nav-zone right" onClick={(e) => { e.stopPropagation(); handleNext(); }} />
 
                 {showDeleteConfirm && (
                     <div className="aura-permission-popup">

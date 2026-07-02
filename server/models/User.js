@@ -191,6 +191,12 @@ const userSchema = new mongoose.Schema(
             longest: { type: Number, default: 0 },
             lastVotedDate: { type: String, default: null }
         },
+        momentsStats: {
+            shared: { type: Number, default: 0 },
+            viewed: { type: Number, default: 0 },
+            liked: { type: Number, default: 0 },
+            likesReceived: { type: Number, default: 0 }
+        },
         pulseVotedQuestions: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: "ZenPulseQuestion"

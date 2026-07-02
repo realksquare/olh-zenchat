@@ -31,6 +31,9 @@ router.post("/", protect, async (req, res) => {
             encryptedKeys: encryptedKeys || {},
             iv: iv || ""
         });
+        
+        // Increment permanent stats for sharing
+        await User.findByIdAndUpdate(req.user._id, { $inc: { "momentsStats.shared": 1 } });
 
         const populated = await Moment.findById(moment._id)
             .populate("userId", "username avatar fullName")
@@ -211,6 +214,8 @@ router.post("/:id/view", protect, async (req, res) => {
                 { $push: { viewedBy: { userId: req.user._id, at: new Date() } } },
                 { new: true }
             );
+            // Increment permanent stats for viewing
+            await User.findByIdAndUpdate(req.user._id, { $inc: { "momentsStats.viewed": 1 } });
         }
         
         // Return updated moment so client can sync viewedBy immediately
@@ -286,6 +291,11 @@ router.post("/:id/like", protect, async (req, res) => {
         const updated = await Moment.findByIdAndUpdate(req.params.id, update, { new: true })
             .populate("userId", "username avatar fullName")
             .populate("taggedUsers", "username avatar fullName");
+
+        // Increment or decrement the counters
+        const increment = alreadyLiked ? -1 : 1;
+        await User.findByIdAndUpdate(req.user._id, { $inc: { "momentsStats.liked": increment } });
+        await User.findByIdAndUpdate(ownerId, { $inc: { "momentsStats.likesReceived": increment } });
 
         // Broadcast to owner + all their contacts so like count updates in real-time
         const io = req.app.get("io");

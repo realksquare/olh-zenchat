@@ -1,6 +1,25 @@
 import React, { useEffect } from 'react';
 
 const MediaViewerModal = ({ url, type, username, isViewOnce, onClose, onPrev, onNext }) => {
+    const touchStartRef = React.useRef(null);
+
+    const handleTouchStart = (e) => {
+        touchStartRef.current = e.touches[0].clientX;
+    };
+
+    const handleTouchEnd = (e) => {
+        if (touchStartRef.current === null) return;
+        const diffX = e.changedTouches[0].clientX - touchStartRef.current;
+        if (Math.abs(diffX) > 50) {
+            if (diffX > 0 && onPrev) {
+                onPrev();
+            } else if (diffX < 0 && onNext) {
+                onNext();
+            }
+        }
+        touchStartRef.current = null;
+    };
+
     // Close on Escape key, navigate on arrow keys
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -46,11 +65,18 @@ const MediaViewerModal = ({ url, type, username, isViewOnce, onClose, onPrev, on
     };
 
     return (
-        <div className="media-viewer-overlay" onClick={onClose} onContextMenu={isViewOnce ? (e) => e.preventDefault() : undefined} style={{
-            position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.92)', 
-            display: 'flex', justifyContent: 'center', alignItems: 'center', backdropFilter: 'blur(8px)',
-            userSelect: 'none'
-        }}>
+        <div 
+            className="media-viewer-overlay" 
+            onClick={onClose} 
+            onContextMenu={isViewOnce ? (e) => e.preventDefault() : undefined} 
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            style={{
+                position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.92)', 
+                display: 'flex', justifyContent: 'center', alignItems: 'center', backdropFilter: 'blur(8px)',
+                userSelect: 'none'
+            }}
+        >
             <button className="media-viewer-close" onClick={onClose} style={{
                 position: 'absolute', top: '20px', right: '20px', background: 'var(--color-overlay, rgba(255, 255, 255, 0.1))', 
                 border: 'none', color: 'white', borderRadius: '50%', width: '40px', height: '40px', 
