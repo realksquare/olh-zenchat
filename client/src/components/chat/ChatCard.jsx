@@ -222,6 +222,22 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         }
     };
 
+    const triggerDelete = (e) => {
+        if (e) e.stopPropagation();
+        setShowMenu(false);
+        const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+        const isMobile = window.innerWidth <= 768;
+
+        if (isMobile && isPWA) {
+            const confirmed = window.confirm("Are you sure you want to delete this conversation? This action cannot be undone.");
+            if (confirmed) {
+                handleDelete();
+            }
+        } else {
+            setShowDeletePrompt(true);
+        }
+    };
+
     const handleToggleContact = async (e) => {
         if (e) e.stopPropagation();
         setContactLoading(true);
@@ -271,18 +287,24 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                 }}
             >
                 {/* Left accent bar */}
-                <div className="chat-card-accent-bar" />
+                <div 
+                    className={`chat-card-accent-bar ${hasMoments ? "has-moment" : ""}`} 
+                    style={hasMoments ? { "--halo-color": useMomentStore.getState().getHaloColor(otherUserId, user?._id) } : {}}
+                />
 
                 {/* Square Monogram */}
                 <div 
-                    className={`chat-card-monogram ${hasMoments ? "has-moment" : ""}`} 
+                    className="chat-card-monogram" 
                     style={{ 
                         background: `${accentColor}22`, 
                         color: accentColor,
-                        ...(hasMoments ? { "--halo-color": useMomentStore.getState().getHaloColor(otherUserId, user?._id) } : {})
                     }}
                 >
-                    <span>{isDeleted ? "?" : displayName.slice(0, 2).toUpperCase()}</span>
+                    {otherUser?.avatar ? (
+                        <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
+                    ) : (
+                        <span>{isDeleted ? "?" : displayName.slice(0, 2).toUpperCase()}</span>
+                    )}
                     {isOnline && <span className={`online-dot${isSPOp ? ' online-dot--amber' : ''}`} />}
                 </div>
 
@@ -379,7 +401,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                             </button>
                         )}
 
-                        <button onClick={(e) => { e.stopPropagation(); setShowDeletePrompt(true); }}
+                        <button onClick={triggerDelete}
                             style={{ ...menuBtnStyle, color: "#ef4444", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -432,7 +454,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                                 </button>
                             )}
 
-                            <button onClick={(e) => { e.stopPropagation(); setShowDeletePrompt(true); setShowMenu(false); }}
+                             <button onClick={triggerDelete}
                                 style={{ ...menuBtnStyle, color: "#ef4444" }}
                                 className="bottom-sheet-item danger-item"
                             >
