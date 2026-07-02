@@ -3826,16 +3826,16 @@ select {
 
 .moments-halo {
   position: relative;
-  border: 2.5px solid var(--halo-color, #3b82f6) !important;
-  box-shadow: 0 0 0 1px var(--halo-color, #3b82f6), 0 0 12px var(--halo-color, #3b82f6);
+  border: 1.5px solid var(--halo-color, #3b82f6) !important;
+  box-shadow: 0 0 0 1px var(--halo-color, #3b82f6), 0 0 6px var(--halo-color, #3b82f6);
   transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .moments-halo::after {
   content: '';
   position: absolute;
-  inset: -5px;
-  border: 1.5px solid var(--halo-color, #3b82f6);
+  inset: -3px;
+  border: 1px solid var(--halo-color, #3b82f6);
   border-radius: 50%;
   opacity: 0.6;
   animation: halo-pulse 2s infinite;
@@ -9213,7 +9213,7 @@ select {
   inset: 0;
   display: flex;
   flex-direction: column;
-  padding-bottom: 72px;
+  padding-bottom: 58px;
 }
 
 .bottom-sheet {
@@ -9236,7 +9236,7 @@ select {
 .bottom-sheet.dragging { transition: none; }
 
 .bottom-sheet-handle-zone {
-  height: 72px;
+  height: 58px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -9286,6 +9286,50 @@ select {
 
 @media (max-width: 768px) {
   .zen-toast { top: 16px; bottom: auto; }
+}
+
+.active-quick-avatar {
+  border: 1.5px solid var(--color-primary, #3da5d9) !important;
+  box-shadow: 0 0 6px var(--color-primary, #3da5d9);
+}
+
+.quick-avatar-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  margin-left: 10px;
+  align-self: center;
+}
+
+.quick-avatar-unread-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--accent, #ef4444);
+  color: white;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 6px;
+  border: 1.5px solid var(--color-surface, #161b22);
+  line-height: 1;
+  z-index: 5;
+}
+
+.quick-avatar-online-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background: #22c55e;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-surface, #161b22);
+  z-index: 5;
+}
+
+.quick-avatar-online-dot.online-dot--amber {
+  background: #eab308;
 }
 
 .peek-empty-state {

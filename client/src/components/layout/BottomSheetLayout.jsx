@@ -8,32 +8,51 @@ import { useAuthStore } from '../../stores/authStore';
 const QuickAvatarRing = ({ chat }) => {
     const user = useAuthStore(s => s.user);
     const setActiveChat = useChatStore(s => s.setActiveChat);
-    const getHaloColor = useMomentStore(s => s.getHaloColor);
-    const hasActiveMoment = useMomentStore(s => s.hasActiveMoment);
+    const activeChat = useChatStore(s => s.activeChat);
+    const unreadCount = useChatStore(s => s.unreadCounts[chat._id] || 0);
+    const onlineUsers = useChatStore(s => s.onlineUsers);
+    const isOffline = useChatStore(s => s.isOffline);
+    const isLowBandwidth = useChatStore(s => s.isLowBandwidth);
+    const peerLowBandwidth = useChatStore(s => s.peerLowBandwidth);
 
     const otherUser = chat.isGroup ? null : chat.participants.find(p => p?._id?.toString() !== user?._id?.toString());
     const otherUserId = otherUser?._id?.toString();
-    const hasMoments = !!(otherUserId && hasActiveMoment(otherUserId));
 
     if (!otherUser) return null;
 
+    const isBlocked = chat.blockStatus?.iBlocked || chat.blockStatus?.theyBlocked;
+    const isOnline = !isBlocked && !isOffline && !otherUser?.presenceHidden && (otherUser?.isOnline || (otherUserId && onlineUsers.has(otherUserId)));
+    const isSPOp = isLowBandwidth || (isOnline && peerLowBandwidth[otherUserId] === true);
+    const isActive = activeChat?._id === chat._id;
+
     return (
-        <div 
-            className={`avatar avatar-sm ${hasMoments ? 'moments-halo' : ''}`}
-            style={{ 
-                cursor: 'pointer', 
-                ...(hasMoments ? { '--halo-color': getHaloColor(otherUserId, user?._id) } : {}) 
-            }}
-            onClick={(e) => {
-                e.stopPropagation();
-                setActiveChat(chat);
-            }}
-        >
-            {otherUser.avatar ? (
-                <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
-            ) : (
-                <span>{otherUser.username?.slice(0, 2).toUpperCase()}</span>
-            )}
+        <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
+            <div 
+                className={`avatar avatar-sm ${isActive ? 'active-quick-avatar' : ''}`}
+                style={{ 
+                    cursor: 'pointer',
+                    position: 'relative'
+                }}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveChat(chat);
+                }}
+            >
+                {otherUser.avatar ? (
+                    <img src={otherUser.avatar} alt={otherUser.username} loading="lazy" />
+                ) : (
+                    <span>{otherUser.username?.slice(0, 2).toUpperCase()}</span>
+                )}
+                {unreadCount > 0 && (
+                    <span className="quick-avatar-unread-badge">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                )}
+                {isOnline && (
+                    <span className={`quick-avatar-online-dot ${isSPOp ? 'online-dot--amber' : ''}`} />
+                )}
+            </div>
+            {isActive && <div className="quick-avatar-divider" />}
         </div>
     );
 };
@@ -70,7 +89,7 @@ const BottomSheetLayout = () => {
         return {
             full: 0,
             mid: sheetMax - (vh * 0.48), // 48dvh from bottom
-            collapsed: sheetMax - 72, // 72px exposed
+            collapsed: sheetMax - 58, // 58px exposed
             sheetMax
         };
     }, []);
@@ -158,7 +177,7 @@ const BottomSheetLayout = () => {
         <div className="bottom-sheet-layout">
             <div className="bottom-sheet-chat-area">
                 {activeChat ? (
-                    <ChatWindow onBack={() => {}} />
+                    <ChatWindow onBack={() => useChatStore.getState().setActiveChat(null)} />
                 ) : (
                     <div className="peek-empty-state" onClick={() => snapTo('mid')}>
                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5, marginBottom: '10px' }}>
@@ -183,7 +202,7 @@ const BottomSheetLayout = () => {
                 >
                     <div className="bottom-sheet-handle-bar" />
                     <div className="bottom-sheet-quick-avatars">
-                        {recentChats.slice(0, 4).map(chat => (
+                        {sheetHeight === 'collapsed' && recentChats.slice(0, 4).map(chat => (
                             <QuickAvatarRing key={chat._id} chat={chat} />
                         ))}
                         {totalUnread > 0 && <span className="bottom-sheet-unread-pill">●{totalUnread > 99 ? '99+' : totalUnread}</span>}

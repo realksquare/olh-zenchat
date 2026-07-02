@@ -100,6 +100,13 @@ const MomentCreator = ({ isOpen, onClose }) => {
     const userId = useAuthStore((s) => s.user?._id);
 
     const showToast = (message) => {
+        const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile && isPWA) {
+            window.alert(message);
+            return;
+        }
+
         setToast(message);
         setTimeout(() => setToast(null), 3000);
     };

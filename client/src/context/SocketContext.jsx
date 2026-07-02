@@ -66,6 +66,13 @@ export const SocketProvider = ({ children }) => {
     }, []);
 
     const showZenToast = useCallback((type, text) => {
+        const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile && isPWA) {
+            window.alert(text);
+            return;
+        }
+
         if (zenToastTimeoutRef.current) {
             clearTimeout(zenToastTimeoutRef.current);
         }

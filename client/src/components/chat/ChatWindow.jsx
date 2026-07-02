@@ -664,6 +664,52 @@ const ChatWindow = ({ onBack }) => {
     const [unreadScrollCount, setUnreadScrollCount] = useState(0);
     const [showUserCard, setShowUserCard] = useState(false);
     const [selectedMedia, setSelectedMedia] = useState(null);
+
+    // Filter image/video media messages for navigation
+    const mediaMessages = useMemo(() => {
+        return (messages || []).filter(
+            m => (m.type === 'image' || m.type === 'video') && !m.deletedForEveryone
+        );
+    }, [messages]);
+
+    const currentMediaIndex = useMemo(() => {
+        if (!selectedMedia || !selectedMedia.messageId) return -1;
+        return mediaMessages.findIndex(m => m._id === selectedMedia.messageId);
+    }, [selectedMedia, mediaMessages]);
+
+    const hasPrevMedia = currentMediaIndex > 0;
+    const hasNextMedia = currentMediaIndex >= 0 && currentMediaIndex < mediaMessages.length - 1;
+
+    const handlePrevMedia = useCallback(() => {
+        if (!hasPrevMedia) return;
+        const prevMsg = mediaMessages[currentMediaIndex - 1];
+        const senderName = (prevMsg.senderId?._id === user?._id || prevMsg.senderId === user?._id)
+            ? "me"
+            : (prevMsg.senderId?.username || otherUser?.username || "user");
+        setSelectedMedia({
+            url: prevMsg.mediaUrl,
+            type: prevMsg.type,
+            username: senderName,
+            isViewOnce: prevMsg.isViewOnce,
+            messageId: prevMsg._id
+        });
+    }, [currentMediaIndex, mediaMessages, hasPrevMedia, user, otherUser]);
+
+    const handleNextMedia = useCallback(() => {
+        if (!hasNextMedia) return;
+        const nextMsg = mediaMessages[currentMediaIndex + 1];
+        const senderName = (nextMsg.senderId?._id === user?._id || nextMsg.senderId === user?._id)
+            ? "me"
+            : (nextMsg.senderId?.username || otherUser?.username || "user");
+        setSelectedMedia({
+            url: nextMsg.mediaUrl,
+            type: nextMsg.type,
+            username: senderName,
+            isViewOnce: nextMsg.isViewOnce,
+            messageId: nextMsg._id
+        });
+    }, [currentMediaIndex, mediaMessages, hasNextMedia, user, otherUser]);
+
     const [selectedDoc, setSelectedDoc] = useState(null);
     const activeViewerMoments = useMomentStore((s) => s.activeViewerMoments);
     const setActiveViewerMoments = useMomentStore((s) => s.setActiveViewerMoments);
@@ -741,6 +787,13 @@ const ChatWindow = ({ onBack }) => {
     // Toast state
     const [localToast, setLocalToast] = useState(null);
     const showToast = useCallback((msg, type = 'info') => {
+        const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile && isPWA) {
+            window.alert(msg);
+            return;
+        }
+
         setLocalToast({ msg, type });
         setTimeout(() => setLocalToast(null), 3000);
     }, []);
@@ -1511,7 +1564,7 @@ const ChatWindow = ({ onBack }) => {
                                         const senderName = (msg.senderId?._id === user?._id || msg.senderId === user?._id)
                                             ? "me"
                                             : (msg.senderId?.username || otherUser?.username || "user");
-                                        setSelectedMedia({ url, type, username: senderName, isViewOnce });
+                                        setSelectedMedia({ url, type, username: senderName, isViewOnce, messageId: msg._id });
                                     }
                                 }}
                             />
@@ -1687,6 +1740,8 @@ const ChatWindow = ({ onBack }) => {
                     username={selectedMedia.username}
                     isViewOnce={selectedMedia.isViewOnce}
                     onClose={() => setSelectedMedia(null)}
+                    onPrev={hasPrevMedia ? handlePrevMedia : null}
+                    onNext={hasNextMedia ? handleNextMedia : null}
                 />
             )}
 
