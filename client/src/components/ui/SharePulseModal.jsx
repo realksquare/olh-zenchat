@@ -1,6 +1,16 @@
 import { useState, useRef, useEffect, memo } from "react";
 import { createPortal } from "react-dom";
 
+const isOlderThanYesterday = (dateString) => {
+    if (!dateString) return false;
+    const date = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return date < yesterday;
+};
+
 const SharePulseModal = ({ isOpen, onClose, question, username }) => {
     const [activeTab, setActiveTab] = useState("download");
     const [copied, setCopied] = useState(false);
@@ -228,7 +238,7 @@ const SharePulseModal = ({ isOpen, onClose, question, username }) => {
     const resultsLines = votedOptions.map(o => `  - ${o.text}: ${o.percentage}% agreed`).join("\n");
     const shareMessage = isToday
         ? `Go vote your opinion on today's ZenPulse:\n\n"${question?.question}"\n\nVote here: ${inviteLink}`
-        : `Check out the results for yesterday's ZenPulse:\n\n"${question?.question}"\n\nResults:\n${resultsLines}\n\nVote on today's pulse and see what the community thinks here: ${inviteLink}`;
+        : `Check out the results for ${isOlderThanYesterday(question?.revealedAt || question?.createdAt) ? 'the previous' : "yesterday's"} ZenPulse:\n\n"${question?.question}"\n\nResults:\n${resultsLines}\n\nVote on today's pulse and see what the community thinks here: ${inviteLink}`;
 
     const handleAction = async () => {
         if (!imageBlob) return;

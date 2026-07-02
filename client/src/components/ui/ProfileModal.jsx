@@ -184,6 +184,164 @@ const CustomSelect = ({ value, onChange, options, isMobile }) => {
     );
 };
 
+const ImageCropperModal = ({ src, onCrop, onClose }) => {
+    const [zoom, setZoom] = useState(1);
+    const [offset, setOffset] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const dragStart = useRef({ x: 0, y: 0 });
+    const imgRef = useRef(null);
+    const containerRef = useRef(null);
+
+    const handleTouchStart = (e) => {
+        setIsDragging(true);
+        dragStart.current = {
+            x: e.touches[0].clientX - offset.x,
+            y: e.touches[0].clientY - offset.y
+        };
+    };
+
+    const handleTouchMove = (e) => {
+        if (!isDragging) return;
+        setOffset({
+            x: e.touches[0].clientX - dragStart.current.x,
+            y: e.touches[0].clientY - dragStart.current.y
+        });
+    };
+
+    const handleMouseDown = (e) => {
+        setIsDragging(true);
+        dragStart.current = {
+            x: e.clientX - offset.x,
+            y: e.clientY - offset.y
+        };
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isDragging) return;
+        setOffset({
+            x: e.clientX - dragStart.current.x,
+            y: e.clientY - dragStart.current.y
+        });
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
+    const handleSave = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 300;
+        canvas.height = 300;
+        const ctx = canvas.getContext("2d");
+
+        const img = imgRef.current;
+        if (!img) return;
+
+        ctx.fillStyle = "#121820";
+        ctx.fillRect(0, 0, 300, 300);
+
+        const displayWidth = img.width * zoom;
+        const displayHeight = img.height * zoom;
+
+        const destX = 150 + offset.x - displayWidth / 2;
+        const destY = 150 + offset.y - displayHeight / 2;
+
+        ctx.drawImage(img, destX, destY, displayWidth, displayHeight);
+
+        const finalCanvas = document.createElement("canvas");
+        finalCanvas.width = 256;
+        finalCanvas.height = 256;
+        const finalCtx = finalCanvas.getContext("2d");
+        finalCtx.drawImage(canvas, 50, 50, 200, 200, 0, 0, 256, 256);
+
+        finalCanvas.toBlob((blob) => {
+            onCrop(blob);
+        }, "image/jpeg", 0.9);
+    };
+
+    return (
+        <div style={{
+            position: 'fixed', inset: 0, background: 'rgba(9, 13, 20, 0.94)',
+            zIndex: 9999999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+        }} onClick={e => e.stopPropagation()}>
+            <div style={{
+                background: 'var(--color-surface, #161b22)', border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))',
+                borderRadius: '16px', padding: '24px', maxWidth: '90%', width: '340px', display: 'flex', flexDirection: 'column',
+                alignItems: 'center', gap: '20px'
+            }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text, #fff)' }}>Crop Profile Picture</h3>
+                
+                <div 
+                    ref={containerRef}
+                    style={{
+                        position: 'relative', width: '300px', height: '300px', background: '#090d14',
+                        overflow: 'hidden', borderRadius: '12px', cursor: isDragging ? 'grabbing' : 'grab',
+                        touchAction: 'none'
+                    }}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleMouseUp}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                >
+                    <img 
+                        ref={imgRef}
+                        src={src} 
+                        alt="Crop preview" 
+                        style={{
+                            position: 'absolute',
+                            left: '50%',
+                            top: '50%',
+                            transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
+                            maxHeight: '100%',
+                            maxWidth: '100%',
+                            pointerEvents: 'none',
+                            userSelect: 'none'
+                        }}
+                    />
+                    <div style={{
+                        position: 'absolute', inset: 0,
+                        border: '50px solid rgba(0, 0, 0, 0.65)',
+                        boxSizing: 'border-box',
+                        pointerEvents: 'none'
+                    }}>
+                        <div style={{
+                            width: '200px', height: '200px',
+                            border: '2px dashed var(--color-primary, #3da5d9)',
+                            borderRadius: '50%',
+                            boxSizing: 'border-box',
+                            position: 'absolute',
+                            left: '-50px',
+                            top: '-50px',
+                            transform: 'translate(50px, 50px)'
+                        }} />
+                    </div>
+                </div>
+
+                <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#8b949e' }}>Zoom</span>
+                    <input 
+                        type="range" 
+                        min="1" 
+                        max="4" 
+                        step="0.01" 
+                        value={zoom} 
+                        onChange={(e) => setZoom(parseFloat(e.target.value))}
+                        style={{ flex: 1, accentColor: 'var(--color-primary, #3da5d9)' }}
+                    />
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', width: '100%', marginTop: '4px' }}>
+                    <button type="button" className="btn btn-outline btn-full" onClick={onClose} style={{ margin: 0, padding: "10px" }}>Cancel</button>
+                    <button type="button" className="btn btn-primary btn-full" onClick={handleSave} style={{ margin: 0, padding: "10px" }}>Crop & Save</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const { user, updateProfile, isLoading, soundEnabled, toggleSound, unblockUser } = useAuthStore();
     const { chats } = useChatStore();
@@ -196,6 +354,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const [password, setPassword] = useState("");
     const [avatarFile, setAvatarFile] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(user?.avatar || "");
+    const [cropImage, setCropImage] = useState(null);
     const [onlineVisibility, setOnlineVisibility] = useState(user?.privacySettings?.onlineStatus || "everyone");
     const [nameVisibility, setNameVisibility] = useState(user?.privacySettings?.fullName || "everyone");
     const [avatarVisibility, setAvatarVisibility] = useState(user?.privacySettings?.avatar || "everyone");
@@ -467,10 +626,9 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 showToast("Image too large. Max 7MB.");
                 return;
             }
-            setAvatarFile(file);
             const url = URL.createObjectURL(file);
-            setAvatarPreview(url);
-            setImageError(false);
+            setCropImage(url);
+            e.target.value = "";
         }
     };
 
@@ -1715,6 +1873,19 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                     </div>
                 </div>
             )
+        )}
+        {cropImage && (
+            <ImageCropperModal
+                src={cropImage}
+                onClose={() => setCropImage(null)}
+                onCrop={(croppedBlob) => {
+                    setAvatarFile(croppedBlob);
+                    const url = URL.createObjectURL(croppedBlob);
+                    setAvatarPreview(url);
+                    setImageError(false);
+                    setCropImage(null);
+                }}
+            />
         )}
         </>,
         document.body

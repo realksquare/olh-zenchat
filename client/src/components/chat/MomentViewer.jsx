@@ -12,12 +12,57 @@ import { getLocalE2EEKeys } from "../../utils/e2eeHelper";
 
 const FILTER_STYLES = {
     none: {},
-    cyber: { filter: "hue-rotate(-45deg) saturate(1.8) contrast(1.15)" },
-    dream: { filter: "blur(0.8px) brightness(1.1) contrast(0.9) saturate(1.1)" },
-    retro: { filter: "sepia(0.5) hue-rotate(-30deg) saturate(1.2) contrast(0.9) brightness(1.1)" },
-    midnight: { filter: "grayscale(0.8) contrast(1.3) brightness(0.8) sepia(0.2) hue-rotate(180deg)" },
-    euphoria: { filter: "hue-rotate(270deg) saturate(1.5) contrast(1.1)" }
+    datetime: {},
+    encrypted: {},
+    zenmode: { filter: 'brightness(0.82) contrast(1.05)' },
+    network: {},
+    moment: {}
 };
+
+const MomentOverlays = ({ filter, createdAt, locationTag }) => (
+    <>
+        {filter === 'datetime' && (
+            <>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -55%)', color: '#ffffff', fontSize: '2.6rem', fontWeight: '900', fontFamily: '"Outfit", "Space Grotesk", -apple-system, sans-serif', letterSpacing: '-0.03em', textShadow: '0 2px 12px rgba(0,0,0,0.6)', pointerEvents: 'none', userSelect: 'none', zIndex: 10, lineHeight: 1 }}>
+                    {new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).replace(/^0/, '')}
+                </div>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, 40%)', color: 'rgba(255,255,255,0.85)', fontSize: '0.78rem', fontWeight: '700', fontFamily: '"Space Grotesk", monospace', textTransform: 'uppercase', letterSpacing: '0.12em', textShadow: '0 1px 4px rgba(0,0,0,0.5)', pointerEvents: 'none', userSelect: 'none', zIndex: 10 }}>
+                    {new Date(createdAt).toLocaleDateString([], { weekday: 'short', month: 'short', day: '2-digit' }).toUpperCase()}
+                </div>
+            </>
+        )}
+        {filter === 'encrypted' && (
+            <div style={{ position: 'absolute', top: '12px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(13, 148, 136, 0.92)', color: '#ffffff', fontSize: '0.72rem', fontWeight: '800', fontFamily: '"Space Grotesk", monospace', padding: '5px 12px', borderRadius: '6px', letterSpacing: '0.08em', textTransform: 'uppercase', display: 'inline-flex', alignItems: 'center', gap: '5px', pointerEvents: 'none', userSelect: 'none', zIndex: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.15)' }}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                E2EE Encrypted
+            </div>
+        )}
+        {filter === 'zenmode' && (
+            <>
+                <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%)', pointerEvents: 'none', zIndex: 9 }} />
+                <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', color: 'rgba(255,255,255,0.92)', fontSize: '0.78rem', fontWeight: '800', fontFamily: '"Space Grotesk", monospace', letterSpacing: '0.28em', textTransform: 'uppercase', textShadow: '0 1px 6px rgba(0,0,0,0.6)', pointerEvents: 'none', userSelect: 'none', zIndex: 10, whiteSpace: 'nowrap' }}>
+                    ZEN MODE
+                </div>
+            </>
+        )}
+        {filter === 'network' && (
+            <>
+                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(61,165,217,0.18) 1px, transparent 1px)', backgroundSize: '20px 20px', pointerEvents: 'none', zIndex: 9 }} />
+                <div style={{ position: 'absolute', bottom: '12px', right: '12px', color: 'rgba(255,255,255,0.9)', fontSize: '0.65rem', fontWeight: '800', fontFamily: '"Space Grotesk", monospace', letterSpacing: '0.1em', textTransform: 'uppercase', textShadow: '0 1px 4px rgba(0,0,0,0.5)', pointerEvents: 'none', userSelect: 'none', zIndex: 10, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/><line x1="7" y1="19" x2="17" y2="19"/></svg>
+                    ZenChat
+                </div>
+            </>
+        )}
+        {filter === 'moment' && (
+            <div style={{ position: 'absolute', bottom: '14px', right: '14px', color: 'var(--color-primary, #3da5d9)', fontSize: '0.9rem', fontWeight: '900', fontFamily: '"Outfit", sans-serif', fontStyle: 'italic', letterSpacing: '-0.01em', textShadow: '0 1px 6px rgba(0,0,0,0.55)', pointerEvents: 'none', userSelect: 'none', zIndex: 10 }}>
+                #Moment.
+            </div>
+        )}
+    </>
+);
 
 const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -681,19 +726,22 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                             <span style={{ fontSize: '0.72rem', color: '#64748b' }}>This moment is E2EE secured and your key is unavailable.</span>
                         </div>
                     ) : displayType === "video" ? (
-                        <video
-                            ref={videoRef}
-                            src={displayMediaUrl}
-                            autoPlay
-                            muted={isMuted || !!displayMusic}
-                            playsInline
-                            onLoadedMetadata={(e) => {
-                                const dur = Math.ceil(e.target.duration);
-                                setTotalDuration(dur);
-                                setTimeLeft(dur);
-                            }}
-                            style={{ ...(FILTER_STYLES[displayFilter] || FILTER_STYLES.none) }}
-                        />
+                        <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+                            <video
+                                ref={videoRef}
+                                src={displayMediaUrl}
+                                autoPlay
+                                muted={isMuted || !!displayMusic}
+                                playsInline
+                                onLoadedMetadata={(e) => {
+                                    const dur = Math.ceil(e.target.duration);
+                                    setTotalDuration(dur);
+                                    setTimeLeft(dur);
+                                }}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', ...(FILTER_STYLES[displayFilter] || FILTER_STYLES.none) }}
+                            />
+                            <MomentOverlays filter={displayFilter} createdAt={currentMoment.createdAt} locationTag={currentMoment.locationTag || decryptedData?.locationTag} />
+                        </div>
                     ) : hasMedia ? (
                         <div className="aura-media-content" key={currentMoment._id} style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
                             {currentMoment.lqip && !isMomentMediaLoaded && (
@@ -723,8 +771,10 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                 }}
                             />
 
+                            <MomentOverlays filter={displayFilter} createdAt={currentMoment.createdAt} locationTag={currentMoment.locationTag || decryptedData?.locationTag} />
+
                             {displayCaption && displayCaption.trim().length >= 3 && (
-                                <div className="aura-image-caption-pill">
+                                <div className="aura-image-caption-pill" style={{ zIndex: 11 }}>
                                     {displayCaption}
                                 </div>
                             )}

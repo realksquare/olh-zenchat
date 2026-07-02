@@ -57,7 +57,15 @@ const QuickAvatarRing = ({ chat }) => {
     );
 };
 
+const getInitials = (name) => {
+    if (!name) return "?";
+    return name.slice(0, 2).toUpperCase();
+};
+
 const BottomSheetLayout = () => {
+    const user = useAuthStore(s => s.user);
+    const hasActiveMoment = useMomentStore(s => s.hasActiveMoment);
+    const getHaloColor = useMomentStore(s => s.getHaloColor);
     const [sheetHeight, setSheetHeight] = useState('collapsed'); // 'collapsed' | 'mid' | 'full'
     const [isDragging, setIsDragging] = useState(false);
     
@@ -175,6 +183,63 @@ const BottomSheetLayout = () => {
 
     return (
         <div className="bottom-sheet-layout">
+            {!activeChat && (
+                <div className="mobile-top-header">
+                    <div 
+                        className={`avatar avatar-sm ${hasActiveMoment(user?._id) ? 'moments-halo-thin' : ''}`}
+                        onClick={() => window.dispatchEvent(new CustomEvent("open-profile-modal"))}
+                        style={{ 
+                            cursor: "pointer",
+                            ...(hasActiveMoment(user?._id) ? { '--halo-color': getHaloColor(user?._id, user?._id) } : {})
+                        }}
+                        title="Edit Profile"
+                    >
+                        {user?.avatar ? (
+                            <img src={user.avatar} alt={user.username} />
+                        ) : (
+                            <span>{getInitials(user?.username)}</span>
+                        )}
+                    </div>
+                    <span className="mobile-header-title">ZenChat</span>
+                    <div className="mobile-header-actions">
+                        <button
+                            className="mobile-header-btn"
+                            onClick={() => window.dispatchEvent(new CustomEvent("open-theme-modal"))}
+                            aria-label="Themes"
+                            title="Themes"
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/>
+                                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+                            </svg>
+                        </button>
+                        <button
+                            className="mobile-header-btn"
+                            onClick={() => window.dispatchEvent(new CustomEvent("open-mobile-menu"))}
+                            aria-label="Menu"
+                            title="Menu"
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="3" y1="12" x2="21" y2="12" />
+                                <line x1="3" y1="6" x2="21" y2="6" />
+                                <line x1="3" y1="18" x2="21" y2="18" />
+                            </svg>
+                        </button>
+                        <button 
+                            className="mobile-header-btn logout" 
+                            onClick={() => window.dispatchEvent(new CustomEvent("confirm-logout"))} 
+                            aria-label="Sign out" 
+                            title="Sign out"
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                <polyline points="16 17 21 12 16 7" />
+                                <line x1="21" y1="12" x2="9" y2="12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            )}
             <div className="bottom-sheet-chat-area">
                 {activeChat ? (
                     <ChatWindow onBack={() => useChatStore.getState().setActiveChat(null)} />
@@ -200,7 +265,25 @@ const BottomSheetLayout = () => {
                     onTouchMove={handleTouchMove} 
                     onTouchEnd={handleTouchEnd}
                 >
-                    <div className="bottom-sheet-handle-bar" />
+                    <div className="bottom-sheet-handle-bar">
+                        <svg 
+                            width="12" 
+                            height="7" 
+                            viewBox="0 0 14 8" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="3" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                            style={{
+                                transform: sheetHeight === 'collapsed' ? 'rotate(0deg)' : 'rotate(180deg)',
+                                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                color: 'var(--color-text-muted, #94a3b8)'
+                            }}
+                        >
+                            <polyline points="1 7 7 1 13 7" />
+                        </svg>
+                    </div>
                     <div className="bottom-sheet-quick-avatars">
                         {sheetHeight === 'collapsed' && recentChats.slice(0, 4).map(chat => (
                             <QuickAvatarRing key={chat._id} chat={chat} />

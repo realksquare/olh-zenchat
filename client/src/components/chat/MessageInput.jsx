@@ -504,7 +504,9 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                 const prev = words[words.length - 2];
                 setSuggestion(getNextWordSuggestion(prev, acModel) || '');
             } else if (lastWord.length >= 3) {
-                setSuggestion(getWordSuggestion(lastWord, acModel) || '');
+                const fullWord = getWordSuggestion(lastWord, acModel);
+                // Store only the suffix (remaining letters), not the full word
+                setSuggestion(fullWord ? fullWord.substring(lastWord.length) : '');
             } else {
                 setSuggestion('');
             }
@@ -808,10 +810,11 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             const endsWithSpace = content.endsWith(' ');
             const words = content.split(/\s+/);
             if (endsWithSpace) {
+                // next-word suggestion: append the full suggested word
                 setContent(content + suggestion + ' ');
             } else {
-                words[words.length - 1] = suggestion;
-                setContent(words.join(' ') + ' ');
+                // word-completion suggestion: append the suffix to current partial word
+                setContent(content + suggestion + ' ');
             }
             setSuggestion('');
             return;
@@ -1004,12 +1007,12 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                         const endX = e.changedTouches[0].clientX;
                         if (endX - touchStartRef.current > 40) { // Swipe right to accept
                             const endsWithSpace = content.endsWith(' ');
-                            const words = content.split(/\s+/);
                             if (endsWithSpace) {
+                                // next-word: append whole suggested word
                                 setContent(content + suggestion + ' ');
                             } else {
-                                words[words.length - 1] = suggestion;
-                                setContent(words.join(' ') + ' ');
+                                // word-completion: append suffix to current partial
+                                setContent(content + suggestion + ' ');
                             }
                             setSuggestion('');
                         }

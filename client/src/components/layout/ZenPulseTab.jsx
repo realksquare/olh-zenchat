@@ -56,6 +56,16 @@ const SnowflakeIcon = ({ size, className }) => (
     </svg>
 );
 
+const isOlderThanYesterday = (dateString) => {
+    if (!dateString) return false;
+    const date = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    return date < yesterday;
+};
+
 const ZenPulseTab = () => {
     const user = useAuthStore(s => s.user);
     const { 
@@ -185,7 +195,9 @@ const ZenPulseTab = () => {
                 {/* Yesterday's Results Section */}
                 {yesterdayQuestion && (
                     <div className="pulse-inapp-card results-card">
-                        <div className="card-top-label">YESTERDAY'S RESULTS</div>
+                        <div className="card-top-label">
+                            {isOlderThanYesterday(yesterdayQuestion.revealedAt || yesterdayQuestion.createdAt) ? "PREVIOUS RESULTS" : "YESTERDAY'S RESULTS"}
+                        </div>
                         <h3 className="pulse-inapp-question-small">{yesterdayQuestion.question}</h3>
                         
                         <div className="pulse-results-list">

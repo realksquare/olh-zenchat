@@ -136,26 +136,26 @@ const UserCardModal = ({ user, isOpen, onClose, hasMoments = false, isOnline = f
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    padding: '8px 18px',
-                                    background: 'linear-gradient(135deg, rgba(61, 165, 217, 0.08) 0%, rgba(99, 102, 241, 0.04) 100%)',
+                                    padding: '10px 16px',
+                                    background: 'var(--color-surface-offset, rgba(255, 255, 255, 0.03))',
                                     border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))',
-                                    borderRadius: '999px',
+                                    borderRadius: '12px',
                                     marginTop: '16px',
                                     marginLeft: 'auto',
                                     marginRight: 'auto',
-                                    maxWidth: 'fit-content',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                                    maxWidth: '90%',
+                                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
                                 }}
                             >
                                 <p 
                                     className="user-card-bio" 
                                     style={{ 
                                         fontSize: '0.85rem', 
-                                        color: 'var(--color-text, rgba(255, 255, 255, 0.85))', 
+                                        color: 'var(--color-text-muted, rgba(255, 255, 255, 0.75))', 
                                         textAlign: 'center', 
                                         wordBreak: 'break-word',
                                         margin: 0,
-                                        fontWeight: '500',
+                                        fontWeight: '400',
                                         lineHeight: '1.4',
                                         fontStyle: 'italic'
                                     }}

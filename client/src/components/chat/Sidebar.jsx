@@ -88,7 +88,24 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
             setPwaPrompt(e.detail);
         };
         window.addEventListener("pwa-prompt-available", handlePrompt);
-        return () => window.removeEventListener("pwa-prompt-available", handlePrompt);
+
+        const openProfile = () => setIsProfileOpen(true);
+        const openTheme = () => setIsThemeOpen(true);
+        const openMenu = () => setShowMobileMenu(true);
+        const confirmLogout = () => setShowLogoutConfirm(true);
+
+        window.addEventListener("open-profile-modal", openProfile);
+        window.addEventListener("open-theme-modal", openTheme);
+        window.addEventListener("open-mobile-menu", openMenu);
+        window.addEventListener("confirm-logout", confirmLogout);
+
+        return () => {
+            window.removeEventListener("pwa-prompt-available", handlePrompt);
+            window.removeEventListener("open-profile-modal", openProfile);
+            window.removeEventListener("open-theme-modal", openTheme);
+            window.removeEventListener("open-mobile-menu", openMenu);
+            window.removeEventListener("confirm-logout", confirmLogout);
+        };
     }, []);
 
     const handleTouchStart = useCallback((e) => {
@@ -362,64 +379,66 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
                     </svg>
                 </div>
             )}
-            <div className="sidebar-profile">
-                <div
-                    className={`avatar avatar-sm ${hasActiveMoment(user?._id) ? 'moments-halo-thin' : ''}`}
-                    onClick={() => setIsProfileOpen(true)}
-                    style={{ 
-                        cursor: "pointer",
-                        ...(hasActiveMoment(user?._id) ? { '--halo-color': getHaloColor(user?._id, user?._id) } : {})
-                    }}
-                    title="Edit Profile"
-                >
-                    {user?.avatar ? (
-                        <img src={user.avatar} alt={user.username} />
-                    ) : (
-                        <span>{getInitials(user?.username)}</span>
-                    )}
+            {!insideSheet && (
+                <div className="sidebar-profile">
+                    <div
+                        className={`avatar avatar-sm ${hasActiveMoment(user?._id) ? 'moments-halo-thin' : ''}`}
+                        onClick={() => setIsProfileOpen(true)}
+                        style={{ 
+                            cursor: "pointer",
+                            ...(hasActiveMoment(user?._id) ? { '--halo-color': getHaloColor(user?._id, user?._id) } : {})
+                        }}
+                        title="Edit Profile"
+                    >
+                        {user?.avatar ? (
+                            <img src={user.avatar} alt={user.username} />
+                        ) : (
+                            <span>{getInitials(user?.username)}</span>
+                        )}
+                    </div>
+                    <span className="sidebar-username" onClick={() => setIsProfileOpen(true)} style={{ cursor: "pointer" }} title="Edit Profile">
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{user?.username}</span>
+                        {user?.isVerified && <VerifiedTick style={{ marginLeft: 0, flexShrink: 0 }} />}
+                    </span>
+                    <div className="sidebar-profile-actions">
+                        <button
+                            className="sidebar-profile-btn"
+                            onClick={() => setIsThemeOpen(true)}
+                            aria-label="Themes"
+                            title="Themes"
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/>
+                                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+                            </svg>
+                        </button>
+                        <button
+                            className="sidebar-profile-btn"
+                            onClick={() => setShowMobileMenu(true)}
+                            aria-label="Menu"
+                            title="Menu"
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="3" y1="12" x2="21" y2="12" />
+                                <line x1="3" y1="6" x2="21" y2="6" />
+                                <line x1="3" y1="18" x2="21" y2="18" />
+                            </svg>
+                        </button>
+                        <button 
+                            className="sidebar-profile-btn logout" 
+                            onClick={() => setShowLogoutConfirm(true)} 
+                            aria-label="Sign out" 
+                            title="Sign out"
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                <polyline points="16 17 21 12 16 7" />
+                                <line x1="21" y1="12" x2="9" y2="12" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-                <span className="sidebar-username" onClick={() => setIsProfileOpen(true)} style={{ cursor: "pointer" }} title="Edit Profile">
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{user?.username}</span>
-                    {user?.isVerified && <VerifiedTick style={{ marginLeft: 0, flexShrink: 0 }} />}
-                </span>
-                <div className="sidebar-profile-actions">
-                    <button
-                        className="sidebar-profile-btn"
-                        onClick={() => setIsThemeOpen(true)}
-                        aria-label="Themes"
-                        title="Themes"
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/>
-                            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
-                        </svg>
-                    </button>
-                    <button
-                        className="sidebar-profile-btn"
-                        onClick={() => setShowMobileMenu(true)}
-                        aria-label="Menu"
-                        title="Menu"
-                    >
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="3" y1="12" x2="21" y2="12" />
-                            <line x1="3" y1="6" x2="21" y2="6" />
-                            <line x1="3" y1="18" x2="21" y2="18" />
-                        </svg>
-                    </button>
-                    <button 
-                        className="sidebar-profile-btn logout" 
-                        onClick={() => setShowLogoutConfirm(true)} 
-                        aria-label="Sign out" 
-                        title="Sign out"
-                    >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                            <polyline points="16 17 21 12 16 7" />
-                            <line x1="21" y1="12" x2="9" y2="12" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
+            )}
 
             <MomentsRow 
                 onAddMoment={() => setIsMomentCreatorOpen(true)} 
