@@ -28,9 +28,9 @@ const QuickAvatarRing = ({ chat }) => {
 
     return (
         <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
-            <div 
+            <div
                 className={`avatar avatar-sm ${isActive ? 'active-quick-avatar' : ''}`}
-                style={{ 
+                style={{
                     cursor: 'pointer',
                     position: 'relative'
                 }}
@@ -70,9 +70,9 @@ const BottomSheetLayout = () => {
     const [sheetHeight, setSheetHeight] = useState('collapsed'); // 'collapsed' | 'mid' | 'full'
     const [isDragging, setIsDragging] = useState(false);
     const [glitchKey, setGlitchKey] = useState(0);
-    
+
     // Use raw px values for inline transform instead of relying purely on classes for smooth drag
-    const [dragY, setDragY] = useState(null); 
+    const [dragY, setDragY] = useState(null);
     const dragStartY = useRef(null);
     const initialTranslateY = useRef(0);
     const sheetRef = useRef(null);
@@ -111,7 +111,7 @@ const BottomSheetLayout = () => {
         dragStartY.current = y;
         lastY.current = y;
         lastTime.current = Date.now();
-        
+
         // Get current transform
         const style = window.getComputedStyle(sheetRef.current);
         const matrix = new DOMMatrixReadOnly(style.transform);
@@ -123,7 +123,7 @@ const BottomSheetLayout = () => {
         if (!isDragging) return;
         const y = e.touches[0].clientY;
         const delta = y - dragStartY.current;
-        
+
         const now = Date.now();
         const dt = now - lastTime.current;
         if (dt > 0) {
@@ -136,7 +136,7 @@ const BottomSheetLayout = () => {
         let newY = initialTranslateY.current + delta;
         // Clamp newY
         newY = Math.max(bounds.full, Math.min(newY, bounds.collapsed));
-        
+
         setDragY(newY);
     };
 
@@ -145,7 +145,7 @@ const BottomSheetLayout = () => {
         setIsDragging(false);
 
         const bounds = getHeights();
-        
+
         // Snap logic based on velocity and position
         if (velocityY.current > 0.5) {
             // fast drag down
@@ -158,7 +158,7 @@ const BottomSheetLayout = () => {
             const distFull = Math.abs(dragY - bounds.full);
             const distMid = Math.abs(dragY - bounds.mid);
             const distCollapsed = Math.abs(dragY - bounds.collapsed);
-            
+
             const min = Math.min(distFull, distMid, distCollapsed);
             if (min === distFull) snapTo('full');
             else if (min === distMid) snapTo('mid');
@@ -192,10 +192,10 @@ const BottomSheetLayout = () => {
         <div className="bottom-sheet-layout">
             {!activeChat && (
                 <div className="mobile-top-header">
-                    <div 
+                    <div
                         className={`avatar avatar-sm ${hasActiveMoment(user?._id) ? 'moments-halo-thin' : ''}`}
                         onClick={() => window.dispatchEvent(new CustomEvent("open-profile-modal"))}
-                        style={{ 
+                        style={{
                             cursor: "pointer",
                             ...(hasActiveMoment(user?._id) ? { '--halo-color': getHaloColor(user?._id, user?._id) } : {})
                         }}
@@ -208,7 +208,7 @@ const BottomSheetLayout = () => {
                         )}
                     </div>
                     <div className="mobile-header-title">
-                        <span 
+                        <span
                             key={glitchKey}
                             className={glitchKey > 0 ? 'glitch-effect' : ''}
                             onClick={() => setGlitchKey(prev => prev + 1)}
@@ -225,8 +225,8 @@ const BottomSheetLayout = () => {
                             title="Themes"
                         >
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/>
-                                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+                                <circle cx="13.5" cy="6.5" r=".5" /><circle cx="17.5" cy="10.5" r=".5" /><circle cx="8.5" cy="7.5" r=".5" /><circle cx="6.5" cy="12.5" r=".5" />
+                                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
                             </svg>
                         </button>
                         <button
@@ -241,10 +241,10 @@ const BottomSheetLayout = () => {
                                 <line x1="3" y1="18" x2="21" y2="18" />
                             </svg>
                         </button>
-                        <button 
-                            className="mobile-header-btn logout" 
-                            onClick={() => window.dispatchEvent(new CustomEvent("confirm-logout"))} 
-                            aria-label="Sign out" 
+                        <button
+                            className="mobile-header-btn logout"
+                            onClick={() => window.dispatchEvent(new CustomEvent("confirm-logout"))}
+                            aria-label="Sign out"
                             title="Sign out"
                         >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -269,21 +269,21 @@ const BottomSheetLayout = () => {
                 className={`bottom-sheet ${sheetHeight} ${isDragging ? 'dragging' : ''}`}
                 style={sheetStyle}
             >
-                <div 
-                    className="bottom-sheet-handle-zone" 
-                    onTouchStart={handleTouchStart} 
-                    onTouchMove={handleTouchMove} 
+                <div
+                    className="bottom-sheet-handle-zone"
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
                 >
                     <div className="bottom-sheet-handle-bar nudge-icon">
-                        <svg 
-                            width="12" 
-                            height="7" 
-                            viewBox="0 0 14 8" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            strokeWidth="3" 
-                            strokeLinecap="round" 
+                        <svg
+                            width="12"
+                            height="7"
+                            viewBox="0 0 14 8"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
                             strokeLinejoin="round"
                             style={{
                                 transform: sheetHeight === 'collapsed' ? 'rotate(0deg)' : 'rotate(180deg)',
@@ -307,14 +307,14 @@ const BottomSheetLayout = () => {
                         )}
                     </div>
                     <div className={`bottom-sheet-chats-title ${isSheetUp ? 'faded-in' : ''}`}>
-                        CHATS
+                        #MOMENTS & CHATS
                     </div>
                 </div>
 
                 <div className="bottom-sheet-content">
-                    <Sidebar 
-                        insideSheet={true} 
-                        onChatSelect={() => snapTo('collapsed')} 
+                    <Sidebar
+                        insideSheet={true}
+                        onChatSelect={() => snapTo('collapsed')}
                     />
                 </div>
             </div>
