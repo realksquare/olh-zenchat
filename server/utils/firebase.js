@@ -50,6 +50,10 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
 
     const message = {
         token: fcmToken,
+        notification: {
+            title: String(title),
+            body: String(body),
+        },
         data: {
             ...stringData,
             title: String(title),
@@ -59,6 +63,11 @@ const sendPushNotification = async (userId, fcmToken, title, body, data = {}) =>
         },
         webpush: {
             headers: { Urgency: "high" },
+            notification: {
+                icon: '/notif-icon.svg',
+                badge: '/notif-badge.svg',
+                tag: stringData.tag || "zenchat-notif",
+            },
             fcm_options: {
                 link: clickUrl
             }

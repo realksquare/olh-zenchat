@@ -154,11 +154,38 @@ export const useChatStore = create(
 
                 if (typeof window !== "undefined" && !window.netCheckInterval) {
                     // 6 s warm-up before first probe — avoids false SP-OP on cold server start
-                    window.netCheckInterval = setTimeout(() => {
+                    let intervalId = null;
+
+                    const startNetCheck = () => {
+                        if (intervalId) return;
                         get().checkNetworkSpeed();
-                        window.netCheckInterval = setInterval(() => {
+                        intervalId = setInterval(() => {
                             get().checkNetworkSpeed();
-                        }, 7000);
+                        }, 30000); // Relaxed to 30 seconds
+                        window.netCheckInterval = intervalId;
+                    };
+
+                    const stopNetCheck = () => {
+                        if (intervalId) {
+                            clearInterval(intervalId);
+                            intervalId = null;
+                            window.netCheckInterval = null;
+                        }
+                    };
+
+                    const handleVisibility = () => {
+                        if (document.visibilityState === 'visible') {
+                            startNetCheck();
+                        } else {
+                            stopNetCheck();
+                        }
+                    };
+
+                    setTimeout(() => {
+                        if (document.visibilityState === 'visible') {
+                            startNetCheck();
+                        }
+                        document.addEventListener("visibilitychange", handleVisibility);
                     }, 6000);
                 }
 
