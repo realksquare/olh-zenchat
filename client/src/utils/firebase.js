@@ -89,10 +89,36 @@ export const disableNotificationPermission = async () => {
     }
 };
 
-export const onMessageListener = () =>
-    new Promise((resolve) => {
-        if (!messaging) return;
-        onMessage(messaging, (payload) => {
-            resolve(payload);
-        });
+export const setupForegroundNotifications = () => {
+    if (!messaging) return;
+    onMessage(messaging, (payload) => {
+        // If document is not visible, show a system notification (desktop workaround)
+        if (document.visibilityState !== 'visible') {
+            let newTitle = payload.data?.title || payload.notification?.title || 'New Message';
+            let newBody = payload.data?.body || payload.notification?.body || '';
+
+            if (payload.data?.isViewOnce === "true") {
+                newBody = "Image - Sent a view-once media";
+            }
+            
+            const notification = new Notification(newTitle, {
+                body: newBody,
+                icon: '/notif-icon.svg',
+                badge: '/notif-badge.svg',
+                tag: payload.data?.tag || payload.notification?.tag || 'zenchat-notif',
+                data: {
+                    url: payload.fcmOptions?.link || payload.data?.url || '/',
+                    chatId: payload.data?.chatId,
+                }
+            });
+            
+            notification.onclick = (event) => {
+                window.focus();
+                const chatId = event.target.data?.chatId;
+                if (chatId) {
+                    window.dispatchEvent(new CustomEvent("open-chat-from-notif", { detail: chatId }));
+                }
+            };
+        }
     });
+};

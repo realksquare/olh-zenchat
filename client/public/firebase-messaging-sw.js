@@ -94,8 +94,8 @@ try {
 
         const notificationOptions = {
             body: newBody,
-            icon: '/logo192.png',
-            badge: '/logo192.png',
+            icon: '/notif-icon.svg',
+            badge: '/notif-badge.svg',
             tag: tag,
             renotify: true,
             silent: false,

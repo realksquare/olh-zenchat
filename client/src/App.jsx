@@ -14,7 +14,7 @@ const ZenPulsePage = lazy(() => import("./pages/ZenPulsePage"));
 import InstallPWA from "./components/ui/InstallPWA";
 import RecoveryKeyModal from "./components/ui/RecoveryKeyModal";
 import { primeAudioContext, getAudioContext } from "./utils/audio";
-import { requestNotificationPermission } from "./utils/firebase";
+import { requestNotificationPermission, setupForegroundNotifications } from "./utils/firebase";
 import axiosInstance from "./utils/axios";
 import NotificationPrompt from "./components/layout/NotificationPrompt";
 import SplashScreen from "./components/ui/SplashScreen";
@@ -336,6 +336,7 @@ const App = () => {
               deviceType: isPWA ? "pwa" : "browser",
               notificationsEnabled: true
             });
+            setupForegroundNotifications();
           }
         } catch (err) {
           console.error("FCM registration error:", err);

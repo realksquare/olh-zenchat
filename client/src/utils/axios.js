@@ -26,6 +26,7 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
     (response) => {
+        sessionStorage.removeItem("auth_401_failures");
         const startTime = response.config?.metadata?.startTime;
         if (startTime) {
             const duration = new Date() - startTime;
@@ -71,10 +72,17 @@ axiosInstance.interceptors.response.use(
         const isAuthRoute = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/auth/register');
         
         if (error.response?.status === 401 && !isAuthRoute) {
-            localStorage.removeItem("zenchat_token");
-            localStorage.removeItem("zenchat_user");
-            localStorage.removeItem("zenchat-auth");
-            window.location.href = "/login";
+            let failures = parseInt(sessionStorage.getItem("auth_401_failures") || "0");
+            failures++;
+            sessionStorage.setItem("auth_401_failures", failures.toString());
+            
+            if (failures >= 3) {
+                localStorage.removeItem("zenchat_token");
+                localStorage.removeItem("zenchat_user");
+                localStorage.removeItem("zenchat-auth");
+                sessionStorage.removeItem("auth_401_failures");
+                window.location.href = "/login";
+            }
         }
         return Promise.reject(error);
     }

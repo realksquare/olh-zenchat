@@ -721,52 +721,61 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                             <span style={{ fontSize: '0.72rem', color: '#64748b' }}>This moment is E2EE secured and your key is unavailable.</span>
                         </div>
                     ) : displayType === "video" ? (
-                        <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
-                            <video
-                                ref={videoRef}
-                                src={displayMediaUrl}
-                                autoPlay
-                                muted={isMuted || !!displayMusic}
-                                playsInline
-                                onLoadedMetadata={(e) => {
-                                    const dur = Math.ceil(e.target.duration);
-                                    setTotalDuration(dur);
-                                    setTimeLeft(dur);
-                                }}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover', ...(FILTER_STYLES[displayFilter] || FILTER_STYLES.none) }}
-                            />
-                            <MomentOverlays filter={displayFilter} createdAt={currentMoment.createdAt} locationTag={currentMoment.locationTag || decryptedData?.locationTag} />
+                        <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ position: 'relative', display: 'flex', maxWidth: '100%', maxHeight: '100%' }}>
+                                <video
+                                    ref={videoRef}
+                                    src={displayMediaUrl}
+                                    autoPlay
+                                    muted={isMuted || !!displayMusic}
+                                    playsInline
+                                    onLoadedMetadata={(e) => {
+                                        const dur = Math.ceil(e.target.duration);
+                                        setTotalDuration(dur);
+                                        setTimeLeft(dur);
+                                    }}
+                                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', ...(FILTER_STYLES[displayFilter] || FILTER_STYLES.none) }}
+                                />
+                                <MomentOverlays filter={displayFilter} createdAt={currentMoment.createdAt} locationTag={currentMoment.locationTag || decryptedData?.locationTag} />
+                            </div>
                         </div>
                     ) : hasMedia ? (
-                        <div className="aura-media-content" key={currentMoment._id} style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
-                            {currentMoment.lqip && !isMomentMediaLoaded && (
+                        <div className="aura-media-content" key={currentMoment._id} style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ position: 'relative', display: 'flex', maxWidth: '100%', maxHeight: '100%' }}>
+                                {currentMoment.lqip && !isMomentMediaLoaded && (
+                                    <img
+                                        src={currentMoment.lqip}
+                                        alt="placeholder"
+                                        className="viewer-main-media"
+                                        style={{
+                                            position: 'absolute',
+                                            inset: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            filter: 'blur(12px) brightness(0.8)',
+                                            transform: 'scale(1.05)',
+                                            zIndex: 1
+                                        }}
+                                    />
+                                )}
                                 <img
-                                    src={currentMoment.lqip}
-                                    alt="placeholder"
+                                    src={displayMediaUrl}
+                                    alt="Moment"
                                     className="viewer-main-media"
+                                    onLoad={() => setIsMomentMediaLoaded(true)}
                                     style={{
-                                        position: 'absolute',
-                                        filter: 'blur(12px) brightness(0.8)',
-                                        transform: 'scale(1.05)',
-                                        zIndex: 1
+                                        ...(FILTER_STYLES[displayFilter] || FILTER_STYLES.none),
+                                        opacity: isMomentMediaLoaded ? 1 : (currentMoment.lqip ? 0 : 1),
+                                        transition: 'opacity 0.4s ease-in-out',
+                                        position: 'relative',
+                                        zIndex: 2,
+                                        maxWidth: '100%',
+                                        maxHeight: '100%',
+                                        objectFit: 'contain'
                                     }}
                                 />
-                            )}
-                            <img
-                                src={displayMediaUrl}
-                                alt="Moment"
-                                className="viewer-main-media"
-                                onLoad={() => setIsMomentMediaLoaded(true)}
-                                style={{
-                                    ...(FILTER_STYLES[displayFilter] || FILTER_STYLES.none),
-                                    opacity: isMomentMediaLoaded ? 1 : (currentMoment.lqip ? 0 : 1),
-                                    transition: 'opacity 0.4s ease-in-out',
-                                    position: 'relative',
-                                    zIndex: 2
-                                }}
-                            />
-
-                            <MomentOverlays filter={displayFilter} createdAt={currentMoment.createdAt} locationTag={currentMoment.locationTag || decryptedData?.locationTag} />
+                                <MomentOverlays filter={displayFilter} createdAt={currentMoment.createdAt} locationTag={currentMoment.locationTag || decryptedData?.locationTag} />
+                            </div>
 
                             {displayCaption && displayCaption.trim().length >= 3 && (
                                 <div className="aura-image-caption-pill" style={{ zIndex: 11 }}>

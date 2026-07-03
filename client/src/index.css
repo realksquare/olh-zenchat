@@ -62,7 +62,7 @@
   --bubble-failed: rgba(224, 92, 106, 0.2);
   --bubble-sent: #475569;
   --bubble-delivered: #2563eb;
-  --bubble-seen: #059669;
+  --bubble-seen: #047857;
 
   --transition-interactive: 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -1484,7 +1484,7 @@ select {
 .message-bubble.mine.status-seen .message-text,
 .message-bubble.mine.status-read .message-text,
 .message-bubble.mine.status-delivered .message-text {
-  color: var(--color-text, #fff)fff;
+  color: var(--color-text, #fff);
   font-weight: 500;
 }
 
@@ -9345,20 +9345,14 @@ select {
 .bottom-sheet-handle-bar {
   width: 36px;
   height: 20px;
-  background: var(--color-surface, #161b22);
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
-  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
 }
 
 .bottom-sheet-handle-bar:hover {
-  transform: scale(1.05);
-  background: var(--color-surface-offset, #1e2530);
-  border-color: var(--color-primary, #3da5d9);
+  transform: scale(1.15);
 }
 
 .bottom-sheet-quick-avatars {
