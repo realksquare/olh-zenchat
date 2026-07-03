@@ -1,42 +1,77 @@
 import { useState, useEffect } from "react";
 
-const quotes = {
+const grammar = {
     zero: [
-        "Zero minutes. Did you actually go outside today, or is your phone just dead?",
-        "No messages. Your friends must be enjoying the peace and quiet.",
-        "0 minutes. The social media databases are wondering if you still exist."
+        "{greeting} {zeroAction} {zeroBurn}",
+        "{zeroBurn} {zeroAction}",
     ],
     veryLow: [
-        "Only {m}m spent. A quick text-and-dash. Efficient, or just avoiding everyone?",
-        "Under 5 minutes. You came, you replied, you vanished. Respectable boundary setting."
+        "{greeting} {veryLowAction} {veryLowBurn}",
     ],
     low: [
-        "{m}m spent. Enough to prove you are social, but not enough to ruin your afternoon.",
-        "{m}m. An actual human connection. Shocking, isn't it?"
+        "{greeting} {lowAction} {lowBurn}",
     ],
     medium: [
-        "{m}m. Quite a long talk. Are you gossiping or planning a revolution?",
-        "Almost an hour. Remember, real life is in high-definition and does not require Wi-Fi."
+        "{mediumAction} {mediumBurn}",
+        "{greeting} {mediumAction} {mediumBurn}"
     ],
     high: [
-        "{h}h {m}m. Go look at some grass. Seriously. It's green and does not send push notifications.",
-        "{h}h {m}m. You've officially spent more time talking than a Trappist monk does in a year."
+        "{highAction} {highBurn}",
+        "Wow. {highAction} {highBurn}"
     ]
 };
 
-const getSarcasticQuote = (minutes) => {
-    let list = quotes.zero;
-    if (minutes > 60) list = quotes.high;
-    else if (minutes > 20) list = quotes.medium;
-    else if (minutes > 5) list = quotes.low;
-    else if (minutes > 0) list = quotes.veryLow;
+const fragments = {
+    greeting: ["Oh look,", "Well well,", "Ah,", "Impressive.", "See that?"],
+    zeroAction: ["0 minutes so far.", "Still at zero.", "Not a single minute logged."],
+    zeroBurn: ["Did your phone die?", "Avoiding people today?", "The ultimate ghost mode.", "Who are you hiding from?"],
+    veryLowAction: ["Only {m}m spent.", "A brief {m}m visit.", "Just {m}m so far."],
+    veryLowBurn: ["Efficient or just lonely?", "Text and dash.", "Setting some serious boundaries.", "Not sticking around, huh?"],
+    lowAction: ["{m}m of socializing.", "{m}m on the clock.", "You survived {m}m here."],
+    lowBurn: ["Enough to prove you exist.", "An actual human connection?", "Don't get too crazy now.", "Pacing yourself, I see."],
+    mediumAction: ["{h}h {m}m? That's quite a chat.", "Clocking in at {h}h {m}m.", "You've been here for {h}h {m}m."],
+    mediumBurn: ["Gossiping or planning a heist?", "The real world called, it left a voicemail.", "Remember what fresh air feels like?", "You're practically a local now."],
+    highAction: ["{h}h {m}m?!", "A staggering {h}h {m}m.", "You hit {h}h {m}m of screen time."],
+    highBurn: ["Go touch some grass.", "Your retinas are begging for mercy.", "Did you forget you have legs?", "I think it's time to log off."]
+};
 
-    const idx = Math.floor(Math.abs(Math.sin(minutes || 1)) * list.length) % list.length;
-    const template = list[idx];
+const prng = (seed) => {
+    let x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+};
+
+const pick = (arr, seed) => arr[Math.floor(prng(seed) * arr.length)];
+
+const getSarcasticQuote = (minutes) => {
+    const today = new Date().getDate();
+    const seed = minutes + today * 1000;
+
+    let category = "zero";
+    if (minutes > 60) category = "high";
+    else if (minutes > 20) category = "medium";
+    else if (minutes > 5) category = "low";
+    else if (minutes > 0) category = "veryLow";
+
+    let template = pick(grammar[category], seed);
+    
+    let iterations = 0;
+    while (template.includes("{") && iterations < 10) {
+        template = template.replace(/\{(\w+)\}/g, (match, key) => {
+            if (fragments[key]) {
+                const localSeed = seed + key.charCodeAt(0) + iterations;
+                return pick(fragments[key], localSeed);
+            }
+            return match;
+        });
+        iterations++;
+    }
 
     const h = Math.floor(minutes / 60);
     const m = minutes % 60;
-    return template.replace("{h}", h).replace("{m}", m);
+    let res = template.replace(/\{h\}/g, h).replace(/\{m\}/g, m);
+    // cleanup double spaces and capitalize first letter
+    res = res.replace(/\s+/g, ' ').trim();
+    return res.charAt(0).toUpperCase() + res.slice(1);
 };
 
 const ZenTimeDashboard = ({ snapTo }) => {
