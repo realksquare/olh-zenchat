@@ -9334,6 +9334,8 @@ select {
 
 .bottom-sheet-handle-zone {
   height: 58px;
+  width: 100%;
+  box-sizing: border-box;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -9376,12 +9378,11 @@ select {
   display: none;
 }
 
-.bottom-sheet-label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+.quick-avatars-empty-text {
+  font-size: 11px;
   color: var(--color-text-faint, #64748b);
-  margin-left: auto;
+  letter-spacing: 0.05em;
+  margin: 0 auto;
   text-transform: uppercase;
 }
 

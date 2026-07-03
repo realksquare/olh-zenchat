@@ -283,11 +283,18 @@ const BottomSheetLayout = () => {
                         </svg>
                     </div>
                     <div className="bottom-sheet-quick-avatars">
-                        {(!sheetHeight || sheetHeight === 'collapsed') && !(isDragging && dragY !== null && dragY < getHeights().collapsed - 12) && recentChats.slice(0, 8).map(chat => (
-                            <QuickAvatarRing key={chat._id} chat={chat} />
-                        ))}
-                        {totalUnread > 0 && <span className="bottom-sheet-unread-pill">●{totalUnread > 99 ? '99+' : totalUnread}</span>}
-                        <span className="bottom-sheet-label">CHATS</span>
+                        {(!sheetHeight || sheetHeight === 'collapsed') && !(isDragging && dragY !== null && dragY < getHeights().collapsed - 12) && (
+                            recentChats.length > 0 ? (
+                                <>
+                                    {recentChats.slice(0, 8).map(chat => (
+                                        <QuickAvatarRing key={chat._id} chat={chat} />
+                                    ))}
+                                    {totalUnread > 0 && <span className="bottom-sheet-unread-pill">●{totalUnread > 99 ? '99+' : totalUnread}</span>}
+                                </>
+                            ) : (
+                                <span className="quick-avatars-empty-text">Pull up to start connecting</span>
+                            )
+                        )}
                     </div>
                 </div>
 
