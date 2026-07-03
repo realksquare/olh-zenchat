@@ -9342,7 +9342,7 @@ select {
   gap: 10px;
   cursor: grab;
   touch-action: none;
-  padding: 0 16px;
+  padding: 0 24px;
 }
 
 .bottom-sheet-handle-bar {
@@ -9367,6 +9367,8 @@ select {
   white-space: nowrap;
   flex: 1;
   min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
   padding-bottom: 2px;
 }
 
