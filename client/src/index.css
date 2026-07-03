@@ -9277,6 +9277,7 @@ select {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+  margin-left: -16px;
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--color-text, #ffffff);

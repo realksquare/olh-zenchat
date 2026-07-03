@@ -397,10 +397,10 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
         const first = files[0];
         const isVideo = first.type.startsWith("video/");
-        const maxSize = isVideo ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+        const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
 
         if (first.size > maxSize) {
-            showToast(`File size exceeds ${isVideo ? "50MB" : "5MB"} limit`);
+            showToast(`File size exceeds ${isVideo ? "50MB" : "10MB"} limit`);
             return;
         }
 
@@ -435,7 +435,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
             for (let i = 1; i < files.length; i++) {
                 if (slotIndex >= 5) break;
                 const f = files[i];
-                if (f.type.startsWith("image/") && f.size <= 5 * 1024 * 1024) {
+                if (f.type.startsWith("image/") && f.size <= 10 * 1024 * 1024) {
                     newLayout[slotIndex] = f;
                     slotIndex++;
                 }
@@ -448,8 +448,8 @@ const MomentCreator = ({ isOpen, onClose }) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (file.size > 5 * 1024 * 1024) {
-            showToast("File size exceeds 5MB limit");
+        if (file.size > 10 * 1024 * 1024) {
+            showToast("File size exceeds 10MB limit");
             return;
         }
 
@@ -865,6 +865,9 @@ const MomentCreator = ({ isOpen, onClose }) => {
                             ) : (
                                 /* Image Moment Creation View */
                                 <>
+                                    <input type="file" ref={cameraInputRef} accept="image/*,video/mp4,video/webm" capture="environment" style={{ display: 'none' }} onChange={handleFileChange} />
+                                    <input type="file" ref={fileInputRef} accept="image/*,video/mp4,video/webm" style={{ display: 'none' }} onChange={handleFileChange} multiple />
+                                    <input type="file" ref={slotFileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleSlotFileChange} />
                                     <div className="aura-preview-container image-preview-wrapper" style={{ position: 'relative', height: '240px', background: '#0a0d14', borderRadius: '16px', margin: '0 28px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         {filePreview ? (
                                             <>
@@ -996,10 +999,7 @@ const MomentCreator = ({ isOpen, onClose }) => {
                                                         Library
                                                     </button>
                                                 </div>
-                                                <input type="file" ref={cameraInputRef} accept="image/*,video/mp4,video/webm" capture="environment" style={{ display: 'none' }} onChange={handleFileChange} />
-                                                <input type="file" ref={fileInputRef} accept="image/*,video/mp4,video/webm" style={{ display: 'none' }} onChange={handleFileChange} multiple />
-                                                <input type="file" ref={slotFileInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleSlotFileChange} />
-                                                <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted, #64748b)', fontWeight: '500', letterSpacing: '0.02em', marginTop: '4px', fontFamily: '"Space Grotesk", monospace' }}>Max size: 5MB for images, 50MB for videos</span>
+                                                <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted, #64748b)', fontWeight: '500', letterSpacing: '0.02em', marginTop: '4px', fontFamily: '"Space Grotesk", monospace' }}>Max size: 10MB for images, 50MB for videos</span>
                                             </div>
                                         )}
                                     </div>

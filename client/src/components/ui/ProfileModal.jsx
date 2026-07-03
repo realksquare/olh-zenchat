@@ -615,8 +615,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 showToast("Please select an image file.");
                 return;
             }
-            if (file.size > 7 * 1024 * 1024) {
-                showToast("Image too large. Max 7MB.");
+            if (file.size > 10 * 1024 * 1024) {
+                showToast("Image too large. Max 10MB.");
                 return;
             }
             const url = URL.createObjectURL(file);

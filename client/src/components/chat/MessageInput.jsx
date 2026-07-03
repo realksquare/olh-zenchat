@@ -92,11 +92,11 @@ const MediaUploadPopup = ({ onClose, onFilesSelected, showToast }) => {
             }
 
             let limit = 10 * 1024 * 1024; // Default 10MB
-            if (isImage) limit = 7 * 1024 * 1024;
+            if (isImage) limit = 10 * 1024 * 1024;
             if (isVideo) limit = 50 * 1024 * 1024;
 
             if (file.size > limit) {
-                const limitText = isImage ? "7 MB" : isVideo ? "50 MB" : "10 MB";
+                const limitText = isImage ? "10 MB" : isVideo ? "50 MB" : "10 MB";
                 errors.push(`${file.name}: exceeds ${limitText} limit`);
                 continue;
             }
@@ -140,7 +140,7 @@ const MediaUploadPopup = ({ onClose, onFilesSelected, showToast }) => {
 
                 <div style={{ padding: '0 28px 28px' }}>
                     <p className="media-upload-hint" style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-                        Images (max 7MB) &bull; Videos (max 18MB) &bull; Documents & Archives (max 10MB)
+                        Images (max 10MB) &bull; Videos (max 18MB) &bull; Documents & Archives (max 10MB)
                     </p>
 
                     <div
