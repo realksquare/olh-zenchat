@@ -207,14 +207,16 @@ const BottomSheetLayout = () => {
                             <span>{getInitials(user?.username)}</span>
                         )}
                     </div>
-                    <span 
-                        key={glitchKey}
-                        className={`mobile-header-title ${glitchKey > 0 ? 'glitch-effect' : ''}`}
-                        onClick={() => setGlitchKey(prev => prev + 1)}
-                        style={{ cursor: 'pointer' }}
-                    >
-                        ZenChat
-                    </span>
+                    <div className="mobile-header-title">
+                        <span 
+                            key={glitchKey}
+                            className={glitchKey > 0 ? 'glitch-effect' : ''}
+                            onClick={() => setGlitchKey(prev => prev + 1)}
+                            style={{ cursor: 'pointer', display: 'inline-block' }}
+                        >
+                            ZenChat
+                        </span>
+                    </div>
                     <div className="mobile-header-actions">
                         <button
                             className="mobile-header-btn"
