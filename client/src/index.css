@@ -9341,6 +9341,7 @@ select {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  position: relative;
   gap: 10px;
   cursor: grab;
   touch-action: none;
@@ -9372,6 +9373,33 @@ select {
   width: 100%;
   box-sizing: border-box;
   padding-bottom: 2px;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.bottom-sheet-quick-avatars.faded-out {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-8px);
+}
+
+.bottom-sheet-chats-title {
+  position: absolute;
+  left: 24px;
+  top: 40px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-text-faint, #64748b);
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.bottom-sheet-chats-title.faded-in {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .bottom-sheet-quick-avatars::-webkit-scrollbar {
@@ -9779,4 +9807,17 @@ body,
   50% {
     transform: translateY(-4px);
   }
+}
+
+.glitch-effect {
+  animation: glitchText 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes glitchText {
+  0% { transform: translate(0); text-shadow: none; }
+  20% { transform: translate(-2px, 1px); text-shadow: 2px 0 var(--color-primary, #3da5d9), -2px 0 var(--accent, #ef4444); }
+  40% { transform: translate(2px, -1px); text-shadow: -2px 0 var(--color-primary, #3da5d9), 2px 0 var(--accent, #ef4444); }
+  60% { transform: translate(-1px, 2px); text-shadow: 2px 0 var(--color-primary, #3da5d9), -2px 0 var(--accent, #ef4444); }
+  80% { transform: translate(1px, -2px); text-shadow: -2px 0 var(--color-primary, #3da5d9), 2px 0 var(--accent, #ef4444); }
+  100% { transform: translate(0); text-shadow: none; }
 }

@@ -69,6 +69,7 @@ const BottomSheetLayout = () => {
     const getHaloColor = useMomentStore(s => s.getHaloColor);
     const [sheetHeight, setSheetHeight] = useState('collapsed'); // 'collapsed' | 'mid' | 'full'
     const [isDragging, setIsDragging] = useState(false);
+    const [glitchKey, setGlitchKey] = useState(0);
     
     // Use raw px values for inline transform instead of relying purely on classes for smooth drag
     const [dragY, setDragY] = useState(null); 
@@ -185,6 +186,8 @@ const BottomSheetLayout = () => {
         ? { transform: `translateY(${dragY}px)`, transition: 'none' }
         : {};
 
+    const isSheetUp = sheetHeight !== 'collapsed' || (isDragging && dragY !== null && dragY < getHeights().collapsed - 12);
+
     return (
         <div className="bottom-sheet-layout">
             {!activeChat && (
@@ -204,7 +207,14 @@ const BottomSheetLayout = () => {
                             <span>{getInitials(user?.username)}</span>
                         )}
                     </div>
-                    <span className="mobile-header-title">ZenChat</span>
+                    <span 
+                        key={glitchKey}
+                        className={`mobile-header-title ${glitchKey > 0 ? 'glitch-effect' : ''}`}
+                        onClick={() => setGlitchKey(prev => prev + 1)}
+                        style={{ cursor: 'pointer' }}
+                    >
+                        ZenChat
+                    </span>
                     <div className="mobile-header-actions">
                         <button
                             className="mobile-header-btn"
@@ -263,7 +273,7 @@ const BottomSheetLayout = () => {
                     onTouchMove={handleTouchMove} 
                     onTouchEnd={handleTouchEnd}
                 >
-                    <div className="bottom-sheet-handle-bar">
+                    <div className="bottom-sheet-handle-bar nudge-icon">
                         <svg 
                             width="12" 
                             height="7" 
@@ -282,19 +292,20 @@ const BottomSheetLayout = () => {
                             <polyline points="1 7 7 1 13 7" />
                         </svg>
                     </div>
-                    <div className="bottom-sheet-quick-avatars">
-                        {(!sheetHeight || sheetHeight === 'collapsed') && !(isDragging && dragY !== null && dragY < getHeights().collapsed - 12) && (
-                            recentChats.length > 0 ? (
-                                <>
-                                    {recentChats.slice(0, 8).map(chat => (
-                                        <QuickAvatarRing key={chat._id} chat={chat} />
-                                    ))}
-                                    {totalUnread > 0 && <span className="bottom-sheet-unread-pill">●{totalUnread > 99 ? '99+' : totalUnread}</span>}
-                                </>
-                            ) : (
-                                <span className="quick-avatars-empty-text">Pull up to start connecting</span>
-                            )
+                    <div className={`bottom-sheet-quick-avatars ${isSheetUp ? 'faded-out' : ''}`}>
+                        {recentChats.length > 0 ? (
+                            <>
+                                {recentChats.slice(0, 8).map(chat => (
+                                    <QuickAvatarRing key={chat._id} chat={chat} />
+                                ))}
+                                {totalUnread > 0 && <span className="bottom-sheet-unread-pill">●{totalUnread > 99 ? '99+' : totalUnread}</span>}
+                            </>
+                        ) : (
+                            <span className="quick-avatars-empty-text">Pull up to start connecting</span>
                         )}
+                    </div>
+                    <div className={`bottom-sheet-chats-title ${isSheetUp ? 'faded-in' : ''}`}>
+                        CHATS
                     </div>
                 </div>
 
