@@ -22,7 +22,7 @@ const FILTER_STYLES = {
 const MomentOverlays = ({ filter, createdAt, locationTag }) => (
     <>
         {filter === 'datetime' && (
-            <div style={{ position: 'absolute', top: '12px', left: '12px', display: 'flex', flexDirection: 'column', gap: '2px', color: '#ffffff', textShadow: '0 2px 8px rgba(0,0,0,0.6)', pointerEvents: 'none', userSelect: 'none', zIndex: 10 }}>
+            <div style={{ position: 'absolute', bottom: '90px', left: '16px', display: 'flex', flexDirection: 'column', gap: '2px', color: '#ffffff', background: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(8px)', padding: '10px 14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 16px rgba(0,0,0,0.4)', pointerEvents: 'none', userSelect: 'none', zIndex: 10 }}>
                 <span style={{ fontSize: '1.8rem', fontWeight: '300', fontFamily: '"Outfit", sans-serif', lineHeight: 1 }}>
                     {new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).replace(/^0/, '')}
                 </span>

@@ -483,6 +483,13 @@ const MomentCreator = ({ isOpen, onClose }) => {
             showToast("Please upload an image first");
             return;
         }
+        if (!isText && activeFilter === 'layout') {
+            const filledSlots = layoutImages.slice(0, layoutSpaces).filter(img => img !== null);
+            if (filledSlots.length < layoutSpaces) {
+                showToast(`Please fill all ${layoutSpaces} image slots for the layout`);
+                return;
+            }
+        }
         if (!isText && caption.trim().length > 0 && caption.trim().length < 3) {
             showToast("Caption must be at least 3 characters");
             return;
