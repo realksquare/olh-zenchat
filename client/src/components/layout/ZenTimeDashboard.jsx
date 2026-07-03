@@ -2,25 +2,25 @@ import { useState, useEffect } from "react";
 
 const quotes = {
     zero: [
-        "Zero minutes. A digital detox champion, or did you just forget your password?",
-        "No chats today. Your friends must be enjoying the silence.",
-        "0 minutes spent. Somewhere, a social media engagement algorithm is crying."
+        "Zero minutes. Did you actually go outside today, or is your phone just dead?",
+        "No messages. Your friends must be enjoying the peace and quiet.",
+        "0 minutes. The social media databases are wondering if you still exist."
     ],
     veryLow: [
-        "Only {m}m spent. A quick check-in. Efficient, surgical, and almost human.",
-        "Under 5 minutes. You came, you texted, you left. The algorithms hate your discipline."
+        "Only {m}m spent. A quick text-and-dash. Efficient, or just avoiding everyone?",
+        "Under 5 minutes. You came, you replied, you vanished. Respectable boundary setting."
     ],
     low: [
-        "{m}m. A healthy conversation. Just enough to stay social, not enough to rot your brain.",
-        "{m}m spent. You're building actual relationships instead of doomscrolling. What a concept."
+        "{m}m spent. Enough to prove you are social, but not enough to ruin your afternoon.",
+        "{m}m. An actual human connection. Shocking, isn't it?"
     ],
     medium: [
-        "{m}m. That's a solid chatting session. Are you planning a wedding or just gossiping?",
-        "Almost an hour. Remember that there's a physical world out there. It has grass. You should touch it."
+        "{m}m. Quite a long talk. Are you gossiping or planning a revolution?",
+        "Almost an hour. Remember, real life is in high-definition and does not require Wi-Fi."
     ],
     high: [
-        "{h}h {m}m spent. Isn't this supposed to be a Zen app? Put the phone down and go stare at a tree.",
-        "{h}h {m}m chatting. You've officially spent more time talking than a monk does in a week. Breathe."
+        "{h}h {m}m. Go look at some grass. Seriously. It's green and does not send push notifications.",
+        "{h}h {m}m. You've officially spent more time talking than a Trappist monk does in a year."
     ]
 };
 
@@ -110,7 +110,7 @@ const ZenTimeDashboard = ({ snapTo }) => {
                 </p>
                 {minutes > 0 ? (
                     <p className="editorial-comparison">
-                        By opting for ZenChat over algorithmic social feeds, you saved <strong className="highlight-metric">{formatData(netSavedMB)}</strong> of network load, and avoided scrolling past <strong className="highlight-metric">{tiktokVideos} videos</strong> and <strong className="highlight-metric">{adsViewed} ads</strong>.
+                        By choosing ZenChat over typical social feeds, you saved <strong className="highlight-metric">{formatData(netSavedMB)}</strong> of network load, and avoided scrolling past <strong className="highlight-metric">{tiktokVideos} videos</strong> and <strong className="highlight-metric">{adsViewed} ads</strong>.
                     </p>
                 ) : (
                     <p className="editorial-comparison zero-state-comparison">
