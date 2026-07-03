@@ -65,6 +65,7 @@
   --bubble-seen: #047857;
 
   --transition-interactive: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --color-contact-highlight: #fbbf24;
 }
 
 /* ── Themes ─────────────────────────────────────────────── */
@@ -94,25 +95,27 @@
 }
 
 [data-theme="earthy_calm"] {
-  --color-primary: #6B8E6B;
-  --color-primary-hover: #5A7B5A;
-  --color-primary-active: #486648;
+  --color-primary: #5A7B5A;
+  --color-primary-hover: #486648;
+  --color-primary-active: #364d36;
 
-  --color-text: #2c3e2c;
-  --color-text-muted: #5e6b5e;
-  --color-text-faint: #899489;
+  --color-text: #1c2a1c;
+  --color-text-muted: #4e5b4e;
+  --color-text-faint: #798479;
 
   --color-surface: #fdfbf7;
   --color-surface-offset: #f4f1ea;
-  --color-surface-offset-2: rgba(107, 142, 107, 0.1);
+  --color-surface-offset-2: rgba(90, 123, 90, 0.1);
   --color-border: rgba(0, 0, 0, 0.08);
   --color-overlay: rgba(0, 0, 0, 0.05);
 
-  --bubble-sending: rgba(137, 148, 137, 0.4);
+  --color-contact-highlight: #b45309;
+
+  --bubble-sending: rgba(121, 132, 121, 0.4);
   --bubble-failed: rgba(180, 83, 83, 0.2);
-  --bubble-sent: #899489;
-  --bubble-delivered: #5A7B5A;
-  --bubble-seen: #6B8E6B;
+  --bubble-sent: #798479;
+  --bubble-delivered: #486648;
+  --bubble-seen: #5A7B5A;
 
   --body-bg: #fdfbf7;
 }
@@ -624,7 +627,7 @@ select {
   flex: 1;
   font-size: var(--text-sm);
   font-weight: 600;
-  color: #e2e8f0;
+  color: var(--color-text);
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -796,7 +799,7 @@ select {
   border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--radius-md);
   padding: var(--space-2) var(--space-3);
-  color: #475569;
+  color: var(--color-text-muted);
 }
 
 .sidebar-search input {
@@ -805,21 +808,21 @@ select {
   border: none;
   outline: none;
   font-size: var(--text-sm);
-  color: #e2e8f0;
+  color: var(--color-text);
 }
 
 .sidebar-search input::placeholder {
-  color: #334155;
+  color: var(--color-text-faint);
 }
 
 .sidebar-search button {
-  color: #475569;
+  color: var(--color-text-muted);
   display: flex;
   align-items: center;
 }
 
 .sidebar-search button:hover {
-  color: #94a3b8;
+  color: var(--color-text);
 }
 
 .search-results {
@@ -1185,7 +1188,7 @@ select {
 .chat-card-name {
   font-weight: 600;
   font-size: var(--text-sm);
-  color: #e2e8f0;
+  color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1193,13 +1196,13 @@ select {
 
 .chat-card-time {
   font-size: var(--text-xs);
-  color: #334155;
+  color: var(--color-text-faint);
   flex-shrink: 0;
 }
 
 .chat-card-preview {
   font-size: var(--text-xs);
-  color: #475569;
+  color: var(--color-text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1251,12 +1254,12 @@ select {
 .chat-empty-title {
   font-size: var(--text-lg);
   font-weight: 700;
-  color: #e2e8f0;
+  color: var(--color-text);
 }
 
 .chat-empty-hint {
   font-size: var(--text-sm);
-  color: #334155;
+  color: var(--color-text-muted);
   max-width: 28ch;
   line-height: 1.6;
 }
@@ -1319,7 +1322,7 @@ select {
 .chat-header-name {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: #e2e8f0;
+  color: var(--color-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1327,7 +1330,7 @@ select {
 
 .chat-header-status {
   font-size: var(--text-xs);
-  color: #94a3b8;
+  color: var(--color-text-muted);
 }
 
 .chat-header-status.status-typing {
@@ -2354,7 +2357,7 @@ select {
   gap: 5px;
   background: transparent;
   border: none;
-  color: #64748b;
+  color: var(--color-text-muted);
   font-size: 0.78rem;
   font-weight: 500;
   padding: 6px 8px;
@@ -2365,12 +2368,12 @@ select {
 }
 
 .sidebar-tab:hover {
-  color: #94a3b8;
+  color: var(--color-text);
   background: var(--color-overlay, rgba(255, 255, 255, 0.04));
 }
 
 .sidebar-tab.active {
-  background: rgba(61, 165, 217, 0.15);
+  background: var(--color-surface-offset-2);
   color: var(--color-primary);
   font-weight: 600;
 }
@@ -2432,8 +2435,7 @@ select {
 /* ── Contact name highlight ───────────────────────────── */
 
 .chat-card-name-contact {
-  color: #fbbf24;
-  
+  color: var(--color-contact-highlight);
 }
 
 /* ── Chat card menu ───────────────────────────────────── */
