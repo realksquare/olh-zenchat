@@ -98,7 +98,7 @@ const BottomSheetLayout = () => {
         return {
             full: 0,
             mid: sheetMax - (vh * 0.48), // 48dvh from bottom
-            collapsed: sheetMax - 58, // 58px exposed
+            collapsed: sheetMax - 72, // 72px exposed
             sheetMax
         };
     }, []);

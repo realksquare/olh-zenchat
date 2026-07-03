@@ -9319,7 +9319,7 @@ select {
   height: 92dvh;
   background: var(--color-surface, #161b22);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  transform: translateY(calc(92dvh - 58px)); 
+  transform: translateY(calc(92dvh - 72px)); 
   transition: transform 320ms cubic-bezier(0.34, 1.56, 0.64, 1);
   will-change: transform;
   display: flex;
@@ -9333,7 +9333,7 @@ select {
 .bottom-sheet.dragging { transition: none; }
 
 .bottom-sheet-handle-zone {
-  height: 58px;
+  height: 72px;
   width: 100%;
   box-sizing: border-box;
   flex-shrink: 0;
