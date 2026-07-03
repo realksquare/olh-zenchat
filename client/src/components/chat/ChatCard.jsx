@@ -273,7 +273,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                 style={{ 
                     "--accent": accentColor,
                     position: "relative", 
-                    opacity: isBlocked ? 0.65 : 1 
+                    opacity: isBlocked ? 0.65 : 1,
+                    zIndex: showMenu ? 50 : 1
                 }}
             >
                 {/* Left accent bar */}
