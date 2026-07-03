@@ -830,6 +830,23 @@ export const SocketProvider = ({ children }) => {
                         contactId: state.contactId
                     });
                 }
+                
+                // Track daily active minutes locally
+                try {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    const stored = localStorage.getItem("zenchat_daily_tracker");
+                    let dailyData = { date: todayStr, minutes: 0 };
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        if (parsed.date === todayStr) dailyData = parsed;
+                    }
+                    dailyData.minutes += 1;
+                    localStorage.setItem("zenchat_daily_tracker", JSON.stringify(dailyData));
+                    window.dispatchEvent(new CustomEvent("zenchat-daily-time-updated", { detail: dailyData.minutes }));
+                } catch (e) {
+                    console.error("Failed to update daily tracker in localStorage:", e);
+                }
+
                 state.accumulatedSeconds = 0; // Reset
             }
         }

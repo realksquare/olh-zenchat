@@ -93,11 +93,13 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
         const openTheme = () => setIsThemeOpen(true);
         const openMenu = () => setShowMobileMenu(true);
         const confirmLogout = () => setShowLogoutConfirm(true);
+        const openTimeDashboard = () => setIsYourTimeOpen(true);
 
         window.addEventListener("open-profile-modal", openProfile);
         window.addEventListener("open-theme-modal", openTheme);
         window.addEventListener("open-mobile-menu", openMenu);
         window.addEventListener("confirm-logout", confirmLogout);
+        window.addEventListener("open-time-dashboard", openTimeDashboard);
 
         return () => {
             window.removeEventListener("pwa-prompt-available", handlePrompt);
@@ -105,6 +107,7 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
             window.removeEventListener("open-theme-modal", openTheme);
             window.removeEventListener("open-mobile-menu", openMenu);
             window.removeEventListener("confirm-logout", confirmLogout);
+            window.removeEventListener("open-time-dashboard", openTimeDashboard);
         };
     }, []);
 

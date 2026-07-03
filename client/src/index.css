@@ -9362,7 +9362,16 @@ select {
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  padding-bottom: 2px;
+}
+
+.bottom-sheet-quick-avatars::-webkit-scrollbar {
+  display: none;
 }
 
 .bottom-sheet-label {
@@ -9615,5 +9624,156 @@ body,
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   ZEN TIME DASHBOARD (MINIMALIST EDITORIAL)
+   ========================================================= */
+
+.zen-time-dashboard-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: clamp(16px, 6vh, 40px) 24px;
+  box-sizing: border-box;
+  color: var(--color-text);
+  animation: dashboardFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  user-select: none;
+  cursor: pointer;
+}
+
+@keyframes dashboardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.editorial-main-time {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.editorial-time-val {
+  font-size: clamp(2.8rem, 8vw, 4.2rem);
+  font-weight: 800;
+  font-family: var(--font-mono, monospace, Courier, monospace);
+  letter-spacing: -2px;
+  color: var(--color-primary);
+  line-height: 1.1;
+}
+
+.editorial-time-lbl {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.editorial-narrative {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: clamp(20px, 4vh, 36px) 0;
+  gap: 16px;
+}
+
+.editorial-quote {
+  font-size: clamp(1.1rem, 3.5vw, 1.35rem);
+  font-weight: 600;
+  line-height: 1.6;
+  color: var(--color-text);
+  font-style: italic;
+  margin: 0;
+}
+
+.editorial-comparison {
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.highlight-metric {
+  color: var(--color-text);
+  font-weight: 700;
+  border-bottom: 1.5px solid var(--color-primary);
+  padding-bottom: 1px;
+}
+
+.editorial-savings-bar {
+  width: 100%;
+  margin-bottom: clamp(16px, 4vh, 28px);
+}
+
+.editorial-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.editorial-bar-track {
+  width: 100%;
+  height: 5px;
+  background: var(--color-surface-offset, rgba(255, 255, 255, 0.06));
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.editorial-bar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 3px;
+  transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.editorial-nudge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--color-border, rgba(255, 255, 255, 0.12));
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.editorial-nudge:hover {
+  background: var(--color-surface-offset, rgba(255, 255, 255, 0.04));
+  color: var(--color-text);
+  border-color: var(--color-primary);
+}
+
+.nudge-icon {
+  animation: bounceSlow 2.2s infinite ease-in-out;
+}
+
+@keyframes bounceSlow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
   }
 }

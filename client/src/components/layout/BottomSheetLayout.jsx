@@ -4,6 +4,7 @@ import Sidebar from '../chat/Sidebar';
 import { useChatStore } from '../../stores/chatStore';
 import { useMomentStore } from '../../stores/momentStore';
 import { useAuthStore } from '../../stores/authStore';
+import ZenTimeDashboard from './ZenTimeDashboard';
 
 const QuickAvatarRing = ({ chat }) => {
     const user = useAuthStore(s => s.user);
@@ -247,13 +248,7 @@ const BottomSheetLayout = () => {
                 {activeChat ? (
                     <ChatWindow onBack={() => useChatStore.getState().setActiveChat(null)} />
                 ) : (
-                    <div className="peek-empty-state" onClick={() => snapTo('mid')}>
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5, marginBottom: '10px' }}>
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                        <p>Pull up to start a conversation</p>
-                    </div>
+                    <ZenTimeDashboard snapTo={snapTo} />
                 )}
             </div>
 
@@ -288,7 +283,7 @@ const BottomSheetLayout = () => {
                         </svg>
                     </div>
                     <div className="bottom-sheet-quick-avatars">
-                        {sheetHeight === 'collapsed' && recentChats.slice(0, 4).map(chat => (
+                        {(!sheetHeight || sheetHeight === 'collapsed') && !(isDragging && dragY !== null && dragY < getHeights().collapsed - 12) && recentChats.slice(0, 8).map(chat => (
                             <QuickAvatarRing key={chat._id} chat={chat} />
                         ))}
                         {totalUnread > 0 && <span className="bottom-sheet-unread-pill">●{totalUnread > 99 ? '99+' : totalUnread}</span>}
