@@ -6415,6 +6415,7 @@ select {
   transform: translateX(-50%) translateY(-100px);
   z-index: 999999;
   background: var(--color-surface, rgba(15, 23, 42, 0.95));
+  color: var(--color-text, #fff);
   backdrop-filter: blur(12px);
   padding: 10px 14px 10px 16px;
   border-radius: 24px;
@@ -7157,7 +7158,7 @@ select {
   left: 50%;
   transform: translateX(-50%) translateY(40px);
   z-index: 1000000;
-  background: rgba(10, 15, 28, 0.95);
+  background: var(--color-surface, rgba(10, 15, 28, 0.95));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
