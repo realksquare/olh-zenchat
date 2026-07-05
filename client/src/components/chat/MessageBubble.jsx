@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect, memo, useMemo, useContext } from "react";
 import { createPortal } from "react-dom";
+import { Trash2, Reply, X, Lock, Play, ExternalLink } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
 import { useChatStore } from "../../stores/chatStore";
 import { useMomentStore } from "../../stores/momentStore";
 import { useSocket } from "../../context/SocketContext";
 import DecryptedText from "./DecryptedText";
 import VoiceMessageBubble from "./VoiceMessageBubble";
+import VideoPlayer from "../ui/VideoPlayer";
 
 const HeartReaction = ({ size = 20 }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="reaction-heart" style={{ filter: "drop-shadow(0 2px 6px rgba(239, 68, 68, 0.45))" }}>
@@ -875,20 +877,17 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                               <span style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--color-text-muted, rgba(255, 255, 255, 0.5))' }}>Loading video...</span>
                                                           </div>
                                                       )}
-                                                      <video 
+                                                      <VideoPlayer 
                                                            src={message.mediaUrl} 
                                                            className="message-video" 
                                                            style={{ 
                                                                opacity: isMediaLoaded ? 1 : 0,
                                                                transition: 'opacity 0.3s ease-in-out',
-                                                               maxWidth: '100%', 
-                                                               borderRadius: '8px', 
-                                                               margin: '0 auto', 
+                                                               width: '100%', 
+                                                               borderRadius: '12px', 
                                                                display: 'block' 
                                                            }} 
-                                                           onLoadedData={() => setIsMediaLoaded(true)}
-                                                           controls
-                                                           playsInline
+                                                           onLoadedMetadata={() => setIsMediaLoaded(true)}
                                                       />
                                                   </div>
                                               ) : (

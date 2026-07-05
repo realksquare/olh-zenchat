@@ -9,6 +9,7 @@ import { getAudioContext } from "../../utils/audio";
 import axiosInstance from "../../utils/axios";
 import { decryptForMultipleRecipients, decryptFileAES } from "../../utils/crypto";
 import { getLocalE2EEKeys } from "../../utils/e2eeHelper";
+import VideoPlayer from "../ui/VideoPlayer";
 
 const FILTER_STYLES = {
     none: {},
@@ -726,14 +727,15 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                     ) : displayType === "video" ? (
                         <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <div style={{ position: 'relative', display: 'flex', maxWidth: '100%', maxHeight: '100%' }}>
-                                <video
+                                <VideoPlayer
                                     ref={videoRef}
                                     src={displayMediaUrl}
                                     autoPlay
                                     muted={isMuted || !!displayMusic}
-                                    playsInline
-                                    onLoadedMetadata={(e) => {
-                                        const dur = Math.ceil(e.target.duration);
+                                    controls={false}
+                                    hideCenterPlay={true}
+                                    onLoadedMetadata={(video) => {
+                                        const dur = Math.ceil(video.duration);
                                         setTotalDuration(dur);
                                         setTimeLeft(dur);
                                     }}
