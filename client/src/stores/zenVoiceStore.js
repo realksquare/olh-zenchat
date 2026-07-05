@@ -362,6 +362,20 @@ export const useZenVoiceStore = create((set, get) => ({
         }
     },
 
+    bridgeDM: async (targetPseudonym) => {
+        const { sessionToken } = get();
+        if (!sessionToken) return { success: false };
+        try {
+            const { data } = await axiosInstance.post(`/zenvoice/bridge-dm/${targetPseudonym}`, {}, {
+                headers: { Authorization: `Bearer ${sessionToken}` }
+            });
+            return { success: true, chatId: data.chatId };
+        } catch (err) {
+            console.error("DM bridge request failed:", err);
+            return { success: false, message: err.response?.data?.message || "Failed to initiate DM request." };
+        }
+    },
+
     resetStore: () => {
         get().disconnectSocket();
         set(INITIAL_STATE);

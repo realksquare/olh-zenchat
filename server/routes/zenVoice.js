@@ -558,5 +558,72 @@ router.post("/report/:reportId/counter", zenVoiceAuth, async (req, res) => {
     }
 });
 
+/**
+ * POST /api/zenvoice/bridge-dm/:targetPseudonym
+ * Creates a silent DM chat between current user and user of targetPseudonym.
+ * Bypasses push notifications.
+ */
+router.post("/bridge-dm/:targetPseudonym", zenVoiceAuth, async (req, res) => {
+    try {
+        const targetPseudonym = req.params.targetPseudonym;
+        const currentPseudonym = req.zenVoicePseudonym;
+
+        if (targetPseudonym === currentPseudonym) {
+            return res.status(400).json({ message: "You cannot DM yourself." });
+        }
+
+        const [currentUser, targetUser] = await Promise.all([
+            User.findOne({ "zenVoice.pseudonym": currentPseudonym }),
+            User.findOne({ "zenVoice.pseudonym": targetPseudonym })
+        ]);
+
+        if (!targetUser) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        const Chat = require("../models/Chat");
+        let chat = await Chat.findOne({
+            isGroup: false,
+            participants: { $all: [currentUser._id, targetUser._id] }
+        });
+
+        if (!chat) {
+            chat = await Chat.create({
+                participants: [currentUser._id, targetUser._id],
+                isGroup: false
+            });
+
+            const Message = require("../models/Message");
+            const message = await Message.create({
+                chatId: chat._id,
+                senderId: currentUser._id,
+                content: "👋 Connection request initiated from #ZenVoice.",
+                type: "text",
+                status: "delivered"
+            });
+
+            chat.lastMessage = message._id;
+            await chat.save();
+
+            const io = req.app.get("io");
+            if (io) {
+                const populated = await Chat.findById(chat._id)
+                    .populate("participants", "username avatar bio isOnline lastSeen isVerified createdAt privacySettings contacts")
+                    .populate({
+                        path: "lastMessage",
+                        populate: { path: "senderId", select: "username" }
+                    });
+
+                io.to(targetUser._id.toString()).emit("new_chat", { chat: populated });
+            }
+        }
+
+        res.json({ success: true, chatId: chat._id });
+    } catch (err) {
+        console.error("[ZenVoice] DM Bridge error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 module.exports = router;
 
