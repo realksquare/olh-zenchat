@@ -205,6 +205,33 @@ const userSchema = new mongoose.Schema(
             type: String,
             enum: ["default", "zen_oled", "earthy_calm"],
             default: "default"
+        },
+        zenVoice: {
+            isStudentVerified: { type: Boolean, default: false },
+            verificationMethod: {
+                type: String,
+                enum: ["academic_email", "github_student", "domain_otp", "none"],
+                default: "none"
+            },
+            collegeName: { type: String, default: "" },
+            collegeEmailDomain: { type: String, default: "" },
+            pseudonym: { type: String, default: "" },
+            bio: { type: String, default: "", maxlength: 100 },
+            zenVoiceToken: { type: String, default: null },
+            zenVoiceSuspendedUntil: { type: Date, default: null },
+            zenVoiceRedCardCount: { type: Number, default: 0 },
+            zenVoiceAppealed: { type: Boolean, default: false },
+            pseudonymChangeRequest: {
+                requested: { type: Boolean, default: false },
+                desiredPseudonym: { type: String, default: "" },
+                status: {
+                    type: String,
+                    enum: ["pending", "approved", "rejected"],
+                    default: "pending"
+                },
+                adminNote: { type: String, default: "" },
+                requestedAt: { type: Date, default: null }
+            }
         }
     },
     { timestamps: true }

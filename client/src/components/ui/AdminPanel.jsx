@@ -25,6 +25,13 @@ const AdminPanel = ({ onClose }) => {
     const [scheduledPulses, setScheduledPulses] = useState([]);
     const [isSchedulingPulse, setIsSchedulingPulse] = useState(false);
 
+    // ZenVoice Admin State
+    const [zvPseudonymRequests, setZvPseudonymRequests] = useState([]);
+    const [zvDomainRequests, setZvDomainRequests] = useState([]);
+    const [zvLoading, setZvLoading] = useState(false);
+    const [zvRejectNote, setZvRejectNote] = useState({});
+    const [zvDomainRejectNote, setZvDomainRejectNote] = useState({});
+
     const showToast = (msg) => {
         setToast(msg);
         setTimeout(() => setToast(null), 3000);
@@ -150,6 +157,42 @@ const AdminPanel = ({ onClose }) => {
         }
     };
 
+    const fetchZenVoiceRequests = async () => {
+        setZvLoading(true);
+        try {
+            const [pseudoRes, domainRes] = await Promise.all([
+                axiosInstance.get("/admin/zenvoice/pseudonym-requests"),
+                axiosInstance.get("/admin/zenvoice/domain-requests")
+            ]);
+            setZvPseudonymRequests(pseudoRes.data.requests || []);
+            setZvDomainRequests(domainRes.data.domains || []);
+        } catch (err) {
+            console.error("ZenVoice admin fetch error:", err);
+        } finally {
+            setZvLoading(false);
+        }
+    };
+
+    const handlePseudonymRequest = async (userId, action, note = "") => {
+        try {
+            await axiosInstance.post(`/admin/zenvoice/pseudonym-requests/${userId}`, { action, adminNote: note });
+            setZvPseudonymRequests(prev => prev.filter(r => r._id !== userId));
+            showToast(`Request ${action === "approve" ? "approved" : "rejected"} and user notified.`);
+        } catch (err) {
+            showToast(err.response?.data?.message || "Action failed");
+        }
+    };
+
+    const handleDomainRequest = async (domainId, action, note = "") => {
+        try {
+            await axiosInstance.post(`/admin/zenvoice/domain-requests/${domainId}`, { action, adminNote: note });
+            setZvDomainRequests(prev => prev.filter(d => d._id !== domainId));
+            showToast(`Domain ${action === "approve" ? "approved" : "rejected"}.`);
+        } catch (err) {
+            showToast(err.response?.data?.message || "Action failed");
+        }
+    };
+
     if (loading) return createPortal(
         <div className="admin-modal-overlay">
             <div className="admin-modal-content">
@@ -179,6 +222,7 @@ const AdminPanel = ({ onClose }) => {
                     <button className={activeTab === "users" ? "active" : ""} onClick={() => setActiveTab("users")}>Users</button>
                     <button className={activeTab === "push" ? "active" : ""} onClick={() => setActiveTab("push")}>Push Notifs</button>
                     <button className={activeTab === "pulse" ? "active" : ""} onClick={() => setActiveTab("pulse")}>ZenPulse</button>
+                    <button className={activeTab === "zenvoice" ? "active" : ""} onClick={() => { setActiveTab("zenvoice"); fetchZenVoiceRequests(); }}>#ZenVoice</button>
                 </div>
 
                 <div className="admin-body">
@@ -357,6 +401,111 @@ const AdminPanel = ({ onClose }) => {
                                             <button onClick={() => handleDeletePulse(p._id)} style={{ background: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer' }}>Delete</button>
                                         </div>
                                     ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === "zenvoice" && (
+                        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+                            {/* Pseudonym Change Requests */}
+                            <div>
+                                <h3 style={{ margin: '0 0 12px', color: 'white', fontSize: '1.05rem' }}>Pseudonym Change Requests</h3>
+                                {zvLoading ? (
+                                    <p style={{ color: '#94a3b8' }}>Loading...</p>
+                                ) : zvPseudonymRequests.length === 0 ? (
+                                    <p style={{ color: '#64748b', fontSize: '0.9rem' }}>No pending pseudonym requests.</p>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        {zvPseudonymRequests.map(req => (
+                                            <div key={req._id} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                                                    <div style={{ flex: 1 }}>
+                                                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>User</span>
+                                                        <p style={{ margin: '2px 0', color: 'white', fontWeight: '500' }}>{req.username} <span style={{ color: '#64748b', fontWeight: 400 }}>({req.email})</span></p>
+                                                    </div>
+                                                    <div style={{ flex: 1 }}>
+                                                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Current Pseudonym</span>
+                                                        <p style={{ margin: '2px 0', color: '#cbd5e1' }}>{req.currentPseudonym || '—'}</p>
+                                                    </div>
+                                                    <div style={{ flex: 1 }}>
+                                                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Requested Pseudonym</span>
+                                                        <p style={{ margin: '2px 0', color: '#38bdf8', fontWeight: '600' }}>{req.desiredPseudonym}</p>
+                                                    </div>
+                                                </div>
+                                                <textarea
+                                                    placeholder="Rejection reason (required to reject, shown in email)"
+                                                    value={zvRejectNote[req._id] || ""}
+                                                    onChange={e => setZvRejectNote(prev => ({ ...prev, [req._id]: e.target.value }))}
+                                                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white', resize: 'vertical', fontSize: '0.85rem', minHeight: '60px', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                                                />
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button
+                                                        onClick={() => handlePseudonymRequest(req._id, "approve")}
+                                                        style={{ flex: 1, padding: '8px', borderRadius: '6px', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}
+                                                    >Approve</button>
+                                                    <button
+                                                        onClick={() => {
+                                                            if (!zvRejectNote[req._id]) { showToast("Enter a rejection reason first."); return; }
+                                                            handlePseudonymRequest(req._id, "reject", zvRejectNote[req._id]);
+                                                        }}
+                                                        style={{ flex: 1, padding: '8px', borderRadius: '6px', background: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}
+                                                    >Reject</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Domain Whitelist Requests */}
+                            <div>
+                                <h3 style={{ margin: '0 0 12px', color: 'white', fontSize: '1.05rem' }}>Domain Whitelist Requests</h3>
+                                {zvLoading ? (
+                                    <p style={{ color: '#94a3b8' }}>Loading...</p>
+                                ) : zvDomainRequests.length === 0 ? (
+                                    <p style={{ color: '#64748b', fontSize: '0.9rem' }}>No pending domain requests.</p>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        {zvDomainRequests.map(dom => (
+                                            <div key={dom._id} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                                    <div style={{ flex: 1, minWidth: '140px' }}>
+                                                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Domain</span>
+                                                        <p style={{ margin: '2px 0', color: '#38bdf8', fontWeight: '600' }}>{dom.domain}</p>
+                                                    </div>
+                                                    <div style={{ flex: 2, minWidth: '140px' }}>
+                                                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Institution</span>
+                                                        <p style={{ margin: '2px 0', color: 'white' }}>{dom.institutionName}</p>
+                                                    </div>
+                                                    <div style={{ flex: 1, minWidth: '100px' }}>
+                                                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Country</span>
+                                                        <p style={{ margin: '2px 0', color: '#cbd5e1' }}>{dom.country || '—'}</p>
+                                                    </div>
+                                                    <div style={{ flex: 1, minWidth: '100px' }}>
+                                                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Type</span>
+                                                        <p style={{ margin: '2px 0', color: '#cbd5e1', textTransform: 'capitalize' }}>{dom.organizationType}</p>
+                                                    </div>
+                                                </div>
+                                                <textarea
+                                                    placeholder="Rejection reason (optional, sent by email if rejected)"
+                                                    value={zvDomainRejectNote[dom._id] || ""}
+                                                    onChange={e => setZvDomainRejectNote(prev => ({ ...prev, [dom._id]: e.target.value }))}
+                                                    style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #334155', background: '#0f172a', color: 'white', resize: 'vertical', fontSize: '0.85rem', minHeight: '56px', outline: 'none', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                                                />
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button
+                                                        onClick={() => handleDomainRequest(dom._id, "approve")}
+                                                        style={{ flex: 1, padding: '8px', borderRadius: '6px', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}
+                                                    >Approve</button>
+                                                    <button
+                                                        onClick={() => handleDomainRequest(dom._id, "reject", zvDomainRejectNote[dom._id] || "")}
+                                                        style={{ flex: 1, padding: '8px', borderRadius: '6px', background: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}
+                                                    >Reject</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 )}
                             </div>
                         </div>

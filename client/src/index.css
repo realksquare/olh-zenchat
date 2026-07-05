@@ -9428,9 +9428,7 @@ select {
   flex-direction: column;
 }
 
-@media (max-width: 768px) {
-  .zen-toast { top: 16px; bottom: auto; }
-}
+
 
 .active-quick-avatar {
   border: 1.5px solid var(--color-primary, #3da5d9) !important;

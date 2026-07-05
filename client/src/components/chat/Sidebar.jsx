@@ -61,6 +61,14 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
     const [isYourTimeOpen, setIsYourTimeOpen] = useState(false);
     const [isThemeOpen, setIsThemeOpen] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
+    const [zenVoiceToast, setZenVoiceToast] = useState(false);
+    const zenVoiceToastTimer = useRef(null);
+
+    const showZenVoiceToast = () => {
+        if (zenVoiceToastTimer.current) clearTimeout(zenVoiceToastTimer.current);
+        setZenVoiceToast(true);
+        zenVoiceToastTimer.current = setTimeout(() => setZenVoiceToast(false), 3000);
+    };
 
     const { todayQuestion, myVote, votedQuestionIds } = usePulseStore();
     const hasUnvotedPulse = todayQuestion && !(myVote?.questionId === todayQuestion?._id || votedQuestionIds.includes(todayQuestion?._id));
@@ -357,6 +365,11 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
         >
+            {zenVoiceToast && (
+                <div className="zen-toast zen-toast-info" style={{ pointerEvents: 'none' }}>
+                    ZenVoice will be live from July 16th, 2026!
+                </div>
+            )}
             {(pullY > 0 || isRefreshing) && (
                 <div className="ptr-indicator" style={{ 
                     opacity: Math.min(pullY / PULL_THRESHOLD, 1), 
@@ -756,6 +769,23 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
                                 <span>ZenVault Local Safe</span>
                             </button>
+                            <div className="mobile-menu-divider" />
+                            <div
+                                className="mobile-menu-btn"
+                                role="button"
+                                aria-disabled="true"
+                                style={{ opacity: 0.45, cursor: 'not-allowed' }}
+                                onClick={showZenVoiceToast}
+                                onMouseEnter={showZenVoiceToast}
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                                    <line x1="12" y1="19" x2="12" y2="23"/>
+                                    <line x1="8" y1="23" x2="16" y2="23"/>
+                                </svg>
+                                <span>#ZenVoice</span>
+                            </div>
                         </div>
                     </div>
                 </div>,
