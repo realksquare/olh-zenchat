@@ -555,6 +555,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                         localBlobUrls.push(objectUrl);
                                         decryptedMediaUrl = objectUrl;
                                     }
+                                } else if (payload.mediaUrl) {
+                                    decryptedMediaUrl = payload.mediaUrl;
                                 }
 
                                 return {

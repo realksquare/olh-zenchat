@@ -524,31 +524,41 @@ const MomentCreator = ({ isOpen, onClose }) => {
             let uploadedUrl = "";
             let lqip = "";
             
-            // 3. Encrypt file if image moment and upload as raw binary
+            // 3. Encrypt file if image moment, or upload directly if video
             if (!isText && selectedFile) {
                 const cloudName = "du4nvei7j";
                 const uploadPreset = "ml_default";
                 const formData = new FormData();
                 let fileToUpload = selectedFile;
-                if (activeFilter === 'layout') {
+                
+                const isVideo = selectedFile?.type?.startsWith("video/");
+
+                if (activeFilter === 'layout' && !isVideo) {
                     fileToUpload = await stitchLayoutImages(layoutImages, layoutSpaces);
-                } else if (imageQuality === "standard") {
+                } else if (imageQuality === "standard" && !isVideo) {
                     fileToUpload = await compressImage(selectedFile);
                 }
 
-                // Perform client-side file encryption
-                const { encryptedBlob, keyHex, ivHex } = await encryptFileAES(fileToUpload);
-                fileKey = keyHex;
-                fileIv = ivHex;
+                let uploadEndpoint = `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`;
 
-                const ext = fileToUpload?.type?.startsWith("video/") ? "mp4" : "jpg";
-                formData.append("file", encryptedBlob, `encrypted_moment.${ext}`);
-                formData.append("upload_preset", uploadPreset);
+                if (isVideo) {
+                    formData.append("file", fileToUpload);
+                    formData.append("upload_preset", uploadPreset);
+                    uploadEndpoint = `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`;
+                } else {
+                    // Perform client-side file encryption for images
+                    const { encryptedBlob, keyHex, ivHex } = await encryptFileAES(fileToUpload);
+                    fileKey = keyHex;
+                    fileIv = ivHex;
+
+                    formData.append("file", encryptedBlob, `encrypted_moment.jpg`);
+                    formData.append("upload_preset", uploadPreset);
+                }
 
                 lqip = await generateLQIP(fileToUpload);
 
                 const res = await axios.post(
-                    `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`,
+                    uploadEndpoint,
                     formData,
                     {
                         signal: controller.signal,

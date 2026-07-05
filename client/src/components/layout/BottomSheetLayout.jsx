@@ -303,7 +303,7 @@ const BottomSheetLayout = () => {
                                 {totalUnread > 0 && <span className="bottom-sheet-unread-pill">●{totalUnread > 99 ? '99+' : totalUnread}</span>}
                             </>
                         ) : (
-                            <span className="quick-avatars-empty-text">Pull up to start connecting</span>
+                            <span className="quick-avatars-empty-text">Pull up to find & connect with users...</span>
                         )}
                     </div>
                     <div className={`bottom-sheet-chats-title ${isSheetUp ? 'faded-in' : ''}`}>

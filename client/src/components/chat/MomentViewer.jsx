@@ -193,6 +193,9 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                     if (!active) return;
                     const objectUrl = URL.createObjectURL(decryptedBlob);
                     setDecryptedMediaUrl(objectUrl);
+                } else if (payload.mediaUrl) {
+                    if (!active) return;
+                    setDecryptedMediaUrl(payload.mediaUrl);
                 }
             } catch (err) {
                 console.error("[MomentViewer] Decryption failed:", err);
