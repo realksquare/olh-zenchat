@@ -88,6 +88,7 @@ app.use("/api/giphy", apiLimiter, require("./routes/giphy"));
 app.use("/api/analytics", apiLimiter, require("./routes/analytics"));
 app.use("/api/messages/bulk", apiLimiter, require("./routes/bulkMessage"));
 app.use("/api/user-media", apiLimiter, require("./routes/userMedia"));
+app.use("/api/zenvoice", apiLimiter, require("./routes/zenVoice"));
 
 registerSocketHandlers(io);
 

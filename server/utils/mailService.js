@@ -222,4 +222,81 @@ const send2faEmail = async (email, username, code) => {
 module.exports = {
     sendResetEmail,
     send2faEmail,
+    sendZenVoiceOTP,
+    sendZenVoicePseudonymResult,
+    sendZenVoiceDomainResult,
 };
+
+async function _sendViaBrevo(to, subject, html) {
+    const brevoApiKey = (process.env.BREVO_API_KEY || "").trim();
+    const senderEmail = process.env.SMTP_FROM ? process.env.SMTP_FROM : "onlinelearninghubteam@gmail.com";
+    if (!brevoApiKey) {
+        console.warn("[ZenVoice Mail] No BREVO_API_KEY — email skipped.");
+        return false;
+    }
+    try {
+        const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+            method: "POST",
+            headers: { "accept": "application/json", "api-key": brevoApiKey, "content-type": "application/json" },
+            body: JSON.stringify({ sender: { name: "ZenVoice by ZenChat", email: senderEmail }, to: [{ email: to }], subject, htmlContent: html })
+        });
+        const resData = await response.json();
+        if (response.ok) {
+            console.log(`[ZenVoice Mail] Sent "${subject}" to ${to}`);
+            return true;
+        }
+        console.error("[ZenVoice Mail] Brevo error:", resData.message);
+        return false;
+    } catch (err) {
+        console.error("[ZenVoice Mail] Fetch error:", err.message);
+        return false;
+    }
+}
+
+const ZV_HEADER = `
+    <div style="background:#0f172a;color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:40px 20px;max-width:600px;margin:0 auto;border-radius:8px;">
+    <div style="margin-bottom:24px;text-align:center;">
+        <h1 style="color:#f59e0b;font-size:26px;font-weight:700;margin:0;letter-spacing:-0.5px;">#ZenVoice</h1>
+        <p style="color:#94a3b8;font-size:13px;margin-top:4px;">Anonymous Academic Chat by ZenChat</p>
+    </div>
+    <div style="background:#1e293b;padding:28px;border-radius:12px;border:1px solid rgba(255,255,255,0.05);">`;
+
+const ZV_FOOTER = `</div><div style="margin-top:20px;text-align:center;color:#64748b;font-size:12px;">&copy; ${new Date().getFullYear()} ZenChat. All rights reserved.</div></div>`;
+
+async function sendZenVoiceOTP(email, username, otp, domain) {
+    console.log(`[ZenVoice OTP] ${username} (${email}) — Domain: ${domain} — OTP: ${otp}`);
+    const subject = "Your ZenVoice Verification Code";
+    const html = `${ZV_HEADER}
+        <h2 style="color:#f1f5f9;font-size:18px;font-weight:600;margin:0 0 12px;">Hello ${username},</h2>
+        <p style="color:#cbd5e1;font-size:15px;line-height:1.6;margin-bottom:20px;">Enter this code to verify your institutional email <strong style="color:#38bdf8;">${domain}</strong> and unlock your #ZenVoice access:</p>
+        <div style="text-align:center;font-size:36px;font-weight:800;letter-spacing:8px;color:#f59e0b;padding:18px;background:#0f172a;border-radius:10px;margin-bottom:20px;">${otp}</div>
+        <p style="color:#94a3b8;font-size:13px;line-height:1.5;">This code is valid for 10 minutes. If you did not request this, you can safely ignore this email.</p>
+    ${ZV_FOOTER}`;
+    return _sendViaBrevo(email, subject, html);
+}
+
+async function sendZenVoicePseudonymResult(email, username, desiredPseudonym, approved, adminNote) {
+    const subject = approved ? "#ZenVoice: Pseudonym Request Approved" : "#ZenVoice: Pseudonym Request Not Approved";
+    const html = `${ZV_HEADER}
+        <h2 style="color:#f1f5f9;font-size:18px;font-weight:600;margin:0 0 12px;">Hello ${username},</h2>
+        ${approved
+            ? `<p style="color:#cbd5e1;font-size:15px;line-height:1.6;margin-bottom:16px;">Your request to change your pseudonym to <strong style="color:#38bdf8;">${desiredPseudonym}</strong> has been <strong style="color:#10b981;">approved</strong>! It is now your active handle in all #ZenVoice rooms.</p>`
+            : `<p style="color:#cbd5e1;font-size:15px;line-height:1.6;margin-bottom:16px;">Your request to change your pseudonym to <strong style="color:#38bdf8;">${desiredPseudonym}</strong> was <strong style="color:#ef4444;">not approved</strong>. Your existing pseudonym remains active.</p>`
+        }
+        ${adminNote ? `<div style="background:#0f172a;border-left:3px solid #f59e0b;padding:12px 16px;border-radius:6px;font-size:14px;color:#94a3b8;margin-top:4px;"><strong style="color:#f8fafc;">Admin note:</strong> ${adminNote}</div>` : ""}
+    ${ZV_FOOTER}`;
+    return _sendViaBrevo(email, subject, html);
+}
+
+async function sendZenVoiceDomainResult(email, username, domain, approved, adminNote) {
+    const subject = approved ? "#ZenVoice: Your Institution Domain Was Approved" : "#ZenVoice: Institution Domain Request Update";
+    const html = `${ZV_HEADER}
+        <h2 style="color:#f1f5f9;font-size:18px;font-weight:600;margin:0 0 12px;">Hello ${username},</h2>
+        ${approved
+            ? `<p style="color:#cbd5e1;font-size:15px;line-height:1.6;margin-bottom:16px;">The domain <strong style="color:#38bdf8;">${domain}</strong> has been <strong style="color:#10b981;">approved</strong>! You can now verify your #ZenVoice account using your institutional email.</p>`
+            : `<p style="color:#cbd5e1;font-size:15px;line-height:1.6;margin-bottom:16px;">The domain <strong style="color:#38bdf8;">${domain}</strong> was <strong style="color:#ef4444;">not approved</strong> at this time.</p>`
+        }
+        ${adminNote ? `<div style="background:#0f172a;border-left:3px solid #f59e0b;padding:12px 16px;border-radius:6px;font-size:14px;color:#94a3b8;margin-top:4px;"><strong style="color:#f8fafc;">Admin note:</strong> ${adminNote}</div>` : ""}
+    ${ZV_FOOTER}`;
+    return _sendViaBrevo(email, subject, html);
+}

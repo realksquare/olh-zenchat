@@ -140,7 +140,6 @@ router.post("/push", authMiddleware, adminCheck, async (req, res) => {
         const { title, body } = req.body;
         if (!title || !body) return res.status(400).json({ message: "Title and body required" });
 
-        // Find all users who have at least one fcm token
         const users = await User.find({ "fcmTokens.0": { $exists: true } });
         const promises = [];
         
@@ -163,6 +162,111 @@ router.post("/push", authMiddleware, adminCheck, async (req, res) => {
         res.json({ message: "Push sent successfully", sentCount });
     } catch (err) {
         console.error("Broadcast push error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// ─── ZenVoice Admin Routes ───────────────────────────────────────────────────
+
+const ZenVoiceDomainWhitelist = require("../models/ZenVoiceDomainWhitelist");
+const { sendZenVoicePseudonymResult, sendZenVoiceDomainResult } = require("../utils/mailService");
+
+// GET /api/admin/zenvoice/pseudonym-requests
+router.get("/zenvoice/pseudonym-requests", authMiddleware, adminCheck, async (req, res) => {
+    try {
+        const users = await User.find({ "zenVoice.pseudonymChangeRequest.requested": true })
+            .select("username email zenVoice.pseudonym zenVoice.pseudonymChangeRequest");
+        const requests = users.map(u => ({
+            _id: u._id,
+            username: u.username,
+            email: u.email,
+            currentPseudonym: u.zenVoice?.pseudonym || "",
+            desiredPseudonym: u.zenVoice?.pseudonymChangeRequest?.desiredPseudonym || "",
+            requestedAt: u.zenVoice?.pseudonymChangeRequest?.requestedAt
+        }));
+        res.json({ requests });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// POST /api/admin/zenvoice/pseudonym-requests/:userId
+router.post("/zenvoice/pseudonym-requests/:userId", authMiddleware, adminCheck, async (req, res) => {
+    try {
+        const { action, adminNote } = req.body;
+        if (!["approve", "reject"].includes(action)) {
+            return res.status(400).json({ message: "Invalid action" });
+        }
+
+        const user = await User.findById(req.params.userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const { desiredPseudonym } = user.zenVoice?.pseudonymChangeRequest || {};
+        if (!desiredPseudonym) return res.status(400).json({ message: "No pending request" });
+
+        if (action === "approve") {
+            user.zenVoice.pseudonym = desiredPseudonym;
+        }
+        user.zenVoice.pseudonymChangeRequest = {
+            requested: false,
+            desiredPseudonym: "",
+            status: action === "approve" ? "approved" : "rejected",
+            adminNote: adminNote || "",
+            requestedAt: null
+        };
+        await user.save();
+
+        if (user.email) {
+            await sendZenVoicePseudonymResult(
+                user.email, user.username, desiredPseudonym,
+                action === "approve", adminNote || ""
+            ).catch(err => console.error("[Admin] ZV pseudonym email error:", err));
+        }
+
+        res.json({ message: "Request processed" });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// GET /api/admin/zenvoice/domain-requests
+router.get("/zenvoice/domain-requests", authMiddleware, adminCheck, async (req, res) => {
+    try {
+        const domains = await ZenVoiceDomainWhitelist.find({ status: "pending" })
+            .populate("submittedBy", "username email")
+            .sort({ createdAt: 1 });
+        res.json({ domains });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// POST /api/admin/zenvoice/domain-requests/:domainId
+router.post("/zenvoice/domain-requests/:domainId", authMiddleware, adminCheck, async (req, res) => {
+    try {
+        const { action, adminNote } = req.body;
+        if (!["approve", "reject"].includes(action)) {
+            return res.status(400).json({ message: "Invalid action" });
+        }
+
+        const domainEntry = await ZenVoiceDomainWhitelist.findById(req.params.domainId)
+            .populate("submittedBy", "username email");
+        if (!domainEntry) return res.status(404).json({ message: "Domain request not found" });
+
+        domainEntry.status = action === "approve" ? "approved" : "rejected";
+        domainEntry.reviewedBy = req.user._id;
+        domainEntry.reviewedAt = new Date();
+        await domainEntry.save();
+
+        if (domainEntry.submittedBy?.email) {
+            await sendZenVoiceDomainResult(
+                domainEntry.submittedBy.email, domainEntry.submittedBy.username,
+                domainEntry.domain, action === "approve", adminNote || ""
+            ).catch(err => console.error("[Admin] ZV domain email error:", err));
+        }
+
+        res.json({ message: "Domain request processed" });
+    } catch (err) {
         res.status(500).json({ message: "Server error" });
     }
 });
