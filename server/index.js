@@ -91,6 +91,7 @@ app.use("/api/user-media", apiLimiter, require("./routes/userMedia"));
 app.use("/api/zenvoice", apiLimiter, require("./routes/zenVoice"));
 
 registerSocketHandlers(io);
+require("./socket/zenVoiceHandlers")(io);
 
 const PORT = process.env.PORT || 5000;
 
@@ -99,7 +100,7 @@ connectDB().then(async () => {
     await User.updateMany({ mfaPreference: "phone" }, { $set: { mfaPreference: "email" } });
 
     const { startCronJobs } = require("./utils/cronJobs");
-    startCronJobs();
+    startCronJobs(io);
 
     server.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);

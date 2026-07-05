@@ -1,0 +1,170 @@
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+const ZenVoiceRoom = require("../models/ZenVoiceRoom");
+const ZenVoiceMessage = require("../models/ZenVoiceMessage");
+const { getPseudonymColor } = require("../utils/zenVoiceHelper");
+
+const socketZenVoiceAuth = async (socket, next) => {
+    try {
+        const token = socket.handshake.auth.token || socket.handshake.auth.sessionToken;
+        if (!token) {
+            return next(new Error("Authentication error: No ZenVoice token provided."));
+        }
+        
+        const decoded = jwt.verify(token, process.env.ZENVOICE_JWT_SECRET);
+        
+        const user = await User.findOne({ "zenVoice.pseudonym": decoded.sub });
+        if (!user) {
+            return next(new Error("Authentication error: User not found."));
+        }
+        
+        if (user.isSuspended) {
+            return next(new Error("Authentication error: Your account is suspended."));
+        }
+        
+        if (user.zenVoice?.zenVoiceSuspendedUntil && new Date() < new Date(user.zenVoice.zenVoiceSuspendedUntil)) {
+            return next(new Error(`Authentication error: Your ZenVoice access is restricted until ${new Date(user.zenVoice.zenVoiceSuspendedUntil).toLocaleString()}`));
+        }
+        
+        socket.pseudonym = decoded.sub;
+        socket.domain = decoded.domain || "";
+        socket.userId = user._id.toString();
+        next();
+    } catch (err) {
+        return next(new Error("Authentication error: Invalid or expired token."));
+    }
+};
+
+const registerZenVoiceSocketHandlers = (io) => {
+    const zvNamespace = io.of("/zenvoice");
+
+    zvNamespace.use(socketZenVoiceAuth);
+
+    zvNamespace.on("connection", (socket) => {
+        // Join a personal channel for direct user-scoped warnings/notifications
+        socket.join(socket.userId);
+
+        socket.on("join_room", async ({ roomId }) => {
+            try {
+                const room = await ZenVoiceRoom.findOne({ _id: roomId, isActive: true });
+                if (!room) {
+                    return socket.emit("error", { message: "Room not found or inactive." });
+                }
+
+                if (room.allowedDomain && room.allowedDomain !== socket.domain) {
+                    return socket.emit("error", { message: "Access denied: Restricted domain." });
+                }
+
+                socket.join(roomId.toString());
+
+                // Ensure user is in members list
+                if (!room.members.includes(socket.pseudonym)) {
+                    room.members.push(socket.pseudonym);
+                    room.memberCount = room.members.length;
+                    await room.save();
+                }
+
+                zvNamespace.to(roomId.toString()).emit("member_count", {
+                    roomId: roomId.toString(),
+                    memberCount: room.memberCount
+                });
+
+                socket.emit("room_joined", { roomId: roomId.toString() });
+            } catch (err) {
+                console.error("[ZenVoice Socket] join_room error:", err);
+                socket.emit("error", { message: "Failed to join room." });
+            }
+        });
+
+        socket.on("leave_room", async ({ roomId }) => {
+            try {
+                socket.leave(roomId.toString());
+                
+                const room = await ZenVoiceRoom.findOneAndUpdate(
+                    { _id: roomId, isActive: true },
+                    { $pull: { members: socket.pseudonym } },
+                    { new: true }
+                );
+
+                if (room) {
+                    room.memberCount = room.members.length;
+                    await room.save();
+
+                    // Emit updated member count
+                    zvNamespace.to(roomId.toString()).emit("member_count", {
+                        roomId: roomId.toString(),
+                        memberCount: room.memberCount
+                    });
+
+                    // Smoking Feature: nuke private room if empty
+                    if (!room.isOfficial && room.members.length === 0) {
+                        await ZenVoiceRoom.findByIdAndDelete(room._id);
+                        await ZenVoiceMessage.deleteMany({ roomId: room._id });
+                    }
+                }
+            } catch (err) {
+                console.error("[ZenVoice Socket] leave_room error:", err);
+            }
+        });
+
+        socket.on("send_message", async ({ roomId, content, type, mediaUrl }) => {
+            try {
+                if (!content || content.trim().length === 0) return;
+
+                const room = await ZenVoiceRoom.findOne({ _id: roomId, isActive: true });
+                if (!room) {
+                    return socket.emit("error", { message: "Room not found or inactive." });
+                }
+
+                if (room.allowedDomain && room.allowedDomain !== socket.domain) {
+                    return socket.emit("error", { message: "Access denied." });
+                }
+
+                // Check suspension again
+                const user = await User.findById(socket.userId);
+                if (user.zenVoice?.zenVoiceSuspendedUntil && new Date() < new Date(user.zenVoice.zenVoiceSuspendedUntil)) {
+                    return socket.emit("error", { message: "Your ZenVoice access is temporarily restricted." });
+                }
+
+                const pseudonymColor = getPseudonymColor(socket.pseudonym);
+                const message = await ZenVoiceMessage.create({
+                    roomId,
+                    pseudonym: socket.pseudonym,
+                    pseudonymAvatarColor,
+                    content: content.trim(),
+                    type: type || "text",
+                    mediaUrl: mediaUrl || null
+                });
+
+                // Update room activity time
+                room.lastActivityAt = new Date();
+                await room.save();
+
+                zvNamespace.to(roomId.toString()).emit("new_message", { message });
+            } catch (err) {
+                console.error("[ZenVoice Socket] send_message error:", err);
+                socket.emit("error", { message: "Failed to send message." });
+            }
+        });
+
+        socket.on("typing_start", ({ roomId }) => {
+            socket.to(roomId.toString()).emit("typing_start", {
+                roomId: roomId.toString(),
+                pseudonym: socket.pseudonym
+            });
+        });
+
+        socket.on("typing_stop", ({ roomId }) => {
+            socket.to(roomId.toString()).emit("typing_stop", {
+                roomId: roomId.toString(),
+                pseudonym: socket.pseudonym
+            });
+        });
+
+        socket.on("disconnect", () => {
+            // Socket leaves rooms automatically
+        });
+    });
+};
+
+module.exports = registerZenVoiceSocketHandlers;

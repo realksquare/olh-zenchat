@@ -203,4 +203,360 @@ router.post("/verify/domain-otp/confirm", authMiddleware, async (req, res) => {
     }
 });
 
+const crypto = require("crypto");
+const zenVoiceAuth = require("../middleware/zenVoiceAuth");
+const ZenVoiceRoom = require("../models/ZenVoiceRoom");
+const ZenVoiceMessage = require("../models/ZenVoiceMessage");
+const ZenVoiceReport = require("../models/ZenVoiceReport");
+const { sendZenVoiceSuspensionEmail } = require("../utils/mailService");
+
+/**
+ * POST /api/zenvoice/pseudonym-request
+ * Submit a request to change pseudonym (requires main ZenChat auth).
+ */
+router.post("/pseudonym-request", authMiddleware, async (req, res) => {
+    try {
+        const { desiredPseudonym } = req.body;
+        if (!desiredPseudonym || desiredPseudonym.trim().length < 3 || desiredPseudonym.trim().length > 25) {
+            return res.status(400).json({ message: "Desired pseudonym must be between 3 and 25 characters." });
+        }
+        const user = await User.findById(req.user._id);
+        if (!user.zenVoice?.isStudentVerified) {
+            return res.status(403).json({ message: "You must be verified to request pseudonym changes." });
+        }
+        const exists = await User.findOne({ "zenVoice.pseudonym": desiredPseudonym.trim() });
+        if (exists) {
+            return res.status(400).json({ message: "This pseudonym is already taken by another user." });
+        }
+        user.zenVoice.pseudonymChangeRequest = {
+            requested: true,
+            desiredPseudonym: desiredPseudonym.trim(),
+            status: "pending",
+            requestedAt: new Date()
+        };
+        await user.save();
+        res.json({ message: "Pseudonym change request submitted to admin for approval." });
+    } catch (err) {
+        console.error("[ZenVoice] pseudonym-request error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * GET /api/zenvoice/rooms
+ * List official rooms matching user's domain, plus private rooms containing user as member.
+ */
+router.get("/rooms", zenVoiceAuth, async (req, res) => {
+    try {
+        const domain = req.zenVoiceDomain;
+        const pseudonym = req.zenVoicePseudonym;
+        const rooms = await ZenVoiceRoom.find({
+            $or: [
+                { isOfficial: true, allowedDomain: domain },
+                { isOfficial: false, members: pseudonym }
+            ],
+            isActive: true
+        }).sort({ lastActivityAt: -1 });
+        res.json({ rooms });
+    } catch (err) {
+        console.error("[ZenVoice] get rooms error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * POST /api/zenvoice/rooms
+ * Create a new private room.
+ */
+router.post("/rooms", zenVoiceAuth, async (req, res) => {
+    try {
+        const { name, description, lockToDomain } = req.body;
+        if (!name || name.trim().length === 0) {
+            return res.status(400).json({ message: "Room name is required." });
+        }
+        const allowedDomain = lockToDomain ? req.zenVoiceDomain : "";
+        const inviteToken = crypto.randomBytes(16).toString("hex");
+        const room = await ZenVoiceRoom.create({
+            name: name.trim(),
+            description: description ? description.trim() : "",
+            creatorPseudonym: req.zenVoicePseudonym,
+            isOfficial: false,
+            allowedDomain,
+            inviteToken,
+            members: [req.zenVoicePseudonym],
+            memberCount: 1
+        });
+        res.status(201).json({ room });
+    } catch (err) {
+        console.error("[ZenVoice] create room error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * GET /api/zenvoice/rooms/search
+ * Search official rooms by name (restricted by domain).
+ */
+router.get("/rooms/search", zenVoiceAuth, async (req, res) => {
+    try {
+        const { query } = req.query;
+        const domain = req.zenVoiceDomain;
+        const rooms = await ZenVoiceRoom.find({
+            isOfficial: true,
+            allowedDomain: domain,
+            name: { $regex: query || "", $options: "i" },
+            isActive: true
+        }).limit(20);
+        res.json({ rooms });
+    } catch (err) {
+        console.error("[ZenVoice] search rooms error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * GET /api/zenvoice/rooms/:roomId
+ * Room metadata.
+ */
+router.get("/rooms/:roomId", zenVoiceAuth, async (req, res) => {
+    try {
+        const room = await ZenVoiceRoom.findOne({ _id: req.params.roomId, isActive: true });
+        if (!room) return res.status(404).json({ message: "Room not found" });
+        if (room.allowedDomain && room.allowedDomain !== req.zenVoiceDomain) {
+            return res.status(403).json({ message: "Access denied: Restricted domain." });
+        }
+        res.json({ room });
+    } catch (err) {
+        console.error("[ZenVoice] get room error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * POST /api/zenvoice/rooms/:roomId/join
+ * Join an official room.
+ */
+router.post("/rooms/:roomId/join", zenVoiceAuth, async (req, res) => {
+    try {
+        const room = await ZenVoiceRoom.findOne({ _id: req.params.roomId, isActive: true });
+        if (!room) return res.status(404).json({ message: "Room not found" });
+        if (!room.isOfficial) {
+            return res.status(400).json({ message: "Private rooms can only be joined via invite link." });
+        }
+        if (room.allowedDomain && room.allowedDomain !== req.zenVoiceDomain) {
+            return res.status(403).json({ message: "Access denied: Restricted domain." });
+        }
+        if (!room.members.includes(req.zenVoicePseudonym)) {
+            room.members.push(req.zenVoicePseudonym);
+            room.memberCount = room.members.length;
+            await room.save();
+        }
+        res.json({ success: true, room });
+    } catch (err) {
+        console.error("[ZenVoice] join room error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * POST /api/zenvoice/rooms/invite/:token
+ * Join a private room via invite link.
+ */
+router.post("/rooms/invite/:token", zenVoiceAuth, async (req, res) => {
+    try {
+        const room = await ZenVoiceRoom.findOne({ inviteToken: req.params.token, isActive: true });
+        if (!room) return res.status(404).json({ message: "Invalid invite link." });
+        if (room.allowedDomain && room.allowedDomain !== req.zenVoiceDomain) {
+            return res.status(403).json({ message: "Access denied: Restricted domain." });
+        }
+        if (!room.members.includes(req.zenVoicePseudonym)) {
+            room.members.push(req.zenVoicePseudonym);
+            room.memberCount = room.members.length;
+            await room.save();
+        }
+        res.json({ success: true, room });
+    } catch (err) {
+        console.error("[ZenVoice] join invite error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * POST /api/zenvoice/rooms/:roomId/leave
+ * Leave a room. Atomic pull and clean check.
+ */
+router.post("/rooms/:roomId/leave", zenVoiceAuth, async (req, res) => {
+    try {
+        const room = await ZenVoiceRoom.findOneAndUpdate(
+            { _id: req.params.roomId, isActive: true },
+            { $pull: { members: req.zenVoicePseudonym } },
+            { new: true }
+        );
+        if (!room) return res.status(404).json({ message: "Room not found" });
+        room.memberCount = room.members.length;
+        await room.save();
+        if (!room.isOfficial && room.members.length === 0) {
+            await ZenVoiceRoom.findByIdAndDelete(room._id);
+            await ZenVoiceMessage.deleteMany({ roomId: room._id });
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error("[ZenVoice] leave room error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * GET /api/zenvoice/rooms/:roomId/messages
+ * Fetch messages for a room.
+ */
+router.get("/rooms/:roomId/messages", zenVoiceAuth, async (req, res) => {
+    try {
+        const { before } = req.query;
+        const room = await ZenVoiceRoom.findOne({ _id: req.params.roomId, isActive: true });
+        if (!room) return res.status(404).json({ message: "Room not found" });
+        if (room.allowedDomain && room.allowedDomain !== req.zenVoiceDomain) {
+            return res.status(403).json({ message: "Access denied." });
+        }
+        const query = { roomId: room._id, deletedAt: null };
+        if (before) {
+            query.createdAt = { $lt: new Date(before) };
+        }
+        const messages = await ZenVoiceMessage.find(query)
+            .sort({ createdAt: -1 })
+            .limit(50);
+        res.json({ messages: messages.reverse() });
+    } catch (err) {
+        console.error("[ZenVoice] get messages error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * POST /api/zenvoice/message/:messageId/restrict
+ * Soft-restrict a message.
+ */
+router.post("/message/:messageId/restrict", zenVoiceAuth, async (req, res) => {
+    try {
+        const message = await ZenVoiceMessage.findById(req.params.messageId);
+        if (!message) return res.status(404).json({ message: "Message not found" });
+        const room = await ZenVoiceRoom.findById(message.roomId);
+        if (!room) return res.status(404).json({ message: "Room not found" });
+        if (message.restrictedBy.includes(req.zenVoicePseudonym)) {
+            return res.status(400).json({ message: "You have already restricted this message." });
+        }
+        message.restrictedBy.push(req.zenVoicePseudonym);
+        const threshold = room.memberCount <= 49 ? 3 : 5;
+        let blurTriggered = false;
+        if (message.restrictedBy.length >= threshold && !message.globalBlur) {
+            message.globalBlur = true;
+            blurTriggered = true;
+            const creator = await User.findOne({ "zenVoice.pseudonym": message.pseudonym });
+            if (creator) {
+                creator.zenVoice.zenVoiceRedCardCount = (creator.zenVoice.zenVoiceRedCardCount || 0) + 1;
+                const rcc = creator.zenVoice.zenVoiceRedCardCount;
+                let durationHours = 0;
+                if (rcc === 1) durationHours = 1;
+                else if (rcc === 2) durationHours = 6;
+                else if (rcc === 3) durationHours = 12;
+                else if (rcc === 4) durationHours = 24;
+                else if (rcc === 5) durationHours = 72;
+                else if (rcc === 6) durationHours = 168;
+                else durationHours = 87600;
+                creator.zenVoice.zenVoiceSuspendedUntil = new Date(Date.now() + durationHours * 60 * 60 * 1000);
+                await creator.save();
+                const io = req.app.get("io");
+                io.of("/zenvoice").to(creator._id.toString()).emit("red_card_warning", {
+                    redCardCount: rcc,
+                    suspendedUntil: creator.zenVoice.zenVoiceSuspendedUntil
+                });
+            }
+        }
+        await message.save();
+        const io = req.app.get("io");
+        io.of("/zenvoice").to(room._id.toString()).emit("message_restricted", {
+            messageId: message._id,
+            restrictedByCount: message.restrictedBy.length,
+            globalBlur: message.globalBlur
+        });
+        res.json({ success: true, restrictedByCount: message.restrictedBy.length, globalBlur: message.globalBlur });
+    } catch (err) {
+        console.error("[ZenVoice] restrict error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * POST /api/zenvoice/message/:messageId/report
+ * Formally report a message.
+ */
+router.post("/message/:messageId/report", zenVoiceAuth, async (req, res) => {
+    try {
+        const { reason, evidence } = req.body;
+        if (!reason) return res.status(400).json({ message: "Reason is required." });
+        const message = await ZenVoiceMessage.findById(req.params.messageId);
+        if (!message) return res.status(404).json({ message: "Message not found" });
+        const reportExists = await ZenVoiceReport.findOne({
+            messageId: message._id,
+            reporterPseudonym: req.zenVoicePseudonym
+        });
+        if (reportExists) {
+            return res.status(400).json({ message: "You have already reported this message." });
+        }
+        const report = await ZenVoiceReport.create({
+            roomId: message.roomId,
+            reportedPseudonym: message.pseudonym,
+            reporterPseudonym: req.zenVoicePseudonym,
+            messageId: message._id,
+            reason,
+            evidence: evidence || ""
+        });
+        const distinctReports = await ZenVoiceReport.distinct("reporterPseudonym", {
+            reportedPseudonym: message.pseudonym,
+            status: "pending"
+        });
+        if (distinctReports.length >= 3) {
+            const userToSuspend = await User.findOne({ "zenVoice.pseudonym": message.pseudonym });
+            if (userToSuspend && !userToSuspend.isSuspended) {
+                userToSuspend.isSuspended = true;
+                await userToSuspend.save();
+                const io = req.app.get("io");
+                io.to(userToSuspend._id.toString()).emit("force_logout", { reason: "community_suspension" });
+                if (userToSuspend.email) {
+                    await sendZenVoiceSuspensionEmail(userToSuspend.email, userToSuspend.username, message.pseudonym)
+                        .catch(e => console.error("[ZenVoice] suspension email fail:", e));
+                }
+            }
+        }
+        res.json({ success: true, reportId: report._id });
+    } catch (err) {
+        console.error("[ZenVoice] report error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * POST /api/zenvoice/report/:reportId/counter
+ * Counter-report.
+ */
+router.post("/report/:reportId/counter", zenVoiceAuth, async (req, res) => {
+    try {
+        const { reason } = req.body;
+        if (!reason) return res.status(400).json({ message: "Counter-report reason is required." });
+        const report = await ZenVoiceReport.findById(req.params.reportId);
+        if (!report) return res.status(404).json({ message: "Report not found." });
+        if (report.reportedPseudonym !== req.zenVoicePseudonym) {
+            return res.status(403).json({ message: "You can only counter-report reports filed against you." });
+        }
+        report.counterReporterPseudonym = req.zenVoicePseudonym;
+        report.counterReportReason = reason;
+        await report.save();
+        res.json({ success: true, message: "Counter-report filed." });
+    } catch (err) {
+        console.error("[ZenVoice] counter report error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 module.exports = router;
+

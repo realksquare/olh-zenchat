@@ -225,6 +225,7 @@ module.exports = {
     sendZenVoiceOTP,
     sendZenVoicePseudonymResult,
     sendZenVoiceDomainResult,
+    sendZenVoiceSuspensionEmail,
 };
 
 async function _sendViaBrevo(to, subject, html) {
@@ -297,6 +298,21 @@ async function sendZenVoiceDomainResult(email, username, domain, approved, admin
             : `<p style="color:#cbd5e1;font-size:15px;line-height:1.6;margin-bottom:16px;">The domain <strong style="color:#38bdf8;">${domain}</strong> was <strong style="color:#ef4444;">not approved</strong> at this time.</p>`
         }
         ${adminNote ? `<div style="background:#0f172a;border-left:3px solid #f59e0b;padding:12px 16px;border-radius:6px;font-size:14px;color:#94a3b8;margin-top:4px;"><strong style="color:#f8fafc;">Admin note:</strong> ${adminNote}</div>` : ""}
+    ${ZV_FOOTER}`;
+    return _sendViaBrevo(email, subject, html);
+}
+
+async function sendZenVoiceSuspensionEmail(email, username, pseudonym) {
+    console.log(`[ZenVoice Suspension] ${username} (${email}) — Pseudonym: ${pseudonym}`);
+    const subject = "#ZenVoice: Account Suspended";
+    const html = `${ZV_HEADER}
+        <h2 style="color:#f1f5f9;font-size:18px;font-weight:600;margin:0 0 12px;">Hello ${username},</h2>
+        <p style="color:#cbd5e1;font-size:15px;line-height:1.6;margin-bottom:16px;">
+            Your ZenChat account has been suspended because your #ZenVoice pseudonym (<strong style="color:#ef4444;">${pseudonym}</strong>) has accumulated multiple formal community reports.
+        </p>
+        <p style="color:#cbd5e1;font-size:15px;line-height:1.6;margin-bottom:16px;">
+            To appeal this suspension, you can reply to this email with your explanation, which will be reviewed by our administration team.
+        </p>
     ${ZV_FOOTER}`;
     return _sendViaBrevo(email, subject, html);
 }

@@ -5,7 +5,7 @@ const Moment = require('../models/Moment');
 const User = require('../models/User');
 const { sendPushNotification } = require('./firebase');
 
-const startCronJobs = () => {
+const startCronJobs = (io) => {
     // Run daily at midnight: '0 0 * * *'
     cron.schedule('0 0 * * *', async () => {
         try {
@@ -172,6 +172,82 @@ const startCronJobs = () => {
             }
         } catch (err) {
             console.error("[Cron] ZenPulse Bank Monitor failed:", err);
+        }
+    });
+
+    // ─── ZenVoice Cron Jobs ──────────────────────────────────────────────────
+
+    // 1. ZenVoice 7:30 AM warning (30 min before 8 AM hard purge)
+    cron.schedule('30 7 * * *', async () => {
+        if (!io) return;
+        try {
+            console.log("[Cron] Sending ZenVoice 8 AM reset warning...");
+            const ZenVoiceRoom = require("../models/ZenVoiceRoom");
+            const activeRooms = await ZenVoiceRoom.find({ isActive: true });
+            activeRooms.forEach(room => {
+                io.of("/zenvoice").to(room._id.toString()).emit("room_reset_countdown", { minutesLeft: 30 });
+            });
+        } catch (err) {
+            console.error("[Cron] ZenVoice 8 AM warning failed:", err);
+        }
+    });
+
+    // 2. ZenVoice 8:00 AM Hard Purge (updates deletedAt to now for TTL purge)
+    cron.schedule('0 8 * * *', async () => {
+        if (!io) return;
+        try {
+            console.log("[Cron] Running ZenVoice 8 AM hard purge...");
+            const ZenVoiceRoom = require("../models/ZenVoiceRoom");
+            const ZenVoiceMessage = require("../models/ZenVoiceMessage");
+            const rooms = await ZenVoiceRoom.find({});
+
+            for (const room of rooms) {
+                io.of("/zenvoice").to(room._id.toString()).emit("purge_lockdown_start");
+                await ZenVoiceMessage.updateMany({ roomId: room._id, deletedAt: null }, { deletedAt: new Date() });
+                await ZenVoiceRoom.findByIdAndUpdate(room._id, { lastActivityAt: new Date() });
+                io.of("/zenvoice").to(room._id.toString()).emit("room_reset");
+                io.of("/zenvoice").to(room._id.toString()).emit("purge_lockdown_end");
+            }
+        } catch (err) {
+            console.error("[Cron] ZenVoice 8 AM purge failed:", err);
+        }
+    });
+
+    // 3. ZenVoice 30-Minute Idle Purge (runs every 5 mins, active post-8 PM only)
+    cron.schedule('*/5 * * * *', async () => {
+        if (!io) return;
+        try {
+            const hour = new Date().getHours();
+            if (hour < 20) return; // post-8 PM local server time only
+
+            console.log("[Cron] Running ZenVoice post-8 PM idle check...");
+            const ZenVoiceRoom = require("../models/ZenVoiceRoom");
+            const ZenVoiceMessage = require("../models/ZenVoiceMessage");
+
+            const idleThreshold = new Date(Date.now() - 30 * 60 * 1000);
+            const warningThreshold = new Date(Date.now() - 25 * 60 * 1000);
+
+            // Purge idle rooms
+            const idleRooms = await ZenVoiceRoom.find({
+                isActive: true,
+                lastActivityAt: { $lt: idleThreshold }
+            });
+            for (const room of idleRooms) {
+                await ZenVoiceMessage.updateMany({ roomId: room._id, deletedAt: null }, { deletedAt: new Date() });
+                io.of("/zenvoice").to(room._id.toString()).emit("room_reset");
+                console.log(`[Cron] ZenVoice room ${room._id} reset due to 30-min inactivity.`);
+            }
+
+            // Warning for rooms approaching idle
+            const warningRooms = await ZenVoiceRoom.find({
+                isActive: true,
+                lastActivityAt: { $lt: warningThreshold, $gte: idleThreshold }
+            });
+            warningRooms.forEach(room => {
+                io.of("/zenvoice").to(room._id.toString()).emit("room_idle_warning", { minutesLeft: 5 });
+            });
+        } catch (err) {
+            console.error("[Cron] ZenVoice idle check failed:", err);
         }
     });
 };
