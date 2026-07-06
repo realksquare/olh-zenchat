@@ -18,12 +18,15 @@ import ZenVaultModal from "../ui/ZenVaultModal";
 import YourTimeDashboard from "../ui/YourTimeDashboard";
 import ThemeSwitcherModal from "../ui/ThemeSwitcherModal";
 import ZenPulseTab from "../layout/ZenPulseTab";
+import ZenVoicePortal from "../zenvoice/ZenVoicePortal";
 import { usePulseStore } from "../../stores/pulseStore";
 import { useMomentStore } from "../../stores/momentStore";
 import { VerifiedTick, AdminIcon, HelpIcon, InviteIcon } from "../ui/Icons";
 
 const Sidebar = ({ onChatSelect, insideSheet = false }) => {
     const user = useAuthStore((s) => s.user);
+    const isAdmin = user?.role === "master_admin" || user?.role === "co_admin";
+    const [isZenVoicePortalOpen, setIsZenVoicePortalOpen] = useState(false);
     const logout = useAuthStore((s) => s.logout);
     const { hasActiveMoment, getHaloColor } = useMomentStore.getState();
     const { 
@@ -734,6 +737,10 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
                 isOpen={isYourTimeOpen}
                 onClose={() => setIsYourTimeOpen(false)}
             />
+            <ZenVoicePortal
+                isOpen={isZenVoicePortalOpen}
+                onClose={() => setIsZenVoicePortalOpen(false)}
+            />
 
             {showMobileMenu && createPortal(
                 <div className={isMobile ? "mobile-bottom-sheet-overlay" : "modal-backdrop"} style={{ display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.4)", zIndex: 20000 }} onClick={() => setShowMobileMenu(false)}>
@@ -770,22 +777,20 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
                                 <span>ZenVault Local Safe</span>
                             </button>
                             <div className="mobile-menu-divider" />
-                            <div
-                                className="mobile-menu-btn"
-                                role="button"
-                                aria-disabled="true"
-                                style={{ opacity: 0.45, cursor: 'not-allowed' }}
-                                onClick={showZenVoiceToast}
-                                onMouseEnter={showZenVoiceToast}
-                            >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                                    <line x1="12" y1="19" x2="12" y2="23"/>
-                                    <line x1="8" y1="23" x2="16" y2="23"/>
-                                </svg>
-                                <span>#ZenVoice</span>
-                            </div>
+                             <div
+                                 className="mobile-menu-btn"
+                                 role="button"
+                                 aria-disabled={!isAdmin}
+                                 style={isAdmin ? { cursor: 'pointer' } : { opacity: 0.45, cursor: 'not-allowed' }}
+                                 onClick={isAdmin ? () => { setShowMobileMenu(false); setIsZenVoicePortalOpen(true); } : showZenVoiceToast}
+                                 onMouseEnter={isAdmin ? undefined : showZenVoiceToast}
+                             >
+                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isAdmin ? "#10b981" : "#94a3b8"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                     <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2v5z" />
+                                     <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+                                 </svg>
+                                 <span>#ZenVoice</span>
+                             </div>
                         </div>
                     </div>
                 </div>,
