@@ -96,7 +96,7 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
             <div className="admin-header" style={{ paddingBottom: "12px", borderBottom: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <ShieldCheck size={22} className="text-warning" style={{ color: "#f59e0b" }} />
-                    <h2 style={{ fontSize: "1.2rem", fontWeight: "700", margin: 0, color: "var(--color-text, #fff)" }}>Verify Academic Voice</h2>
+                    <h2 style={{ fontSize: "1.2rem", fontWeight: "700", margin: 0, color: "var(--color-text, #fff)" }}>Claim your Academic Pseudonym</h2>
                 </div>
                 <button className="admin-close-btn" onClick={onClose} aria-label="Close modal" style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", padding: "4px", fontSize: "1.5rem" }}>&times;</button>
             </div>
@@ -117,8 +117,8 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
             return (
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                     <div style={{ textAlign: "center", marginBottom: "8px" }}>
-                        <p style={{ color: "#94a3b8", fontSize: "0.9rem", lineHeight: "1.5", margin: 0 }}>
-                            ZenVoice is an anonymous academic-only network. Please verify your student status to gain access.
+                        <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.9rem", lineHeight: "1.5", margin: 0 }}>
+                            Welcome to ZenVoice, where your identity dies and your academic pseudonym is born. Prove you're a real student to get in.
                         </p>
                     </div>
 
@@ -131,7 +131,7 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                                 alignItems: "center",
                                 justifyContent: "space-between",
                                 padding: "16px",
-                                background: "rgba(255, 255, 255, 0.02)",
+                                background: "var(--color-surface-offset, #161b22)",
                                 border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                 borderRadius: "12px",
                                 cursor: "pointer",
@@ -140,12 +140,12 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                             className="hover-card"
                         >
                             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                                <div style={{ width: "40px", height: "40px", borderRadius: "8px", background: "rgba(245, 158, 11, 0.1)", display: "flex", alignItems: "center", justifyValue: "center", justifyContent: "center" }}>
+                                <div style={{ width: "40px", height: "40px", borderRadius: "8px", background: "var(--color-surface, #0f172a)", border: "1px solid rgba(245, 158, 11, 0.2)", display: "flex", alignItems: "center", justifyValue: "center", justifyContent: "center" }}>
                                     <Mail size={20} style={{ color: "#f59e0b" }} />
                                 </div>
                                 <div style={{ textAlign: "left" }}>
                                     <h4 style={{ margin: "0 0 2px", fontSize: "0.95rem", fontWeight: "600", color: "#fff" }}>Institutional Email</h4>
-                                    <p style={{ margin: 0, fontSize: "0.8rem", color: "#94a3b8" }}>Verify via code sent to your student inbox</p>
+                                    <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)" }}>We send a code, you type it in. Typical institutional stuff.</p>
                                 </div>
                             </div>
                             <ArrowRight size={18} style={{ color: "#64748b" }} />
@@ -159,7 +159,7 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                                 alignItems: "center",
                                 justifyContent: "space-between",
                                 padding: "16px",
-                                background: "rgba(255, 255, 255, 0.02)",
+                                background: "var(--color-surface-offset, #161b22)",
                                 border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                 borderRadius: "12px",
                                 cursor: "pointer",
@@ -168,7 +168,7 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                             className="hover-card"
                         >
                             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                                <div style={{ width: "40px", height: "40px", borderRadius: "8px", background: "rgba(56, 189, 248, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <div style={{ width: "40px", height: "40px", borderRadius: "8px", background: "var(--color-surface, #0f172a)", border: "1px solid rgba(56, 189, 248, 0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-github">
                                         <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
                                         <path d="M9 18c-4.51 2-5-2-7-2" />
@@ -176,7 +176,7 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                                 </div>
                                 <div style={{ textAlign: "left" }}>
                                     <h4 style={{ margin: "0 0 2px", fontSize: "0.95rem", fontWeight: "600", color: "#fff" }}>GitHub Student Developer Pack</h4>
-                                    <p style={{ margin: 0, fontSize: "0.8rem", color: "#94a3b8" }}>Instant verification with your student pack</p>
+                                    <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)" }}>GitHub already did the hard work of verifying you. Tap to bypass.</p>
                                 </div>
                             </div>
                             <ArrowRight size={18} style={{ color: "#64748b" }} />
@@ -190,7 +190,7 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
             return (
                 <form onSubmit={handleSendOTP} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                     <div style={{ textAlign: "left" }}>
-                        <label style={{ fontSize: "0.85rem", color: "#94a3b8", display: "block", marginBottom: "6px" }}>Enter Academic Email</label>
+                        <label style={{ fontSize: "0.85rem", color: "var(--color-text-muted, #94a3b8)", display: "block", marginBottom: "6px" }}>Drop your academic email here</label>
                         <input
                             type="email"
                             placeholder="you@university.edu"
@@ -202,15 +202,15 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                                 padding: "12px",
                                 borderRadius: "8px",
                                 border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
-                                background: "#0c0e17",
+                                background: "var(--color-surface-offset, #161b22)",
                                 color: "#fff",
                                 outline: "none",
                                 fontSize: "0.95rem",
                                 boxSizing: "border-box"
                             }}
                         />
-                        <span style={{ fontSize: "0.75rem", color: "#64748b", display: "block", marginTop: "6px", lineHeight: "1.4" }}>
-                            We support primary institutional domains. If your university is not yet whitelisted, it will be queued for rapid admin review.
+                        <span style={{ fontSize: "0.75rem", color: "var(--color-text-faint, #64748b)", display: "block", marginTop: "6px", lineHeight: "1.4" }}>
+                            We only accept legit college domains. If your school isn't whitelisted yet, it'll get sent to our admins (who might take a while to approve it).
                         </span>
                     </div>
 
@@ -262,8 +262,8 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
             return (
                 <form onSubmit={handleVerifyOTP} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                     <div style={{ textAlign: "center" }}>
-                        <p style={{ color: "#94a3b8", fontSize: "0.9rem", margin: "0 0 16px" }}>
-                            A 6-digit verification code has been dispatched to <strong style={{ color: "#fff" }}>{email}</strong>.
+                        <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.9rem", margin: "0 0 16px" }}>
+                            We sent a 6-digit code to <strong style={{ color: "var(--color-primary, #3da5d9)" }}>{email}</strong>. Check your spam if it's not there, our mail server can be dramatic.
                         </p>
                         <input
                             type="text"
@@ -273,12 +273,12 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                             onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                             required
                             style={{
-                                width: "160px",
+                                width: "220px",
                                 textAlign: "center",
                                 padding: "14px",
                                 borderRadius: "8px",
                                 border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
-                                background: "#0c0e17",
+                                background: "var(--color-surface-offset, #161b22)",
                                 color: "#f59e0b",
                                 outline: "none",
                                 fontSize: "1.6rem",
@@ -336,24 +336,24 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
         if (step === 4) {
             return (
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "10px 0" }}>
-                    <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "rgba(245, 158, 11, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px" }}>
+                    <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "var(--color-surface-offset, #161b22)", border: "1px solid rgba(245, 158, 11, 0.2)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px" }}>
                         <ShieldCheck size={28} style={{ color: "#f59e0b" }} />
                     </div>
-                    <h3 style={{ margin: 0, color: "#fff", fontSize: "1.1rem", fontWeight: "600" }}>Domain Pending Approval</h3>
-                    <p style={{ color: "#94a3b8", fontSize: "0.88rem", lineHeight: "1.5", margin: 0 }}>
-                        The institution domain <strong style={{ color: "#fff" }}>@{email.split("@")[1]}</strong> has been queued for rapid administrative verification.
+                    <h3 style={{ margin: 0, color: "#fff", fontSize: "1.1rem", fontWeight: "600" }}>Admins are looking at this...</h3>
+                    <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.88rem", lineHeight: "1.5", margin: 0 }}>
+                        Your college domain <strong style={{ color: "#fff" }}>@{email.split("@")[1]}</strong> isn't whitelisted yet. It's in the queue for our admins to review (once they wake up).
                     </p>
-                    <p style={{ color: "#64748b", fontSize: "0.8rem", lineHeight: "1.4", margin: 0 }}>
-                        An notification email will be dispatched to your ZenChat account immediately once the domain is approved.
+                    <p style={{ color: "var(--color-text-faint, #64748b)", fontSize: "0.8rem", lineHeight: "1.4", margin: 0 }}>
+                        We'll ping your ZenChat account as soon as they decide your school is legit.
                     </p>
-
+ 
                     <button
                         onClick={onClose}
                         style={{
                             width: "100%",
                             padding: "12px",
                             borderRadius: "8px",
-                            background: "rgba(255, 255, 255, 0.05)",
+                            background: "var(--color-surface-offset, #161b22)",
                             border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                             color: "#fff",
                             fontWeight: "600",
@@ -373,23 +373,23 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px", padding: "10px 0" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
                         <CheckCircle2 size={44} style={{ color: "#10b981" }} />
-                        <h3 style={{ margin: "6px 0 0", color: "#fff", fontSize: "1.2rem", fontWeight: "700" }}>Voice Verified!</h3>
+                        <h3 style={{ margin: "6px 0 0", color: "#fff", fontSize: "1.2rem", fontWeight: "700" }}>You're in!</h3>
                     </div>
-
-                    <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.06))", borderRadius: "12px", padding: "20px", textAlign: "center" }}>
-                        <span style={{ fontSize: "0.8rem", color: "#94a3b8", display: "block", marginBottom: "8px" }}>YOUR ANONYMOUS PSEUDONYM</span>
+ 
+                    <div style={{ background: "var(--color-surface-offset, #161b22)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.06))", borderRadius: "12px", padding: "20px", textAlign: "center" }}>
+                        <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)", display: "block", marginBottom: "8px" }}>MEET YOUR NEW ALTER EGO</span>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginBottom: "8px" }}>
                             <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: pseudonymColor || "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                 <span style={{ color: "#000", fontWeight: "bold", fontSize: "0.9rem" }}>{pseudonym ? pseudonym.slice(0, 2).toUpperCase() : ""}</span>
                             </div>
                             <span style={{ fontSize: "1.3rem", fontWeight: "700", color: "#fff" }}>{pseudonym}</span>
                         </div>
-                        <span style={{ fontSize: "0.82rem", color: "#64748b" }}>{collegeName}</span>
+                        <span style={{ fontSize: "0.82rem", color: "var(--color-text-faint, #64748b)" }}>{collegeName}</span>
                     </div>
-
-                    <div style={{ background: "rgba(245, 158, 11, 0.05)", borderLeft: "3px solid #f59e0b", padding: "12px 16px", borderRadius: "6px", fontSize: "0.8rem", color: "#94a3b8", textAlign: "left", lineHeight: "1.4" }}>
+ 
+                    <div style={{ background: "var(--color-surface-offset, #161b22)", borderLeft: "3px solid #f59e0b", padding: "12px 16px", borderRadius: "6px", fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)", textAlign: "left", lineHeight: "1.4" }}>
                         <strong style={{ color: "#fff", display: "block", marginBottom: "2px" }}>Academic Security & Ephemerality:</strong>
-                        Your real name and primary ZenChat identity are never linked to this pseudonym. All room messages automatically wipe clean at 8 AM.
+                        Zero links to your real face or name. Speak freely. Oh, and everything gets purged daily at 8 AM, so don't get too attached to your posts.
                     </div>
 
                     <button

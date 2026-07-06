@@ -235,7 +235,10 @@ router.get("/zenvoice/domain-requests", authMiddleware, adminCheck, async (req, 
         const domains = await ZenVoiceDomainWhitelist.find({ status: "pending" })
             .populate("submittedBy", "username email")
             .sort({ createdAt: 1 });
-        res.json({ domains });
+        const approved = await ZenVoiceDomainWhitelist.find({ status: "approved" })
+            .populate("submittedBy", "username email")
+            .sort({ reviewedAt: -1 });
+        res.json({ domains, approved });
     } catch (err) {
         res.status(500).json({ message: "Server error" });
     }

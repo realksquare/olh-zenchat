@@ -138,14 +138,14 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
     const activeRoom = useZenVoiceStore.getState().rooms.find(r => r._id === roomId) || {};
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#0b0c14", position: "relative" }}>
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "var(--body-bg, #0b0f19)", position: "relative" }}>
             {/* Purge Lockdown Overlay */}
             {purgeLockdown && (
-                <div style={{ position: "absolute", inset: 0, background: "rgba(11, 12, 20, 0.95)", zIndex: 120000, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px", textAlign: "center" }}>
+                <div style={{ position: "absolute", inset: 0, background: "var(--body-bg, #0b0f19)", zIndex: 120000, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px", textAlign: "center" }}>
                     <Shield size={44} className="animate-pulse" style={{ color: "#f59e0b", animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite", marginBottom: "16px" }} />
-                    <h2 style={{ color: "#fff", fontSize: "1.2rem", fontWeight: "700", margin: "0 0 8px" }}>8:00 AM Reset Purge</h2>
-                    <p style={{ color: "#94a3b8", fontSize: "0.85rem", maxWidth: "280px", lineHeight: "1.5", margin: 0 }}>
-                        All rooms are undergoing ephemeral database cleanup. Chat access will resume immediately after the purge completes.
+                    <h2 style={{ color: "#fff", fontSize: "1.2rem", fontWeight: "700", margin: "0 0 8px" }}>The 8:00 AM Nuke</h2>
+                    <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.85rem", maxWidth: "280px", lineHeight: "1.5", margin: 0 }}>
+                        Deleting everything to protect your digital footprint. Access will resume in a second. Calm down.
                     </p>
                 </div>
             )}
@@ -192,11 +192,11 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
 
             {/* Countdown / Warning Banners */}
             {(resetCountdown || idleWarning) && (
-                <div style={{ background: "rgba(245, 158, 11, 0.08)", borderLeft: "3px solid #f59e0b", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 5 }}>
+                <div style={{ background: "var(--color-surface-offset, #161b22)", borderLeft: "3px solid #f59e0b", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 5 }}>
                     <span style={{ fontSize: "0.8rem", color: "#f59e0b", fontWeight: "600" }}>
                         {resetCountdown
-                            ? `⚠️ Room Reset Warning: Hard purge in ${resetCountdown} mins.`
-                            : `⏳ Idle Room warning: Wiping in ${idleWarning} mins due to inactivity.`
+                            ? `⚠️ Clean sweep incoming: All posts get deleted in ${resetCountdown} mins.`
+                            : `⏳ Crickets here: Wiping room in ${idleWarning} mins due to inactivity.`
                         }
                     </span>
                 </div>
@@ -253,12 +253,11 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         borderRadius: "12px",
                                         background: isOwn ? "#f59e0b" : "var(--color-surface, #0f172a)",
                                         color: isOwn ? "#000" : "#fff",
-                                        border: isOwn ? "none" : "1px solid var(--color-border, rgba(255, 255, 255, 0.05))",
+                                        border: isOwn ? "none" : "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                         fontSize: "0.9rem",
                                         lineHeight: "1.4",
                                         textAlign: "left",
-                                        position: "relative",
-                                        ...(isBlurred ? { backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", opacity: 0.8 } : {})
+                                        position: "relative"
                                     }}
                                 >
                                     {isBlurred ? (
@@ -267,7 +266,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                             style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}
                                         >
                                             <ShieldAlert size={16} style={{ color: isOwn ? "#000" : "#ef4444" }} />
-                                            <span style={{ fontSize: "0.8rem", fontWeight: "600", textDecoration: "underline" }}>Blurred by community. Tap to reveal.</span>
+                                            <span style={{ fontSize: "0.8rem", fontWeight: "600", textDecoration: "underline" }}>Community flagged this as garbage. Tap to read anyway.</span>
                                         </div>
                                     ) : (
                                         <span>{msg.content}</span>
@@ -349,7 +348,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             {typingUsers.length > 0 && (
                 <div style={{ padding: "0 16px 8px", fontSize: "0.75rem", color: "#64748b", textAlign: "left" }}>
                     <span>
-                        {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing...
+                        {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing some hot take...
                     </span>
                 </div>
             )}
@@ -358,7 +357,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             <form onSubmit={handleSendMessage} style={{ padding: "12px 16px", borderTop: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", display: "flex", gap: "10px", background: "var(--color-surface, #0f172a)" }}>
                 <input
                     type="text"
-                    placeholder="Type an anonymous academic message..."
+                    placeholder="Drop an anonymous message... keep it chill..."
                     value={input}
                     onChange={handleInputChange}
                     style={{
@@ -366,7 +365,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                         padding: "12px",
                         borderRadius: "8px",
                         border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
-                        background: "#0c0e17",
+                        background: "var(--color-surface-offset, #161b22)",
                         color: "#fff",
                         fontSize: "0.88rem",
                         outline: "none",
@@ -409,8 +408,8 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                             <span style={{ color: "#000", fontWeight: "bold", fontSize: "1.1rem" }}>{selectedUser.slice(0, 2).toUpperCase()}</span>
                         </div>
                         <h4 style={{ margin: "0 0 4px", color: "#fff", fontSize: "1.05rem", fontWeight: "700" }}>{selectedUser}</h4>
-                        <span style={{ fontSize: "0.78rem", color: "#64748b" }}>Academic Member</span>
-
+                        <span style={{ fontSize: "0.78rem", color: "var(--color-text-faint, #64748b)" }}>Verified Peer</span>
+ 
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "20px" }}>
                             <button
                                 onClick={() => handleDMBridge(selectedUser)}
@@ -431,16 +430,16 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                 }}
                             >
                                 <MessageCircle size={16} />
-                                <span>Bridge 1-on-1 DM</span>
+                                <span>Nudge into a private DM</span>
                             </button>
-
+ 
                             <button
                                 onClick={() => toggleNotification(selectedUser)}
                                 style={{
                                     width: "100%",
                                     padding: "10px",
                                     borderRadius: "8px",
-                                    background: "rgba(255, 255, 255, 0.03)",
+                                    background: "var(--color-surface-offset, #161b22)",
                                     border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                     color: notifSubscribed[selectedUser] ? "#ef4444" : "#fff",
                                     fontWeight: "600",
@@ -453,19 +452,18 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                 }}
                             >
                                 {notifSubscribed[selectedUser] ? <BellOff size={16} /> : <Bell size={16} />}
-                                <span>{notifSubscribed[selectedUser] ? "Unsubscribe Alerts" : "Subscribe Alerts"}</span>
+                                <span>{notifSubscribed[selectedUser] ? "Mute notifications" : "Get pings when they talk"}</span>
                             </button>
                         </div>
                     </div>
                 </div>
             )}
-
             {/* Formal Report Modal */}
             {reportingMessage && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ width: "100%", maxWidth: "380px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", position: "relative" }}>
                         <h3 style={{ margin: "0 0 16px", color: "#fff", fontSize: "1.1rem", fontWeight: "700", textAlign: "left" }}>
-                            File Formal Report
+                            Nark on this message
                         </h3>
                         <button
                             onClick={() => { setReportingMessage(null); setReportReason(""); setReportEvidence(""); }}
@@ -473,7 +471,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                         >
                             &times;
                         </button>
-
+ 
                         {reportSuccess ? (
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", padding: "20px 0" }}>
                                 <CheckCircle2 size={36} style={{ color: "#10b981" }} />
@@ -482,7 +480,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                         ) : (
                             <form onSubmit={handleReportSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                                 <div style={{ textAlign: "left" }}>
-                                    <label style={{ fontSize: "0.8rem", color: "#94a3b8", display: "block", marginBottom: "6px" }}>Select Violation Reason</label>
+                                    <label style={{ fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)", display: "block", marginBottom: "6px" }}>Select Violation Reason</label>
                                     <select
                                         value={reportReason}
                                         onChange={e => setReportReason(e.target.value)}
@@ -492,7 +490,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                             padding: "10px",
                                             borderRadius: "8px",
                                             border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
-                                            background: "#0c0e17",
+                                            background: "var(--color-surface-offset, #161b22)",
                                             color: "#fff",
                                             fontSize: "0.85rem",
                                             outline: "none"
@@ -502,14 +500,14 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         <option value="harassment">Harassment / Bullying</option>
                                         <option value="spam">Spam / Flooding</option>
                                         <option value="hate_speech">Hate Speech</option>
-                                        <option value="other">Other Violation</option>
+                                        <option value="other">Just being annoying / Other</option>
                                     </select>
                                 </div>
-
+ 
                                 <div style={{ textAlign: "left" }}>
-                                    <label style={{ fontSize: "0.8rem", color: "#94a3b8", display: "block", marginBottom: "4px" }}>Evidence / Context</label>
+                                    <label style={{ fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)", display: "block", marginBottom: "4px" }}>Evidence / Context</label>
                                     <textarea
-                                        placeholder="Explain the violation in detail..."
+                                        placeholder="What did they do? Be specific..."
                                         value={reportEvidence}
                                         onChange={e => setReportEvidence(e.target.value)}
                                         maxLength={300}
@@ -518,7 +516,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                             padding: "10px",
                                             borderRadius: "8px",
                                             border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
-                                            background: "#0c0e17",
+                                            background: "var(--color-surface-offset, #161b22)",
                                             color: "#fff",
                                             fontSize: "0.85rem",
                                             minHeight: "70px",
@@ -529,7 +527,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         }}
                                     />
                                 </div>
-
+ 
                                 <button
                                     type="submit"
                                     disabled={!reportReason}
@@ -537,7 +535,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         width: "100%",
                                         padding: "12px",
                                         borderRadius: "8px",
-                                        background: reportReason ? "#f59e0b" : "rgba(255,255,255,0.02)",
+                                        background: reportReason ? "#f59e0b" : "var(--color-surface-offset, #161b22)",
                                         border: "none",
                                         color: reportReason ? "#000" : "#64748b",
                                         fontWeight: "600",
@@ -546,7 +544,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         marginTop: "8px"
                                     }}
                                 >
-                                    Submit Formal Report
+                                    File Snitch Report
                                 </button>
                             </form>
                         )}

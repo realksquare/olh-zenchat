@@ -28,6 +28,7 @@ const AdminPanel = ({ onClose }) => {
     // ZenVoice Admin State
     const [zvPseudonymRequests, setZvPseudonymRequests] = useState([]);
     const [zvDomainRequests, setZvDomainRequests] = useState([]);
+    const [zvApprovedDomains, setZvApprovedDomains] = useState([]);
     const [zvLoading, setZvLoading] = useState(false);
     const [zvRejectNote, setZvRejectNote] = useState({});
     const [zvDomainRejectNote, setZvDomainRejectNote] = useState({});
@@ -166,6 +167,7 @@ const AdminPanel = ({ onClose }) => {
             ]);
             setZvPseudonymRequests(pseudoRes.data.requests || []);
             setZvDomainRequests(domainRes.data.domains || []);
+            setZvApprovedDomains(domainRes.data.approved || []);
         } catch (err) {
             console.error("ZenVoice admin fetch error:", err);
         } finally {
@@ -187,9 +189,23 @@ const AdminPanel = ({ onClose }) => {
         try {
             await axiosInstance.post(`/admin/zenvoice/domain-requests/${domainId}`, { action, adminNote: note });
             setZvDomainRequests(prev => prev.filter(d => d._id !== domainId));
+            if (action === "approve") {
+                fetchZenVoiceRequests();
+            }
             showToast(`Domain ${action === "approve" ? "approved" : "rejected"}.`);
         } catch (err) {
             showToast(err.response?.data?.message || "Action failed");
+        }
+    };
+
+    const handleRevokeDomain = async (domainId) => {
+        if (!window.confirm("Revoke whitelisting for this domain? Any students under this domain will no longer be verified if they check again.")) return;
+        try {
+            await axiosInstance.post(`/admin/zenvoice/domain-requests/${domainId}`, { action: "reject", adminNote: "Whitelisting revoked by admin." });
+            setZvApprovedDomains(prev => prev.filter(d => d._id !== domainId));
+            showToast("Whitelisting revoked.");
+        } catch (err) {
+            showToast(err.response?.data?.message || "Revocation failed");
         }
     };
 
@@ -503,6 +519,31 @@ const AdminPanel = ({ onClose }) => {
                                                         style={{ flex: 1, padding: '8px', borderRadius: '6px', background: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}
                                                     >Reject</button>
                                                 </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Approved Domains List */}
+                            <div style={{ marginTop: '24px' }}>
+                                <h3 style={{ margin: '0 0 12px', color: 'white', fontSize: '1.05rem' }}>Approved Domains Whitelist</h3>
+                                {zvLoading ? (
+                                    <p style={{ color: '#94a3b8' }}>Loading...</p>
+                                ) : zvApprovedDomains.length === 0 ? (
+                                    <p style={{ color: '#64748b', fontSize: '0.9rem' }}>No approved domains.</p>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        {zvApprovedDomains.map(dom => (
+                                            <div key={dom._id} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <div style={{ textAlign: 'left' }}>
+                                                    <p style={{ margin: '0', color: '#38bdf8', fontWeight: '600' }}>{dom.domain}</p>
+                                                    <p style={{ margin: '2px 0 0', color: 'white', fontSize: '0.85rem' }}>{dom.institutionName}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleRevokeDomain(dom._id)}
+                                                    style={{ padding: '6px 12px', borderRadius: '6px', background: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem' }}
+                                                >Revoke</button>
                                             </div>
                                         ))}
                                     </div>

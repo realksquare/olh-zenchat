@@ -11,7 +11,7 @@ const socketZenVoiceAuth = async (socket, next) => {
             return next(new Error("Authentication error: No ZenVoice token provided."));
         }
         
-        const decoded = jwt.verify(token, process.env.ZENVOICE_JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.ZENVOICE_JWT_SECRET || process.env.JWT_SECRET || "zenvoice-secret-fallback-key");
         
         const user = await User.findOne({ "zenVoice.pseudonym": decoded.sub });
         if (!user) {

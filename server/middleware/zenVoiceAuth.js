@@ -14,7 +14,7 @@ const zenVoiceAuthMiddleware = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
     try {
-        const decoded = jwt.verify(token, process.env.ZENVOICE_JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.ZENVOICE_JWT_SECRET || process.env.JWT_SECRET || "zenvoice-secret-fallback-key");
         req.zenVoicePseudonym = decoded.sub;
         req.zenVoiceDomain = decoded.domain || "";
         next();

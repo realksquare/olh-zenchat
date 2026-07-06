@@ -90,7 +90,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
     const displayedRooms = searchQuery.trim() && activeTab === "official" ? searchResults : (activeTab === "official" ? officialRooms : privateRooms);
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#0b0c14" }}>
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "var(--body-bg, #0b0f19)" }}>
             {/* Header */}
             <div style={{ padding: "16px", borderBottom: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--color-surface, #0f172a)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -125,7 +125,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
             </div>
 
             {/* Tabs */}
-            <div style={{ display: "flex", background: "rgba(255,255,255,0.01)", borderBottom: "1px solid var(--color-border, rgba(255, 255, 255, 0.05))" }}>
+            <div style={{ display: "flex", background: "var(--color-surface, #0f172a)", borderBottom: "1px solid var(--color-border, rgba(255, 255, 255, 0.05))" }}>
                 <button
                     onClick={() => { setActiveTab("official"); setSearchQuery(""); }}
                     style={{
@@ -141,7 +141,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                         transition: "0.2s"
                     }}
                 >
-                    Official Rooms
+                    Verified Channels
                 </button>
                 <button
                     onClick={() => { setActiveTab("private"); setSearchQuery(""); }}
@@ -158,7 +158,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                         transition: "0.2s"
                     }}
                 >
-                    Private Rooms
+                    Student Hideouts
                 </button>
             </div>
 
@@ -168,7 +168,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                     <Search size={16} style={{ position: "absolute", left: "28px", top: "50%", transform: "translateY(-50%)", color: "#64748b" }} />
                     <input
                         type="text"
-                        placeholder={`Search verified rooms on @${collegeEmailDomain || "domain"}...`}
+                        placeholder={`Find rooms on @${collegeEmailDomain || "domain"}...`}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         style={{
@@ -176,7 +176,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                             padding: "10px 12px 10px 36px",
                             borderRadius: "8px",
                             border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
-                            background: "rgba(255,255,255,0.02)",
+                            background: "var(--color-surface-offset, #161b22)",
                             color: "#fff",
                             fontSize: "0.85rem",
                             outline: "none",
@@ -194,11 +194,11 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                     </div>
                 ) : displayedRooms.length === 0 ? (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "60px 20px", textAlign: "center", gap: "12px" }}>
-                        <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "rgba(255,255,255,0.02)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "var(--color-surface-offset, #161b22)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <MessageSquare size={20} style={{ color: "#64748b" }} />
                         </div>
-                        <span style={{ color: "#64748b", fontSize: "0.88rem" }}>
-                            {activeTab === "official" ? "No official channels found." : "Create your first private study room."}
+                        <span style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.88rem" }}>
+                            {activeTab === "official" ? "Nothing official here. Admins probably forgot to set up channels." : "Zero private rooms found. Start your own hideout and share the link."}
                         </span>
                     </div>
                 ) : (
@@ -212,8 +212,8 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                     alignItems: "center",
                                     justifyContent: "space-between",
                                     padding: "16px",
-                                    background: "var(--color-surface, #0f172a)",
-                                    border: "1px solid var(--color-border, rgba(255, 255, 255, 0.06))",
+                                    background: "var(--color-surface-offset, #161b22)",
+                                    border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                     borderRadius: "12px",
                                     cursor: "pointer",
                                     transition: "0.2s"
@@ -224,18 +224,18 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                                         <span style={{ fontWeight: "600", color: "#fff", fontSize: "0.95rem" }}>{room.name}</span>
                                         {room.allowedDomain ? (
-                                            <div style={{ display: "flex", alignItems: "center", gap: "3px", background: "rgba(56, 189, 248, 0.1)", padding: "2px 6px", borderRadius: "4px" }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "3px", background: "var(--color-surface, #0f172a)", border: "1px solid rgba(56, 189, 248, 0.2)", padding: "2px 6px", borderRadius: "4px" }}>
                                                 <Lock size={10} style={{ color: "#38bdf8" }} />
-                                                <span style={{ fontSize: "0.65rem", color: "#38bdf8", fontWeight: "600" }}>Domain Locked</span>
+                                                <span style={{ fontSize: "0.65rem", color: "#38bdf8", fontWeight: "600" }}>College Locked</span>
                                             </div>
                                         ) : (
-                                            <div style={{ display: "flex", alignItems: "center", gap: "3px", background: "rgba(245, 158, 11, 0.1)", padding: "2px 6px", borderRadius: "4px" }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "3px", background: "var(--color-surface, #0f172a)", border: "1px solid rgba(245, 158, 11, 0.2)", padding: "2px 6px", borderRadius: "4px" }}>
                                                 <Globe size={10} style={{ color: "#f59e0b" }} />
-                                                <span style={{ fontSize: "0.65rem", color: "#f59e0b", fontWeight: "600" }}>Open</span>
+                                                <span style={{ fontSize: "0.65rem", color: "#f59e0b", fontWeight: "600" }}>Public</span>
                                             </div>
                                         )}
                                     </div>
-                                    <p style={{ margin: 0, fontSize: "0.8rem", color: "#94a3b8" }}>{room.description || "No description provided."}</p>
+                                    <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)" }}>{room.description || "No description. They're keeping it mysterious."}</p>
                                 </div>
 
                                 <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#64748b", fontSize: "0.8rem" }}>
@@ -264,12 +264,12 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
 
                         {createdRoom ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: "16px", textAlign: "center" }}>
-                                <p style={{ color: "#94a3b8", fontSize: "0.88rem", lineHeight: "1.5", margin: 0 }}>
-                                    Your private room <strong style={{ color: "#fff" }}>{createdRoom.name}</strong> is live. Share this invite link with college peers:
+                                <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.88rem", lineHeight: "1.5", margin: 0 }}>
+                                    Your secret room <strong style={{ color: "#fff" }}>{createdRoom.name}</strong> is ready. Throw this invite link at your peers:
                                 </p>
                                 
-                                <div style={{ display: "flex", alignItems: "center", background: "#0c0e17", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "8px", padding: "8px 12px" }}>
-                                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "0.8rem", color: "#64748b", textAlign: "left" }}>
+                                <div style={{ display: "flex", alignItems: "center", background: "var(--color-surface-offset, #161b22)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "8px", padding: "8px 12px" }}>
+                                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "0.8rem", color: "var(--color-text-faint, #64748b)", textAlign: "left" }}>
                                         {window.location.origin}/zenvoice/invite/{createdRoom.inviteToken}
                                     </span>
                                     <button
@@ -301,10 +301,10 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                         ) : (
                             <form onSubmit={handleCreateRoom} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                                 <div style={{ textAlign: "left" }}>
-                                    <label style={{ fontSize: "0.8rem", color: "#94a3b8", display: "block", marginBottom: "4px" }}>Room Name</label>
+                                    <label style={{ fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)", display: "block", marginBottom: "4px" }}>What should we call this room?</label>
                                     <input
                                         type="text"
-                                        placeholder="e.g. Study Group ECE-B"
+                                        placeholder="e.g. Gossip Central / Study Group"
                                         value={newRoomName}
                                         onChange={(e) => setNewRoomName(e.target.value)}
                                         maxLength={40}
@@ -314,7 +314,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                             padding: "10px",
                                             borderRadius: "8px",
                                             border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
-                                            background: "#0c0e17",
+                                            background: "var(--color-surface-offset, #161b22)",
                                             color: "#fff",
                                             fontSize: "0.85rem",
                                             outline: "none",
@@ -322,11 +322,11 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                         }}
                                     />
                                 </div>
-
+ 
                                 <div style={{ textAlign: "left" }}>
-                                    <label style={{ fontSize: "0.8rem", color: "#94a3b8", display: "block", marginBottom: "4px" }}>Description</label>
+                                    <label style={{ fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)", display: "block", marginBottom: "4px" }}>Tell them what this room is for... (keep it brief)</label>
                                     <textarea
-                                        placeholder="Brief summary..."
+                                        placeholder="What goes on in here?"
                                         value={newRoomDesc}
                                         onChange={(e) => setNewRoomDesc(e.target.value)}
                                         maxLength={150}
@@ -335,7 +335,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                             padding: "10px",
                                             borderRadius: "8px",
                                             border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
-                                            background: "#0c0e17",
+                                            background: "var(--color-surface-offset, #161b22)",
                                             color: "#fff",
                                             fontSize: "0.85rem",
                                             minHeight: "60px",
@@ -347,7 +347,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                     />
                                 </div>
 
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.01)", padding: "10px 0" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "transparent", padding: "10px 0" }}>
                                     <input
                                         type="checkbox"
                                         id="lockDomain"
@@ -355,8 +355,8 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                         onChange={(e) => setLockToDomain(e.target.checked)}
                                         style={{ cursor: "pointer" }}
                                     />
-                                    <label htmlFor="lockDomain" style={{ fontSize: "0.8rem", color: "#cbd5e1", cursor: "pointer", textAlign: "left", userSelect: "none" }}>
-                                        Restrict access to @{collegeEmailDomain || "domain"} members only
+                                    <label htmlFor="lockDomain" style={{ fontSize: "0.8rem", color: "var(--color-text, #cbd5e1)", cursor: "pointer", textAlign: "left", userSelect: "none" }}>
+                                        Only let people from @{collegeEmailDomain || "domain"} join
                                     </label>
                                 </div>
 

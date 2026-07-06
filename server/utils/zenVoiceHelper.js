@@ -56,7 +56,7 @@ const getPseudonymColor = (pseudonym) => {
 const issueZenVoiceToken = (pseudonym, domain) => {
     return jwt.sign(
         { sub: pseudonym, domain: domain || "" },
-        process.env.ZENVOICE_JWT_SECRET,
+        process.env.ZENVOICE_JWT_SECRET || process.env.JWT_SECRET || "zenvoice-secret-fallback-key",
         { expiresIn: "12h" }
     );
 };
