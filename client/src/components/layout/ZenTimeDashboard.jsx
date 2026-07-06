@@ -77,6 +77,7 @@ const getSarcasticQuote = (minutes) => {
 
 const ZenTimeDashboard = ({ snapTo }) => {
     const [minutes, setMinutes] = useState(0);
+    const [animatedMinutes, setAnimatedMinutes] = useState(0);
 
     const loadDailyTime = () => {
         try {
@@ -108,18 +109,40 @@ const ZenTimeDashboard = ({ snapTo }) => {
         return () => window.removeEventListener("zenchat-daily-time-updated", handleUpdate);
     }, []);
 
+    useEffect(() => {
+        if (minutes > 0) {
+            let start = null;
+            const duration = 600;
+            const startVal = animatedMinutes;
+            const endVal = minutes;
+            let animationFrameId;
+
+            const step = (timestamp) => {
+                if (!start) start = timestamp;
+                const progress = Math.min((timestamp - start) / duration, 1);
+                const ease = progress * (2 - progress);
+                setAnimatedMinutes(Math.round(startVal + ease * (endVal - startVal)));
+
+                if (progress < 1) {
+                    animationFrameId = requestAnimationFrame(step);
+                }
+            };
+
+            animationFrameId = requestAnimationFrame(step);
+            return () => cancelAnimationFrame(animationFrameId);
+        } else {
+            setAnimatedMinutes(0);
+        }
+    }, [minutes]);
+
     const openDetails = (e) => {
         e.stopPropagation();
         window.dispatchEvent(new CustomEvent("open-time-dashboard"));
     };
 
-    // Calculations based on minutes
     const gigDataMB = minutes * 2.50;
     const zenDataMB = minutes * 0.03;
     const netSavedMB = Math.max(0, gigDataMB - zenDataMB);
-
-    const tiktokVideos = minutes * 4;
-    const adsViewed = Math.floor(minutes / 3);
 
     const formatData = (mb) => {
         if (mb >= 1024) {
@@ -128,14 +151,14 @@ const ZenTimeDashboard = ({ snapTo }) => {
         return `${mb.toFixed(1)} MB`;
     };
 
-    // Calculate progress fill percentage (max comparison bound is 250MB)
-    const fillPercent = Math.min(100, (netSavedMB / 250) * 100);
+    const animSaved = Math.max(0, animatedMinutes * 2.47);
+    const fillPercent = Math.min(100, (animSaved / 250) * 100);
 
     return (
         <div className="zen-time-dashboard-container" onClick={openDetails}>
             <div className="editorial-main-time">
                 <span className="editorial-time-val">
-                    {Math.floor(minutes / 60) > 0 ? `${Math.floor(minutes / 60)}h ` : ""}{minutes % 60}m
+                    {Math.floor(animatedMinutes / 60) > 0 ? `${Math.floor(animatedMinutes / 60)}h ` : ""}{animatedMinutes % 60}m
                 </span>
                 <span className="editorial-time-lbl">spent in conversation today</span>
             </div>
@@ -159,7 +182,7 @@ const ZenTimeDashboard = ({ snapTo }) => {
                 <div className="editorial-savings-bar">
                     <div className="editorial-bar-label">
                         <span>DATA FOOTPRINT SAVED</span>
-                        <span className="savings-val">+{formatData(netSavedMB)}</span>
+                        <span className="savings-val">+{formatData(animSaved)}</span>
                     </div>
                     <div className="editorial-bar-track">
                         <div className="editorial-bar-fill" style={{ width: `${fillPercent}%` }} />
