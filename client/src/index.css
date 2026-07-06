@@ -139,10 +139,12 @@
 [data-theme="zen_oled"] .message-bubble.mine::before {
   content: "";
   position: absolute;
-  top: -100%;
-  left: -100%;
-  width: 300%;
-  height: 300%;
+  top: 50%;
+  left: 50%;
+  width: 150vmax;
+  height: 150vmax;
+  margin-top: -75vmax;
+  margin-left: -75vmax;
   z-index: -1;
   background: conic-gradient(from 0deg, transparent 60%, var(--color-text-muted) 100%);
   animation: spin-border 3s linear infinite;
@@ -9718,25 +9720,25 @@ body,
 }
 
 .editorial-quote {
-  font-size: clamp(1.1rem, 3.5vw, 1.35rem);
-  font-weight: 600;
-  line-height: 1.6;
-  color: var(--color-text);
+  font-size: clamp(1.25rem, 4vw, 1.55rem);
+  font-weight: 700;
+  line-height: 1.5;
+  color: #fff;
   font-style: italic;
   margin: 0;
 }
 
 .editorial-comparison {
-  font-size: 0.88rem;
-  line-height: 1.7;
-  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.85);
   margin: 0;
 }
 
 .highlight-metric {
-  color: var(--color-text);
+  color: var(--color-primary);
   font-weight: 700;
-  border-bottom: 1.5px solid var(--color-primary);
+  border-bottom: 1.5px dashed var(--color-primary);
   padding-bottom: 1px;
 }
 

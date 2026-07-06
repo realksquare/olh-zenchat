@@ -145,7 +145,7 @@ const ZenTimeDashboard = ({ snapTo }) => {
                 </p>
                 {minutes > 0 ? (
                     <p className="editorial-comparison">
-                        By choosing ZenChat over typical social feeds, you saved <strong className="highlight-metric">{formatData(netSavedMB)}</strong> of network load, and avoided scrolling past <strong className="highlight-metric">{tiktokVideos} videos</strong> and <strong className="highlight-metric">{adsViewed} ads</strong>.
+                        You used a mere <strong className="highlight-metric">{formatData(zenDataMB)}</strong> of data in {minutes}m of messaging, saving <strong className="highlight-metric">{formatData(netSavedMB)}</strong> and hours of mindless scrolling.
                     </p>
                 ) : (
                     <p className="editorial-comparison zero-state-comparison">
@@ -166,12 +166,14 @@ const ZenTimeDashboard = ({ snapTo }) => {
                 </div>
             )}
 
-            <div className="editorial-nudge" onClick={(e) => { e.stopPropagation(); snapTo('mid'); }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="18 15 12 9 6 15" />
-                </svg>
-                <span>{minutes === 0 ? "Pull up the panel below to access chats" : "View Detailed Analytics"}</span>
-            </div>
+            {minutes === 0 && (
+                <div className="editorial-nudge" onClick={(e) => { e.stopPropagation(); snapTo('mid'); }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="18 15 12 9 6 15" />
+                    </svg>
+                    <span>Pull up to view chats.</span>
+                </div>
+            )}
         </div>
     );
 };

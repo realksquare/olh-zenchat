@@ -183,14 +183,9 @@ export const SocketProvider = ({ children }) => {
                 if (soundEnabled) playReceiveSound();
                 
                 if (activeChat?._id?.toString() !== decompressed.chatId?.toString()) {
-                    const senderName = existingChat?.isGroup ? existingChat.groupName : (existingChat?.participants?.find(p => p._id === decompressed.senderId || p._id?._id === decompressed.senderId)?.username || "New message");
-                    let previewText = "Sent a message";
-                    if (decompressed.type === "image") previewText = "Sent an image";
-                    else if (decompressed.type === "video") previewText = "Sent a video";
-                    else if (decompressed.type === "voice") previewText = "Sent a voice message";
-                    else if (decompressed.content) previewText = decompressed.content.substring(0, 30) + (decompressed.content.length > 30 ? "..." : "");
-                    
-                    showZenToast('info', `${senderName}: ${previewText}`);
+                    const sender = existingChat?.participants?.find(p => p._id === decompressed.senderId || p._id?._id === decompressed.senderId);
+                    const displayName = existingChat?.isGroup ? existingChat.groupName : (sender?.fullName || sender?.username || "Someone");
+                    showZenToast('info', `New message(s) from ${displayName}`);
                 }
             }
         };
@@ -244,8 +239,16 @@ export const SocketProvider = ({ children }) => {
             useChatStore.getState().updateMessage(decompressed.chatId, decompressed);
         };
 
-        const handleMessageReactionUpdated = ({ chatId, _id, reactions }) => {
+        const handleMessageReactionUpdated = ({ chatId, _id, reactions, action, reactorId }) => {
             useChatStore.getState().updateMessage(chatId, { _id, reactions });
+            
+            const currentUserId = useAuthStore.getState().user?._id;
+            if (reactorId && reactorId.toString() !== currentUserId?.toString() && (action === 'added' || action === 'updated')) {
+                const existingChat = useChatStore.getState().chats.find(c => c._id?.toString() === chatId?.toString());
+                const reactorUser = existingChat?.participants?.find(p => p._id === reactorId || p._id?._id === reactorId);
+                const displayName = existingChat?.isGroup ? existingChat.groupName : (reactorUser?.fullName || reactorUser?.username || "Someone");
+                showZenToast('info', `New reaction(s) from ${displayName}`);
+            }
         };
 
         const handleMessageDeleted = ({ messageId, chatId, deleteFor }) => {
