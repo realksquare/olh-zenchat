@@ -21,7 +21,6 @@ router.get("/status", authMiddleware, async (req, res) => {
 
         const zv = user.zenVoice || {};
 
-        // Already verified — re-issue session token
         if (zv.isStudentVerified) {
             const token = issueZenVoiceToken(zv.pseudonym, zv.collegeEmailDomain);
             return res.json({
@@ -35,7 +34,6 @@ router.get("/status", authMiddleware, async (req, res) => {
             });
         }
 
-        // Academic email fast-track: check if user's registered email domain is whitelisted
         if (user.email) {
             const emailDomain = user.email.split("@")[1]?.toLowerCase();
             if (emailDomain) {
@@ -46,15 +44,15 @@ router.get("/status", authMiddleware, async (req, res) => {
 
                 if (whitelisted) {
                     const pseudonym = await generatePseudonym();
-                    user.zenVoice = {
-                        ...zv,
-                        isStudentVerified: true,
-                        verificationMethod: "academic_email",
-                        collegeName: whitelisted.institutionName,
-                        collegeEmailDomain: emailDomain,
-                        pseudonym
-                    };
-                    await user.save();
+                    await User.findByIdAndUpdate(req.user._id, {
+                        $set: {
+                            "zenVoice.isStudentVerified": true,
+                            "zenVoice.verificationMethod": "academic_email",
+                            "zenVoice.collegeName": whitelisted.institutionName,
+                            "zenVoice.collegeEmailDomain": emailDomain,
+                            "zenVoice.pseudonym": pseudonym
+                        }
+                    });
 
                     const token = issueZenVoiceToken(pseudonym, emailDomain);
                     return res.json({
