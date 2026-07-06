@@ -16,7 +16,8 @@ axiosInstance.interceptors.request.use(
     (config) => {
         config.metadata = { startTime: new Date() };
         const token = localStorage.getItem("zenchat_token");
-        if (token) {
+        const hasAuth = config.headers.Authorization || config.headers.authorization;
+        if (token && !hasAuth) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
