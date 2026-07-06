@@ -46,6 +46,9 @@ const ConnectionHeatmap = () => {
         days.push(d.toISOString().split('T')[0]);
     }
 
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isTodayEmpty = !(history[todayStr] > 0);
+
     return (
         <div className="connection-heatmap-container">
             <div className="heatmap-header">
@@ -53,31 +56,41 @@ const ConnectionHeatmap = () => {
                 <span className="heatmap-subtitle">Last 4 Weeks</span>
             </div>
             
-            <div className="heatmap-grid">
-                {days.map((dateStr) => {
-                    const mins = history[dateStr] || 0;
-                    const intensity = getIntensity(mins);
+            <div className="heatmap-body-wrapper">
+                <div className={`heatmap-body-content ${isTodayEmpty ? 'is-blurred' : ''}`}>
+                    <div className="heatmap-grid">
+                        {days.map((dateStr) => {
+                            const mins = history[dateStr] || 0;
+                            const intensity = getIntensity(mins);
+                            
+                            return (
+                                <div 
+                                    key={dateStr} 
+                                    className={`heatmap-cell intensity-${intensity}`}
+                                    title={`${mins} minutes on ${dateStr}`}
+                                />
+                            );
+                        })}
+                    </div>
                     
-                    return (
-                        <div 
-                            key={dateStr} 
-                            className={`heatmap-cell intensity-${intensity}`}
-                            title={`${mins} minutes on ${dateStr}`}
-                        />
-                    );
-                })}
-            </div>
-            
-            <div className="heatmap-legend">
-                <span>Less</span>
-                <div className="legend-cells">
-                    <div className="heatmap-cell intensity-0" />
-                    <div className="heatmap-cell intensity-1" />
-                    <div className="heatmap-cell intensity-2" />
-                    <div className="heatmap-cell intensity-3" />
-                    <div className="heatmap-cell intensity-4" />
+                    <div className="heatmap-legend">
+                        <span>Less</span>
+                        <div className="legend-cells">
+                            <div className="heatmap-cell intensity-0" />
+                            <div className="heatmap-cell intensity-1" />
+                            <div className="heatmap-cell intensity-2" />
+                            <div className="heatmap-cell intensity-3" />
+                            <div className="heatmap-cell intensity-4" />
+                        </div>
+                        <span>More</span>
+                    </div>
                 </div>
-                <span>More</span>
+
+                {isTodayEmpty && (
+                    <div className="heatmap-empty-overlay">
+                        <span className="empty-overlay-text">Start your first conversation for today</span>
+                    </div>
+                )}
             </div>
         </div>
     );

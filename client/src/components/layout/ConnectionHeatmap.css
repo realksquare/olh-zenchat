@@ -80,3 +80,46 @@
   height: 10px;
   border-radius: 2px;
 }
+
+.heatmap-body-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.heatmap-body-content {
+  transition: filter 0.3s ease, opacity 0.3s ease;
+}
+
+.heatmap-body-content.is-blurred {
+  filter: blur(2px);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.heatmap-empty-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.empty-overlay-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  text-align: center;
+  background: var(--color-surface, #0f141c);
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
