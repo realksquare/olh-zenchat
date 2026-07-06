@@ -608,7 +608,7 @@ router.post("/bridge-dm/:targetPseudonym", zenVoiceAuth, async (req, res) => {
             const io = req.app.get("io");
             if (io) {
                 const populated = await Chat.findById(chat._id)
-                    .populate("participants", "username avatar bio isOnline lastSeen isVerified createdAt privacySettings contacts")
+                    .populate("participants", "username fullName avatar bio isOnline lastSeen isVerified createdAt privacySettings contacts")
                     .populate({
                         path: "lastMessage",
                         populate: { path: "senderId", select: "username" }

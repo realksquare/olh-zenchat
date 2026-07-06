@@ -768,6 +768,8 @@ const registerSocketHandlers = (io) => {
                 const payload = {
                     _id: messageId.toString(),
                     chatId: chatId.toString(),
+                    action,
+                    reactorId: userId.toString(),
                     reactions: message.reactions.map(r => ({
                         userId: r.userId.toString(),
                         emoji: r.emoji

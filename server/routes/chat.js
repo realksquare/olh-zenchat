@@ -16,7 +16,7 @@ router.get("/", async (req, res) => {
             participants: req.user._id,
             deletedBy: { $ne: req.user._id }
         })
-            .populate("participants", "username avatar bio isOnline lastSeen isVerified createdAt privacySettings contacts")
+            .populate("participants", "username fullName avatar bio isOnline lastSeen isVerified createdAt privacySettings contacts")
             .populate({
                 path: "lastMessage",
                 populate: { path: "senderId", select: "username" },
@@ -147,7 +147,7 @@ router.post("/", async (req, res) => {
             }
             // Re-fetch fully populated (fresh data, no stale deletedBy or lastMessage)
             const freshChat = await Chat.findById(existingChat._id)
-                .populate("participants", "username avatar bio isOnline lastSeen isVerified privacySettings contacts")
+                .populate("participants", "username fullName avatar bio isOnline lastSeen isVerified privacySettings contacts")
                 .populate({
                     path: "lastMessage",
                     populate: { path: "senderId", select: "username" },
@@ -171,7 +171,7 @@ router.post("/", async (req, res) => {
         });
 
         const populated = await Chat.findById(newChat._id)
-            .populate("participants", "username avatar bio isOnline lastSeen isVerified createdAt privacySettings contacts")
+            .populate("participants", "username fullName avatar bio isOnline lastSeen isVerified createdAt privacySettings contacts")
             .populate({
                 path: "lastMessage",
                 populate: { path: "senderId", select: "username" },
@@ -230,7 +230,7 @@ router.get("/:chatId", async (req, res) => {
             _id: req.params.chatId,
             participants: req.user._id,
         })
-            .populate("participants", "username avatar bio isOnline lastSeen isVerified createdAt privacySettings contacts")
+            .populate("participants", "username fullName avatar bio isOnline lastSeen isVerified createdAt privacySettings contacts")
             .populate({
                 path: "lastMessage",
                 populate: { path: "senderId", select: "username" },
@@ -396,7 +396,7 @@ router.post("/offline-sync", async (req, res) => {
         for (const msgPayload of messages) {
             const { chatId, content, type, mediaUrl, replyTo, isViewOnce, cid, isEncrypted, encryptedSymmetricKey, iv, isLowBandwidth, isZenMessage, replyToMoment, replyToMomentUsername, lqip } = msgPayload;
 
-            const chat = await Chat.findById(chatId).populate("participants", "privacySettings contacts blockedUsers notificationsEnabled fcmTokens fcmToken");
+            const chat = await Chat.findById(chatId).populate("participants", "fullName privacySettings contacts blockedUsers notificationsEnabled fcmTokens fcmToken");
             if (!chat) continue;
 
             const message = await Message.create({
