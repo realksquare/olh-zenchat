@@ -1,0 +1,82 @@
+.connection-heatmap-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  width: 100%;
+}
+
+.heatmap-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.heatmap-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.5px;
+}
+
+.heatmap-subtitle {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+
+.heatmap-cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background-color: var(--color-surface-offset, rgba(255, 255, 255, 0.05));
+  transition: all 0.2s ease;
+}
+
+/* Base Team Color is #01f5a5 */
+.heatmap-cell.intensity-1 {
+  background-color: rgba(1, 245, 165, 0.25);
+}
+
+.heatmap-cell.intensity-2 {
+  background-color: rgba(1, 245, 165, 0.5);
+}
+
+.heatmap-cell.intensity-3 {
+  background-color: rgba(1, 245, 165, 0.75);
+}
+
+.heatmap-cell.intensity-4 {
+  background-color: rgba(1, 245, 165, 1);
+  box-shadow: 0 0 10px rgba(1, 245, 165, 0.3);
+}
+
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.legend-cells {
+  display: flex;
+  gap: 4px;
+}
+
+.legend-cells .heatmap-cell {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}

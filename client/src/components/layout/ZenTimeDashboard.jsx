@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ConnectionHeatmap from "./ConnectionHeatmap";
 
 const grammar = {
     zero: [
@@ -165,6 +166,8 @@ const ZenTimeDashboard = ({ snapTo }) => {
                     </div>
                 </div>
             )}
+            
+            <ConnectionHeatmap />
 
             {minutes === 0 && (
                 <div className="editorial-nudge" onClick={(e) => { e.stopPropagation(); snapTo('mid'); }}>

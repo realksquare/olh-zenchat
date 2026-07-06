@@ -845,6 +845,27 @@ export const SocketProvider = ({ children }) => {
                     }
                     dailyData.minutes += 1;
                     localStorage.setItem("zenchat_daily_tracker", JSON.stringify(dailyData));
+                    
+                    // Also update historical data for the heatmap
+                    let history = {};
+                    const histStored = localStorage.getItem("zenchat_historical_tracker");
+                    if (histStored) {
+                        try { history = JSON.parse(histStored); } catch(e){}
+                    }
+                    if (!history[todayStr]) history[todayStr] = 0;
+                    history[todayStr] += 1;
+                    
+                    // Prune old days (> 30 days)
+                    const thirtyDaysAgo = new Date();
+                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                    for (const key of Object.keys(history)) {
+                        if (new Date(key) < thirtyDaysAgo) {
+                            delete history[key];
+                        }
+                    }
+                    
+                    localStorage.setItem("zenchat_historical_tracker", JSON.stringify(history));
+
                     window.dispatchEvent(new CustomEvent("zenchat-daily-time-updated", { detail: dailyData.minutes }));
                 } catch (e) {
                     console.error("Failed to update daily tracker in localStorage:", e);
