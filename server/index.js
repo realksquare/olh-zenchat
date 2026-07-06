@@ -77,7 +77,7 @@ app.get("/api/health", (req, res) => {
     res.json({ status: "ok", version: "59e125d", uptime: process.uptime() });
 });
 
-app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/auth", apiLimiter, authRoutes);
 app.use("/api/chats", apiLimiter, chatRoutes);
 app.use("/api/messages", apiLimiter, messageRoutes);
 app.use("/api/pulse", apiLimiter, require("./routes/zenPulse"));

@@ -998,7 +998,7 @@ select {
   display: block;
   font-size: var(--text-xs);
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--color-text-muted, #94a3b8);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding: var(--space-1) var(--space-4) var(--space-2);
@@ -9259,7 +9259,7 @@ select {
   display: flex;
   flex-direction: column;
   padding-top: 56px;
-  padding-bottom: 58px;
+  padding-bottom: 76px;
 }
 
 /* Mobile Top Header styling */
@@ -9391,7 +9391,7 @@ select {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
-  color: var(--color-text-faint, #64748b);
+  color: var(--color-text-muted, #64748b);
   text-transform: uppercase;
   opacity: 0;
   pointer-events: none;
@@ -9723,7 +9723,7 @@ body,
   font-size: clamp(1.25rem, 4vw, 1.55rem);
   font-weight: 700;
   line-height: 1.5;
-  color: #fff;
+  color: var(--color-text, #fff);
   font-style: italic;
   margin: 0;
 }
@@ -9731,7 +9731,7 @@ body,
 .editorial-comparison {
   font-size: 0.95rem;
   line-height: 1.75;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.85));
   margin: 0;
 }
 

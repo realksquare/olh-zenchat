@@ -9,6 +9,15 @@ const { sendResetEmail, send2faEmail } = require("../utils/mailService");
 const { verifyFirebaseIdToken } = require("../utils/firebase");
 
 const router = express.Router();
+const rateLimit = require("express-rate-limit");
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    message: { message: "Too many authentication attempts, please try again after 15 minutes." },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 const generateToken = (user) => {
     return jwt.sign(
@@ -45,7 +54,7 @@ const getWebOtpDomain = (req) => {
 
 
 // 4. Verify 2FA OTP (For secondary factor)
-router.post("/verify-2fa-otp", async (req, res) => {
+router.post("/verify-2fa-otp", authLimiter, async (req, res) => {
     try {
         const { userId, otpCode } = req.body;
         if (!userId) {
@@ -91,7 +100,7 @@ router.post("/verify-2fa-otp", async (req, res) => {
 });
 
 // 5. Generate Cryptographic E2EE Bypass Challenge
-router.post("/challenge", async (req, res) => {
+router.post("/challenge", authLimiter, async (req, res) => {
     try {
         const { userId } = req.body;
         if (!userId) {
@@ -143,7 +152,7 @@ router.post("/challenge", async (req, res) => {
 });
 
 // 6. Verify Decrypted Challenge (Bypasses 2FA via E2EE Key ownership proof)
-router.post("/verify-challenge", async (req, res) => {
+router.post("/verify-challenge", authLimiter, async (req, res) => {
     try {
         const { userId, decryptedChallenge } = req.body;
         if (!userId || !decryptedChallenge) {
@@ -184,6 +193,7 @@ router.post("/verify-challenge", async (req, res) => {
 
 router.post(
     "/register",
+    authLimiter,
     [
         body("username").trim().isLength({ min: 3, max: 20 }).matches(/^[a-z0-9_]+$/).withMessage("Username can only contain lowercase letters, numbers, and underscores"),
         body("email").isEmail().normalizeEmail(),
@@ -289,6 +299,7 @@ router.post("/referral/click/:username", async (req, res) => {
 });
 router.post(
     "/login",
+    authLimiter,
     [
         body("email").isEmail().normalizeEmail(),
         body("password").notEmpty(),
@@ -353,7 +364,7 @@ router.post(
     }
 );
 
-router.post("/resend-mfa", async (req, res) => {
+router.post("/resend-mfa", authLimiter, async (req, res) => {
     try {
         const { userId } = req.body;
         if (!userId) return res.status(400).json({ message: "userId is required" });
@@ -748,7 +759,7 @@ router.post("/unblock/:targetId", authMiddleware, async (req, res) => {
     }
 });
 
-router.post("/forgot-password", async (req, res) => {
+router.post("/forgot-password", authLimiter, async (req, res) => {
     try {
         const { identifier, method } = req.body;
         if (!identifier) {
@@ -814,7 +825,7 @@ router.post("/forgot-password", async (req, res) => {
     }
 });
 
-router.post("/forgot-password/verify-code", async (req, res) => {
+router.post("/forgot-password/verify-code", authLimiter, async (req, res) => {
     try {
         const { identifier, code, firebaseToken } = req.body;
         if (!identifier) {
@@ -871,7 +882,7 @@ router.post("/forgot-password/verify-code", async (req, res) => {
     }
 });
 
-router.post("/reset-password/:token", async (req, res) => {
+router.post("/reset-password/:token", authLimiter, async (req, res) => {
     try {
         const { token } = req.params;
         const { newPassword } = req.body;

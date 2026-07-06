@@ -112,14 +112,14 @@
 .empty-overlay-text {
   font-size: 0.72rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-text, #fff);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   text-align: center;
   background: var(--color-surface, #0f141c);
   padding: 6px 14px;
   border-radius: 6px;
-  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border: 1px dashed var(--color-border, rgba(255, 255, 255, 0.12));
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 

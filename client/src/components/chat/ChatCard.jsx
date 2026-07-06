@@ -50,6 +50,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const nameContainerRef = useRef(null);
     const nameContentRef = useRef(null);
     const pressTimer = useRef(null);
+    const touchStartPos = useRef({ x: 0, y: 0 });
 
     const [isMobile, setIsMobile] = useState(false);
     const menuTimeoutRef = useRef(null);
@@ -204,8 +205,30 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         if (typeof onSelect === "function") onSelect(chat);
     };
 
-    const handleTouchStart = () => { pressTimer.current = setTimeout(() => setShowMenu(true), 500); };
-    const handleTouchEnd = () => { if (pressTimer.current) clearTimeout(pressTimer.current); };
+    const handleTouchStart = (e) => {
+        const touch = e.touches[0];
+        touchStartPos.current = { x: touch.clientX, y: touch.clientY };
+        if (pressTimer.current) clearTimeout(pressTimer.current);
+        pressTimer.current = setTimeout(() => {
+            setShowMenu(true);
+        }, 800);
+    };
+    const handleTouchEnd = () => {
+        if (pressTimer.current) {
+            clearTimeout(pressTimer.current);
+            pressTimer.current = null;
+        }
+    };
+    const handleTouchMove = (e) => {
+        if (!pressTimer.current) return;
+        const touch = e.touches[0];
+        const dx = Math.abs(touch.clientX - touchStartPos.current.x);
+        const dy = Math.abs(touch.clientY - touchStartPos.current.y);
+        if (dx > 8 || dy > 8) {
+            clearTimeout(pressTimer.current);
+            pressTimer.current = null;
+        }
+    };
 
     const handleDelete = async (e) => {
         if (e) e.stopPropagation();
@@ -265,7 +288,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleClick(); }}
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
-                onTouchMove={handleTouchEnd}
+                onTouchMove={handleTouchMove}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 role="button"
@@ -353,7 +376,7 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
                     <button
                         className="chat-card-menu-btn"
                         onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
-                        style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", marginLeft: "4px", opacity: showMenu ? 1 : 0.45 }}
+                        style={{ background: "transparent", border: "none", color: "var(--color-text-muted, #94a3b8)", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center", marginLeft: "4px", opacity: showMenu ? 1 : 0.75 }}
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" />

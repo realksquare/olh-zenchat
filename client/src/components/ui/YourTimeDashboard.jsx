@@ -152,7 +152,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
         return (
             <div className="analytics-card" style={{ gridColumn: "1 / -1" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
-                    <h3 style={{ margin: 0, color: "#f8fafc", fontSize: "1.1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
+                    <h3 style={{ margin: 0, color: "var(--color-text, #f8fafc)", fontSize: "1.1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                         </svg>
@@ -169,9 +169,9 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
                     <span style={{ fontSize: "2.5rem", fontWeight: "700", color: "#38bdf8", letterSpacing: "-1px" }}>
                         {hrs > 0 ? `${hrs}h ` : ""}{mins}m
                     </span>
-                    <span style={{ color: "#94a3b8", fontSize: "0.9rem" }}>{selectedContact === "all" ? "total time actively engaged" : `with ${displayName.replace("Chatting with ", "")}`}</span>
+                    <span style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.9rem" }}>{selectedContact === "all" ? "total time actively engaged" : `with ${displayName.replace("Chatting with ", "")}`}</span>
                 </div>
-                <div style={{ padding: "10px 14px", background: "rgba(56, 189, 248, 0.08)", borderRadius: "10px", border: "1px solid rgba(56, 189, 248, 0.15)", color: "#7dd3fc", fontSize: "0.85rem", fontStyle: "italic" }}>
+                <div style={{ padding: "10px 14px", background: "rgba(56, 189, 248, 0.08)", borderRadius: "10px", border: "1px solid rgba(56, 189, 248, 0.15)", color: "var(--color-text, #38bdf8)", fontSize: "0.85rem", fontStyle: "italic" }}>
                     "{selectedContact === "all" ? activeTime.tagline : "Quality time spent building a connection."}"
                 </div>
             </div>
@@ -183,7 +183,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
         const m = stats.moments;
         return (
             <div className="analytics-card">
-                <h3 style={{ margin: "0 0 16px 0", color: "#f8fafc", fontSize: "1.1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
+                <h3 style={{ margin: "0 0 16px 0", color: "var(--color-text, #f8fafc)", fontSize: "1.1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/>
                     </svg>
@@ -195,7 +195,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
                         <div className="stat-lbl">Shared</div>
                     </div>
                     <div className="stat-box">
-                        <div className="stat-val" style={{ color: "#94a3b8" }}>{m.viewed}</div>
+                        <div className="stat-val" style={{ color: "var(--color-text-muted, #94a3b8)" }}>{m.viewed}</div>
                         <div className="stat-lbl">Viewed</div>
                     </div>
                     <div className="stat-box">
@@ -207,7 +207,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
                         <div className="stat-lbl">Likes Received</div>
                     </div>
                 </div>
-                <div style={{ padding: "10px 14px", background: "rgba(251, 191, 36, 0.08)", borderRadius: "10px", border: "1px solid rgba(251, 191, 36, 0.15)", color: "#fcd34d", fontSize: "0.85rem", fontStyle: "italic" }}>
+                <div style={{ padding: "10px 14px", background: "rgba(251, 191, 36, 0.08)", borderRadius: "10px", border: "1px solid rgba(251, 191, 36, 0.15)", color: "var(--color-text, #fbbf24)", fontSize: "0.85rem", fontStyle: "italic" }}>
                     "{m.tagline}"
                 </div>
             </div>
@@ -219,7 +219,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
         const ds = stats.dataSaved;
         return (
             <div className="analytics-card">
-                <h3 style={{ margin: "0 0 16px 0", color: "#f8fafc", fontSize: "1.1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
+                <h3 style={{ margin: "0 0 16px 0", color: "var(--color-text, #f8fafc)", fontSize: "1.1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
                     </svg>
@@ -231,11 +231,11 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
                     </span>
                     <span style={{ color: "#86efac", fontSize: "1.1rem", fontWeight: "600" }}>GB</span>
                 </div>
-                <p style={{ margin: "0 0 16px 0", color: "#94a3b8", fontSize: "0.85rem", lineHeight: "1.5" }}>
+                <p style={{ margin: "0 0 16px 0", color: "var(--color-text-muted, #94a3b8)", fontSize: "0.85rem", lineHeight: "1.5" }}>
                     Estimated data saved vs Instagram/TikTok usage during the same time period. <br />
-                    <span style={{ fontSize: "0.75rem", color: "#64748b" }}>* {ds.source}</span>
+                    <span style={{ fontSize: "0.75rem", color: "var(--color-text-faint, #64748b)" }}>* {ds.source}</span>
                 </p>
-                <div style={{ padding: "10px 14px", background: "rgba(34, 197, 94, 0.08)", borderRadius: "10px", border: "1px solid rgba(34, 197, 94, 0.15)", color: "#86efac", fontSize: "0.85rem", fontStyle: "italic" }}>
+                <div style={{ padding: "10px 14px", background: "rgba(34, 197, 94, 0.08)", borderRadius: "10px", border: "1px solid rgba(34, 197, 94, 0.15)", color: "var(--color-text, #22c55e)", fontSize: "0.85rem", fontStyle: "italic" }}>
                     "{ds.tagline}"
                 </div>
             </div>
@@ -247,7 +247,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
         const lb = stats.leaderboard || [];
         return (
             <div className="analytics-card" style={{ gridColumn: "1 / -1" }}>
-                <h3 style={{ margin: "0 0 16px 0", color: "#f8fafc", fontSize: "1.1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
+                <h3 style={{ margin: "0 0 16px 0", color: "var(--color-text, #f8fafc)", fontSize: "1.1rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                     </svg>
@@ -260,7 +260,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
                         return (
                             <div key={user.userId} style={{
                                 display: "flex", alignItems: "center", padding: "12px",
-                                background: user.isMe ? "rgba(168, 85, 247, 0.1)" : "rgba(255, 255, 255, 0.02)",
+                                background: user.isMe ? "rgba(168, 85, 247, 0.1)" : "var(--color-surface-offset, rgba(255, 255, 255, 0.02))",
                                 borderRadius: "12px", border: user.isMe ? "1px solid rgba(168, 85, 247, 0.3)" : "1px solid var(--color-border, rgba(255, 255, 255, 0.08))"
                             }}>
                                 <div style={{ width: "24px", color: index < 3 ? "#a855f7" : "#64748b", fontWeight: "700", fontSize: "1rem" }}>
@@ -269,17 +269,17 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
                                 <div className="avatar avatar-sm" style={{ margin: "0 12px" }}>
                                     {user.avatar ? <img src={user.avatar} alt={user.username} /> : <span>{user.username.slice(0, 2).toUpperCase()}</span>}
                                 </div>
-                                <div style={{ flex: 1, color: user.isMe ? "#e9d5ff" : "#e2e8f0", fontWeight: "500" }}>
+                                <div style={{ flex: 1, color: user.isMe ? "var(--color-primary, #a855f7)" : "var(--color-text, #e2e8f0)", fontWeight: "500" }}>
                                     {user.username} {user.isMe && "(You)"}
                                 </div>
-                                <div style={{ color: "#94a3b8", fontSize: "0.9rem", fontWeight: "600" }}>
+                                <div style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.9rem", fontWeight: "600" }}>
                                     {hrs > 0 ? `${hrs}h ` : ""}{mins}m
                                 </div>
                             </div>
                         );
                     })}
                     {lb.length === 1 && (
-                        <div style={{ textAlign: "center", padding: "20px", color: "#64748b", fontSize: "0.9rem" }}>
+                        <div style={{ textAlign: "center", padding: "20px", color: "var(--color-text-faint, #64748b)", fontSize: "0.9rem" }}>
                             Add contacts to see how you rank among your friends!
                         </div>
                     )}
@@ -292,20 +292,20 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
         <div className="modal-overlay" style={{ zIndex: 100000, padding: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div className="modal-card" style={{ maxWidth: "800px", width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column", padding: 0, background: "var(--color-surface, rgba(15, 23, 42, 0.95))", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))" }}>
                 <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(255, 255, 255, 0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <h2 style={{ margin: 0, color: "#f8fafc", fontSize: "1.3rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px" }}>
+                    <h2 style={{ margin: 0, color: "var(--color-text, #f8fafc)", fontSize: "1.3rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "10px" }}>
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                         </svg>
                         Your Time on ZenChat
                     </h2>
-                    <button onClick={onClose} style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", padding: "4px" }}>
+                    <button onClick={onClose} style={{ background: "transparent", border: "none", color: "var(--color-text-muted, #94a3b8)", cursor: "pointer", padding: "4px" }}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                 </div>
 
                 <div style={{ padding: "24px", overflowY: "auto", flex: 1 }}>
                     {loading ? (
-                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "200px", color: "#64748b" }}>
+                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "200px", color: "var(--color-text-faint, #64748b)" }}>
                             <div className="spinner" style={{ width: "30px", height: "30px", border: "3px solid rgba(168, 85, 247, 0.2)", borderTopColor: "#a855f7", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
                             <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
                         </div>
@@ -346,7 +346,7 @@ const YourTimeDashboard = ({ isOpen, onClose }) => {
                     }
                     .stat-lbl {
                         font-size: 0.75rem;
-                        color: #64748b;
+                        color: var(--color-text-faint, #64748b);
                         text-transform: uppercase;
                         letter-spacing: 0.5px;
                         font-weight: 600;

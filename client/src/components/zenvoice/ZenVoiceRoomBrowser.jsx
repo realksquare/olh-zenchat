@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useZenVoiceStore } from "../../stores/zenVoiceStore";
-import { Plus, Search, Globe, Lock, Users, ArrowLeft, Copy, Check, MessageSquare } from "lucide-react";
+import { Plus, Search, Globe, Lock, Users, ArrowLeft, Copy, Check, MessageSquare, Loader2 } from "lucide-react";
 
 const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
     const {
