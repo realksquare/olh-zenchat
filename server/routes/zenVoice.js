@@ -91,7 +91,7 @@ router.post("/verify/domain-otp/send", authMiddleware, async (req, res) => {
         }
 
         const domain = institutionalEmail.split("@")[1]?.toLowerCase();
-        const user = await User.findById(req.user._id).select("username zenVoice verificationSession");
+        const user = await User.findById(req.user._id).select("username zenVoice");
 
         if (user.zenVoice?.isStudentVerified) {
             return res.status(400).json({ message: "Already verified" });
@@ -100,7 +100,6 @@ router.post("/verify/domain-otp/send", authMiddleware, async (req, res) => {
         const domainEntry = await ZenVoiceDomainWhitelist.findOne({ domain });
 
         if (!domainEntry || domainEntry.status !== "approved") {
-            // Domain is unknown or pending — create/update pending entry
             if (!domainEntry) {
                 await ZenVoiceDomainWhitelist.create({
                     domain,
@@ -115,18 +114,16 @@ router.post("/verify/domain-otp/send", authMiddleware, async (req, res) => {
             });
         }
 
-        // Domain is approved — generate and send OTP
         const otp = String(Math.floor(100000 + Math.random() * 900000));
-        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000);
 
-        // Reuse the verificationSession.emailOtpCode field, store domain alongside it
-        user.verificationSession = {
-            ...user.verificationSession,
-            emailOtpCode: otp,
-            emailOtpExpires: otpExpires,
-            tempJwtToken: domain // repurpose to store target domain
-        };
-        await user.save();
+        await User.findByIdAndUpdate(req.user._id, {
+            $set: {
+                "verificationSession.emailOtpCode": otp,
+                "verificationSession.emailOtpExpires": otpExpires,
+                "verificationSession.tempJwtToken": domain
+            }
+        });
 
         await sendZenVoiceOTP(institutionalEmail, user.username, otp, domain);
 
@@ -149,44 +146,42 @@ router.post("/verify/domain-otp/confirm", authMiddleware, async (req, res) => {
         const user = await User.findById(req.user._id).select(
             "username email zenVoice verificationSession"
         );
+        if (!user) return res.status(404).json({ message: "User not found" });
 
         const session = user.verificationSession || {};
-        const domain = session.tempJwtToken; // stored domain
+        const domain = session.tempJwtToken;
 
         if (!session.emailOtpCode || !session.emailOtpExpires || !domain) {
-            return res.status(400).json({ message: "No pending OTP. Please request a new code." });
+            return res.status(400).json({ message: "No pending verification. Request a new code first." });
         }
 
         if (new Date() > new Date(session.emailOtpExpires)) {
-            return res.status(400).json({ message: "OTP has expired. Please request a new code." });
+            return res.status(400).json({ message: "Code expired. Request a fresh one." });
         }
 
         if (session.emailOtpCode !== String(otp).trim()) {
-            return res.status(400).json({ message: "Invalid OTP. Please try again." });
+            return res.status(400).json({ message: "Wrong code. Try again." });
         }
 
         const domainEntry = await ZenVoiceDomainWhitelist.findOne({ domain, status: "approved" });
         if (!domainEntry) {
-            return res.status(400).json({ message: "Domain is no longer approved." });
+            return res.status(400).json({ message: "Your institution domain is no longer approved." });
         }
 
         const pseudonym = await generatePseudonym();
-        user.zenVoice = {
-            ...(user.zenVoice || {}),
-            isStudentVerified: true,
-            verificationMethod: "domain_otp",
-            collegeName: domainEntry.institutionName,
-            collegeEmailDomain: domain,
-            pseudonym
-        };
 
-        // Clear the OTP session
-        user.verificationSession = {
-            emailOtpCode: null,
-            emailOtpExpires: null,
-            tempJwtToken: null
-        };
-        await user.save();
+        await User.findByIdAndUpdate(req.user._id, {
+            $set: {
+                "zenVoice.isStudentVerified": true,
+                "zenVoice.verificationMethod": "domain_otp",
+                "zenVoice.collegeName": domainEntry.institutionName,
+                "zenVoice.collegeEmailDomain": domain,
+                "zenVoice.pseudonym": pseudonym,
+                "verificationSession.emailOtpCode": null,
+                "verificationSession.emailOtpExpires": null,
+                "verificationSession.tempJwtToken": null
+            }
+        });
 
         const sessionToken = issueZenVoiceToken(pseudonym, domain);
         res.json({

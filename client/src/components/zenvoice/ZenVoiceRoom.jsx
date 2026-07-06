@@ -143,9 +143,9 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             {purgeLockdown && (
                 <div style={{ position: "absolute", inset: 0, background: "var(--body-bg, #0b0f19)", zIndex: 120000, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px", textAlign: "center" }}>
                     <Shield size={44} className="animate-pulse" style={{ color: "#f59e0b", animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite", marginBottom: "16px" }} />
-                    <h2 style={{ color: "#fff", fontSize: "1.2rem", fontWeight: "700", margin: "0 0 8px" }}>The 8:00 AM Nuke</h2>
+                    <h2 style={{ color: "#fff", fontSize: "1.2rem", fontWeight: "700", margin: "0 0 8px" }}>Daily Reset</h2>
                     <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.85rem", maxWidth: "280px", lineHeight: "1.5", margin: 0 }}>
-                        Deleting everything to protect your digital footprint. Access will resume in a second. Calm down.
+                        Clearing all messages for today. Access resumes shortly.
                     </p>
                 </div>
             )}
@@ -357,7 +357,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             <form onSubmit={handleSendMessage} style={{ padding: "12px 16px", borderTop: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", display: "flex", gap: "10px", background: "var(--color-surface, #0f172a)" }}>
                 <input
                     type="text"
-                    placeholder="Drop an anonymous message... keep it chill..."
+                    placeholder={`Say something as ${myPseudonym || "your pseudonym"}...`}
                     value={input}
                     onChange={handleInputChange}
                     style={{
@@ -430,7 +430,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                 }}
                             >
                                 <MessageCircle size={16} />
-                                <span>Nudge into a private DM</span>
+                                <span>Message on ZenChat</span>
                             </button>
  
                             <button
@@ -452,7 +452,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                 }}
                             >
                                 {notifSubscribed[selectedUser] ? <BellOff size={16} /> : <Bell size={16} />}
-                                <span>{notifSubscribed[selectedUser] ? "Mute notifications" : "Get pings when they talk"}</span>
+                                <span>{notifSubscribed[selectedUser] ? "Turn off notifications" : "Notify me when they post"}</span>
                             </button>
                         </div>
                     </div>
@@ -463,7 +463,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ width: "100%", maxWidth: "380px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", position: "relative" }}>
                         <h3 style={{ margin: "0 0 16px", color: "#fff", fontSize: "1.1rem", fontWeight: "700", textAlign: "left" }}>
-                            Nark on this message
+                            Report message
                         </h3>
                         <button
                             onClick={() => { setReportingMessage(null); setReportReason(""); setReportEvidence(""); }}
@@ -500,7 +500,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         <option value="harassment">Harassment / Bullying</option>
                                         <option value="spam">Spam / Flooding</option>
                                         <option value="hate_speech">Hate Speech</option>
-                                        <option value="other">Just being annoying / Other</option>
+                                        <option value="other">Other</option>
                                     </select>
                                 </div>
  
@@ -544,7 +544,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         marginTop: "8px"
                                     }}
                                 >
-                                    File Snitch Report
+                                    Submit Report
                                 </button>
                             </form>
                         )}

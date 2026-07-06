@@ -118,7 +118,7 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                     <div style={{ textAlign: "center", marginBottom: "8px" }}>
                         <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.9rem", lineHeight: "1.5", margin: 0 }}>
-                            Welcome to ZenVoice, where your identity dies and your academic pseudonym is born. Prove you're a real student to get in.
+                            ZenVoice is only for verified students. Pick how you want to prove you're one.
                         </p>
                     </div>
 
@@ -145,7 +145,7 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                                 </div>
                                 <div style={{ textAlign: "left" }}>
                                     <h4 style={{ margin: "0 0 2px", fontSize: "0.95rem", fontWeight: "600", color: "#fff" }}>Institutional Email</h4>
-                                    <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)" }}>We send a code, you type it in. Typical institutional stuff.</p>
+                                <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)" }}>We send a 6-digit code to your college email. Takes about a minute.</p>
                                 </div>
                             </div>
                             <ArrowRight size={18} style={{ color: "#64748b" }} />
@@ -176,7 +176,7 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                                 </div>
                                 <div style={{ textAlign: "left" }}>
                                     <h4 style={{ margin: "0 0 2px", fontSize: "0.95rem", fontWeight: "600", color: "#fff" }}>GitHub Student Developer Pack</h4>
-                                    <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)" }}>GitHub already did the hard work of verifying you. Tap to bypass.</p>
+                                    <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)" }}>If you have GitHub Student Developer Pack, you're already verified. Just tap to connect.</p>
                                 </div>
                             </div>
                             <ArrowRight size={18} style={{ color: "#64748b" }} />
@@ -210,7 +210,7 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                             }}
                         />
                         <span style={{ fontSize: "0.75rem", color: "var(--color-text-faint, #64748b)", display: "block", marginTop: "6px", lineHeight: "1.4" }}>
-                            We only accept legit college domains. If your school isn't whitelisted yet, it'll get sent to our admins (who might take a while to approve it).
+                            If your institution isn't on our list yet, we'll flag it for admin review and let you know when it's approved.
                         </span>
                     </div>
 
@@ -341,10 +341,10 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                     </div>
                     <h3 style={{ margin: 0, color: "#fff", fontSize: "1.1rem", fontWeight: "600" }}>Admins are looking at this...</h3>
                     <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.88rem", lineHeight: "1.5", margin: 0 }}>
-                        Your college domain <strong style={{ color: "#fff" }}>@{email.split("@")[1]}</strong> isn't whitelisted yet. It's in the queue for our admins to review (once they wake up).
+                        Your college domain <strong style={{ color: "#fff" }}>@{email.split("@")[1]}</strong> isn't on our whitelist yet. It's been sent to our admins for review.
                     </p>
                     <p style={{ color: "var(--color-text-faint, #64748b)", fontSize: "0.8rem", lineHeight: "1.4", margin: 0 }}>
-                        We'll ping your ZenChat account as soon as they decide your school is legit.
+                        We'll notify your ZenChat account once they've approved it.
                     </p>
  
                     <button
@@ -377,7 +377,7 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                     </div>
  
                     <div style={{ background: "var(--color-surface-offset, #161b22)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.06))", borderRadius: "12px", padding: "20px", textAlign: "center" }}>
-                        <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)", display: "block", marginBottom: "8px" }}>MEET YOUR NEW ALTER EGO</span>
+                        <span style={{ fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)", display: "block", marginBottom: "8px" }}>YOUR PSEUDONYM</span>
                         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginBottom: "8px" }}>
                             <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: pseudonymColor || "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                 <span style={{ color: "#000", fontWeight: "bold", fontSize: "0.9rem" }}>{pseudonym ? pseudonym.slice(0, 2).toUpperCase() : ""}</span>
@@ -388,8 +388,8 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                     </div>
  
                     <div style={{ background: "var(--color-surface-offset, #161b22)", borderLeft: "3px solid #f59e0b", padding: "12px 16px", borderRadius: "6px", fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)", textAlign: "left", lineHeight: "1.4" }}>
-                        <strong style={{ color: "#fff", display: "block", marginBottom: "2px" }}>Academic Security & Ephemerality:</strong>
-                        Zero links to your real face or name. Speak freely. Oh, and everything gets purged daily at 8 AM, so don't get too attached to your posts.
+                        <strong style={{ color: "#fff", display: "block", marginBottom: "2px" }}>No link to your real identity.</strong>
+                        Your name and profile stay completely separate. Messages reset daily at 8 AM, so nothing sticks around.
                     </div>
 
                     <button
