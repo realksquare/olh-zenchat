@@ -7,7 +7,7 @@ const zenVoiceMessageSchema = new mongoose.Schema({
     content: { type: String, required: true, maxlength: 1000 },
     type: {
         type: String,
-        enum: ["text", "image", "gif", "sticker"],
+        enum: ["text", "image", "gif", "sticker", "doc"],
         default: "text"
     },
     mediaUrl: { type: String, default: null },

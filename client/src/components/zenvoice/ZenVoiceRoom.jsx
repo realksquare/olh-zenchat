@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useZenVoiceStore } from "../../stores/zenVoiceStore";
-import { ArrowLeft, Send, ShieldAlert, Flag, Bell, BellOff, MessageCircle, MoreVertical, Shield } from "lucide-react";
+import { ArrowLeft, Send, ShieldAlert, Flag, Bell, BellOff, MessageCircle, MoreVertical, Shield, Paperclip, Smile, Loader2 } from "lucide-react";
+import GifPicker from "../chat/GifPicker";
+import axios from "axios";
 
 const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
     const {
@@ -30,9 +32,57 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
     const [reportReason, setReportReason] = useState("");
     const [reportEvidence, setReportEvidence] = useState("");
     const [reportSuccess, setReportSuccess] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [showGifPicker, setShowGifPicker] = useState(false);
 
     const messagesEndRef = useRef(null);
     const typingTimeoutRef = useRef(null);
+    const fileInputRef = useRef(null);
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const name = file.name.toLowerCase();
+        const isImage = /\.(jpg|jpeg|png|webp)$/i.test(name);
+        const isGif = /\.gif$/i.test(name);
+        const isDoc = !isImage && !isGif;
+        
+        let type = "doc";
+        let uploadType = "raw";
+        if (isImage) {
+            type = "image";
+            uploadType = "image";
+        } else if (isGif) {
+            type = "gif";
+            uploadType = "image";
+        }
+
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", "ml_default");
+
+            const res = await axios.post(
+                `https://api.cloudinary.com/v1_1/du4nvei7j/${uploadType}/upload`,
+                formData
+            );
+            const downloadURL = res.data.secure_url;
+            sendMessageSocket(roomId, file.name, type, downloadURL);
+        } catch (err) {
+            console.error("Upload error:", err);
+            alert("Failed to upload file.");
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    };
+
+    const handleGifSelect = (url, msgType) => {
+        sendMessageSocket(roomId, msgType === "sticker" ? "Sticker" : "GIF", msgType, url);
+        setShowGifPicker(false);
+    };
 
     // Fetch initial messages on mount
     useEffect(() => {
@@ -249,11 +299,11 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
 
                                 <div
                                     style={{
-                                        padding: "10px 14px",
+                                        padding: msg.type === "sticker" ? "0" : "10px 14px",
                                         borderRadius: "12px",
-                                        background: isOwn ? "#f59e0b" : "var(--color-surface, #0f172a)",
+                                        background: msg.type === "sticker" ? "transparent" : (isOwn ? "#f59e0b" : "var(--color-surface, #0f172a)"),
                                         color: isOwn ? "#000" : "#fff",
-                                        border: isOwn ? "none" : "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
+                                        border: msg.type === "sticker" || isOwn ? "none" : "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                         fontSize: "0.9rem",
                                         lineHeight: "1.4",
                                         textAlign: "left",
@@ -269,7 +319,42 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                             <span style={{ fontSize: "0.8rem", fontWeight: "600", textDecoration: "underline" }}>Community flagged this as garbage. Tap to read anyway.</span>
                                         </div>
                                     ) : (
-                                        <span>{msg.content}</span>
+                                        <>
+                                            {(msg.type === "image" || msg.type === "gif") && (
+                                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                                    <img
+                                                        src={msg.mediaUrl}
+                                                        alt={msg.content || "Media"}
+                                                        style={{ maxWidth: "100%", maxHeight: "250px", borderRadius: "8px", objectFit: "contain", cursor: "pointer" }}
+                                                        onClick={() => window.open(msg.mediaUrl, "_blank")}
+                                                    />
+                                                    {msg.content && msg.content !== "GIF" && msg.content !== "Sticker" && (
+                                                        <span style={{ fontSize: "0.85rem", display: "block" }}>{msg.content}</span>
+                                                    )}
+                                                </div>
+                                            )}
+                                            {msg.type === "sticker" && (
+                                                <img
+                                                    src={msg.mediaUrl}
+                                                    alt="Sticker"
+                                                    style={{ width: "120px", height: "120px", objectFit: "contain" }}
+                                                />
+                                            )}
+                                            {msg.type === "doc" && (
+                                                <a
+                                                    href={msg.mediaUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style={{ display: "flex", alignItems: "center", gap: "8px", color: isOwn ? "#000" : "#3da5d9", textDecoration: "none" }}
+                                                >
+                                                    <Paperclip size={18} />
+                                                    <span style={{ textDecoration: "underline", fontSize: "0.85rem" }}>{msg.content}</span>
+                                                </a>
+                                            )}
+                                            {(!msg.type || msg.type === "text") && (
+                                                <span>{msg.content}</span>
+                                            )}
+                                        </>
                                     )}
                                 </div>
 
@@ -354,12 +439,31 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             )}
 
             {/* Input Form */}
-            <form onSubmit={handleSendMessage} style={{ padding: "12px 16px", borderTop: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", display: "flex", gap: "10px", background: "var(--color-surface, #0f172a)" }}>
+            <form onSubmit={handleSendMessage} style={{ padding: "12px 16px", borderTop: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", display: "flex", alignItems: "center", gap: "10px", background: "var(--color-surface, #0f172a)" }}>
+                <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    style={{ background: "none", border: "none", color: "var(--color-text-muted, #94a3b8)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px" }}
+                >
+                    {uploading ? <Loader2 className="animate-spin" size={20} style={{ animation: "spin 1s linear infinite" }} /> : <Paperclip size={20} />}
+                </button>
+
+                <button
+                    type="button"
+                    onClick={() => setShowGifPicker(true)}
+                    disabled={uploading}
+                    style={{ background: "none", border: "none", color: "var(--color-text-muted, #94a3b8)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px" }}
+                >
+                    <Smile size={20} />
+                </button>
+
                 <input
                     type="text"
                     placeholder={`Say something as ${myPseudonym || "your pseudonym"}...`}
                     value={input}
                     onChange={handleInputChange}
+                    disabled={uploading}
                     style={{
                         flex: 1,
                         padding: "12px",
@@ -372,17 +476,26 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                         boxSizing: "border-box"
                     }}
                 />
+
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.zip,.rar,.txt"
+                    style={{ display: "none" }}
+                    onChange={handleFileUpload}
+                />
+
                 <button
                     type="submit"
-                    disabled={!input.trim()}
+                    disabled={!input.trim() || uploading}
                     style={{
                         padding: "10px 16px",
                         borderRadius: "8px",
-                        background: input.trim() ? "#f59e0b" : "rgba(255,255,255,0.02)",
+                        background: input.trim() && !uploading ? "#f59e0b" : "rgba(255,255,255,0.02)",
                         border: "none",
-                        color: input.trim() ? "#000" : "#64748b",
+                        color: input.trim() && !uploading ? "#000" : "#64748b",
                         fontWeight: "600",
-                        cursor: input.trim() ? "pointer" : "not-allowed",
+                        cursor: input.trim() && !uploading ? "pointer" : "not-allowed",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -392,6 +505,13 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                     <Send size={18} />
                 </button>
             </form>
+
+            {showGifPicker && (
+                <GifPicker
+                    onClose={() => setShowGifPicker(false)}
+                    onSelect={handleGifSelect}
+                />
+            )}
 
             {/* Selected User Popover / Modal */}
             {selectedUser && (

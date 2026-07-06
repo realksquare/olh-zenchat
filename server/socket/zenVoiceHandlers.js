@@ -126,7 +126,7 @@ const registerZenVoiceSocketHandlers = (io) => {
                     return socket.emit("error", { message: "Your ZenVoice access is temporarily restricted." });
                 }
 
-                const pseudonymColor = getPseudonymColor(socket.pseudonym);
+                const pseudonymAvatarColor = getPseudonymColor(socket.pseudonym);
                 const message = await ZenVoiceMessage.create({
                     roomId,
                     pseudonym: socket.pseudonym,
