@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useZenVoiceStore } from "../../stores/zenVoiceStore";
-import { ArrowLeft, Send, ShieldAlert, Flag, Bell, BellOff, MessageCircle, MoreVertical, Shield, Paperclip, Smile, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, ShieldAlert, Flag, Bell, BellOff, MessageCircle, MoreVertical, Shield, Paperclip, Smile, Loader2, CheckCircle2 } from "lucide-react";
 import GifPicker from "../chat/GifPicker";
 import axios from "axios";
 
@@ -18,7 +18,9 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         restrictMessage,
         reportMessage,
         bridgeDM,
-        sendMessageSocket
+        sendMessageSocket,
+        joinRoomSocket,
+        leaveRoomSocket
     } = useZenVoiceStore();
 
     const [input, setInput] = useState("");
@@ -84,10 +86,14 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         setShowGifPicker(false);
     };
 
-    // Fetch initial messages on mount
+    // Fetch initial messages and join socket room on mount
     useEffect(() => {
         fetchMessages(roomId);
-    }, [roomId, fetchMessages]);
+        joinRoomSocket(roomId);
+        return () => {
+            leaveRoomSocket(roomId);
+        };
+    }, [roomId, fetchMessages, joinRoomSocket, leaveRoomSocket]);
 
     // Auto scroll to bottom
     useEffect(() => {

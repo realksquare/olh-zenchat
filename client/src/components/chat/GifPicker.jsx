@@ -172,7 +172,7 @@ const GifPicker = ({ onClose, onSelect, initialQuery = "" }) => {
     };
 
     return createPortal(
-        <div className="modal-overlay gif-picker-overlay" onClick={onClose} style={{ zIndex: 10002 }}>
+        <div className="modal-overlay gif-picker-overlay" onClick={onClose} style={{ zIndex: 200000 }}>
             <div className="gif-picker-modal" onClick={(e) => e.stopPropagation()}>
                 <div className="gif-picker-header">
                     <div className="gif-tabs">

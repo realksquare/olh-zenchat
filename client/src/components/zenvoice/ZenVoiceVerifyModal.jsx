@@ -273,7 +273,7 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                             onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                             required
                             style={{
-                                width: "220px",
+                                width: "260px",
                                 textAlign: "center",
                                 padding: "14px",
                                 borderRadius: "8px",

@@ -13,7 +13,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
         collegeEmailDomain
     } = useZenVoiceStore();
 
-    const [activeTab, setActiveTab] = useState("official"); // "official" | "private"
+    const [activeTab, setActiveTab] = useState(() => localStorage.getItem("zenvoice_active_tab") || "official"); // "official" | "private"
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -127,7 +127,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
             {/* Tabs */}
             <div style={{ display: "flex", background: "var(--color-surface, #0f172a)", borderBottom: "1px solid var(--color-border, rgba(255, 255, 255, 0.05))" }}>
                 <button
-                    onClick={() => { setActiveTab("official"); setSearchQuery(""); }}
+                    onClick={() => { setActiveTab("official"); localStorage.setItem("zenvoice_active_tab", "official"); setSearchQuery(""); }}
                     style={{
                         flex: 1,
                         padding: "14px 10px",
@@ -144,7 +144,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                     Verified Channels
                 </button>
                 <button
-                    onClick={() => { setActiveTab("private"); setSearchQuery(""); }}
+                    onClick={() => { setActiveTab("private"); localStorage.setItem("zenvoice_active_tab", "private"); setSearchQuery(""); }}
                     style={{
                         flex: 1,
                         padding: "14px 10px",
