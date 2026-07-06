@@ -269,7 +269,10 @@ router.post("/rooms", zenVoiceAuth, async (req, res) => {
         if (!name || name.trim().length === 0) {
             return res.status(400).json({ message: "Room name is required." });
         }
-        const allowedDomain = lockToDomain ? req.zenVoiceDomain : "";
+        if (!req.zenVoicePseudonym) {
+            return res.status(401).json({ message: "ZenVoice session missing pseudonym." });
+        }
+        const allowedDomain = lockToDomain ? (req.zenVoiceDomain || "") : "";
         const inviteToken = crypto.randomBytes(16).toString("hex");
         const room = await ZenVoiceRoom.create({
             name: name.trim(),
@@ -284,7 +287,7 @@ router.post("/rooms", zenVoiceAuth, async (req, res) => {
         res.status(201).json({ room });
     } catch (err) {
         console.error("[ZenVoice] create room error:", err);
-        res.status(500).json({ message: "Server error" });
+        res.status(500).json({ message: err.message || "Server error" });
     }
 });
 
