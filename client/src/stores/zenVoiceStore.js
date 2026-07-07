@@ -36,11 +36,16 @@ export const useZenVoiceStore = create((set, get) => ({
         const socketUrl = import.meta.env.VITE_API_URL || window.location.origin;
         const zvSocket = io(`${socketUrl}/zenvoice`, {
             auth: { token },
-            transports: ["websocket"]
+            transports: import.meta.env.DEV ? ["polling", "websocket"] : ["websocket"]
         });
 
         zvSocket.on("connect", () => {
             set({ isConnectedToRoom: true });
+            // Re-join active room in case socket connected after joinRoomSocket was called
+            const { activeRoomId } = get();
+            if (activeRoomId) {
+                zvSocket.emit("join_room", { roomId: activeRoomId });
+            }
         });
 
         zvSocket.on("disconnect", () => {
@@ -49,7 +54,7 @@ export const useZenVoiceStore = create((set, get) => ({
 
         zvSocket.on("new_message", ({ message }) => {
             const { activeRoomId, messages } = get();
-            if (message.roomId === activeRoomId) {
+            if (String(message.roomId) === String(activeRoomId)) {
                 set({ messages: [...messages, message] });
             }
         });
@@ -111,9 +116,10 @@ export const useZenVoiceStore = create((set, get) => ({
 
     joinRoomSocket: (roomId) => {
         const { socket } = get();
-        if (socket) {
+        // Always record the active room so the connect handler can re-join on socket ready
+        set({ activeRoomId: roomId, messages: [], idleWarning: false, resetCountdown: false });
+        if (socket?.connected) {
             socket.emit("join_room", { roomId });
-            set({ activeRoomId: roomId, messages: [], idleWarning: false, resetCountdown: false });
         }
     },
 
@@ -374,6 +380,11 @@ export const useZenVoiceStore = create((set, get) => ({
             console.error("DM bridge request failed:", err);
             return { success: false, message: err.response?.data?.message || "Failed to initiate DM request." };
         }
+    },
+
+    clearActiveRoom: () => {
+        // Clears local room state without emitting leave_room to the server
+        set({ activeRoomId: null, messages: [], memberCount: 0, idleWarning: false, resetCountdown: false });
     },
 
     resetStore: () => {

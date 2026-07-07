@@ -20,7 +20,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         bridgeDM,
         sendMessageSocket,
         joinRoomSocket,
-        leaveRoomSocket
+        clearActiveRoom
     } = useZenVoiceStore();
 
     const [input, setInput] = useState("");
@@ -91,9 +91,10 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         fetchMessages(roomId);
         joinRoomSocket(roomId);
         return () => {
-            leaveRoomSocket(roomId);
+            // Clear local state only — do NOT emit leave_room, that's only for the explicit Leave button
+            clearActiveRoom();
         };
-    }, [roomId, fetchMessages, joinRoomSocket, leaveRoomSocket]);
+    }, [roomId, fetchMessages, joinRoomSocket, clearActiveRoom]);
 
     // Auto scroll to bottom
     useEffect(() => {
