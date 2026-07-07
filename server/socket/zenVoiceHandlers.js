@@ -192,6 +192,63 @@ const registerZenVoiceSocketHandlers = (io) => {
             }
         });
 
+        socket.on("toggle_star_message", async ({ roomId, messageId }) => {
+            try {
+                const message = await ZenVoiceMessage.findById(messageId);
+                if (!message) return;
+                const isStarred = message.starredBy?.includes(socket.pseudonym);
+                if (isStarred) {
+                    message.starredBy = message.starredBy.filter(p => p !== socket.pseudonym);
+                } else {
+                    if (!message.starredBy) message.starredBy = [];
+                    message.starredBy.push(socket.pseudonym);
+                }
+                await message.save();
+                socket.emit("message_starred_toggled", { messageId, starredBy: message.starredBy });
+            } catch (err) {
+                console.error("[ZenVoice Socket] toggle_star_message error:", err);
+            }
+        });
+
+        socket.on("bulk_star_messages", async ({ roomId, messageIds }) => {
+            try {
+                if (!Array.isArray(messageIds) || messageIds.length === 0) return;
+                await ZenVoiceMessage.updateMany(
+                    { _id: { $in: messageIds } },
+                    { $addToSet: { starredBy: socket.pseudonym } }
+                );
+                socket.emit("bulk_messages_starred", { messageIds, pseudonym: socket.pseudonym });
+            } catch (err) {
+                console.error("[ZenVoice Socket] bulk_star_messages error:", err);
+            }
+        });
+
+        socket.on("bulk_delete_messages", async ({ roomId, messageIds, deleteFor }) => {
+            try {
+                if (!Array.isArray(messageIds) || messageIds.length === 0) return;
+
+                if (deleteFor === "everyone") {
+                    await ZenVoiceMessage.updateMany(
+                        { _id: { $in: messageIds }, pseudonym: socket.pseudonym },
+                        {
+                            deletedForEveryone: true,
+                            content: "",
+                            mediaUrl: null
+                        }
+                    );
+                    zvNamespace.to(roomId.toString()).emit("bulk_messages_deleted", { messageIds, deleteFor: "everyone" });
+                } else {
+                    await ZenVoiceMessage.updateMany(
+                        { _id: { $in: messageIds } },
+                        { $addToSet: { deletedFor: socket.pseudonym } }
+                    );
+                    socket.emit("bulk_messages_deleted", { messageIds, deleteFor: "self" });
+                }
+            } catch (err) {
+                console.error("[ZenVoice Socket] bulk_delete_messages error:", err);
+            }
+        });
+
         socket.on("typing_start", ({ roomId }) => {
             socket.to(roomId.toString()).emit("typing_start", {
                 roomId: roomId.toString(),

@@ -21,6 +21,9 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         sendMessageSocket,
         editMessageSocket,
         deleteMessageSocket,
+        toggleStarMessageSocket,
+        bulkStarMessagesSocket,
+        bulkDeleteMessagesSocket,
         joinRoomSocket,
         clearActiveRoom
     } = useZenVoiceStore();
@@ -41,9 +44,22 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
     const [replyingToMessage, setReplyingToMessage] = useState(null);
     const [editingMessage, setEditingMessage] = useState(null);
-    const [forwardingMessage, setForwardingMessage] = useState(null);
-    const [deletingMessage, setDeletingMessage] = useState(null);
+    const [forwardingMessages, setForwardingMessages] = useState([]);
+    const [deletingMessages, setDeletingMessages] = useState([]);
     const [selectedForwardRooms, setSelectedForwardRooms] = useState([]);
+    const [selectedMessageIds, setSelectedMessageIds] = useState(new Set());
+
+    const toggleMessageSelection = (msgId) => {
+        setSelectedMessageIds(prev => {
+            const next = new Set(prev);
+            if (next.has(msgId)) {
+                next.delete(msgId);
+            } else {
+                next.add(msgId);
+            }
+            return next;
+        });
+    };
     const [toast, setToast] = useState(null);
 
     const showToast = (type, text) => {
@@ -310,6 +326,9 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                     const isOwn = msg.pseudonym === myPseudonym;
                     const isBlurred = msg.globalBlur && !revealedMessages.has(msg._id);
                     const isDeletedForMe = msg.deletedFor?.includes(myPseudonym);
+                    const isSelected = selectedMessageIds.has(msg._id);
+                    const isSelectionMode = selectedMessageIds.size > 0;
+                    const isStarredByMe = msg.starredBy?.includes(myPseudonym);
 
                     if (isDeletedForMe) return null;
 
@@ -350,6 +369,43 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
 
                     return (
                         <div className={`message-row ${isOwn ? "mine" : "theirs"}`} key={msg._id} id={`msg-${msg._id}`}>
+                            {isSelectionMode && (
+                                <div
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleMessageSelection(msg._id);
+                                    }}
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        marginRight: "10px",
+                                        cursor: "pointer",
+                                        flexShrink: 0
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            width: "18px",
+                                            height: "18px",
+                                            borderRadius: "4px",
+                                            border: "2px solid #64748b",
+                                            borderColor: isSelected ? "#f59e0b" : "#64748b",
+                                            background: isSelected ? "#f59e0b" : "transparent",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            transition: "all 0.2s"
+                                        }}
+                                    >
+                                        {isSelected && (
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3">
+                                                <polyline points="20 6 9 17 4 12" />
+                                            </svg>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                             {/* Avatar (Only for other users) */}
                             {!isOwn && (
                                 <div
@@ -394,7 +450,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                 {/* Bubble Container */}
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%" }}>
                                     {/* Action Menu Trigger (Left of bubble for own messages, right for others) */}
-                                    {!isOwn && (
+                                    {!isOwn && !isSelectionMode && (
                                         <button
                                             onClick={() => setMenuOpenMessage(menuOpenMessage === msg._id ? null : msg._id)}
                                             style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", padding: "4px" }}
@@ -405,10 +461,17 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
 
                                     <div
                                         className={`message-bubble ${isOwn ? "mine status-seen" : "theirs"} ${msg.type === "sticker" ? "is-sticker" : ""}`}
+                                        onClick={(e) => {
+                                            if (isSelectionMode) {
+                                                e.stopPropagation();
+                                                toggleMessageSelection(msg._id);
+                                            }
+                                        }}
                                         style={{
                                             background: msg.type === "sticker" ? "transparent" : undefined,
                                             border: msg.type === "sticker" ? "none" : undefined,
-                                            padding: msg.type === "sticker" ? "0" : undefined
+                                            padding: msg.type === "sticker" ? "0" : undefined,
+                                            cursor: isSelectionMode ? "pointer" : undefined
                                         }}
                                     >
                                         {msg.replyTo && (
@@ -481,7 +544,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         )}
                                     </div>
 
-                                    {isOwn && (
+                                    {isOwn && !isSelectionMode && (
                                         <button
                                             onClick={() => setMenuOpenMessage(menuOpenMessage === msg._id ? null : msg._id)}
                                             style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", padding: "4px" }}
@@ -497,6 +560,11 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         <span title="Your message has been soft-restricted by peers." style={{ display: "inline-flex", alignItems: "center" }}>
                                             <ShieldAlert size={12} style={{ color: "#ef4444" }} />
                                         </span>
+                                    )}
+                                    {isStarredByMe && (
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" strokeWidth="1" style={{ flexShrink: 0 }}>
+                                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                        </svg>
                                     )}
                                     <span style={{ fontSize: "0.68rem", color: "#64748b" }}>
                                         {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -553,10 +621,39 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                             </button>
                                         )}
 
+                                        {/* Star / Unstar */}
+                                        <button
+                                            onClick={() => {
+                                                toggleStarMessageSocket(roomId, msg._id);
+                                                setMenuOpenMessage(null);
+                                            }}
+                                            style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#cbd5e1", fontSize: "0.8rem", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill={msg.starredBy?.includes(myPseudonym) ? "#f59e0b" : "none"} stroke="#f59e0b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                            </svg>
+                                            <span>{msg.starredBy?.includes(myPseudonym) ? "Unstar" : "Star"}</span>
+                                        </button>
+
+                                        {/* Select */}
+                                        <button
+                                            onClick={() => {
+                                                setSelectedMessageIds(new Set([msg._id]));
+                                                setMenuOpenMessage(null);
+                                            }}
+                                            style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#cbd5e1", fontSize: "0.8rem", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                <path d="M9 11l3 3L22 4" />
+                                            </svg>
+                                            <span>Select</span>
+                                        </button>
+
                                         {/* Forward */}
                                         <button
                                             onClick={() => {
-                                                setForwardingMessage(msg);
+                                                setForwardingMessages([msg]);
                                                 setSelectedForwardRooms([]);
                                                 setMenuOpenMessage(null);
                                             }}
@@ -608,7 +705,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         {/* Delete */}
                                         <button
                                             onClick={() => {
-                                                setDeletingMessage(msg);
+                                                setDeletingMessages([msg]);
                                                 setMenuOpenMessage(null);
                                             }}
                                             style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#cbd5e1", fontSize: "0.8rem", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
@@ -706,73 +803,152 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                 </div>
             )}
 
-            {/* Input Form */}
-            <form onSubmit={handleSendMessage} style={{ padding: "12px 16px", borderTop: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", display: "flex", alignItems: "center", gap: "10px", background: "var(--color-surface, #0f172a)" }}>
-                <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    style={{ background: "none", border: "none", color: "var(--color-text-muted, #94a3b8)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px" }}
-                >
-                    {uploading ? <Loader2 className="animate-spin" size={20} style={{ animation: "spin 1s linear infinite" }} /> : <Paperclip size={20} />}
-                </button>
+            {/* Selection Action Bar or Normal Message Input */}
+            {isSelectionMode ? (
+                <div style={{
+                    padding: "12px 16px",
+                    borderTop: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    background: "var(--color-surface-offset, #161b22)"
+                }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <button
+                            onClick={() => setSelectedMessageIds(new Set())}
+                            style={{
+                                background: "none",
+                                border: "none",
+                                color: "#cbd5e1",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                fontSize: "0.85rem"
+                            }}
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                            <span>Cancel ({selectedMessageIds.size})</span>
+                        </button>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
+                        {/* Fav Action */}
+                        <button
+                            onClick={() => {
+                                bulkStarMessagesSocket(roomId, Array.from(selectedMessageIds));
+                                setSelectedMessageIds(new Set());
+                                showToast("success", "Selected messages marked as favorite");
+                            }}
+                            title="Favorite"
+                            style={{ background: "none", border: "none", color: "#f59e0b", cursor: "pointer", display: "flex", alignItems: "center" }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                            </svg>
+                        </button>
 
-                <button
-                    type="button"
-                    onClick={() => setShowGifPicker(true)}
-                    disabled={uploading}
-                    style={{ background: "none", border: "none", color: "var(--color-text-muted, #94a3b8)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px" }}
-                >
-                    <Smile size={20} />
-                </button>
+                        {/* Forward Action */}
+                        <button
+                            onClick={() => {
+                                const selectedMsgs = messages.filter(m => selectedMessageIds.has(m._id));
+                                setForwardingMessages(selectedMsgs);
+                                setSelectedForwardRooms([]);
+                            }}
+                            title="Forward"
+                            style={{ background: "none", border: "none", color: "#cbd5e1", cursor: "pointer", display: "flex", alignItems: "center" }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="15 10 20 15 15 20" />
+                                <path d="M4 4v7a4 4 0 0 0 4 4h12" />
+                            </svg>
+                        </button>
 
-                <input
-                    type="text"
-                    placeholder={`Say something as ${myPseudonym || "your pseudonym"}...`}
-                    value={input}
-                    onChange={handleInputChange}
-                    disabled={uploading}
-                    style={{
-                        flex: 1,
-                        padding: "12px",
-                        borderRadius: "8px",
-                        border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
-                        background: "var(--color-surface-offset, #161b22)",
-                        color: "#fff",
-                        fontSize: "0.88rem",
-                        outline: "none",
-                        boxSizing: "border-box"
-                    }}
-                />
+                        {/* Delete Action */}
+                        <button
+                            onClick={() => {
+                                const selectedMsgs = messages.filter(m => selectedMessageIds.has(m._id));
+                                setDeletingMessages(selectedMsgs);
+                            }}
+                            title="Delete"
+                            style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", display: "flex", alignItems: "center" }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <form onSubmit={handleSendMessage} style={{ padding: "12px 16px", borderTop: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", display: "flex", alignItems: "center", gap: "10px", background: "var(--color-surface, #0f172a)" }}>
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        style={{ background: "none", border: "none", color: "var(--color-text-muted, #94a3b8)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px" }}
+                    >
+                        {uploading ? <Loader2 className="animate-spin" size={20} style={{ animation: "spin 1s linear infinite" }} /> : <Paperclip size={20} />}
+                    </button>
 
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.zip,.rar,.txt"
-                    style={{ display: "none" }}
-                    onChange={handleFileUpload}
-                />
+                    <button
+                        type="button"
+                        onClick={() => setShowGifPicker(true)}
+                        disabled={uploading}
+                        style={{ background: "none", border: "none", color: "var(--color-text-muted, #94a3b8)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px" }}
+                    >
+                        <Smile size={20} />
+                    </button>
 
-                <button
-                    type="submit"
-                    disabled={!input.trim() || uploading}
-                    style={{
-                        padding: "10px 16px",
-                        borderRadius: "8px",
-                        background: input.trim() && !uploading ? "#f59e0b" : "rgba(255,255,255,0.02)",
-                        border: "none",
-                        color: input.trim() && !uploading ? "#000" : "#64748b",
-                        fontWeight: "600",
-                        cursor: input.trim() && !uploading ? "pointer" : "not-allowed",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transition: "0.2s"
-                    }}
-                >
-                    <Send size={18} />
-                </button>
-            </form>
+                    <input
+                        type="text"
+                        placeholder={`Say something as ${myPseudonym || "your pseudonym"}...`}
+                        value={input}
+                        onChange={handleInputChange}
+                        disabled={uploading}
+                        style={{
+                            flex: 1,
+                            padding: "12px",
+                            borderRadius: "8px",
+                            border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
+                            background: "var(--color-surface-offset, #161b22)",
+                            color: "#fff",
+                            fontSize: "0.88rem",
+                            outline: "none",
+                            boxSizing: "border-box"
+                        }}
+                    />
+
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp,.gif,.pdf,.doc,.docx,.zip,.rar,.txt"
+                        style={{ display: "none" }}
+                        onChange={handleFileUpload}
+                    />
+
+                    <button
+                        type="submit"
+                        disabled={!input.trim() || uploading}
+                        style={{
+                            padding: "10px 16px",
+                            borderRadius: "8px",
+                            background: input.trim() && !uploading ? "#f59e0b" : "rgba(255,255,255,0.02)",
+                            border: "none",
+                            color: input.trim() && !uploading ? "#000" : "#64748b",
+                            fontWeight: "600",
+                            cursor: input.trim() && !uploading ? "pointer" : "not-allowed",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            transition: "0.2s"
+                        }}
+                    >
+                        <Send size={18} />
+                    </button>
+                </form>
+            )}
 
             {showGifPicker && (
                 <GifPicker
@@ -993,11 +1169,11 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             )}
 
             {/* Custom Forward Modal */}
-            {forwardingMessage && (
+            {forwardingMessages.length > 0 && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ width: "100%", maxWidth: "380px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", display: "flex", flexDirection: "column", maxHeight: "80vh" }}>
                         <h3 style={{ margin: "0 0 16px", color: "#fff", fontSize: "1.1rem", fontWeight: "700" }}>
-                            Forward Message
+                            Forward {forwardingMessages.length === 1 ? "Message" : `${forwardingMessages.length} Messages`}
                         </h3>
                         <div style={{ overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
                             {useZenVoiceStore.getState().rooms.map(room => {
@@ -1039,7 +1215,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                         </div>
                         <div style={{ display: "flex", gap: "12px" }}>
                             <button
-                                onClick={() => { setForwardingMessage(null); setSelectedForwardRooms([]); }}
+                                onClick={() => { setForwardingMessages([]); setSelectedForwardRooms([]); }}
                                 style={{
                                     flex: 1,
                                     padding: "10px",
@@ -1056,13 +1232,16 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                             </button>
                             <button
                                 onClick={() => {
-                                    if (selectedForwardRooms.length > 0) {
+                                    if (selectedForwardRooms.length > 0 && forwardingMessages.length > 0) {
                                         selectedForwardRooms.forEach(rid => {
-                                            sendMessageSocket(rid, forwardingMessage.content, forwardingMessage.type, forwardingMessage.mediaUrl);
+                                            forwardingMessages.forEach(fMsg => {
+                                                sendMessageSocket(rid, fMsg.content, fMsg.type, fMsg.mediaUrl);
+                                            });
                                         });
-                                        setForwardingMessage(null);
+                                        setForwardingMessages([]);
                                         setSelectedForwardRooms([]);
-                                        showToast("success", `Message forwarded to ${selectedForwardRooms.length} room(s)`);
+                                        setSelectedMessageIds(new Set());
+                                        showToast("success", `Messages forwarded to ${selectedForwardRooms.length} room(s)`);
                                     }
                                 }}
                                 disabled={selectedForwardRooms.length === 0}
@@ -1086,20 +1265,22 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             )}
 
             {/* Custom Delete Message Modal */}
-            {deletingMessage && (
+            {deletingMessages.length > 0 && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ width: "100%", maxWidth: "380px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", position: "relative", textAlign: "center" }}>
                         <h3 style={{ margin: "0 0 12px", color: "#fff", fontSize: "1.1rem", fontWeight: "700" }}>
-                            Delete message?
+                            Delete {deletingMessages.length === 1 ? "message?" : `${deletingMessages.length} messages?`}
                         </h3>
                         <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.85rem", lineHeight: "1.5", margin: "0 0 20px" }}>
-                            This message will be removed from your chat view.
+                            Selected messages will be removed from your chat view.
                         </p>
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                             <button
                                 onClick={() => {
-                                    deleteMessageSocket(roomId, deletingMessage._id, "me");
-                                    setDeletingMessage(null);
+                                    const ids = deletingMessages.map(m => m._id);
+                                    bulkDeleteMessagesSocket(roomId, ids, "me");
+                                    setDeletingMessages([]);
+                                    setSelectedMessageIds(new Set());
                                 }}
                                 style={{
                                     padding: "11px",
@@ -1114,11 +1295,13 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                             >
                                 Delete for me
                             </button>
-                            {deletingMessage.pseudonym === myPseudonym && (
+                            {deletingMessages.every(m => m.pseudonym === myPseudonym) && (
                                 <button
                                     onClick={() => {
-                                        deleteMessageSocket(roomId, deletingMessage._id, "everyone");
-                                        setDeletingMessage(null);
+                                        const ids = deletingMessages.map(m => m._id);
+                                        bulkDeleteMessagesSocket(roomId, ids, "everyone");
+                                        setDeletingMessages([]);
+                                        setSelectedMessageIds(new Set());
                                     }}
                                     style={{
                                         padding: "11px",
@@ -1135,7 +1318,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                 </button>
                             )}
                             <button
-                                onClick={() => setDeletingMessage(null)}
+                                onClick={() => setDeletingMessages([])}
                                 style={{
                                     padding: "10px",
                                     borderRadius: "8px",

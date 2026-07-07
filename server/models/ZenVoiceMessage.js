@@ -17,6 +17,7 @@ const zenVoiceMessageSchema = new mongoose.Schema({
     deletedFor: [{ type: String }],
     replyTo: { type: mongoose.Schema.Types.ObjectId, ref: "ZenVoiceMessage", default: null },
     isEdited: { type: Boolean, default: false },
+    starredBy: [{ type: String }],
     deletedAt: { type: Date, default: null },
     createdAt: { type: Date, default: Date.now }
 });

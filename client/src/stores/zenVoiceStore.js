@@ -88,6 +88,33 @@ export const useZenVoiceStore = create((set, get) => ({
             });
         });
 
+        zvSocket.on("message_starred_toggled", ({ messageId, starredBy }) => {
+            const { messages } = get();
+            set({
+                messages: messages.map(m => m._id === messageId ? { ...m, starredBy } : m)
+            });
+        });
+
+        zvSocket.on("bulk_messages_starred", ({ messageIds, pseudonym }) => {
+            const { messages } = get();
+            set({
+                messages: messages.map(m => messageIds.includes(m._id) ? { ...m, starredBy: Array.from(new Set([...(m.starredBy || []), pseudonym])) } : m)
+            });
+        });
+
+        zvSocket.on("bulk_messages_deleted", ({ messageIds, deleteFor }) => {
+            const { messages, pseudonym } = get();
+            if (deleteFor === "everyone") {
+                set({
+                    messages: messages.map(m => messageIds.includes(m._id) ? { ...m, deletedForEveryone: true, content: "", mediaUrl: null } : m)
+                });
+            } else {
+                set({
+                    messages: messages.map(m => messageIds.includes(m._id) ? { ...m, deletedFor: [...(m.deletedFor || []), pseudonym] } : m)
+                });
+            }
+        });
+
         zvSocket.on("member_count", ({ roomId, memberCount }) => {
             const { activeRoomId } = get();
             if (roomId === activeRoomId) {
@@ -169,6 +196,27 @@ export const useZenVoiceStore = create((set, get) => ({
         const { socket } = get();
         if (socket) {
             socket.emit("delete_message", { roomId, messageId, deleteFor });
+        }
+    },
+
+    toggleStarMessageSocket: (roomId, messageId) => {
+        const { socket } = get();
+        if (socket) {
+            socket.emit("toggle_star_message", { roomId, messageId });
+        }
+    },
+
+    bulkStarMessagesSocket: (roomId, messageIds) => {
+        const { socket } = get();
+        if (socket) {
+            socket.emit("bulk_star_messages", { roomId, messageIds });
+        }
+    },
+
+    bulkDeleteMessagesSocket: (roomId, messageIds, deleteFor) => {
+        const { socket } = get();
+        if (socket) {
+            socket.emit("bulk_delete_messages", { roomId, messageIds, deleteFor });
         }
     },
 
