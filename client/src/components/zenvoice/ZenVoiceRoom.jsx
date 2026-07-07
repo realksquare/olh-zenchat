@@ -279,170 +279,216 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                     const isBlurred = msg.globalBlur && !revealedMessages.has(msg._id);
 
                     return (
-                        <div
-                            key={msg._id}
-                            style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignSelf: isOwn ? "flex-end" : "flex-start",
-                                maxWidth: "75%",
-                                alignItems: isOwn ? "flex-end" : "flex-start",
-                                position: "relative"
-                            }}
-                        >
-                            {/* Sender Info (Hidden for own messages) */}
-                            {!isOwn && (
+                        <div className={`message-row ${isOwn ? "mine" : "theirs"}`} key={msg._id}>
+                            {/* Avatar / Spacer */}
+                            {!isOwn ? (
                                 <div
                                     onClick={() => setSelectedUser(msg.pseudonym)}
-                                    style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px", cursor: "pointer" }}
-                                >
-                                    <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: msg.pseudonymAvatarColor || "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                        <span style={{ color: "#000", fontSize: "0.6rem", fontWeight: "bold" }}>
-                                            {msg.pseudonym.slice(0, 2).toUpperCase()}
-                                        </span>
-                                    </div>
-                                    <span style={{ fontSize: "0.78rem", color: "#94a3b8", fontWeight: "600" }}>{msg.pseudonym}</span>
-                                </div>
-                            )}
-
-                            {/* Bubble Container */}
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                {/* Message Context Action Button (Left of bubble for own messages, right for others) */}
-                                {!isOwn && (
-                                    <button
-                                        onClick={() => setMenuOpenMessage(menuOpenMessage === msg._id ? null : msg._id)}
-                                        style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", padding: "4px" }}
-                                    >
-                                        <MoreVertical size={16} />
-                                    </button>
-                                )}
-
-                                <div
                                     style={{
-                                        padding: msg.type === "sticker" ? "0" : "10px 14px",
-                                        borderRadius: "12px",
-                                        background: msg.type === "sticker" ? "transparent" : (isOwn ? "#f59e0b" : "var(--color-surface, #0f172a)"),
-                                        color: isOwn ? "#000" : "#fff",
-                                        border: msg.type === "sticker" || isOwn ? "none" : "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
-                                        fontSize: "0.9rem",
-                                        lineHeight: "1.4",
-                                        textAlign: "left",
-                                        position: "relative"
+                                        width: "36px",
+                                        height: "36px",
+                                        borderRadius: "50%",
+                                        background: msg.pseudonymAvatarColor || "#3b82f6",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        cursor: "pointer",
+                                        flexShrink: 0
                                     }}
                                 >
-                                    {isBlurred ? (
-                                        <div
-                                            onClick={() => setRevealedMessages(prev => new Set([...prev, msg._id]))}
-                                            style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}
-                                        >
-                                            <ShieldAlert size={16} style={{ color: isOwn ? "#000" : "#ef4444" }} />
-                                            <span style={{ fontSize: "0.8rem", fontWeight: "600", textDecoration: "underline" }}>Community flagged this as garbage. Tap to read anyway.</span>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            {(msg.type === "image" || msg.type === "gif") && (
-                                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                                                    <img
-                                                        src={msg.mediaUrl}
-                                                        alt={msg.content || "Media"}
-                                                        style={{ maxWidth: "100%", maxHeight: "250px", borderRadius: "8px", objectFit: "contain", cursor: "pointer" }}
-                                                        onClick={() => window.open(msg.mediaUrl, "_blank")}
-                                                    />
-                                                    {msg.content && msg.content !== "GIF" && msg.content !== "Sticker" && (
-                                                        <span style={{ fontSize: "0.85rem", display: "block" }}>{msg.content}</span>
-                                                    )}
-                                                </div>
-                                            )}
-                                            {msg.type === "sticker" && (
-                                                <img
-                                                    src={msg.mediaUrl}
-                                                    alt="Sticker"
-                                                    style={{ width: "120px", height: "120px", objectFit: "contain" }}
-                                                />
-                                            )}
-                                            {msg.type === "doc" && (
-                                                <a
-                                                    href={msg.mediaUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    style={{ display: "flex", alignItems: "center", gap: "8px", color: isOwn ? "#000" : "#3da5d9", textDecoration: "none" }}
-                                                >
-                                                    <Paperclip size={18} />
-                                                    <span style={{ textDecoration: "underline", fontSize: "0.85rem" }}>{msg.content}</span>
-                                                </a>
-                                            )}
-                                            {(!msg.type || msg.type === "text") && (
-                                                <span>{msg.content}</span>
-                                            )}
-                                        </>
-                                    )}
+                                    <span style={{ color: "#000", fontSize: "0.85rem", fontWeight: "bold" }}>
+                                        {msg.pseudonym.slice(0, 2).toUpperCase()}
+                                    </span>
                                 </div>
+                            ) : (
+                                <div className="avatar-spacer" />
+                            )}
 
-                                {isOwn && (
-                                    <button
-                                        onClick={() => setMenuOpenMessage(menuOpenMessage === msg._id ? null : msg._id)}
-                                        style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", padding: "4px" }}
+                            {/* Bubble Outer */}
+                            <div className="message-bubble-outer" style={{ position: "relative" }}>
+                                {/* Sender Name */}
+                                {!isOwn && (
+                                    <span
+                                        onClick={() => setSelectedUser(msg.pseudonym)}
+                                        style={{
+                                            fontSize: "0.75rem",
+                                            color: "var(--color-text-muted, #94a3b8)",
+                                            fontWeight: "600",
+                                            marginBottom: "2px",
+                                            cursor: "pointer",
+                                            display: "block"
+                                        }}
                                     >
-                                        <MoreVertical size={16} />
-                                    </button>
-                                )}
-                            </div>
-
-                            {/* Message Timestamp & Soft Warnings */}
-                            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
-                                {msg.restrictedBy?.length > 0 && isOwn && (
-                                    <span title="Your message has been soft-restricted by peers." style={{ display: "inline-flex", alignItems: "center" }}>
-                                        <ShieldAlert size={12} style={{ color: "#ef4444" }} />
+                                        {msg.pseudonym}
                                     </span>
                                 )}
-                                <span style={{ fontSize: "0.68rem", color: "#64748b" }}>
-                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                            </div>
 
-                            {/* Context Action Menu */}
-                            {menuOpenMessage === msg._id && (
-                                <div
-                                    style={{
-                                        position: "absolute",
-                                        top: "100%",
-                                        [isOwn ? "right" : "left"]: 0,
-                                        zIndex: 100,
-                                        background: "var(--color-surface, #0f172a)",
-                                        border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
-                                        borderRadius: "8px",
-                                        padding: "4px 0",
-                                        minWidth: "120px",
-                                        boxShadow: "0 10px 15px -3px rgba(0,0,0,0.5)"
-                                    }}
-                                    onClick={e => e.stopPropagation()}
-                                >
+                                {/* Bubble Container */}
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%" }}>
+                                    {/* Action Menu Trigger (Left of bubble for own messages, right for others) */}
                                     {!isOwn && (
-                                        <>
-                                            <button
-                                                onClick={() => handleRestrict(msg._id)}
-                                                style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#cbd5e1", fontSize: "0.8rem", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-                                            >
-                                                <ShieldAlert size={14} style={{ color: "#ef4444" }} />
-                                                <span>Restrict</span>
-                                            </button>
-                                            <button
-                                                onClick={() => { setReportingMessage(msg); setMenuOpenMessage(null); }}
-                                                style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#cbd5e1", fontSize: "0.8rem", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-                                            >
-                                                <Flag size={14} style={{ color: "#f59e0b" }} />
-                                                <span>Report</span>
-                                            </button>
-                                        </>
+                                        <button
+                                            onClick={() => setMenuOpenMessage(menuOpenMessage === msg._id ? null : msg._id)}
+                                            style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", padding: "4px" }}
+                                        >
+                                            <MoreVertical size={16} />
+                                        </button>
                                     )}
-                                    <button
-                                        onClick={() => setMenuOpenMessage(null)}
-                                        style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#64748b", fontSize: "0.8rem", textAlign: "left", cursor: "pointer" }}
+
+                                    <div
+                                        className={`message-bubble ${isOwn ? "mine status-seen" : "theirs"} ${msg.type === "sticker" ? "is-sticker" : ""}`}
+                                        style={{
+                                            background: msg.type === "sticker" ? "transparent" : undefined,
+                                            border: msg.type === "sticker" ? "none" : undefined,
+                                            padding: msg.type === "sticker" ? "0" : undefined
+                                        }}
                                     >
-                                        Cancel
-                                    </button>
+                                        {isBlurred ? (
+                                            <div
+                                                onClick={() => setRevealedMessages(prev => new Set([...prev, msg._id]))}
+                                                style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}
+                                            >
+                                                <ShieldAlert size={16} style={{ color: isOwn ? "#000" : "#ef4444" }} />
+                                                <span style={{ fontSize: "0.8rem", fontWeight: "600", textDecoration: "underline" }}>Community flagged this as garbage. Tap to read anyway.</span>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                {(msg.type === "image" || msg.type === "gif") && (
+                                                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                                        <img
+                                                            src={msg.mediaUrl}
+                                                            alt={msg.content || "Media"}
+                                                            style={{ maxWidth: "100%", maxHeight: "250px", borderRadius: "8px", objectFit: "contain", cursor: "pointer" }}
+                                                            onClick={() => window.open(msg.mediaUrl, "_blank")}
+                                                        />
+                                                        {msg.content && msg.content !== "GIF" && msg.content !== "Sticker" && (
+                                                            <span style={{ fontSize: "0.85rem", display: "block" }}>{msg.content}</span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                {msg.type === "sticker" && (
+                                                    <img
+                                                        src={msg.mediaUrl}
+                                                        alt="Sticker"
+                                                        style={{ width: "120px", height: "120px", objectFit: "contain" }}
+                                                    />
+                                                )}
+                                                {msg.type === "doc" && (
+                                                    <a
+                                                        href={msg.mediaUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        style={{ display: "flex", alignItems: "center", gap: "8px", color: isOwn ? "#000" : "#3da5d9", textDecoration: "none" }}
+                                                    >
+                                                        <Paperclip size={18} />
+                                                        <span style={{ textDecoration: "underline", fontSize: "0.85rem" }}>{msg.content}</span>
+                                                    </a>
+                                                )}
+                                                {(!msg.type || msg.type === "text") && (
+                                                    <span>{msg.content}</span>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {isOwn && (
+                                        <button
+                                            onClick={() => setMenuOpenMessage(menuOpenMessage === msg._id ? null : msg._id)}
+                                            style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", padding: "4px" }}
+                                        >
+                                            <MoreVertical size={16} />
+                                        </button>
+                                    )}
                                 </div>
-                            )}
+
+                                {/* Message Timestamp & Soft Warnings */}
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                                    {msg.restrictedBy?.length > 0 && isOwn && (
+                                        <span title="Your message has been soft-restricted by peers." style={{ display: "inline-flex", alignItems: "center" }}>
+                                            <ShieldAlert size={12} style={{ color: "#ef4444" }} />
+                                        </span>
+                                    )}
+                                    <span style={{ fontSize: "0.68rem", color: "#64748b" }}>
+                                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                </div>
+
+                                {/* Context Action Menu */}
+                                {menuOpenMessage === msg._id && (
+                                    <div
+                                        style={{
+                                            position: "absolute",
+                                            top: "100%",
+                                            [isOwn ? "right" : "left"]: 0,
+                                            zIndex: 100,
+                                            background: "var(--color-surface, #0f172a)",
+                                            border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
+                                            borderRadius: "8px",
+                                            padding: "4px 0",
+                                            minWidth: "120px",
+                                            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.5)"
+                                        }}
+                                        onClick={e => e.stopPropagation()}
+                                    >
+                                        {msg.content && (
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(msg.content);
+                                                    setMenuOpenMessage(null);
+                                                    showToast("success", "Copied to clipboard");
+                                                }}
+                                                style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#cbd5e1", fontSize: "0.8rem", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                                            >
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                                </svg>
+                                                <span>Copy</span>
+                                            </button>
+                                        )}
+                                        {msg.mediaUrl && (
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(msg.mediaUrl);
+                                                    setMenuOpenMessage(null);
+                                                    showToast("success", "Link copied");
+                                                }}
+                                                style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#cbd5e1", fontSize: "0.8rem", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                                            >
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                                                </svg>
+                                                <span>Copy link</span>
+                                            </button>
+                                        )}
+                                        {!isOwn && (
+                                            <>
+                                                <button
+                                                    onClick={() => handleRestrict(msg._id)}
+                                                    style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#cbd5e1", fontSize: "0.8rem", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                                                >
+                                                    <ShieldAlert size={14} style={{ color: "#ef4444" }} />
+                                                    <span>Restrict</span>
+                                                </button>
+                                                <button
+                                                    onClick={() => { setReportingMessage(msg); setMenuOpenMessage(null); }}
+                                                    style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#cbd5e1", fontSize: "0.8rem", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                                                >
+                                                    <Flag size={14} style={{ color: "#f59e0b" }} />
+                                                    <span>Report</span>
+                                                </button>
+                                            </>
+                                        )}
+                                        <button
+                                            onClick={() => setMenuOpenMessage(null)}
+                                            style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#64748b", fontSize: "0.8rem", textAlign: "left", cursor: "pointer" }}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                    )}
+                            </div>
                         </div>
                     );
                 })}
