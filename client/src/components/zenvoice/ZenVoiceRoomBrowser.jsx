@@ -10,7 +10,8 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
         searchRooms,
         joinRoom,
         isLoading,
-        collegeEmailDomain
+        collegeEmailDomain,
+        sessionToken
     } = useZenVoiceStore();
 
     const [activeTab, setActiveTab] = useState(() => localStorage.getItem("zenvoice_active_tab") || "official"); // "official" | "private"
@@ -28,8 +29,10 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
     const [formError, setFormError] = useState("");
 
     useEffect(() => {
-        fetchRooms();
-    }, [fetchRooms]);
+        if (sessionToken) {
+            fetchRooms();
+        }
+    }, [fetchRooms, sessionToken]);
 
     // Handle search query
     useEffect(() => {
