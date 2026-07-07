@@ -107,7 +107,7 @@ const registerZenVoiceSocketHandlers = (io) => {
             }
         });
 
-        socket.on("send_message", async ({ roomId, content, type, mediaUrl }) => {
+        socket.on("send_message", async ({ roomId, content, type, mediaUrl, replyTo }) => {
             try {
                 if (!content || content.trim().length === 0) return;
 
@@ -133,17 +133,62 @@ const registerZenVoiceSocketHandlers = (io) => {
                     pseudonymAvatarColor,
                     content: content.trim(),
                     type: type || "text",
-                    mediaUrl: mediaUrl || null
+                    mediaUrl: mediaUrl || null,
+                    replyTo: replyTo || null
                 });
 
                 // Update room activity time
                 room.lastActivityAt = new Date();
                 await room.save();
 
-                zvNamespace.to(roomId.toString()).emit("new_message", { message });
+                let populatedMessage = message;
+                if (replyTo) {
+                    populatedMessage = await ZenVoiceMessage.findById(message._id).populate("replyTo");
+                }
+
+                zvNamespace.to(roomId.toString()).emit("new_message", { message: populatedMessage });
             } catch (err) {
                 console.error("[ZenVoice Socket] send_message error:", err);
                 socket.emit("error", { message: "Failed to send message." });
+            }
+        });
+
+        socket.on("edit_message", async ({ messageId, newContent }) => {
+            try {
+                if (!newContent || newContent.trim().length === 0) return;
+                const message = await ZenVoiceMessage.findById(messageId);
+                if (!message) return;
+                if (message.pseudonym !== socket.pseudonym) return;
+
+                message.content = newContent.trim();
+                message.isEdited = true;
+                await message.save();
+
+                const populatedMessage = await ZenVoiceMessage.findById(message._id).populate("replyTo");
+                zvNamespace.to(message.roomId.toString()).emit("message_edited", { message: populatedMessage });
+            } catch (err) {
+                console.error("[ZenVoice Socket] edit_message error:", err);
+            }
+        });
+
+        socket.on("delete_message", async ({ roomId, messageId, deleteFor }) => {
+            try {
+                const message = await ZenVoiceMessage.findById(messageId);
+                if (!message) return;
+
+                if (deleteFor === "everyone") {
+                    if (message.pseudonym !== socket.pseudonym) return;
+                    message.deletedForEveryone = true;
+                    message.content = "";
+                    message.mediaUrl = null;
+                    await message.save();
+                    zvNamespace.to(roomId.toString()).emit("message_deleted", { messageId, deleteFor: "everyone" });
+                } else {
+                    await ZenVoiceMessage.findByIdAndUpdate(messageId, { $addToSet: { deletedFor: socket.pseudonym } });
+                    socket.emit("message_deleted", { messageId, deleteFor: "self" });
+                }
+            } catch (err) {
+                console.error("[ZenVoice Socket] delete_message error:", err);
             }
         });
 

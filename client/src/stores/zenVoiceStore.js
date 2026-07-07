@@ -59,6 +59,26 @@ export const useZenVoiceStore = create((set, get) => ({
             }
         });
 
+        zvSocket.on("message_edited", ({ message }) => {
+            const { messages } = get();
+            set({
+                messages: messages.map(m => m._id === message._id ? message : m)
+            });
+        });
+
+        zvSocket.on("message_deleted", ({ messageId, deleteFor }) => {
+            const { messages, pseudonym } = get();
+            if (deleteFor === "everyone") {
+                set({
+                    messages: messages.map(m => m._id === messageId ? { ...m, deletedForEveryone: true, content: "", mediaUrl: null } : m)
+                });
+            } else {
+                set({
+                    messages: messages.map(m => m._id === messageId ? { ...m, deletedFor: [...(m.deletedFor || []), pseudonym] } : m)
+                });
+            }
+        });
+
         zvSocket.on("message_restricted", ({ messageId, restrictedByCount, globalBlur }) => {
             const { messages } = get();
             set({
@@ -131,10 +151,24 @@ export const useZenVoiceStore = create((set, get) => ({
         }
     },
 
-    sendMessageSocket: (roomId, content, type = "text", mediaUrl = null) => {
+    sendMessageSocket: (roomId, content, type = "text", mediaUrl = null, replyTo = null) => {
         const { socket } = get();
         if (socket) {
-            socket.emit("send_message", { roomId, content, type, mediaUrl });
+            socket.emit("send_message", { roomId, content, type, mediaUrl, replyTo });
+        }
+    },
+
+    editMessageSocket: (messageId, newContent) => {
+        const { socket } = get();
+        if (socket) {
+            socket.emit("edit_message", { messageId, newContent });
+        }
+    },
+
+    deleteMessageSocket: (roomId, messageId, deleteFor) => {
+        const { socket } = get();
+        if (socket) {
+            socket.emit("delete_message", { roomId, messageId, deleteFor });
         }
     },
 

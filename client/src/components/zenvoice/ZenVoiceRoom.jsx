@@ -19,6 +19,8 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         reportMessage,
         bridgeDM,
         sendMessageSocket,
+        editMessageSocket,
+        deleteMessageSocket,
         joinRoomSocket,
         clearActiveRoom
     } = useZenVoiceStore();
@@ -37,6 +39,11 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
     const [uploading, setUploading] = useState(false);
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+    const [replyingToMessage, setReplyingToMessage] = useState(null);
+    const [editingMessage, setEditingMessage] = useState(null);
+    const [forwardingMessage, setForwardingMessage] = useState(null);
+    const [deletingMessage, setDeletingMessage] = useState(null);
+    const [selectedForwardRooms, setSelectedForwardRooms] = useState([]);
     const [toast, setToast] = useState(null);
 
     const showToast = (type, text) => {
@@ -49,6 +56,19 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             return () => clearTimeout(t);
         }
     }, [toast]);
+
+    const scrollToMessage = (targetId) => {
+        const el = document.getElementById(`msg-${targetId}`);
+        if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.style.transition = "background 0.3s";
+            const originalBg = el.style.background;
+            el.style.background = "rgba(245, 158, 11, 0.25)";
+            setTimeout(() => {
+                el.style.background = originalBg;
+            }, 800);
+        }
+    };
 
     const messagesEndRef = useRef(null);
     const typingTimeoutRef = useRef(null);
@@ -159,7 +179,19 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         e.preventDefault();
         if (!input.trim()) return;
 
-        sendMessageSocket(roomId, input.trim(), "text");
+        if (editingMessage) {
+            editMessageSocket(editingMessage._id, input.trim());
+            setEditingMessage(null);
+        } else {
+            sendMessageSocket(
+                roomId,
+                input.trim(),
+                "text",
+                null,
+                replyingToMessage ? replyingToMessage._id : null
+            );
+            setReplyingToMessage(null);
+        }
         setInput("");
 
         if (typing) {
@@ -277,11 +309,49 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                 {messages.map((msg) => {
                     const isOwn = msg.pseudonym === myPseudonym;
                     const isBlurred = msg.globalBlur && !revealedMessages.has(msg._id);
+                    const isDeletedForMe = msg.deletedFor?.includes(myPseudonym);
+
+                    if (isDeletedForMe) return null;
+
+                    if (msg.deletedForEveryone) {
+                        return (
+                            <div className={`message-row ${isOwn ? "mine" : "theirs"}`} key={msg._id} id={`msg-${msg._id}`}>
+                                {!isOwn && (
+                                    <div
+                                        style={{
+                                            width: "36px",
+                                            height: "36px",
+                                            borderRadius: "50%",
+                                            background: msg.pseudonymAvatarColor || "#3b82f6",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            flexShrink: 0
+                                        }}
+                                    >
+                                        <span style={{ color: "#000", fontSize: "0.85rem", fontWeight: "bold" }}>
+                                            {msg.pseudonym.slice(0, 2).toUpperCase()}
+                                        </span>
+                                    </div>
+                                )}
+                                <div className="message-bubble-outer">
+                                    {!isOwn && (
+                                        <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted, #94a3b8)", fontWeight: "600", marginBottom: "2px", display: "block" }}>
+                                            {msg.pseudonym}
+                                        </span>
+                                    )}
+                                    <div className="message-bubble deleted-bubble" style={{ padding: "10px 14px" }}>
+                                        <span className="deleted-text">This message was deleted</span>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    }
 
                     return (
-                        <div className={`message-row ${isOwn ? "mine" : "theirs"}`} key={msg._id}>
-                            {/* Avatar / Spacer */}
-                            {!isOwn ? (
+                        <div className={`message-row ${isOwn ? "mine" : "theirs"}`} key={msg._id} id={`msg-${msg._id}`}>
+                            {/* Avatar (Only for other users) */}
+                            {!isOwn && (
                                 <div
                                     onClick={() => setSelectedUser(msg.pseudonym)}
                                     style={{
@@ -300,8 +370,6 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         {msg.pseudonym.slice(0, 2).toUpperCase()}
                                     </span>
                                 </div>
-                            ) : (
-                                <div className="avatar-spacer" />
                             )}
 
                             {/* Bubble Outer */}
@@ -343,6 +411,28 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                             padding: msg.type === "sticker" ? "0" : undefined
                                         }}
                                     >
+                                        {msg.replyTo && (
+                                            <div
+                                                className="replied-message-preview"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    scrollToMessage(msg.replyTo._id || msg.replyTo);
+                                                }}
+                                            >
+                                                <div className="replied-sender">
+                                                    {msg.replyTo.pseudonym === myPseudonym ? "You" : msg.replyTo.pseudonym}
+                                                </div>
+                                                <div className="replied-content">
+                                                    {msg.replyTo.deletedForEveryone ? "Original message deleted" : (msg.replyTo.content || (
+                                                        msg.replyTo.type === 'image' ? 'Image' :
+                                                        msg.replyTo.type === 'gif' ? 'GIF' :
+                                                        msg.replyTo.type === 'sticker' ? 'Sticker' :
+                                                        msg.replyTo.type === 'doc' ? 'Document' :
+                                                        'Media'
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                         {isBlurred ? (
                                             <div
                                                 onClick={() => setRevealedMessages(prev => new Set([...prev, msg._id]))}
@@ -430,6 +520,56 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         }}
                                         onClick={e => e.stopPropagation()}
                                     >
+                                        {/* Reply */}
+                                        <button
+                                            onClick={() => {
+                                                setReplyingToMessage(msg);
+                                                setMenuOpenMessage(null);
+                                            }}
+                                            style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#cbd5e1", fontSize: "0.8rem", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                                <polyline points="9 17 4 12 9 7" />
+                                                <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+                                            </svg>
+                                            <span>Reply</span>
+                                        </button>
+
+                                        {/* Edit (only text type for own messages) */}
+                                        {isOwn && (!msg.type || msg.type === "text") && (
+                                            <button
+                                                onClick={() => {
+                                                    setEditingMessage(msg);
+                                                    setInput(msg.content);
+                                                    setMenuOpenMessage(null);
+                                                }}
+                                                style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#cbd5e1", fontSize: "0.8rem", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                                            >
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                    <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                </svg>
+                                                <span>Edit</span>
+                                            </button>
+                                        )}
+
+                                        {/* Forward */}
+                                        <button
+                                            onClick={() => {
+                                                setForwardingMessage(msg);
+                                                setSelectedForwardRooms([]);
+                                                setMenuOpenMessage(null);
+                                            }}
+                                            style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#cbd5e1", fontSize: "0.8rem", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                                <polyline points="15 10 20 15 15 20" />
+                                                <path d="M4 4v7a4 4 0 0 0 4 4h12" />
+                                            </svg>
+                                            <span>Forward</span>
+                                        </button>
+
+                                        {/* Copy */}
                                         {msg.content && (
                                             <button
                                                 onClick={() => {
@@ -446,6 +586,8 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                                 <span>Copy</span>
                                             </button>
                                         )}
+
+                                        {/* Copy Link */}
                                         {msg.mediaUrl && (
                                             <button
                                                 onClick={() => {
@@ -462,6 +604,23 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                                 <span>Copy link</span>
                                             </button>
                                         )}
+
+                                        {/* Delete */}
+                                        <button
+                                            onClick={() => {
+                                                setDeletingMessage(msg);
+                                                setMenuOpenMessage(null);
+                                            }}
+                                            style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#cbd5e1", fontSize: "0.8rem", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                                        >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                                <polyline points="3 6 5 6 21 6" />
+                                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                            </svg>
+                                            <span style={{ color: "#ef4444" }}>Delete</span>
+                                        </button>
+
+                                        {/* Restrict / Report (only for other users) */}
                                         {!isOwn && (
                                             <>
                                                 <button
@@ -480,6 +639,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                                 </button>
                                             </>
                                         )}
+
                                         <button
                                             onClick={() => setMenuOpenMessage(null)}
                                             style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#64748b", fontSize: "0.8rem", textAlign: "left", cursor: "pointer" }}
@@ -487,7 +647,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                             Cancel
                                         </button>
                                     </div>
-                                    )}
+                                )}
                             </div>
                         </div>
                     );
@@ -501,6 +661,48 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                     <span>
                         {typingUsers.join(", ")} {typingUsers.length === 1 ? "is" : "are"} typing some hot take...
                     </span>
+                </div>
+            )}
+
+            {/* Reply / Edit preview banners */}
+            {replyingToMessage && (
+                <div className="reply-preview-container" style={{ margin: "0 16px 8px" }}>
+                    <div className="reply-info">
+                        <div className="reply-to-user">
+                            Replying to {replyingToMessage.pseudonym === myPseudonym ? "yourself" : replyingToMessage.pseudonym}
+                        </div>
+                        <div className="reply-to-text">
+                            {replyingToMessage.type === "image" ? "Image" :
+                             replyingToMessage.type === "video" ? "Video" :
+                             replyingToMessage.type === "voice" ? "Voice message" :
+                             replyingToMessage.type === "sticker" ? "Sticker" :
+                             replyingToMessage.type === "gif" ? "GIF" :
+                             replyingToMessage.content}
+                        </div>
+                    </div>
+                    <button className="reply-cancel-btn" onClick={() => setReplyingToMessage(null)}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+            )}
+
+            {editingMessage && (
+                <div className="reply-preview-container" style={{ margin: "0 16px 8px" }}>
+                    <div className="reply-info">
+                        <div className="reply-to-user" style={{ color: "var(--color-primary)" }}>
+                            Editing message
+                        </div>
+                        <div className="reply-to-text">
+                            {editingMessage.content}
+                        </div>
+                    </div>
+                    <button className="reply-cancel-btn" onClick={() => { setEditingMessage(null); setInput(""); }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
                 </div>
             )}
 
@@ -784,6 +986,169 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                 }}
                             >
                                 Leave
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Custom Forward Modal */}
+            {forwardingMessage && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: "100%", maxWidth: "380px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", display: "flex", flexDirection: "column", maxHeight: "80vh" }}>
+                        <h3 style={{ margin: "0 0 16px", color: "#fff", fontSize: "1.1rem", fontWeight: "700" }}>
+                            Forward Message
+                        </h3>
+                        <div style={{ overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+                            {useZenVoiceStore.getState().rooms.map(room => {
+                                const isSelected = selectedForwardRooms.includes(room._id);
+                                return (
+                                    <div
+                                        key={room._id}
+                                        onClick={() => {
+                                            setSelectedForwardRooms(prev =>
+                                                prev.includes(room._id) ? prev.filter(id => id !== room._id) : [...prev, room._id]
+                                            );
+                                        }}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "space-between",
+                                            padding: "12px",
+                                            borderRadius: "8px",
+                                            background: isSelected ? "rgba(245, 158, 11, 0.15)" : "var(--color-surface-offset, #161b22)",
+                                            border: isSelected ? "1px solid #f59e0b" : "1px solid transparent",
+                                            cursor: "pointer",
+                                            transition: "all 0.2s"
+                                        }}
+                                    >
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "2px", textAlign: "left" }}>
+                                            <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "#fff" }}>{room.name}</span>
+                                            <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
+                                                {room.isOfficial ? "Official Channel" : "Student Hideout"}
+                                            </span>
+                                        </div>
+                                        {isSelected && (
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5">
+                                                <polyline points="20 6 9 17 4 12" />
+                                            </svg>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div style={{ display: "flex", gap: "12px" }}>
+                            <button
+                                onClick={() => { setForwardingMessage(null); setSelectedForwardRooms([]); }}
+                                style={{
+                                    flex: 1,
+                                    padding: "10px",
+                                    borderRadius: "8px",
+                                    background: "var(--color-surface-offset, #161b22)",
+                                    border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
+                                    color: "#cbd5e1",
+                                    fontWeight: "600",
+                                    cursor: "pointer",
+                                    fontSize: "0.85rem"
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (selectedForwardRooms.length > 0) {
+                                        selectedForwardRooms.forEach(rid => {
+                                            sendMessageSocket(rid, forwardingMessage.content, forwardingMessage.type, forwardingMessage.mediaUrl);
+                                        });
+                                        setForwardingMessage(null);
+                                        setSelectedForwardRooms([]);
+                                        showToast("success", `Message forwarded to ${selectedForwardRooms.length} room(s)`);
+                                    }
+                                }}
+                                disabled={selectedForwardRooms.length === 0}
+                                style={{
+                                    flex: 1,
+                                    padding: "10px",
+                                    borderRadius: "8px",
+                                    background: selectedForwardRooms.length > 0 ? "#f59e0b" : "var(--color-surface-offset, #161b22)",
+                                    border: "none",
+                                    color: selectedForwardRooms.length > 0 ? "#000" : "#64748b",
+                                    fontWeight: "600",
+                                    cursor: selectedForwardRooms.length > 0 ? "pointer" : "not-allowed",
+                                    fontSize: "0.85rem"
+                                }}
+                            >
+                                Forward
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Custom Delete Message Modal */}
+            {deletingMessage && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: "100%", maxWidth: "380px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", position: "relative", textAlign: "center" }}>
+                        <h3 style={{ margin: "0 0 12px", color: "#fff", fontSize: "1.1rem", fontWeight: "700" }}>
+                            Delete message?
+                        </h3>
+                        <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.85rem", lineHeight: "1.5", margin: "0 0 20px" }}>
+                            This message will be removed from your chat view.
+                        </p>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            <button
+                                onClick={() => {
+                                    deleteMessageSocket(roomId, deletingMessage._id, "me");
+                                    setDeletingMessage(null);
+                                }}
+                                style={{
+                                    padding: "11px",
+                                    borderRadius: "8px",
+                                    background: "var(--color-surface-offset, #161b22)",
+                                    border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
+                                    color: "#fff",
+                                    fontWeight: "600",
+                                    cursor: "pointer",
+                                    fontSize: "0.85rem"
+                                }}
+                            >
+                                Delete for me
+                            </button>
+                            {deletingMessage.pseudonym === myPseudonym && (
+                                <button
+                                    onClick={() => {
+                                        deleteMessageSocket(roomId, deletingMessage._id, "everyone");
+                                        setDeletingMessage(null);
+                                    }}
+                                    style={{
+                                        padding: "11px",
+                                        borderRadius: "8px",
+                                        background: "#ef4444",
+                                        border: "none",
+                                        color: "#fff",
+                                        fontWeight: "600",
+                                        cursor: "pointer",
+                                        fontSize: "0.85rem"
+                                    }}
+                                >
+                                    Delete for everyone
+                                </button>
+                            )}
+                            <button
+                                onClick={() => setDeletingMessage(null)}
+                                style={{
+                                    padding: "10px",
+                                    borderRadius: "8px",
+                                    background: "transparent",
+                                    border: "none",
+                                    color: "#64748b",
+                                    fontWeight: "600",
+                                    cursor: "pointer",
+                                    fontSize: "0.85rem",
+                                    marginTop: "4px"
+                                }}
+                            >
+                                Cancel
                             </button>
                         </div>
                     </div>

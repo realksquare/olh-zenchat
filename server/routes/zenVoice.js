@@ -419,6 +419,7 @@ router.get("/rooms/:roomId/messages", zenVoiceAuth, async (req, res) => {
             query.createdAt = { $lt: new Date(before) };
         }
         const messages = await ZenVoiceMessage.find(query)
+            .populate("replyTo")
             .sort({ createdAt: -1 })
             .limit(50);
         res.json({ messages: messages.reverse() });

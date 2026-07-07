@@ -13,6 +13,10 @@ const zenVoiceMessageSchema = new mongoose.Schema({
     mediaUrl: { type: String, default: null },
     restrictedBy: [{ type: String }],
     globalBlur: { type: Boolean, default: false },
+    deletedForEveryone: { type: Boolean, default: false },
+    deletedFor: [{ type: String }],
+    replyTo: { type: mongoose.Schema.Types.ObjectId, ref: "ZenVoiceMessage", default: null },
+    isEdited: { type: Boolean, default: false },
     deletedAt: { type: Date, default: null },
     createdAt: { type: Date, default: Date.now }
 });
