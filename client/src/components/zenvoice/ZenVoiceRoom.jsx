@@ -36,6 +36,19 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
     const [reportSuccess, setReportSuccess] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [showGifPicker, setShowGifPicker] = useState(false);
+    const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    const showToast = (type, text) => {
+        setToast({ type, text });
+    };
+
+    useEffect(() => {
+        if (toast) {
+            const t = setTimeout(() => setToast(null), 3000);
+            return () => clearTimeout(t);
+        }
+    }, [toast]);
 
     const messagesEndRef = useRef(null);
     const typingTimeoutRef = useRef(null);
@@ -74,7 +87,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             sendMessageSocket(roomId, file.name, type, downloadURL);
         } catch (err) {
             console.error("Upload error:", err);
-            alert("Failed to upload file.");
+            showToast("error", "Failed to upload file.");
         } finally {
             setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = "";
@@ -181,7 +194,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         if (res.success && onDMBridgeSuccess) {
             onDMBridgeSuccess(res.chatId);
         } else {
-            alert(res.message || "Failed to start DM.");
+            showToast("error", res.message || "Failed to start DM.");
         }
     };
 
@@ -231,7 +244,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                 </div>
 
                 <button
-                    onClick={() => { if (window.confirm("Leave this room? For private rooms, if you are the last member it will nuke the room permanently.")) { leaveRoom(roomId); onBack(); } }}
+                    onClick={() => setShowLeaveConfirm(true)}
                     style={{
                         padding: "6px 12px",
                         borderRadius: "6px",
@@ -676,6 +689,77 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                             </form>
                         )}
                     </div>
+                </div>
+            )}
+
+            {/* Custom Leave Room Confirmation Modal */}
+            {showLeaveConfirm && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: "100%", maxWidth: "380px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", position: "relative", textAlign: "center" }}>
+                        <h3 style={{ margin: "0 0 12px", color: "#fff", fontSize: "1.1rem", fontWeight: "700" }}>
+                            Leave Room?
+                        </h3>
+                        <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.85rem", lineHeight: "1.5", margin: "0 0 20px" }}>
+                            For private rooms, if you are the last member it will nuke the room permanently.
+                        </p>
+                        <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+                            <button
+                                onClick={() => setShowLeaveConfirm(false)}
+                                style={{
+                                    flex: 1,
+                                    padding: "10px",
+                                    borderRadius: "8px",
+                                    background: "var(--color-surface-offset, #161b22)",
+                                    border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
+                                    color: "#cbd5e1",
+                                    fontWeight: "600",
+                                    cursor: "pointer",
+                                    fontSize: "0.85rem"
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowLeaveConfirm(false);
+                                    leaveRoom(roomId);
+                                    onBack();
+                                }}
+                                style={{
+                                    flex: 1,
+                                    padding: "10px",
+                                    borderRadius: "8px",
+                                    background: "#ef4444",
+                                    border: "none",
+                                    color: "#fff",
+                                    fontWeight: "600",
+                                    cursor: "pointer",
+                                    fontSize: "0.85rem"
+                                }}
+                            >
+                                Leave
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Custom Toast Alert */}
+            {toast && (
+                <div className={`zen-toast zen-toast-${toast.type}`} style={{ pointerEvents: "auto" }}>
+                    {toast.type === "success" && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                    )}
+                    {toast.type === "error" && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="15" y1="9" x2="9" y2="15" />
+                            <line x1="9" y1="9" x2="15" y2="15" />
+                        </svg>
+                    )}
+                    <span>{toast.text}</span>
                 </div>
             )}
         </div>
