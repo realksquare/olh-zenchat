@@ -103,7 +103,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                     >
                         <ArrowLeft size={20} />
                     </button>
-                    <h1 style={{ fontSize: "1.2rem", fontWeight: "700", margin: 0, color: "#fff" }}>#ZenVoice</h1>
+                    <h1 style={{ fontSize: "1.2rem", fontWeight: "700", margin: 0, color: "var(--color-text, #fff)" }}>#ZenVoice</h1>
                 </div>
 
                 <button
@@ -180,7 +180,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                             borderRadius: "8px",
                             border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                             background: "var(--color-surface-offset, #161b22)",
-                            color: "#fff",
+                            color: "var(--color-text, #fff)",
                             fontSize: "0.85rem",
                             outline: "none",
                             boxSizing: "border-box"
@@ -225,7 +225,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                             >
                                 <div style={{ display: "flex", flexDirection: "column", gap: "4px", textAlign: "left" }}>
                                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                        <span style={{ fontWeight: "600", color: "#fff", fontSize: "0.95rem" }}>{room.name}</span>
+                                        <span style={{ fontWeight: "600", color: "var(--color-text, #fff)", fontSize: "0.95rem" }}>{room.name}</span>
                                         {room.allowedDomain ? (
                                             <div style={{ display: "flex", alignItems: "center", gap: "3px", background: "var(--color-surface, #0f172a)", border: "1px solid rgba(56, 189, 248, 0.2)", padding: "2px 6px", borderRadius: "4px" }}>
                                                 <Lock size={10} style={{ color: "#38bdf8" }} />
@@ -255,7 +255,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
             {isCreateOpen && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ width: "100%", maxWidth: "400px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", position: "relative" }}>
-                        <h3 style={{ margin: "0 0 16px", color: "#fff", fontSize: "1.1rem", fontWeight: "700" }}>
+                        <h3 style={{ margin: "0 0 16px", color: "var(--color-text, #fff)", fontSize: "1.1rem", fontWeight: "700" }}>
                             {createdRoom ? "Private Room Created" : "Create Private Room"}
                         </h3>
                         <button
@@ -268,7 +268,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                         {createdRoom ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: "16px", textAlign: "center" }}>
                                 <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.88rem", lineHeight: "1.5", margin: 0 }}>
-                                    Your secret room <strong style={{ color: "#fff" }}>{createdRoom.name}</strong> is ready. Throw this invite link at your peers:
+                                    Your secret room <strong style={{ color: "var(--color-text, #fff)" }}>{createdRoom.name}</strong> is ready. Throw this invite link at your peers:
                                 </p>
                                 
                                 <div style={{ display: "flex", alignItems: "center", background: "var(--color-surface-offset, #161b22)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "8px", padding: "8px 12px" }}>
@@ -318,7 +318,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                             borderRadius: "8px",
                                             border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                             background: "var(--color-surface-offset, #161b22)",
-                                            color: "#fff",
+                                            color: "var(--color-text, #fff)",
                                             fontSize: "0.85rem",
                                             outline: "none",
                                             boxSizing: "border-box"
@@ -339,7 +339,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                             borderRadius: "8px",
                                             border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                             background: "var(--color-surface-offset, #161b22)",
-                                            color: "#fff",
+                                            color: "var(--color-text, #fff)",
                                             fontSize: "0.85rem",
                                             minHeight: "60px",
                                             resize: "vertical",

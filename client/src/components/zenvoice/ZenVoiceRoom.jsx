@@ -261,7 +261,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             {purgeLockdown && (
                 <div style={{ position: "absolute", inset: 0, background: "var(--body-bg, #0b0f19)", zIndex: 120000, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px", textAlign: "center" }}>
                     <Shield size={44} className="animate-pulse" style={{ color: "#f59e0b", animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite", marginBottom: "16px" }} />
-                    <h2 style={{ color: "#fff", fontSize: "1.2rem", fontWeight: "700", margin: "0 0 8px" }}>Daily Reset</h2>
+                    <h2 style={{ color: "var(--color-text, #fff)", fontSize: "1.2rem", fontWeight: "700", margin: "0 0 8px" }}>Daily Reset</h2>
                     <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.85rem", maxWidth: "280px", lineHeight: "1.5", margin: 0 }}>
                         Clearing all messages for today. Access resumes shortly.
                     </p>
@@ -278,7 +278,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                         <ArrowLeft size={20} />
                     </button>
                     <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "flex-start" }}>
-                        <span style={{ fontWeight: "700", color: "#fff", fontSize: "1rem" }}>{activeRoom.name || "Room"}</span>
+                        <span style={{ fontWeight: "700", color: "var(--color-text, #fff)", fontSize: "1rem" }}>{activeRoom.name || "Room"}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             <span style={{ fontSize: "0.75rem", color: "#10b981", display: "flex", alignItems: "center", gap: "4px" }}>
                                 <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", display: "inline-block" }}></span>
@@ -913,7 +913,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                             borderRadius: "8px",
                             border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                             background: "var(--color-surface-offset, #161b22)",
-                            color: "#fff",
+                            color: "var(--color-text, #fff)",
                             fontSize: "0.88rem",
                             outline: "none",
                             boxSizing: "border-box"
@@ -971,7 +971,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                         <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: getPseudonymColor(selectedUser), display: "flex", alignItems: "center", justifyContent: "center", margin: "10px auto 12px" }}>
                             <span style={{ color: "#000", fontWeight: "bold", fontSize: "1.1rem" }}>{selectedUser.slice(0, 2).toUpperCase()}</span>
                         </div>
-                        <h4 style={{ margin: "0 0 4px", color: "#fff", fontSize: "1.05rem", fontWeight: "700" }}>{selectedUser}</h4>
+                        <h4 style={{ margin: "0 0 4px", color: "var(--color-text, #fff)", fontSize: "1.05rem", fontWeight: "700" }}>{selectedUser}</h4>
                         <span style={{ fontSize: "0.78rem", color: "var(--color-text-faint, #64748b)" }}>Verified Peer</span>
  
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "20px" }}>
@@ -1026,7 +1026,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             {reportingMessage && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ width: "100%", maxWidth: "380px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", position: "relative" }}>
-                        <h3 style={{ margin: "0 0 16px", color: "#fff", fontSize: "1.1rem", fontWeight: "700", textAlign: "left" }}>
+                        <h3 style={{ margin: "0 0 16px", color: "var(--color-text, #fff)", fontSize: "1.1rem", fontWeight: "700", textAlign: "left" }}>
                             Report message
                         </h3>
                         <button
@@ -1055,7 +1055,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                             borderRadius: "8px",
                                             border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                             background: "var(--color-surface-offset, #161b22)",
-                                            color: "#fff",
+                                            color: "var(--color-text, #fff)",
                                             fontSize: "0.85rem",
                                             outline: "none"
                                         }}
@@ -1081,7 +1081,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                             borderRadius: "8px",
                                             border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                             background: "var(--color-surface-offset, #161b22)",
-                                            color: "#fff",
+                                            color: "var(--color-text, #fff)",
                                             fontSize: "0.85rem",
                                             minHeight: "70px",
                                             resize: "vertical",
@@ -1120,7 +1120,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             {showLeaveConfirm && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ width: "100%", maxWidth: "380px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", position: "relative", textAlign: "center" }}>
-                        <h3 style={{ margin: "0 0 12px", color: "#fff", fontSize: "1.1rem", fontWeight: "700" }}>
+                        <h3 style={{ margin: "0 0 12px", color: "var(--color-text, #fff)", fontSize: "1.1rem", fontWeight: "700" }}>
                             Leave Room?
                         </h3>
                         <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.85rem", lineHeight: "1.5", margin: "0 0 20px" }}>
@@ -1155,7 +1155,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                     borderRadius: "8px",
                                     background: "#ef4444",
                                     border: "none",
-                                    color: "#fff",
+                                    color: "var(--color-text, #fff)",
                                     fontWeight: "600",
                                     cursor: "pointer",
                                     fontSize: "0.85rem"
@@ -1172,7 +1172,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             {forwardingMessages.length > 0 && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ width: "100%", maxWidth: "380px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", display: "flex", flexDirection: "column", maxHeight: "80vh" }}>
-                        <h3 style={{ margin: "0 0 16px", color: "#fff", fontSize: "1.1rem", fontWeight: "700" }}>
+                        <h3 style={{ margin: "0 0 16px", color: "var(--color-text, #fff)", fontSize: "1.1rem", fontWeight: "700" }}>
                             Forward {forwardingMessages.length === 1 ? "Message" : `${forwardingMessages.length} Messages`}
                         </h3>
                         <div style={{ overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
@@ -1199,7 +1199,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         }}
                                     >
                                         <div style={{ display: "flex", flexDirection: "column", gap: "2px", textAlign: "left" }}>
-                                            <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "#fff" }}>{room.name}</span>
+                                            <span style={{ fontSize: "0.9rem", fontWeight: "600", color: "var(--color-text, #fff)" }}>{room.name}</span>
                                             <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
                                                 {room.isOfficial ? "Official Channel" : "Student Hideout"}
                                             </span>
@@ -1268,7 +1268,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             {deletingMessages.length > 0 && (
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ width: "100%", maxWidth: "380px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", position: "relative", textAlign: "center" }}>
-                        <h3 style={{ margin: "0 0 12px", color: "#fff", fontSize: "1.1rem", fontWeight: "700" }}>
+                        <h3 style={{ margin: "0 0 12px", color: "var(--color-text, #fff)", fontSize: "1.1rem", fontWeight: "700" }}>
                             Delete {deletingMessages.length === 1 ? "message?" : `${deletingMessages.length} messages?`}
                         </h3>
                         <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.85rem", lineHeight: "1.5", margin: "0 0 20px" }}>
@@ -1287,7 +1287,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                     borderRadius: "8px",
                                     background: "var(--color-surface-offset, #161b22)",
                                     border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
-                                    color: "#fff",
+                                    color: "var(--color-text, #fff)",
                                     fontWeight: "600",
                                     cursor: "pointer",
                                     fontSize: "0.85rem"
@@ -1308,7 +1308,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         borderRadius: "8px",
                                         background: "#ef4444",
                                         border: "none",
-                                        color: "#fff",
+                                        color: "var(--color-text, #fff)",
                                         fontWeight: "600",
                                         cursor: "pointer",
                                         fontSize: "0.85rem"

@@ -120,6 +120,13 @@
   --body-bg: #fdfbf7;
 }
 
+[data-theme="earthy_calm"] .moments-aura-title,
+[data-theme="earthy_calm"] .profile-modal h2 {
+  background: linear-gradient(135deg, var(--color-text) 0%, var(--color-text-muted) 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
 /* Animated Border for ZenOLED Message Bubble */
 @keyframes spin-border {
   100% {
