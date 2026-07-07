@@ -56,11 +56,12 @@ const ThemeSwitcherModal = ({ isOpen, onClose }) => {
                     background: "var(--color-surface, rgba(15, 23, 42, 0.95))", 
                     border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                     borderRadius: "16px",
-                    overflow: "hidden"
+                    overflow: "hidden",
+                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
                 }}
             >
                 {/* Header */}
-                <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255, 255, 255, 0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--color-surface)", position: "sticky", top: 0, zIndex: 10 }}>
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--color-border, rgba(255, 255, 255, 0.05))", display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--color-surface)", position: "sticky", top: 0, zIndex: 10 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                         <div style={{ padding: "8px", background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <PaletteIcon />
@@ -109,7 +110,7 @@ const ThemeSwitcherModal = ({ isOpen, onClose }) => {
                             style={{
                                 padding: "16px",
                                 borderRadius: "12px",
-                                border: !isUnlocked ? "2px solid var(--color-border, rgba(255, 255, 255, 0.08))" : user.selectedTheme === "zen_oled" ? "2px solid #5eead4" : "2px solid rgba(255,255,255,0.05)",
+                                border: !isUnlocked ? "2px solid var(--color-border, rgba(255, 255, 255, 0.08))" : user.selectedTheme === "zen_oled" ? "2px solid #5eead4" : "2px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                 background: !isUnlocked ? "var(--color-surface-offset, rgba(255,255,255,0.02))" : user.selectedTheme === "zen_oled" ? "rgba(94, 234, 212, 0.05)" : "var(--color-surface-offset, rgba(255,255,255,0.02))",
                                 cursor: !isUnlocked ? "not-allowed" : "pointer",
                                 opacity: !isUnlocked ? 0.6 : 1,
@@ -134,7 +135,7 @@ const ThemeSwitcherModal = ({ isOpen, onClose }) => {
                             style={{
                                 padding: "16px",
                                 borderRadius: "12px",
-                                border: !isUnlocked ? "2px solid var(--color-border, rgba(255, 255, 255, 0.08))" : user.selectedTheme === "earthy_calm" ? "2px solid #6B8E6B" : "2px solid rgba(255,255,255,0.05)",
+                                border: !isUnlocked ? "2px solid var(--color-border, rgba(255, 255, 255, 0.08))" : user.selectedTheme === "earthy_calm" ? "2px solid #6B8E6B" : "2px solid var(--color-border, rgba(255, 255, 255, 0.08))",
                                 background: !isUnlocked ? "var(--color-surface-offset, rgba(255,255,255,0.02))" : user.selectedTheme === "earthy_calm" ? "rgba(107, 142, 107, 0.05)" : "var(--color-surface-offset, rgba(255,255,255,0.02))",
                                 cursor: !isUnlocked ? "not-allowed" : "pointer",
                                 opacity: !isUnlocked ? 0.6 : 1,
