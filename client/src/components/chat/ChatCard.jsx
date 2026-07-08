@@ -51,6 +51,8 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const nameContentRef = useRef(null);
     const pressTimer = useRef(null);
     const touchStartPos = useRef({ x: 0, y: 0 });
+    const touchStartTime = useRef(0);
+    const hasMoved = useRef(false);
 
     const [isMobile, setIsMobile] = useState(false);
     const menuTimeoutRef = useRef(null);
@@ -208,25 +210,36 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     const handleTouchStart = (e) => {
         const touch = e.touches[0];
         touchStartPos.current = { x: touch.clientX, y: touch.clientY };
+        touchStartTime.current = Date.now();
+        hasMoved.current = false;
         if (pressTimer.current) clearTimeout(pressTimer.current);
         pressTimer.current = setTimeout(() => {
             setShowMenu(true);
         }, 800);
     };
-    const handleTouchEnd = () => {
-        if (pressTimer.current) {
-            clearTimeout(pressTimer.current);
-            pressTimer.current = null;
-        }
-    };
     const handleTouchMove = (e) => {
-        if (!pressTimer.current) return;
+        if (!touchStartPos.current) return;
         const touch = e.touches[0];
         const dx = Math.abs(touch.clientX - touchStartPos.current.x);
         const dy = Math.abs(touch.clientY - touchStartPos.current.y);
         if (dx > 8 || dy > 8) {
+            hasMoved.current = true;
+            if (pressTimer.current) {
+                clearTimeout(pressTimer.current);
+                pressTimer.current = null;
+            }
+        }
+    };
+    const handleTouchEnd = (e) => {
+        if (pressTimer.current) {
             clearTimeout(pressTimer.current);
             pressTimer.current = null;
+        }
+        const duration = Date.now() - touchStartTime.current;
+        if (!hasMoved.current && duration < 300) {
+            // Prevent simulated double tap / click delay
+            e.preventDefault();
+            handleClick();
         }
     };
 

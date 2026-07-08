@@ -183,8 +183,16 @@ export const SocketProvider = ({ children }) => {
                 if (soundEnabled) playReceiveSound();
                 
                 if (activeChat?._id?.toString() !== decompressed.chatId?.toString()) {
-                    const sender = existingChat?.participants?.find(p => p._id === decompressed.senderId || p._id?._id === decompressed.senderId);
-                    const displayName = existingChat?.isGroup ? existingChat.groupName : (sender?.fullName || sender?.username || "Someone");
+                    const senderIdStr = (decompressed.senderId?._id || decompressed.senderId || '').toString();
+                    const sender = existingChat?.participants?.find(p => {
+                        const pIdStr = (p._id?._id || p._id || p).toString();
+                        return pIdStr === senderIdStr;
+                    });
+                    const displayName = existingChat?.isGroup 
+                        ? existingChat.groupName 
+                        : ((sender?.fullName && sender.fullName.trim()) 
+                            ? sender.fullName 
+                            : (sender?.username || "Someone"));
                     showZenToast('info', `New message(s) from ${displayName}`);
                 }
             }
@@ -245,8 +253,16 @@ export const SocketProvider = ({ children }) => {
             const currentUserId = useAuthStore.getState().user?._id;
             if (reactorId && reactorId.toString() !== currentUserId?.toString() && (action === 'added' || action === 'updated')) {
                 const existingChat = useChatStore.getState().chats.find(c => c._id?.toString() === chatId?.toString());
-                const reactorUser = existingChat?.participants?.find(p => p._id === reactorId || p._id?._id === reactorId);
-                const displayName = existingChat?.isGroup ? existingChat.groupName : (reactorUser?.fullName || reactorUser?.username || "Someone");
+                const reactorIdStr = reactorId?.toString();
+                const reactorUser = existingChat?.participants?.find(p => {
+                    const pIdStr = (p._id?._id || p._id || p).toString();
+                    return pIdStr === reactorIdStr;
+                });
+                const displayName = existingChat?.isGroup 
+                    ? existingChat.groupName 
+                    : ((reactorUser?.fullName && reactorUser.fullName.trim()) 
+                        ? reactorUser.fullName 
+                        : (reactorUser?.username || "Someone"));
                 showZenToast('info', `New reaction(s) from ${displayName}`);
             }
         };
@@ -347,7 +363,9 @@ export const SocketProvider = ({ children }) => {
             const otherParticipant = targetChat?.participants?.find(
                 (p) => (p._id || p)?.toString() === senderId?.toString()
             );
-            const senderName = otherParticipant?.username || "Someone";
+            const senderName = (otherParticipant?.fullName && otherParticipant.fullName.trim()) 
+                ? otherParticipant.fullName 
+                : (otherParticipant?.username || "Someone");
 
             clearZenTimers();
             setIncomingZenInvite({ chatId, senderId, senderName });
@@ -418,7 +436,9 @@ export const SocketProvider = ({ children }) => {
             const otherParticipant = targetChat?.participants?.find(
                 (p) => (p._id || p)?.toString() === senderId?.toString()
             );
-            const senderName = otherParticipant?.username || "Someone";
+            const senderName = (otherParticipant?.fullName && otherParticipant.fullName.trim()) 
+                ? otherParticipant.fullName 
+                : (otherParticipant?.username || "Someone");
 
             clearZenTimers();
             setIncomingZenExit({ chatId, senderId, senderName });

@@ -9828,3 +9828,66 @@ body,
   80% { transform: translate(1px, -2px); text-shadow: -2px 0 var(--color-primary, #3da5d9), 2px 0 var(--accent, #ef4444); }
   100% { transform: translate(0); text-shadow: none; }
 }
+
+/* ── Download modal ─────────────────────────────────────── */
+.download-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+.download-modal {
+  background: var(--color-surface, #161b22);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  border-radius: 16px;
+  padding: 24px;
+  width: 340px;
+  max-width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.download-modal-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text, #fff);
+  margin: 0;
+}
+
+.download-modal-subtitle {
+  font-size: 0.85rem;
+  color: var(--color-text-muted, #94a3b8);
+  margin: 0;
+  word-break: break-all;
+}
+
+.download-modal-btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: opacity 0.15s ease;
+}
+
+.download-modal-btn.primary {
+  background: var(--color-primary, #f59e0b);
+  color: #000;
+}
+
+.download-modal-btn.secondary {
+  background: var(--color-surface-offset, #1c1f26);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  color: var(--color-text, #fff);
+}
+

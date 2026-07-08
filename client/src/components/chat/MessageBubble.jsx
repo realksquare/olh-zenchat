@@ -172,6 +172,38 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
         !!message.mediaUrl?.startsWith("blob:");
     const [isMediaLoaded, setIsMediaLoaded] = useState(isLocalBlob);
     const [manualLoad, setManualLoad] = useState(false);
+    const [downloadState, setDownloadState] = useState(null); // 'confirm' | 'downloading' | 'success' | 'error'
+    const [downloadErr, setDownloadErr] = useState('');
+
+    const startDownload = async () => {
+        setDownloadState('downloading');
+        try {
+            const fileName = getFileName(message.mediaUrl, message.content);
+            const dotIndex = fileName.lastIndexOf('.');
+            const baseName = dotIndex !== -1 ? fileName.slice(0, dotIndex) : fileName;
+            const extension = dotIndex !== -1 ? fileName.slice(dotIndex) : '';
+            const downloadName = `${baseName}_${senderUsername}_zenchat${extension}`;
+
+            const response = await fetch(message.mediaUrl);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            
+            const link = document.createElement("a");
+            link.href = blobUrl;
+            link.download = downloadName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(blobUrl);
+            
+            setDownloadState('success');
+        } catch (err) {
+            console.error("Download failed:", err);
+            setDownloadErr(err.message || 'Unknown network error');
+            setDownloadState('error');
+        }
+    };
     
     // Swipe to reply state
     const [swipeOffset, setSwipeOffset] = useState(0);
@@ -932,7 +964,11 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                        </div>
                                                       <a
                                                           href={message.mediaUrl}
-                                                          onClick={(e) => triggerDownload(e, message.mediaUrl, message.content, senderUsername)}
+                                                          onClick={(e) => {
+                                                              e.preventDefault();
+                                                              e.stopPropagation();
+                                                              setDownloadState('confirm');
+                                                          }}
                                                           style={{ color: '#94a3b8', padding: '4px', borderRadius: '6px', transition: 'all 0.2s', cursor: 'pointer' }}
                                                            onMouseEnter={e => e.currentTarget.style.color = '#fff'}
                                                            onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
@@ -1360,6 +1396,64 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                 );
                             })}
                         </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+            {downloadState && createPortal(
+                <div className="download-modal-overlay" onClick={() => setDownloadState(null)}>
+                    <div className="download-modal" onClick={(e) => e.stopPropagation()}>
+                        {downloadState === 'confirm' && (
+                            <>
+                                <h3 className="download-modal-title">Download file?</h3>
+                                <p className="download-modal-subtitle">{getFileName(message.mediaUrl, message.content)}</p>
+                                <div className="delete-modal-actions" style={{ marginTop: '12px' }}>
+                                    <button className="download-modal-btn primary" onClick={startDownload}>
+                                        Download
+                                    </button>
+                                    <button className="download-modal-btn secondary" onClick={() => setDownloadState(null)}>
+                                        Cancel
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                        {downloadState === 'downloading' && (
+                            <>
+                                <h3 className="download-modal-title">Downloading...</h3>
+                                <p className="download-modal-subtitle">Fetching file from server...</p>
+                                <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0' }}>
+                                    <div className="animate-spin" style={{ width: '28px', height: '28px', borderRadius: '50%', border: '3px solid var(--color-primary, #f59e0b)', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}></div>
+                                </div>
+                            </>
+                        )}
+                        {downloadState === 'success' && (
+                            <>
+                                <h3 className="download-modal-title" style={{ color: '#10b981' }}>Download Completed!</h3>
+                                <p className="download-modal-subtitle">File successfully saved to your device.</p>
+                                <div className="delete-modal-actions" style={{ marginTop: '12px' }}>
+                                    <button className="download-modal-btn primary" style={{ background: '#10b981' }} onClick={() => setDownloadState(null)}>
+                                        Awesome
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                        {downloadState === 'error' && (
+                            <>
+                                <h3 className="download-modal-title" style={{ color: '#ef4444' }}>Download Failed</h3>
+                                <p className="download-modal-subtitle" style={{ fontSize: '0.8rem' }}>{downloadErr || 'Network error occurred.'}</p>
+                                <div className="delete-modal-actions" style={{ marginTop: '12px' }}>
+                                    <button className="download-modal-btn primary" onClick={startDownload}>
+                                        Retry
+                                    </button>
+                                    <button className="download-modal-btn secondary" onClick={() => { window.open(message.mediaUrl, "_blank"); setDownloadState(null); }}>
+                                        Open in Tab
+                                    </button>
+                                    <button className="download-modal-btn secondary" style={{ border: 'none' }} onClick={() => setDownloadState(null)}>
+                                        Cancel
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>,
                 document.body
