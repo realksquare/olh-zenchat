@@ -103,8 +103,8 @@
   --color-text-muted: #4e5b4e;
   --color-text-faint: #798479;
 
-  --color-surface: #fdfbf7;
-  --color-surface-offset: #f4f1ea;
+  --color-surface: #f7f5f0;
+  --color-surface-offset: #ece8dd;
   --color-surface-offset-2: rgba(90, 123, 90, 0.1);
   --color-border: rgba(0, 0, 0, 0.15);
   --color-overlay: rgba(0, 0, 0, 0.05);
@@ -117,7 +117,7 @@
   --bubble-delivered: #486648;
   --bubble-seen: #5A7B5A;
 
-  --body-bg: #fdfbf7;
+  --body-bg: #ede9df;
 }
 
 [data-theme="earthy_calm"] .moments-aura-title,
