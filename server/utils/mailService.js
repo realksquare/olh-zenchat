@@ -169,6 +169,10 @@ const send2faEmail = async (email, username, code) => {
     console.log("=======================================================\n");
 
     const brevoApiKey = (process.env.BREVO_API_KEY || "").trim();
+    const resendApiKey = (process.env.RESEND_API_KEY || "").trim();
+    const transporter = getTransporter();
+
+    const from = process.env.SMTP_FROM || '"ZenChat" <no-reply@zenchat.com>';
     const subject = "Your ZenChat 2FA Verification Code";
     const html = `
         <div style="background-color: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px 20px; text-align: center; border-radius: 8px; max-width: 600px; margin: 0 auto;">
@@ -194,10 +198,11 @@ const send2faEmail = async (email, username, code) => {
         </div>
     `;
 
+    // 1. Try Brevo HTTPS API
     if (brevoApiKey) {
         try {
             const senderEmail = process.env.SMTP_FROM ? process.env.SMTP_FROM : "onlinelearninghubteam@gmail.com";
-            await fetch("https://api.brevo.com/v3/smtp/email", {
+            const response = await fetch("https://api.brevo.com/v3/smtp/email", {
                 method: "POST",
                 headers: {
                     "accept": "application/json",
@@ -211,11 +216,57 @@ const send2faEmail = async (email, username, code) => {
                     htmlContent: html
                 })
             });
-            console.log(`[Brevo] 2FA email successfully dispatched to ${email}`);
+            if (response.ok) {
+                console.log(`[Brevo] 2FA email successfully dispatched to ${email}`);
+                return true;
+            }
         } catch (error) {
             console.error("[Brevo] Error dispatching 2FA email:", error);
         }
     }
+
+    // 2. Try Resend HTTPS API
+    if (resendApiKey) {
+        try {
+            const fromEmail = process.env.SMTP_FROM ? process.env.SMTP_FROM : "onboarding@resend.dev";
+            const response = await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${resendApiKey}`
+                },
+                body: JSON.stringify({
+                    from: fromEmail,
+                    to: email,
+                    subject: subject,
+                    html: html
+                })
+            });
+            if (response.ok) {
+                console.log(`[Resend] 2FA email successfully dispatched to ${email}`);
+                return true;
+            }
+        } catch (error) {
+            console.error("[Resend] Error dispatching 2FA email:", error);
+        }
+    }
+
+    // 3. Try Nodemailer SMTP transporter
+    if (transporter) {
+        try {
+            await transporter.sendMail({
+                from,
+                to: email,
+                subject,
+                html,
+            });
+            console.log(`[SMTP] 2FA email successfully dispatched to ${email}`);
+            return true;
+        } catch (error) {
+            console.error("[SMTP] Error dispatching 2FA email via transporter:", error);
+        }
+    }
+
     return true;
 };
 

@@ -334,7 +334,7 @@ router.post(
             if (user.is2faEnabled) {
                 const otp = Math.floor(100000 + Math.random() * 900000).toString();
                 
-                await send2faEmail(user.email, user.username, otp);
+                send2faEmail(user.email, user.username, otp).catch(err => console.error("2FA send error:", err));
 
                 user.verificationSession = {
                     otpCode: otp,
@@ -376,7 +376,7 @@ router.post("/resend-mfa", authLimiter, async (req, res) => {
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         
-        await send2faEmail(user.email, user.username, otp);
+        send2faEmail(user.email, user.username, otp).catch(err => console.error("[Resend MFA] send error:", err));
 
         user.verificationSession = {
             otpCode: otp,
@@ -441,7 +441,7 @@ router.post("/2fa/setup/request", authMiddleware, async (req, res) => {
         };
         await user.save();
 
-        await send2faEmail(emailTarget, user.username, otpCode);
+        send2faEmail(emailTarget, user.username, otpCode).catch(err => console.error("2FA setup send error:", err));
         res.json({ message: `Verification code sent to email ${emailTarget}` });
     } catch (err) {
         console.error("2FA request setup error:", err);
