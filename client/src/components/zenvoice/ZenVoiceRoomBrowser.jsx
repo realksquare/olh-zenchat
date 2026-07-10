@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useZenVoiceStore } from "../../stores/zenVoiceStore";
+import { useAuthStore } from "../../stores/authStore";
 import { Plus, Search, Globe, Lock, Users, ArrowLeft, Copy, Check, MessageSquare, Loader2 } from "lucide-react";
 
 const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
@@ -14,11 +15,15 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
         sessionToken
     } = useZenVoiceStore();
 
+    const { user } = useAuthStore();
+    const isAdmin = user?.role === "master_admin" || user?.role === "co_admin";
+
     const [activeTab, setActiveTab] = useState(() => localStorage.getItem("zenvoice_active_tab") || "official"); // "official" | "private"
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [isCreatingOfficial, setIsCreatingOfficial] = useState(false);
     
     // Create room form state
     const [newRoomName, setNewRoomName] = useState("");
@@ -60,7 +65,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
             return;
         }
 
-        const res = await createRoom(newRoomName.trim(), newRoomDesc.trim(), lockToDomain);
+        const res = await createRoom(newRoomName.trim(), newRoomDesc.trim(), isCreatingOfficial ? true : lockToDomain, isCreatingOfficial);
         if (res.success) {
             setCreatedRoom(res.room);
             setNewRoomName("");
@@ -109,25 +114,47 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                     <h1 style={{ fontSize: "1.2rem", fontWeight: "700", margin: 0, color: "var(--color-text, #fff)" }}>#ZenVoice</h1>
                 </div>
 
-                <button
-                    onClick={() => { setIsCreateOpen(true); setCreatedRoom(null); setFormError(""); }}
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        padding: "8px 14px",
-                        borderRadius: "8px",
-                        background: "#f59e0b",
-                        border: "none",
-                        color: "#000",
-                        fontWeight: "600",
-                        fontSize: "0.85rem",
-                        cursor: "pointer"
-                    }}
-                >
-                    <Plus size={16} />
-                    <span>New Room</span>
-                </button>
+                {activeTab === "private" ? (
+                    <button
+                        onClick={() => { setIsCreateOpen(true); setIsCreatingOfficial(false); setCreatedRoom(null); setFormError(""); }}
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            padding: "8px 14px",
+                            borderRadius: "8px",
+                            background: "#f59e0b",
+                            border: "none",
+                            color: "#000",
+                            fontWeight: "600",
+                            fontSize: "0.85rem",
+                            cursor: "pointer"
+                        }}
+                    >
+                        <Plus size={16} />
+                        <span>New Private Room</span>
+                    </button>
+                ) : isAdmin ? (
+                    <button
+                        onClick={() => { setIsCreateOpen(true); setIsCreatingOfficial(true); setCreatedRoom(null); setFormError(""); }}
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            padding: "8px 14px",
+                            borderRadius: "8px",
+                            background: "var(--color-primary, #3da5d9)",
+                            border: "none",
+                            color: "#fff",
+                            fontWeight: "600",
+                            fontSize: "0.85rem",
+                            cursor: "pointer"
+                        }}
+                    >
+                        <Plus size={16} />
+                        <span>New Official Channel</span>
+                    </button>
+                ) : null}
             </div>
 
             {/* Tabs */}
@@ -259,7 +286,10 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                 <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <div style={{ width: "100%", maxWidth: "400px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", position: "relative" }}>
                         <h3 style={{ margin: "0 0 16px", color: "var(--color-text, #fff)", fontSize: "1.1rem", fontWeight: "700" }}>
-                            {createdRoom ? "Private Room Created" : "Create Private Room"}
+                            {createdRoom 
+                                ? (isCreatingOfficial ? "Official Channel Created" : "Private Room Created") 
+                                : (isCreatingOfficial ? "Create Official Channel" : "Create Private Room")
+                            }
                         </h3>
                         <button
                             onClick={() => setIsCreateOpen(false)}
@@ -271,20 +301,26 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                         {createdRoom ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: "16px", textAlign: "center" }}>
                                 <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.88rem", lineHeight: "1.5", margin: 0 }}>
-                                    Your secret room <strong style={{ color: "var(--color-text, #fff)" }}>{createdRoom.name}</strong> is ready. Throw this invite link at your peers:
+                                    {isCreatingOfficial ? (
+                                        <>Official channel <strong style={{ color: "var(--color-text, #fff)" }}>{createdRoom.name}</strong> is ready. Students can find and join it from the browser.</>
+                                    ) : (
+                                        <>Your secret room <strong style={{ color: "var(--color-text, #fff)" }}>{createdRoom.name}</strong> is ready. Throw this invite link at your peers:</>
+                                    )}
                                 </p>
                                 
-                                <div style={{ display: "flex", alignItems: "center", background: "var(--color-surface-offset, #161b22)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "8px", padding: "8px 12px" }}>
-                                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "0.8rem", color: "var(--color-text-faint, #64748b)", textAlign: "left" }}>
-                                        {window.location.origin}/zenvoice/invite/{createdRoom.inviteToken}
-                                    </span>
-                                    <button
-                                        onClick={copyInviteLink}
-                                        style={{ background: "none", border: "none", color: copied ? "#10b981" : "#f59e0b", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center" }}
-                                    >
-                                        {copied ? <Check size={16} /> : <Copy size={16} />}
-                                    </button>
-                                </div>
+                                {!isCreatingOfficial && (
+                                    <div style={{ display: "flex", alignItems: "center", background: "var(--color-surface-offset, #161b22)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "8px", padding: "8px 12px" }}>
+                                        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "0.8rem", color: "var(--color-text-faint, #64748b)", textAlign: "left" }}>
+                                            {window.location.origin}/zenvoice/invite/{createdRoom.inviteToken}
+                                        </span>
+                                        <button
+                                            onClick={copyInviteLink}
+                                            style={{ background: "none", border: "none", color: copied ? "#10b981" : "#f59e0b", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center" }}
+                                        >
+                                            {copied ? <Check size={16} /> : <Copy size={16} />}
+                                        </button>
+                                    </div>
+                                )}
 
                                 <button
                                     onClick={() => { setIsCreateOpen(false); handleSelectRoom(createdRoom); }}
@@ -292,9 +328,9 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                         width: "100%",
                                         padding: "12px",
                                         borderRadius: "8px",
-                                        background: "#f59e0b",
+                                        background: isCreatingOfficial ? "var(--color-primary, #3da5d9)" : "#f59e0b",
                                         border: "none",
-                                        color: "#000",
+                                        color: isCreatingOfficial ? "#fff" : "#000",
                                         fontWeight: "600",
                                         cursor: "pointer",
                                         fontSize: "0.9rem",
@@ -310,7 +346,7 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                     <label style={{ fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)", display: "block", marginBottom: "4px" }}>What should we call this room?</label>
                                     <input
                                         type="text"
-                                        placeholder="e.g. Gossip Central / Study Group"
+                                        placeholder={isCreatingOfficial ? "e.g. Announcements / Tech Talks" : "e.g. Gossip Central / Study Group"}
                                         value={newRoomName}
                                         onChange={(e) => setNewRoomName(e.target.value)}
                                         maxLength={40}
@@ -353,18 +389,20 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                     />
                                 </div>
 
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "transparent", padding: "10px 0" }}>
-                                    <input
-                                        type="checkbox"
-                                        id="lockDomain"
-                                        checked={lockToDomain}
-                                        onChange={(e) => setLockToDomain(e.target.checked)}
-                                        style={{ cursor: "pointer" }}
-                                    />
-                                    <label htmlFor="lockDomain" style={{ fontSize: "0.8rem", color: "var(--color-text, #cbd5e1)", cursor: "pointer", textAlign: "left", userSelect: "none" }}>
-                                        Only let people from @{collegeEmailDomain || "domain"} join
-                                    </label>
-                                </div>
+                                {!isCreatingOfficial && (
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "transparent", padding: "10px 0" }}>
+                                        <input
+                                            type="checkbox"
+                                            id="lockDomain"
+                                            checked={lockToDomain}
+                                            onChange={(e) => setLockToDomain(e.target.checked)}
+                                            style={{ cursor: "pointer" }}
+                                        />
+                                        <label htmlFor="lockDomain" style={{ fontSize: "0.8rem", color: "var(--color-text, #cbd5e1)", cursor: "pointer", textAlign: "left", userSelect: "none" }}>
+                                            Only let people from @{collegeEmailDomain || "domain"} join
+                                        </label>
+                                    </div>
+                                )}
 
                                 {formError && (
                                     <div style={{ padding: "8px", background: "rgba(239, 68, 68, 0.1)", borderRadius: "6px", color: "#ef4444", fontSize: "0.78rem" }}>
@@ -378,9 +416,9 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                         width: "100%",
                                         padding: "12px",
                                         borderRadius: "8px",
-                                        background: "#f59e0b",
+                                        background: isCreatingOfficial ? "var(--color-primary, #3da5d9)" : "#f59e0b",
                                         border: "none",
-                                        color: "#000",
+                                        color: isCreatingOfficial ? "#fff" : "#000",
                                         fontWeight: "600",
                                         cursor: "pointer",
                                         fontSize: "0.9rem",

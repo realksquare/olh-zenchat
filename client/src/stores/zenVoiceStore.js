@@ -311,14 +311,14 @@ export const useZenVoiceStore = create((set, get) => ({
         }
     },
 
-    createRoom: async (name, description, lockToDomain) => {
+    createRoom: async (name, description, lockToDomain, isOfficial = false) => {
         const { sessionToken, rooms } = get();
         if (!sessionToken) return { success: false };
         set({ isLoading: true, error: null });
         try {
             const { data } = await axiosInstance.post(
                 "/zenvoice/rooms",
-                { name, description, lockToDomain },
+                { name, description, lockToDomain, isOfficial },
                 { headers: { Authorization: `Bearer ${sessionToken}` } }
             );
             set({ rooms: [data.room, ...rooms], isLoading: false });

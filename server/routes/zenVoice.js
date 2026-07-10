@@ -263,20 +263,31 @@ router.get("/rooms", zenVoiceAuth, async (req, res) => {
  */
 router.post("/rooms", zenVoiceAuth, async (req, res) => {
     try {
-        const { name, description, lockToDomain } = req.body;
+        const { name, description, lockToDomain, isOfficial } = req.body;
         if (!name || name.trim().length === 0) {
             return res.status(400).json({ message: "Room name is required." });
         }
         if (!req.zenVoicePseudonym) {
             return res.status(401).json({ message: "ZenVoice session missing pseudonym." });
         }
+
+        let officialValue = false;
+        if (isOfficial) {
+            const user = await User.findOne({ "zenVoice.pseudonym": req.zenVoicePseudonym });
+            if (user && (user.role === "master_admin" || user.role === "co_admin")) {
+                officialValue = true;
+            } else {
+                return res.status(403).json({ message: "Only administrators can create official rooms." });
+            }
+        }
+
         const allowedDomain = lockToDomain ? (req.zenVoiceDomain || "") : "";
         const inviteToken = crypto.randomBytes(16).toString("hex");
         const room = await ZenVoiceRoom.create({
             name: name.trim(),
             description: description ? description.trim() : "",
             creatorPseudonym: req.zenVoicePseudonym,
-            isOfficial: false,
+            isOfficial: officialValue,
             allowedDomain,
             inviteToken,
             members: [req.zenVoicePseudonym],

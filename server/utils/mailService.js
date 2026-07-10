@@ -4,26 +4,32 @@ const nodemailer = require("nodemailer");
  * Creates and returns a Nodemailer Transporter.
  * Automatically falls back to standard Google SMTP or a development test account.
  */
-const getTransporter = () => {
-    try {
-        const host = (process.env.SMTP_HOST || "").trim();
-        const user = (process.env.SMTP_USER || "").trim();
-        const pass = (process.env.SMTP_PASS || "").trim();
+const host = (process.env.SMTP_HOST || "").trim();
+const user = (process.env.SMTP_USER || "").trim();
+const pass = (process.env.SMTP_PASS || "").trim();
 
-        if (host && user && pass) {
-            return nodemailer.createTransport({
-                host,
-                port: parseInt(process.env.SMTP_PORT || "587", 10),
-                secure: process.env.SMTP_SECURE === "true" || process.env.SMTP_PORT === "465",
-                auth: { user, pass },
-            });
-        }
-    } catch (err) {
-        console.error("[SMTP] Error initializing transport:", err);
+let globalTransporter = null;
+try {
+    if (host && user && pass) {
+        globalTransporter = nodemailer.createTransport({
+            host,
+            port: parseInt(process.env.SMTP_PORT || "587", 10),
+            secure: process.env.SMTP_SECURE === "true" || process.env.SMTP_PORT === "465",
+            auth: { user, pass },
+            pool: true, // Enable connection pooling
+            maxConnections: 5,
+            maxMessages: 100,
+            rateDelta: 1000,
+            rateLimit: 5
+        });
+        console.log("[SMTP] Connection pool initialized successfully.");
     }
+} catch (err) {
+    console.error("[SMTP] Error initializing transport pool:", err);
+}
 
-    // Fallback: Return a mock/development transporter or logging transporter
-    return null;
+const getTransporter = () => {
+    return globalTransporter;
 };
 
 /**

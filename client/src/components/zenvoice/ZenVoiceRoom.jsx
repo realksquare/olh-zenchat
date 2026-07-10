@@ -48,6 +48,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
     const [deletingMessages, setDeletingMessages] = useState([]);
     const [selectedForwardRooms, setSelectedForwardRooms] = useState([]);
     const [selectedMessageIds, setSelectedMessageIds] = useState(new Set());
+    const isSelectionMode = selectedMessageIds.size > 0;
 
     const toggleMessageSelection = (msgId) => {
         setSelectedMessageIds(prev => {
@@ -328,7 +329,6 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                     const isBlurred = msg.globalBlur && !revealedMessages.has(msg._id);
                     const isDeletedForMe = msg.deletedFor?.includes(myPseudonym);
                     const isSelected = selectedMessageIds.has(msg._id);
-                    const isSelectionMode = selectedMessageIds.size > 0;
                     const isStarredByMe = msg.starredBy?.includes(myPseudonym);
 
                     if (isDeletedForMe) return null;
