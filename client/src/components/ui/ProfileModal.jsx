@@ -8,6 +8,7 @@ import LoadingOverlay from "./LoadingOverlay";
 import { db } from "../../db/zenDB";
 import { generateRecoveryKey, rotateUserRecoveryKey, setupE2EEForUser, getLocalE2EEKeys } from "../../utils/e2eeHelper";
 import { decryptForMultipleRecipients, decryptFileAES } from "../../utils/crypto";
+import MomentViewer from "../chat/MomentViewer";
 
 // Phone parser and country codes removed in favor of Email 2FA
 
@@ -401,6 +402,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
 
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [capturedMoments, setCapturedMoments] = useState([]);
+    const [viewerMoment, setViewerMoment] = useState(null);
     const [loadingMoments, setLoadingMoments] = useState(false);
     const [momentToDelete, setMomentToDelete] = useState(null);
     useEffect(() => {
@@ -1054,6 +1056,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                 return (
                                                     <div 
                                                         key={mom._id} 
+                                                        onClick={() => setViewerMoment(mom)}
                                                         style={{ 
                                                             position: "relative", 
                                                             height: "90px", 
@@ -1061,7 +1064,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                             overflow: "hidden", 
                                                             border: "1px solid var(--color-border, rgba(255,255,255,0.08))",
                                                             background: "linear-gradient(135deg, rgba(61,165,217,0.06) 0%, rgba(168,85,247,0.06) 100%)",
-                                                            transition: "transform 0.2s, box-shadow 0.2s"
+                                                            transition: "transform 0.2s, box-shadow 0.2s",
+                                                            cursor: "pointer"
                                                         }}
                                                         onMouseEnter={(e) => {
                                                             e.currentTarget.style.transform = "translateY(-2px)";
@@ -1072,6 +1076,9 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                                             e.currentTarget.style.boxShadow = "none";
                                                         }}
                                                     >
+                                                        <div style={{ position: "absolute", top: "6px", left: "6px", background: "rgba(15, 23, 42, 0.75)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", padding: "2px 6px", fontSize: "0.58rem", color: "#e2e8f0", zIndex: 5, pointerEvents: "none" }}>
+                                                            {new Date(mom.createdAt).toLocaleDateString([], { month: "short", day: "numeric" })}
+                                                        </div>
                                                         {mom.type === "image" ? (
                                                             <>
                                                                 <img 
@@ -1880,6 +1887,13 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                     setImageError(false);
                     setCropImage(null);
                 }}
+            />
+        )}
+        {viewerMoment && (
+            <MomentViewer 
+                moments={[viewerMoment]} 
+                isOpen={!!viewerMoment} 
+                onClose={() => setViewerMoment(null)} 
             />
         )}
         </>,

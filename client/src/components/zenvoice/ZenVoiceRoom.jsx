@@ -253,7 +253,8 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         }));
     };
 
-    const activeRoom = useZenVoiceStore.getState().rooms.find(r => r._id === roomId) || {};
+    const rooms = useZenVoiceStore(s => s.rooms || []);
+    const activeRoom = rooms.find(r => r._id === roomId) || {};
 
     return (
         <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "var(--body-bg, #0b0f19)", position: "relative" }}>

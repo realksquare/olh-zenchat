@@ -80,8 +80,11 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
     };
 
     const handleSelectRoom = async (room) => {
+        if (!room) return;
+        const myPseudonym = useZenVoiceStore.getState().pseudonym;
+        const membersList = room.members || [];
         // If official room and we are not in its members list, join first
-        if (room.isOfficial && !room.members.includes(useZenVoiceStore.getState().pseudonym)) {
+        if (room.isOfficial && !membersList.includes(myPseudonym)) {
             await joinRoom(room._id);
         }
         onRoomSelect(room._id);

@@ -4768,7 +4768,7 @@ select {
   background: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(10px);
   z-index: 2000;
-  transition: opacity 1s ease;
+  transition: opacity 0.35s ease;
   overflow: hidden !important;
   padding: 0 !important;
 }

@@ -23,7 +23,7 @@ const FILTER_STYLES = {
 const MomentOverlays = ({ filter, createdAt, locationTag }) => (
     <>
         {filter === 'datetime' && (
-            <div style={{ position: 'absolute', bottom: '90px', left: '16px', display: 'flex', flexDirection: 'column', gap: '2px', color: '#ffffff', background: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(8px)', padding: '10px 14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 16px rgba(0,0,0,0.4)', pointerEvents: 'none', userSelect: 'none', zIndex: 10 }}>
+            <div style={{ position: 'absolute', top: '50%', left: '16px', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: '2px', color: '#ffffff', background: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(8px)', padding: '10px 14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 4px 16px rgba(0,0,0,0.4)', pointerEvents: 'none', userSelect: 'none', zIndex: 10 }}>
                 <span style={{ fontSize: '1.8rem', fontWeight: '300', fontFamily: '"Outfit", sans-serif', lineHeight: 1 }}>
                     {new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).replace(/^0/, '')}
                 </span>
@@ -328,7 +328,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
 
     // Timer effect that respects input focus (pausing)
     useEffect(() => {
-        if (!isOpen || !currentMoment || showDeleteConfirm) return;
+        if (!isOpen || !currentMoment || showDeleteConfirm || isDecrypting) return;
 
         stopAudio();
         setShowMusicInfo(false);
@@ -491,12 +491,15 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const handleClose = () => {
         setIsClosing(true);
         stopAudio();
+        if (videoRef.current) {
+            videoRef.current.pause();
+        }
         setTimeout(() => {
             onClose();
             setIsClosing(false);
             setCurrentIndex(0);
             setShowDeleteConfirm(false);
-        }, 800);
+        }, 350);
     };
 
     const handleSendReply = async () => {
@@ -582,23 +585,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                         style={{ backgroundImage: `url(${displayMediaUrl})` }}
                     />
                 )}
-                <div className="aura-progress-bars" style={{ display: 'flex', gap: '4px', position: 'absolute', top: '12px', left: '12px', right: '12px', zIndex: 1100 }}>
-                    {moments.map((_, idx) => (
-                        <div key={`${currentIndex}-${idx}`} className="aura-progress-bg" style={{ flex: 1, height: '3px', background: 'rgba(255, 255, 255, 0.3)', borderRadius: '2px', overflow: 'hidden' }}>
-                            <div
-                                className={`aura-progress-fill solid ${idx === currentIndex ? 'active' : (idx < currentIndex ? 'completed' : '')}`}
-                                style={{
-                                    ...(idx === currentIndex ? { '--duration': `${totalDuration}s` } : {}),
-                                    background: '#ffffff',
-                                    height: '100%',
-                                    width: idx < currentIndex ? '100%' : (idx === currentIndex ? undefined : '0%'), // Let CSS animation handle current, force 100% for completed
-                                    opacity: 1,
-                                    boxShadow: 'none' // Remove any blur
-                                }}
-                            />
-                        </div>
-                    ))}
-                </div>
+
 
                 <div className={`aura-viewer-header${(!hasMedia) ? ' with-bg' : ' with-gradient'}`}>
                     <div className="aura-user-meta-container">
