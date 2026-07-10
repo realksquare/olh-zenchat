@@ -659,7 +659,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
         formData.append("privacySettings", JSON.stringify(privacySettings));
         const res = await updateProfile(formData);
         if (res.success) {
-            showToast("Profile updated successfully.");
+            showToast("Profile updated. Looking sharp.");
             setTimeout(() => {
                 onSave?.();
                 onClose();
@@ -723,7 +723,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             setIs2faEnabled(true);
             setOtpSent(false);
             setOtpCode("");
-            showToast("2FA verified and enabled successfully!");
+            showToast("2FA active. Nobody's getting in now.");
         } catch (err) {
             showToast(err.response?.data?.message || "Verification failed. Please check the code.");
         } finally {
@@ -854,7 +854,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             const newKey = generateRecoveryKey();
             await rotateUserRecoveryKey(user, newKey);
             setRecoveryKeyText(newKey);
-            showToast("New Recovery Key successfully generated and cached.");
+            showToast("New recovery key ready and cached. Don't lose it.");
         } catch (err) {
             console.error("[Settings] Rotation failed:", err);
             showToast("Key generation failed. Make sure E2EE is active on this device.");
@@ -882,7 +882,7 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
             const { checkAuth } = useAuthStore.getState();
             await checkAuth();
             
-            showToast("End-to-End Encryption activated successfully.");
+            showToast("E2EE activated. Pure privacy unlocked.");
             setActivationPassword("");
         } catch (err) {
             console.error("[ProfileModal] Activation failed:", err);

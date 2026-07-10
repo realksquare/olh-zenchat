@@ -298,7 +298,8 @@ userSchema.methods.toPrivateJSON = function () {
         cryptoIv: this.cryptoIv,
         hasSeenPurgeNotice: this.hasSeenPurgeNotice,
         pulseStreak: this.pulseStreak,
-        selectedTheme: this.selectedTheme
+        selectedTheme: this.selectedTheme,
+        createdAt: this.createdAt
     };
 };
 

@@ -208,6 +208,9 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
     };
 
     const handleTouchStart = (e) => {
+        if (e.target.closest('.chat-card-actions') || e.target.closest('.chat-card-menu')) {
+            return;
+        }
         const touch = e.touches[0];
         touchStartPos.current = { x: touch.clientX, y: touch.clientY };
         touchStartTime.current = Date.now();
@@ -231,6 +234,9 @@ const ChatCard = ({ chat, isActive, onSelect, onPin, isPinned }) => {
         }
     };
     const handleTouchEnd = (e) => {
+        if (e.target.closest('.chat-card-actions') || e.target.closest('.chat-card-menu')) {
+            return;
+        }
         if (pressTimer.current) {
             clearTimeout(pressTimer.current);
             pressTimer.current = null;

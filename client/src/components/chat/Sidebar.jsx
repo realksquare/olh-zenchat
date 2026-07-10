@@ -745,7 +745,7 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
             {showMobileMenu && createPortal(
                 <div className={isMobile ? "mobile-bottom-sheet-overlay" : "modal-backdrop"} style={{ display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.4)", zIndex: 20000 }} onClick={() => setShowMobileMenu(false)}>
                     <div className={isMobile ? "mobile-bottom-sheet" : "modal-card"} onClick={(e) => e.stopPropagation()} style={isMobile ? { padding: "20px 0 32px" } : { maxWidth: "340px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "var(--color-surface, rgba(15, 23, 42, 0.9))", backdropFilter: "blur(20px)", padding: "24px", borderRadius: "16px", width: "100%" }}>
-                        <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#f8fafc", marginBottom: "16px", textAlign: "center", padding: isMobile ? "0 20px" : "0" }}>Menu</h3>
+                        <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "var(--color-text, #f8fafc)", marginBottom: "16px", textAlign: "center", padding: isMobile ? "0 20px" : "0" }}>Menu</h3>
                         
                         <div style={{ display: "flex", flexDirection: "column", gap: "6px", padding: isMobile ? "0 20px" : "0" }}>
                             <button className="mobile-menu-btn" onClick={() => { setShowMobileMenu(false); setIsYourTimeOpen(true); }}>

@@ -50,6 +50,49 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
     const [selectedMessageIds, setSelectedMessageIds] = useState(new Set());
     const isSelectionMode = selectedMessageIds.size > 0;
 
+    const longPressTimerRef = useRef(null);
+    const touchStartRef = useRef({ x: 0, y: 0 });
+    const isLongPressActive = useRef(false);
+
+    const handleMessageTouchStart = (e, msgId) => {
+        if (isSelectionMode) return;
+        const touch = e.touches[0];
+        touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+        isLongPressActive.current = false;
+
+        if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = setTimeout(() => {
+            isLongPressActive.current = true;
+            if (navigator.vibrate) navigator.vibrate(50);
+            setMenuOpenMessage(msgId);
+        }, 500);
+    };
+
+    const handleMessageTouchMove = (e) => {
+        if (isSelectionMode) return;
+        const touch = e.touches[0];
+        const diffX = Math.abs(touch.clientX - touchStartRef.current.x);
+        const diffY = Math.abs(touch.clientY - touchStartRef.current.y);
+        if (diffX > 10 || diffY > 10) {
+            if (longPressTimerRef.current) {
+                clearTimeout(longPressTimerRef.current);
+                longPressTimerRef.current = null;
+            }
+        }
+    };
+
+    const handleMessageTouchEnd = (e) => {
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+        if (isLongPressActive.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            isLongPressActive.current = false;
+        }
+    };
+
     const toggleMessageSelection = (msgId) => {
         setSelectedMessageIds(prev => {
             const next = new Set(prev);
@@ -275,7 +318,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                     <button
                         onClick={onBack}
-                        style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px" }}
+                        style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px", flexShrink: 0 }}
                     >
                         <ArrowLeft size={20} />
                     </button>
@@ -468,6 +511,9 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                                 toggleMessageSelection(msg._id);
                                             }
                                         }}
+                                        onTouchStart={(e) => handleMessageTouchStart(e, msg._id)}
+                                        onTouchMove={handleMessageTouchMove}
+                                        onTouchEnd={handleMessageTouchEnd}
                                         style={{
                                             background: msg.type === "sticker" ? "transparent" : undefined,
                                             border: msg.type === "sticker" ? "none" : undefined,
@@ -622,19 +668,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                             </button>
                                         )}
 
-                                        {/* Star / Unstar */}
-                                        <button
-                                            onClick={() => {
-                                                toggleStarMessageSocket(roomId, msg._id);
-                                                setMenuOpenMessage(null);
-                                            }}
-                                            style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#cbd5e1", fontSize: "0.8rem", textAlign: "left", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-                                        >
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill={msg.starredBy?.includes(myPseudonym) ? "#f59e0b" : "none"} stroke="#f59e0b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                                            </svg>
-                                            <span>{msg.starredBy?.includes(myPseudonym) ? "Unstar" : "Star"}</span>
-                                        </button>
+
 
                                         {/* Select */}
                                         <button
@@ -738,12 +772,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                             </>
                                         )}
 
-                                        <button
-                                            onClick={() => setMenuOpenMessage(null)}
-                                            style={{ width: "100%", padding: "8px 12px", background: "none", border: "none", color: "#64748b", fontSize: "0.8rem", textAlign: "left", cursor: "pointer" }}
-                                        >
-                                            Cancel
-                                        </button>
+
                                     </div>
                                 )}
                             </div>
@@ -888,7 +917,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={uploading}
-                        style={{ background: "none", border: "none", color: "var(--color-text-muted, #94a3b8)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px" }}
+                        style={{ background: "none", border: "none", color: "var(--color-text-muted, #94a3b8)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px", flexShrink: 0 }}
                     >
                         {uploading ? <Loader2 className="animate-spin" size={20} style={{ animation: "spin 1s linear infinite" }} /> : <Paperclip size={20} />}
                     </button>
@@ -897,7 +926,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                         type="button"
                         onClick={() => setShowGifPicker(true)}
                         disabled={uploading}
-                        style={{ background: "none", border: "none", color: "var(--color-text-muted, #94a3b8)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px" }}
+                        style={{ background: "none", border: "none", color: "var(--color-text-muted, #94a3b8)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: "8px", flexShrink: 0 }}
                     >
                         <Smile size={20} />
                     </button>
@@ -943,7 +972,8 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            transition: "0.2s"
+                            transition: "0.2s",
+                            flexShrink: 0
                         }}
                     >
                         <Send size={18} />

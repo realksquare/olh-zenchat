@@ -275,7 +275,7 @@ const BottomSheetLayout = () => {
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
                 >
-                    <div className="bottom-sheet-handle-bar nudge-icon">
+                    <div className="bottom-sheet-handle-bar nudge-icon" style={{ display: "flex", flexDirection: "column", alignItems: "center", background: "none", height: "auto", gap: "2px" }}>
                         <svg
                             width="12"
                             height="7"
@@ -289,6 +289,24 @@ const BottomSheetLayout = () => {
                                 transform: sheetHeight === 'collapsed' ? 'rotate(0deg)' : 'rotate(180deg)',
                                 transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                 color: 'var(--color-text-muted, #94a3b8)'
+                            }}
+                        >
+                            <polyline points="1 7 7 1 13 7" />
+                        </svg>
+                        <svg
+                            width="12"
+                            height="7"
+                            viewBox="0 0 14 8"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            style={{
+                                transform: sheetHeight === 'collapsed' ? 'rotate(0deg)' : 'rotate(180deg)',
+                                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                color: 'var(--color-text-muted, #94a3b8)',
+                                marginTop: "-2px"
                             }}
                         >
                             <polyline points="1 7 7 1 13 7" />

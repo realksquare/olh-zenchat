@@ -104,14 +104,14 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
         <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "var(--body-bg, #0b0f19)" }}>
             {/* Header */}
             <div style={{ padding: "16px", borderBottom: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--color-surface, #0f172a)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
                     <button
                         onClick={onBack}
-                        style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px" }}
+                        style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px", flexShrink: 0 }}
                     >
                         <ArrowLeft size={20} />
                     </button>
-                    <h1 style={{ fontSize: "1.2rem", fontWeight: "700", margin: 0, color: "var(--color-text, #fff)" }}>#ZenVoice</h1>
+                    <h1 style={{ fontSize: "1.2rem", fontWeight: "700", margin: 0, color: "var(--color-text, #fff)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>#ZenVoice</h1>
                 </div>
 
                 {activeTab === "private" ? (
@@ -120,19 +120,20 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                         style={{
                             display: "flex",
                             alignItems: "center",
-                            gap: "6px",
-                            padding: "8px 14px",
-                            borderRadius: "8px",
+                            gap: "4px",
+                            padding: "6px 10px",
+                            borderRadius: "6px",
                             background: "#f59e0b",
                             border: "none",
                             color: "#000",
                             fontWeight: "600",
-                            fontSize: "0.85rem",
-                            cursor: "pointer"
+                            fontSize: "0.78rem",
+                            cursor: "pointer",
+                            flexShrink: 0
                         }}
                     >
-                        <Plus size={16} />
-                        <span>New Private Room</span>
+                        <Plus size={14} />
+                        <span>New Private</span>
                     </button>
                 ) : isAdmin ? (
                     <button
@@ -140,19 +141,20 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                         style={{
                             display: "flex",
                             alignItems: "center",
-                            gap: "6px",
-                            padding: "8px 14px",
-                            borderRadius: "8px",
+                            gap: "4px",
+                            padding: "6px 10px",
+                            borderRadius: "6px",
                             background: "var(--color-primary, #3da5d9)",
                             border: "none",
                             color: "#fff",
                             fontWeight: "600",
-                            fontSize: "0.85rem",
-                            cursor: "pointer"
+                            fontSize: "0.78rem",
+                            cursor: "pointer",
+                            flexShrink: 0
                         }}
                     >
-                        <Plus size={16} />
-                        <span>New Official Channel</span>
+                        <Plus size={14} />
+                        <span>New Official</span>
                     </button>
                 ) : null}
             </div>

@@ -1429,7 +1429,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                         {downloadState === 'success' && (
                             <>
                                 <h3 className="download-modal-title" style={{ color: '#10b981' }}>Download Completed!</h3>
-                                <p className="download-modal-subtitle">File successfully saved to your device.</p>
+                                <p className="download-modal-subtitle">Saved to your device. Check your downloads.</p>
                                 <div className="delete-modal-actions" style={{ marginTop: '12px' }}>
                                     <button className="download-modal-btn primary" style={{ background: '#10b981' }} onClick={() => setDownloadState(null)}>
                                         Awesome

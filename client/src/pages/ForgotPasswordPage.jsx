@@ -31,7 +31,7 @@ const ForgotPasswordPage = () => {
                 // User has 2FA enabled, show method selection options
                 setMfaChoices(data);
             } else {
-                setSuccessMessage(data.message || "Reset link/code has been sent successfully.");
+                setSuccessMessage(data.message || "We threw a reset link into your inbox.");
                 if (data.method === "phone") {
                     setChosenMethod("phone");
                 }

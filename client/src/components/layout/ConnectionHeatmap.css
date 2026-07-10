@@ -86,14 +86,11 @@
   width: 100%;
 }
 
-.heatmap-body-content {
-  transition: filter 0.3s ease, opacity 0.3s ease;
-}
-
-.heatmap-body-content.is-blurred {
+.heatmap-grid.is-blurred {
   filter: blur(2px);
   opacity: 0.35;
   pointer-events: none;
+  transition: filter 0.3s ease, opacity 0.3s ease;
 }
 
 .heatmap-empty-overlay {
