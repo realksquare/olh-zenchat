@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useZenVoiceStore } from "../../stores/zenVoiceStore";
 import { useAuthStore } from "../../stores/authStore";
-import { ArrowLeft, Send, ShieldAlert, Flag, Bell, BellOff, MessageCircle, MoreVertical, Shield, Paperclip, Smile, Loader2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ChevronLeft, Send, ShieldAlert, Flag, Bell, BellOff, MessageCircle, MoreVertical, Shield, Paperclip, Smile, Loader2, CheckCircle2 } from "lucide-react";
 import GifPicker from "../chat/GifPicker";
 import axios from "axios";
 
@@ -46,6 +46,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
     const [tempBio, setTempBio] = useState("");
     const [isRequestingName, setIsRequestingName] = useState(false);
     const [newName, setNewName] = useState("");
+    const [showNukeConfirm, setShowNukeConfirm] = useState(false);
 
     useEffect(() => {
         if (sessionToken && showMyProfile) {
@@ -59,8 +60,9 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         const res = await updateBio(tempBio);
         if (res.success) {
             setIsEditingBio(false);
+            showToast("success", "Bio updated successfully");
         } else {
-            alert(res.message || "Failed to update bio");
+            showToast("error", res.message || "Failed to update bio");
         }
     };
 
@@ -70,8 +72,9 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         if (res.success) {
             setIsRequestingName(false);
             setNewName("");
+            showToast("success", "Pseudonym change requested");
         } else {
-            alert(res.message || "Failed to request pseudonym change");
+            showToast("error", res.message || "Failed to request pseudonym change");
         }
     };
 
@@ -388,14 +391,12 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             {/* Header */}
             <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--color-surface, #0f172a)", zIndex: 10 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    {!(window.innerWidth <= 768) && (
-                        <button
-                            onClick={onBack}
-                            style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px", flexShrink: 0 }}
-                        >
-                            <ArrowLeft size={20} />
-                        </button>
-                    )}
+                    <button
+                        onClick={onBack}
+                        style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px", flexShrink: 0 }}
+                    >
+                        <ChevronLeft size={20} />
+                    </button>
                     <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "flex-start" }}>
                         <span style={{ fontWeight: "700", color: "var(--color-text, #fff)", fontSize: "1rem" }}>{activeRoom.name || "Room"}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -1592,15 +1593,9 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
 
                                 {((activeRoom.creatorPseudonym === myPseudonym && !activeRoom.isOfficial) || useAuthStore.getState().user?.role === "master_admin" || useAuthStore.getState().user?.role === "co_admin") && (
                                     <button
-                                        onClick={async () => {
-                                            if (confirm("Are you absolutely sure you want to nuke this room and delete all posts?")) {
-                                                const res = await deleteRoom(roomId);
-                                                if (res.success) {
-                                                    onBack();
-                                                } else {
-                                                    alert(res.message || "Failed to delete room.");
-                                                }
-                                            }
+                                        onClick={() => {
+                                            setShowRoomOptions(false);
+                                            setShowNukeConfirm(true);
                                         }}
                                         style={{
                                             width: "100%",
@@ -1715,7 +1710,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", background: "var(--color-surface-offset, #161b22)", padding: "8px 10px", borderRadius: "6px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", justifyValue: "center", justifyContent: "space-between", gap: "8px", background: "var(--color-surface-offset, #161b22)", padding: "8px 10px", borderRadius: "6px" }}>
                                         <span style={{ fontStyle: tempBio ? "normal" : "italic", color: tempBio ? "var(--color-text)" : "var(--color-text-muted)" }}>
                                             {tempBio || "Tell them something sarcastic..."}
                                         </span>
@@ -1774,6 +1769,40 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                     </div>
                                 )}
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Custom Nuke Confirmation Modal */}
+            {showNukeConfirm && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: "100%", maxWidth: "380px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", position: "relative", textAlign: "center", color: "var(--color-text, #fff)" }}>
+                        <h3 style={{ margin: "0 0 12px", fontSize: "1.1rem", fontWeight: "700", color: "#f8fafc" }}>Nuke Room?</h3>
+                        <p style={{ fontSize: "0.85rem", color: "var(--color-text-muted, #94a3b8)", marginBottom: "20px", lineHeight: "1.5" }}>
+                            This will nuke the room, permanently deleting all messages and media. This action cannot be undone.
+                        </p>
+                        <div style={{ display: "flex", gap: "12px" }}>
+                            <button
+                                onClick={() => setShowNukeConfirm(false)}
+                                style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "transparent", color: "#cbd5e1", cursor: "pointer", fontWeight: "600", fontSize: "0.85rem" }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    setShowNukeConfirm(false);
+                                    const res = await deleteRoom(roomId);
+                                    if (res.success) {
+                                        onBack();
+                                    } else {
+                                        showToast("error", res.message || "Failed to delete room.");
+                                    }
+                                }}
+                                style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "#ef4444", border: "none", color: "#000", cursor: "pointer", fontWeight: "700", fontSize: "0.85rem" }}
+                            >
+                                Nuke
+                            </button>
                         </div>
                     </div>
                 </div>

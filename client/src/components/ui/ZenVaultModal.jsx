@@ -12,6 +12,7 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
     const [files, setFiles] = useState([]);
     const [isDragOver, setIsDragOver] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [deletingFileId, setDeletingFileId] = useState(null);
 
     // Store derived key in ref so it is purely in-memory and cleared on lock
     const activeKeyRef = useRef(null);
@@ -295,15 +296,21 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
         }
     };
 
-    const deleteFile = async (id) => {
-        if (!confirm("Are you sure you want to permanently delete this file? It cannot be recovered.")) return;
+    const deleteFile = (id) => {
+        setDeletingFileId(id);
+    };
+
+    const handleDeleteFile = async () => {
+        if (!deletingFileId) return;
         try {
-            await db.vault.delete(id);
+            await db.vault.delete(deletingFileId);
             loadFiles();
             setSuccess("File deleted from local safe.");
         } catch (err) {
             console.error("Deletion failed:", err);
             setError("Failed to delete file.");
+        } finally {
+            setDeletingFileId(null);
         }
     };
 
@@ -606,6 +613,30 @@ const ZenVaultModal = ({ isOpen, onClose }) => {
                     )}
                 </div>
             </div>
+            {deletingFileId && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.65)", zIndex: 120000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: "100%", maxWidth: "340px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", textAlign: "center", color: "var(--color-text, #fff)" }}>
+                        <h3 style={{ margin: "0 0 12px", fontSize: "1.1rem", fontWeight: "700", color: "#f8fafc" }}>Delete File?</h3>
+                        <p style={{ fontSize: "0.85rem", color: "var(--color-text-muted, #94a3b8)", marginBottom: "20px", lineHeight: "1.5" }}>
+                            Are you sure you want to permanently delete this file? It cannot be recovered.
+                        </p>
+                        <div style={{ display: "flex", gap: "12px" }}>
+                            <button
+                                onClick={() => setDeletingFileId(null)}
+                                style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "transparent", color: "#cbd5e1", cursor: "pointer", fontWeight: "600", fontSize: "0.85rem" }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDeleteFile}
+                                style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "#ef4444", border: "none", color: "#000", cursor: "pointer", fontWeight: "700", fontSize: "0.85rem" }}
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

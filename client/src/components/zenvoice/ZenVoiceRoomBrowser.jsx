@@ -41,6 +41,12 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
     const [formError, setFormError] = useState("");
 
     const [showMyProfile, setShowMyProfile] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    const showToast = (type, text) => {
+        setToast({ type, text });
+        setTimeout(() => setToast(null), 3000);
+    };
     const [isEditingBio, setIsEditingBio] = useState(false);
     const [tempBio, setTempBio] = useState("");
     const [isRequestingName, setIsRequestingName] = useState(false);
@@ -58,8 +64,9 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
         const res = await updateBio(tempBio);
         if (res.success) {
             setIsEditingBio(false);
+            showToast("success", "Bio updated successfully");
         } else {
-            alert(res.message || "Failed to update bio");
+            showToast("error", res.message || "Failed to update bio");
         }
     };
 
@@ -69,8 +76,9 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
         if (res.success) {
             setIsRequestingName(false);
             setNewName("");
+            showToast("success", "Pseudonym change requested");
         } else {
-            alert(res.message || "Failed to request pseudonym change");
+            showToast("error", res.message || "Failed to request pseudonym change");
         }
     };
 
@@ -146,14 +154,12 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
             {/* Header */}
             <div style={{ padding: "16px", borderBottom: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--color-surface, #0f172a)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
-                    {!(window.innerWidth <= 768) && (
-                        <button
-                            onClick={onBack}
-                            style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px", flexShrink: 0 }}
-                        >
-                            <ArrowLeft size={20} />
-                        </button>
-                    )}
+                    <button
+                        onClick={onBack}
+                        style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px", flexShrink: 0 }}
+                    >
+                        <ArrowLeft size={20} />
+                    </button>
                     
                     {/* Own Profile Chip */}
                     <div
@@ -633,6 +639,24 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                             </div>
                         </div>
                     </div>
+                </div>
+            )}
+            {/* Custom Toast Alert */}
+            {toast && (
+                <div className={`zen-toast zen-toast-${toast.type}`} style={{ pointerEvents: "auto" }}>
+                    {toast.type === "success" && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                    )}
+                    {toast.type === "error" && (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="15" y1="9" x2="9" y2="15" />
+                            <line x1="9" y1="9" x2="15" y2="15" />
+                        </svg>
+                    )}
+                    <span>{toast.text}</span>
                 </div>
             )}
         </div>

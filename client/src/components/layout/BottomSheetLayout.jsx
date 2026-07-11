@@ -79,31 +79,42 @@ const BottomSheetLayout = () => {
     const [viewTransitioning, setViewTransitioning] = useState(false);
     const [zvActiveRoomId, setZvActiveRoomId] = useState(null);
     const [zvShowVerifier, setZvShowVerifier] = useState(false);
+    const [revealCircle, setRevealCircle] = useState(null);
 
     const { isVerified, checkStatus, sessionToken } = useZenVoiceStore();
 
-    const switchToZenVoice = async () => {
-        setViewTransitioning(true);
-        const statusRes = await checkStatus();
-        if (statusRes?.success && statusRes?.isVerified) {
-            setZvShowVerifier(false);
-        } else {
-            setZvShowVerifier(true);
-        }
-        
+    const triggerViewTransition = (nextView, callbackBeforeSwitch) => {
+        const x = window.innerWidth / 2;
+        const y = window.innerHeight / 2;
+        setRevealCircle({ x, y, fading: false });
+
         setTimeout(() => {
-            setActiveView('zenvoice');
-            setViewTransitioning(false);
-        }, 150);
+            if (callbackBeforeSwitch) callbackBeforeSwitch();
+            setActiveView(nextView);
+        }, 400);
+
+        setTimeout(() => {
+            setRevealCircle(prev => prev ? { ...prev, fading: true } : null);
+        }, 800);
+
+        setTimeout(() => {
+            setRevealCircle(null);
+        }, 1800);
+    };
+
+    const switchToZenVoice = async () => {
+        const statusRes = await checkStatus();
+        const nextShowVerifier = !(statusRes?.success && statusRes?.isVerified);
+        
+        triggerViewTransition('zenvoice', () => {
+            setZvShowVerifier(nextShowVerifier);
+        });
     };
 
     const switchToZenChat = () => {
-        setViewTransitioning(true);
-        setTimeout(() => {
-            setActiveView('zenchat');
+        triggerViewTransition('zenchat', () => {
             setZvActiveRoomId(null);
-            setViewTransitioning(false);
-        }, 150);
+        });
     };
 
     const handleDMBridgeSuccess = (chatId) => {
@@ -418,6 +429,16 @@ const BottomSheetLayout = () => {
                     />
                 </div>
             </div>
+            {revealCircle && (
+                <div
+                    className={`zen-reveal-circle ${revealCircle.fading ? 'fade-out' : ''}`}
+                    style={{
+                        left: revealCircle.x,
+                        top: revealCircle.y,
+                        '--reveal-radius': `${Math.max(window.innerWidth, window.innerHeight) * 1.5}px`
+                    }}
+                />
+            )}
         </div>
     );
 };
