@@ -109,9 +109,9 @@ const ConnectionHeatmap = () => {
                     })}
                 </div>
 
-                {isTodayEmpty && (
+                {isBlurred && (
                     <div className="heatmap-empty-overlay">
-                        <span className="empty-overlay-text">Start your first conversation for today</span>
+                        <span className="empty-overlay-text">Start your first conversation</span>
                     </div>
                 )}
             </div>
