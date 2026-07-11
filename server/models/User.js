@@ -233,7 +233,13 @@ const userSchema = new mongoose.Schema(
                 },
                 adminNote: { type: String, default: "" },
                 requestedAt: { type: Date, default: null }
-            }
+            },
+            zenVoiceSubscriptions: [
+                {
+                    roomId: { type: mongoose.Schema.Types.ObjectId, ref: "ZenVoiceRoom" },
+                    pseudonym: { type: String }
+                }
+            ]
         }
     },
     { timestamps: true }

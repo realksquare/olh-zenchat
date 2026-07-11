@@ -36,6 +36,13 @@ const getCachedPublicKey = async (userId) => {
 
 const SocketContext = createContext(null);
 
+const getLocalDateString = (d = new Date()) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 export const SocketProvider = ({ children }) => {
     const socketRef = useRef(null);
     const [isConnected, setIsConnected] = useState(false);
@@ -971,7 +978,7 @@ export const SocketProvider = ({ children }) => {
                 
                 // Track daily active minutes locally
                 try {
-                    const todayStr = new Date().toISOString().split('T')[0];
+                    const todayStr = getLocalDateString();
                     const stored = localStorage.getItem("zenchat_daily_tracker");
                     let dailyData = { date: todayStr, minutes: 0 };
                     if (stored) {

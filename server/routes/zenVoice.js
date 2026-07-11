@@ -765,5 +765,68 @@ router.delete("/rooms/:roomId", zenVoiceAuth, async (req, res) => {
     }
 });
 
+/**
+ * POST /api/zenvoice/rooms/:roomId/subscribe/:targetPseudonym
+ * Subscribes or unsubscribes the current user to push notifications when targetPseudonym posts in roomId.
+ */
+router.post("/rooms/:roomId/subscribe/:targetPseudonym", zenVoiceAuth, async (req, res) => {
+    try {
+        const { roomId, targetPseudonym } = req.params;
+        const currentPseudonym = req.zenVoicePseudonym;
+
+        if (targetPseudonym === currentPseudonym) {
+            return res.status(400).json({ message: "You cannot subscribe to yourself." });
+        }
+
+        const user = await User.findOne({ "zenVoice.pseudonym": currentPseudonym });
+        if (!user) return res.status(404).json({ message: "User not found." });
+
+        if (!user.zenVoice.zenVoiceSubscriptions) {
+            user.zenVoice.zenVoiceSubscriptions = [];
+        }
+
+        const index = user.zenVoice.zenVoiceSubscriptions.findIndex(
+            sub => sub.roomId.toString() === roomId.toString() && sub.pseudonym === targetPseudonym
+        );
+
+        let subscribed = false;
+        if (index > -1) {
+            // Unsubscribe
+            user.zenVoice.zenVoiceSubscriptions.splice(index, 1);
+        } else {
+            // Subscribe
+            user.zenVoice.zenVoiceSubscriptions.push({ roomId, pseudonym: targetPseudonym });
+            subscribed = true;
+        }
+
+        await user.save();
+        res.json({ success: true, subscribed });
+    } catch (err) {
+        console.error("[ZenVoice] Subscription error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * GET /api/zenvoice/rooms/:roomId/subscriptions
+ * Gets the list of subscribed pseudonyms for the current user in roomId.
+ */
+router.get("/rooms/:roomId/subscriptions", zenVoiceAuth, async (req, res) => {
+    try {
+        const { roomId } = req.params;
+        const user = await User.findOne({ "zenVoice.pseudonym": req.zenVoicePseudonym });
+        if (!user) return res.status(404).json({ message: "User not found." });
+
+        const subs = (user.zenVoice.zenVoiceSubscriptions || [])
+            .filter(sub => sub.roomId.toString() === roomId.toString())
+            .map(sub => sub.pseudonym);
+
+        res.json({ success: true, subscriptions: subs });
+    } catch (err) {
+        console.error("[ZenVoice] Get subscriptions error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 module.exports = router;
 

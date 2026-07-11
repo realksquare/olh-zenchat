@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import "./ConnectionHeatmap.css";
 
+const getLocalDateString = (d = new Date()) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 const getIntensity = (minutes) => {
     if (!minutes || minutes < 1) return 0;
     if (minutes < 10) return 1;
@@ -25,7 +32,7 @@ const ConnectionHeatmap = () => {
             const dailyStored = localStorage.getItem("zenchat_daily_tracker");
             if (dailyStored) {
                 const dailyParsed = JSON.parse(dailyStored);
-                const todayStr = new Date().toISOString().split('T')[0];
+                const todayStr = getLocalDateString();
                 if (dailyParsed.date === todayStr) {
                     data[todayStr] = dailyParsed.minutes || 0;
                 }
@@ -50,19 +57,19 @@ const ConnectionHeatmap = () => {
     // Generate last 28 days including today
     const days = [];
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // normalize
 
     // We want to display a 4x7 grid (28 days).
     for (let i = 27; i >= 0; i--) {
         const d = new Date(today);
         d.setDate(d.getDate() - i);
-        days.push(d.toISOString().split('T')[0]);
+        days.push(getLocalDateString(d));
     }
 
     const hasAnyHistory = Object.values(history).some(val => val > 0);
     const isBlurred = !hasAnyHistory;
 
-    const handleCellClick = (dateStr) => {
+    const handleCellClick = (e, dateStr) => {
+        e.stopPropagation();
         const mins = history[dateStr] || 0;
         if (mins > 0) {
             setSelectedDate(dateStr);
@@ -86,7 +93,7 @@ const ConnectionHeatmap = () => {
     const stats = selectedDate ? getStatData(selectedDate) : null;
 
     return (
-        <div className="connection-heatmap-container">
+        <div className="connection-heatmap-container" onClick={(e) => e.stopPropagation()}>
             <div className="heatmap-header">
                 <span className="heatmap-title">Connection Consistency</span>
                 <span className="heatmap-subtitle">Last 4 Weeks</span>
@@ -103,7 +110,7 @@ const ConnectionHeatmap = () => {
                                 key={dateStr} 
                                 className={`heatmap-cell intensity-${intensity}`}
                                 title={`${mins} minutes on ${dateStr}`}
-                                onClick={() => handleCellClick(dateStr)}
+                                onClick={(e) => handleCellClick(e, dateStr)}
                             />
                         );
                     })}

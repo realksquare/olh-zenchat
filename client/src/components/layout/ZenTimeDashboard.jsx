@@ -76,6 +76,13 @@ const getSarcasticQuote = (minutes) => {
     return res.charAt(0).toUpperCase() + res.slice(1);
 };
 
+const getLocalDateString = (d = new Date()) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 const ZenTimeDashboard = ({ snapTo }) => {
     const [minutes, setMinutes] = useState(0);
     const [animatedMinutes, setAnimatedMinutes] = useState(0);
@@ -89,7 +96,7 @@ const ZenTimeDashboard = ({ snapTo }) => {
 
     const loadDailyTime = () => {
         try {
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = getLocalDateString();
             const stored = localStorage.getItem("zenchat_daily_tracker");
             if (stored) {
                 const parsed = JSON.parse(stored);
