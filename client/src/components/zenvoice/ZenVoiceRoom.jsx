@@ -25,8 +25,39 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         bulkStarMessagesSocket,
         bulkDeleteMessagesSocket,
         joinRoomSocket,
-        clearActiveRoom
+        clearActiveRoom,
+        blockedPseudonyms,
+        toggleBlockPseudonym,
+        deleteRoom
     } = useZenVoiceStore();
+
+    const [showRoomOptions, setShowRoomOptions] = useState(false);
+    const [isMuted, setIsMuted] = useState(() => localStorage.getItem("zenvoice_mute_" + roomId) === "1");
+
+    useEffect(() => {
+        const handleDeletedEvent = (e) => {
+            if (String(e.detail) === String(roomId)) {
+                alert("This room has been deleted by an administrator.");
+                onBack();
+            }
+        };
+        window.addEventListener("zenvoice-room-deleted-notify", handleDeletedEvent);
+        return () => window.removeEventListener("zenvoice-room-deleted-notify", handleDeletedEvent);
+    }, [roomId, onBack]);
+
+    const toggleMuteRoom = () => {
+        const newMute = !isMuted;
+        setIsMuted(newMute);
+        if (newMute) {
+            localStorage.setItem("zenvoice_mute_" + roomId, "1");
+        } else {
+            localStorage.removeItem("zenvoice_mute_" + roomId);
+        }
+    };
+
+    const handleToggleBlockUser = (pName) => {
+        toggleBlockPseudonym(pName);
+    };
 
     const [input, setInput] = useState("");
     const [typing, setTyping] = useState(false);
@@ -337,19 +368,19 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                 </div>
 
                 <button
-                    onClick={() => setShowLeaveConfirm(true)}
+                    onClick={() => setShowRoomOptions(true)}
                     style={{
-                        padding: "6px 12px",
-                        borderRadius: "6px",
-                        background: "rgba(239, 68, 68, 0.1)",
-                        border: "1px solid rgba(239, 68, 68, 0.2)",
-                        color: "#ef4444",
-                        fontSize: "0.8rem",
-                        fontWeight: "600",
-                        cursor: "pointer"
+                        background: "none",
+                        border: "none",
+                        color: "#94a3b8",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "6px"
                     }}
+                    title="Room Options"
                 >
-                    Leave
+                    <MoreVertical size={20} />
                 </button>
             </div>
 
@@ -369,7 +400,8 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "14px" }}>
                 {messages.map((msg) => {
                     const isOwn = msg.pseudonym === myPseudonym;
-                    const isBlurred = msg.globalBlur && !revealedMessages.has(msg._id);
+                    const isBlockedUser = blockedPseudonyms?.has(msg.pseudonym);
+                    const isBlurred = (msg.globalBlur || isBlockedUser) && !revealedMessages.has(msg._id);
                     const isDeletedForMe = msg.deletedFor?.includes(myPseudonym);
                     const isSelected = selectedMessageIds.has(msg._id);
                     const isStarredByMe = msg.starredBy?.includes(myPseudonym);
@@ -491,18 +523,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                     </span>
                                 )}
 
-                                {/* Bubble Container */}
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%" }}>
-                                    {/* Action Menu Trigger (Left of bubble for own messages, right for others) */}
-                                    {!isOwn && !isSelectionMode && (
-                                        <button
-                                            onClick={() => setMenuOpenMessage(menuOpenMessage === msg._id ? null : msg._id)}
-                                            style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", padding: "4px" }}
-                                        >
-                                            <MoreVertical size={16} />
-                                        </button>
-                                    )}
-
                                     <div
                                         className={`message-bubble ${isOwn ? "mine status-seen" : "theirs"} ${msg.type === "sticker" ? "is-sticker" : ""}`}
                                         onClick={(e) => {
@@ -549,7 +570,9 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                                 style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}
                                             >
                                                 <ShieldAlert size={16} style={{ color: isOwn ? "#000" : "#ef4444" }} />
-                                                <span style={{ fontSize: "0.8rem", fontWeight: "600", textDecoration: "underline" }}>Community flagged this as garbage. Tap to read anyway.</span>
+                                                <span style={{ fontSize: "0.8rem", fontWeight: "600", textDecoration: "underline" }}>
+                                                    {isBlockedUser ? "You muted this user. Tap to reveal post anyway." : "Community flagged this as garbage. Tap to read anyway."}
+                                                </span>
                                             </div>
                                         ) : (
                                             <>
@@ -591,14 +614,6 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         )}
                                     </div>
 
-                                    {isOwn && !isSelectionMode && (
-                                        <button
-                                            onClick={() => setMenuOpenMessage(menuOpenMessage === msg._id ? null : msg._id)}
-                                            style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", padding: "4px" }}
-                                        >
-                                            <MoreVertical size={16} />
-                                        </button>
-                                    )}
                                 </div>
 
                                 {/* Message Timestamp & Soft Warnings */}
@@ -939,6 +954,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                         disabled={uploading}
                         style={{
                             flex: 1,
+                            minWidth: 0,
                             padding: "12px",
                             borderRadius: "8px",
                             border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
@@ -1003,8 +1019,15 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                             <span style={{ color: "#000", fontWeight: "bold", fontSize: "1.1rem" }}>{selectedUser.slice(0, 2).toUpperCase()}</span>
                         </div>
                         <h4 style={{ margin: "0 0 4px", color: "var(--color-text, #fff)", fontSize: "1.05rem", fontWeight: "700" }}>{selectedUser}</h4>
-                        <span style={{ fontSize: "0.78rem", color: "var(--color-text-faint, #64748b)" }}>Verified Peer</span>
- 
+                        <div style={{ display: "flex", gap: "6px", justifyContent: "center", alignItems: "center", marginBottom: "8px" }}>
+                            <span style={{ fontSize: "0.78rem", color: "var(--color-text-faint, #64748b)" }}>Verified Student</span>
+                            {activeRoom.allowedDomain && (
+                                <span style={{ fontSize: "0.75rem", color: "#f59e0b", background: "rgba(245,158,11,0.1)", padding: "2px 6px", borderRadius: "4px" }}>
+                                    @{activeRoom.allowedDomain}
+                                </span>
+                            )}
+                        </div>
+
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "20px" }}>
                             <button
                                 onClick={() => handleDMBridge(selectedUser)}
@@ -1027,7 +1050,7 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                 <MessageCircle size={16} />
                                 <span>Message on ZenChat</span>
                             </button>
- 
+
                             <button
                                 onClick={() => toggleNotification(selectedUser)}
                                 style={{
@@ -1048,6 +1071,30 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                             >
                                 {notifSubscribed[selectedUser] ? <BellOff size={16} /> : <Bell size={16} />}
                                 <span>{notifSubscribed[selectedUser] ? "Turn off notifications" : "Notify me when they post"}</span>
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    handleToggleBlockUser(selectedUser);
+                                    setSelectedUser(null);
+                                }}
+                                style={{
+                                    width: "100%",
+                                    padding: "10px",
+                                    borderRadius: "8px",
+                                    background: blockedPseudonyms?.has(selectedUser) ? "rgba(239, 68, 68, 0.15)" : "var(--color-surface-offset, #161b22)",
+                                    border: blockedPseudonyms?.has(selectedUser) ? "1px solid #ef4444" : "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
+                                    color: "#ef4444",
+                                    fontWeight: "600",
+                                    fontSize: "0.85rem",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "6px"
+                                }}
+                            >
+                                <span>{blockedPseudonyms?.has(selectedUser) ? "Unmute Peer" : "Mute Peer (Hide Messages)"}</span>
                             </button>
                         </div>
                     </div>
@@ -1364,6 +1411,145 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                             >
                                 Cancel
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Room Options Bottom Sheet / Modal */}
+            {showRoomOptions && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: "100%", maxWidth: "360px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", position: "relative", color: "var(--color-text, #fff)" }}>
+                        <button
+                            onClick={() => setShowRoomOptions(false)}
+                            style={{ position: "absolute", right: "20px", top: "20px", background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: "1.5rem" }}
+                        >
+                            &times;
+                        </button>
+                        
+                        <h3 style={{ margin: "0 0 16px", fontWeight: "700", borderBottom: "1px solid var(--color-border, rgba(255, 255, 255, 0.05))", paddingBottom: "8px" }}>
+                            Room Options
+                        </h3>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "14px", fontSize: "0.85rem", textAlign: "left" }}>
+                            <div>
+                                <span style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.78rem", display: "block" }}>Room Name</span>
+                                <span style={{ fontWeight: "600", fontSize: "0.95rem" }}>{activeRoom.name}</span>
+                            </div>
+
+                            {activeRoom.description && (
+                                <div>
+                                    <span style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.78rem", display: "block" }}>Description</span>
+                                    <span>{activeRoom.description}</span>
+                                </div>
+                            )}
+
+                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                <div>
+                                    <span style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.78rem", display: "block" }}>Domain Lock</span>
+                                    <span>{activeRoom.allowedDomain ? `@${activeRoom.allowedDomain}` : "Public"}</span>
+                                </div>
+                                <div style={{ textAlign: "right" }}>
+                                    <span style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.78rem", display: "block" }}>Members</span>
+                                    <span>{memberCount} online</span>
+                                </div>
+                            </div>
+
+                            {!activeRoom.isOfficial && (
+                                <div>
+                                    <span style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.78rem", display: "block", marginBottom: "4px" }}>Room Invite Link</span>
+                                    <div style={{ display: "flex", alignItems: "center", background: "var(--color-surface-offset, #161b22)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "8px", padding: "8px 12px" }}>
+                                        <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "0.8rem", color: "var(--color-text-faint, #64748b)", textAlign: "left" }}>
+                                            {window.location.origin}/zenvoice/invite/{activeRoom.inviteToken}
+                                        </span>
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(`${window.location.origin}/zenvoice/invite/${activeRoom.inviteToken}`);
+                                                showToast("success", "Invite link copied!");
+                                            }}
+                                            style={{ background: "none", border: "none", color: "#f59e0b", cursor: "pointer", padding: "4px", display: "flex", alignItems: "center" }}
+                                        >
+                                            Copy
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
+                                <button
+                                    onClick={toggleMuteRoom}
+                                    style={{
+                                        width: "100%",
+                                        padding: "10px",
+                                        borderRadius: "8px",
+                                        background: "var(--color-surface-offset, #161b22)",
+                                        border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
+                                        color: isMuted ? "#f59e0b" : "#fff",
+                                        fontWeight: "600",
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: "6px"
+                                    }}
+                                >
+                                    <span>{isMuted ? "Unmute Notifications" : "Mute Notifications"}</span>
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        setShowRoomOptions(false);
+                                        setShowLeaveConfirm(true);
+                                    }}
+                                    style={{
+                                        width: "100%",
+                                        padding: "10px",
+                                        borderRadius: "8px",
+                                        background: "rgba(239, 68, 68, 0.1)",
+                                        border: "1px solid rgba(239, 68, 68, 0.2)",
+                                        color: "#ef4444",
+                                        fontWeight: "600",
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: "6px"
+                                    }}
+                                >
+                                    <span>Leave Room</span>
+                                </button>
+
+                                {((activeRoom.creatorPseudonym === myPseudonym && !activeRoom.isOfficial) || useAuthStore.getState().user?.role === "master_admin" || useAuthStore.getState().user?.role === "co_admin") && (
+                                    <button
+                                        onClick={async () => {
+                                            if (confirm("Are you absolutely sure you want to nuke this room and delete all posts?")) {
+                                                const res = await deleteRoom(roomId);
+                                                if (res.success) {
+                                                    onBack();
+                                                } else {
+                                                    alert(res.message || "Failed to delete room.");
+                                                }
+                                            }
+                                        }}
+                                        style={{
+                                            width: "100%",
+                                            padding: "10px",
+                                            borderRadius: "8px",
+                                            background: "#ef4444",
+                                            border: "none",
+                                            color: "#000",
+                                            fontWeight: "700",
+                                            cursor: "pointer",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: "6px"
+                                        }}
+                                    >
+                                        <span>Delete Room (Nuke)</span>
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

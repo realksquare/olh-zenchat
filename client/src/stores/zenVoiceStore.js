@@ -21,6 +21,7 @@ const INITIAL_STATE = {
     purgeLockdown: false,
     restrictedMessages: new Set(),
     blockedPseudonyms: new Set(),
+    profileData: null,
     socket: null,
     isLoading: false,
     error: null
@@ -120,6 +121,17 @@ export const useZenVoiceStore = create((set, get) => ({
             if (roomId === activeRoomId) {
                 set({ memberCount });
             }
+        });
+
+        zvSocket.on("room_deleted", ({ roomId }) => {
+            const { activeRoomId, rooms } = get();
+            if (String(roomId) === String(activeRoomId)) {
+                set({ activeRoomId: null, messages: [], isConnectedToRoom: false });
+                window.dispatchEvent(new CustomEvent("zenvoice-room-deleted-notify", { detail: roomId }));
+            }
+            set({
+                rooms: rooms.filter(r => String(r._id) !== String(roomId))
+            });
         });
 
         zvSocket.on("room_reset_countdown", ({ minutesLeft }) => {
@@ -467,6 +479,88 @@ export const useZenVoiceStore = create((set, get) => ({
     clearActiveRoom: () => {
         // Clears local room state without emitting leave_room to the server
         set({ activeRoomId: null, messages: [], memberCount: 0, idleWarning: false, resetCountdown: false });
+    },
+
+    fetchMyProfile: async () => {
+        const { sessionToken } = get();
+        if (!sessionToken) return;
+        try {
+            const { data } = await axiosInstance.get("/zenvoice/profile", {
+                headers: { Authorization: `Bearer ${sessionToken}` }
+            });
+            set({ profileData: data });
+            return data;
+        } catch (err) {
+            console.error("Fetch profile error:", err);
+        }
+    },
+
+    updateBio: async (bio) => {
+        const { sessionToken } = get();
+        if (!sessionToken) return { success: false };
+        try {
+            const { data } = await axiosInstance.put("/zenvoice/profile", { bio }, {
+                headers: { Authorization: `Bearer ${sessionToken}` }
+            });
+            const { profileData } = get();
+            if (profileData) {
+                set({ profileData: { ...profileData, bio: data.bio } });
+            }
+            return { success: true };
+        } catch (err) {
+            console.error("Update bio error:", err);
+            return { success: false, message: err.response?.data?.message || "Failed to update bio" };
+        }
+    },
+
+    requestPseudonymChange: async (desiredPseudonym) => {
+        const { sessionToken } = get();
+        if (!sessionToken) return { success: false };
+        try {
+            const { data } = await axiosInstance.post("/zenvoice/profile/pseudonym-request", { desiredPseudonym }, {
+                headers: { Authorization: `Bearer ${sessionToken}` }
+            });
+            const { profileData } = get();
+            if (profileData) {
+                set({ profileData: { ...profileData, pseudonymChangeRequest: data.pseudonymChangeRequest } });
+            }
+            return { success: true };
+        } catch (err) {
+            console.error("Request pseudonym change error:", err);
+            return { success: false, message: err.response?.data?.message || "Failed to request change" };
+        }
+    },
+
+    deleteRoom: async (roomId) => {
+        const { sessionToken } = get();
+        if (!sessionToken) return { success: false };
+        try {
+            await axiosInstance.delete(`/zenvoice/rooms/${roomId}`, {
+                headers: { Authorization: `Bearer ${sessionToken}` }
+            });
+            const { rooms, activeRoomId } = get();
+            if (String(roomId) === String(activeRoomId)) {
+                set({ activeRoomId: null, messages: [], isConnectedToRoom: false });
+            }
+            set({
+                rooms: rooms.filter(r => String(r._id) !== String(roomId))
+            });
+            return { success: true };
+        } catch (err) {
+            console.error("Delete room error:", err);
+            return { success: false, message: err.response?.data?.message || "Failed to delete room" };
+        }
+    },
+
+    toggleBlockPseudonym: (pseudonym) => {
+        const { blockedPseudonyms } = get();
+        const next = new Set(blockedPseudonyms);
+        if (next.has(pseudonym)) {
+            next.delete(pseudonym);
+        } else {
+            next.add(pseudonym);
+        }
+        set({ blockedPseudonyms: next });
     },
 
     resetStore: () => {

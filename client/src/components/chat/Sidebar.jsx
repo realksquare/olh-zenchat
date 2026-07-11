@@ -778,19 +778,26 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
                             </button>
                             <div className="mobile-menu-divider" />
                              <div
-                                 className="mobile-menu-btn"
-                                 role="button"
-                                 aria-disabled={!isAdmin}
-                                 style={isAdmin ? { cursor: 'pointer' } : { opacity: 0.45, cursor: 'not-allowed' }}
-                                 onClick={isAdmin ? () => { setShowMobileMenu(false); setIsZenVoicePortalOpen(true); } : showZenVoiceToast}
-                                 onMouseEnter={isAdmin ? undefined : showZenVoiceToast}
-                             >
-                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isAdmin ? "#10b981" : "#94a3b8"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                     <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2v5z" />
-                                     <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
-                                 </svg>
-                                 <span>#ZenVoice</span>
-                             </div>
+                                  className="mobile-menu-btn"
+                                  role="button"
+                                  aria-disabled={!isAdmin}
+                                  style={isAdmin ? { cursor: 'pointer' } : { opacity: 0.45, cursor: 'not-allowed' }}
+                                  onClick={isAdmin ? () => {
+                                      setShowMobileMenu(false);
+                                      if (isMobile) {
+                                          window.dispatchEvent(new CustomEvent("switch-to-zenvoice"));
+                                      } else {
+                                          setIsZenVoicePortalOpen(true);
+                                      }
+                                  } : showZenVoiceToast}
+                                  onMouseEnter={isAdmin ? undefined : showZenVoiceToast}
+                              >
+                                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={isAdmin ? "#10b981" : "#94a3b8"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2v5z" />
+                                      <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+                                  </svg>
+                                  <span>#ZenVoice</span>
+                              </div>
                         </div>
                     </div>
                 </div>,

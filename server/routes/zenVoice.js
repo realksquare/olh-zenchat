@@ -633,5 +633,116 @@ router.post("/bridge-dm/:targetPseudonym", zenVoiceAuth, async (req, res) => {
     }
 });
 
+/**
+ * GET /api/zenvoice/profile
+ */
+router.get("/profile", zenVoiceAuth, async (req, res) => {
+    try {
+        const user = await User.findOne({ "zenVoice.pseudonym": req.zenVoicePseudonym }).select("createdAt zenVoice");
+        if (!user) {
+            return res.status(404).json({ message: "Profile not found." });
+        }
+        res.json({
+            pseudonym: user.zenVoice.pseudonym,
+            collegeName: user.zenVoice.collegeName,
+            domain: user.zenVoice.collegeEmailDomain,
+            bio: user.zenVoice.bio || "",
+            verificationMethod: user.zenVoice.verificationMethod,
+            redCardCount: user.zenVoice.zenVoiceRedCardCount || 0,
+            createdAt: user.createdAt,
+            pseudonymChangeRequest: user.zenVoice.pseudonymChangeRequest || { requested: false, desiredPseudonym: "", status: "pending" }
+        });
+    } catch (err) {
+        console.error("[ZenVoice] Get profile error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * PUT /api/zenvoice/profile
+ */
+router.put("/profile", zenVoiceAuth, async (req, res) => {
+    try {
+        const { bio } = req.body;
+        const sanitizedBio = (bio || "").substring(0, 100);
+        const user = await User.findOneAndUpdate(
+            { "zenVoice.pseudonym": req.zenVoicePseudonym },
+            { $set: { "zenVoice.bio": sanitizedBio } },
+            { new: true }
+        );
+        if (!user) {
+            return res.status(404).json({ message: "Profile not found." });
+        }
+        res.json({ success: true, bio: user.zenVoice.bio });
+    } catch (err) {
+        console.error("[ZenVoice] Update profile error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * POST /api/zenvoice/profile/pseudonym-request
+ */
+router.post("/profile/pseudonym-request", zenVoiceAuth, async (req, res) => {
+    try {
+        const { desiredPseudonym } = req.body;
+        if (!desiredPseudonym || desiredPseudonym.trim().length < 3 || desiredPseudonym.trim().length > 25) {
+            return res.status(400).json({ message: "Desired pseudonym must be between 3 and 25 characters." });
+        }
+        const user = await User.findOne({ "zenVoice.pseudonym": req.zenVoicePseudonym });
+        if (!user) {
+            return res.status(404).json({ message: "Profile not found." });
+        }
+        const exists = await User.findOne({ "zenVoice.pseudonym": desiredPseudonym.trim() });
+        if (exists) {
+            return res.status(400).json({ message: "This pseudonym is already taken by another user." });
+        }
+        user.zenVoice.pseudonymChangeRequest = {
+            requested: true,
+            desiredPseudonym: desiredPseudonym.trim(),
+            status: "pending",
+            requestedAt: new Date()
+        };
+        await user.save();
+        res.json({ success: true, pseudonymChangeRequest: user.zenVoice.pseudonymChangeRequest });
+    } catch (err) {
+        console.error("[ZenVoice] Profile pseudonym-request error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * DELETE /api/zenvoice/rooms/:roomId
+ */
+router.delete("/rooms/:roomId", zenVoiceAuth, async (req, res) => {
+    try {
+        const room = await ZenVoiceRoom.findOne({ _id: req.params.roomId, isActive: true });
+        if (!room) {
+            return res.status(404).json({ message: "Room not found." });
+        }
+
+        const user = await User.findOne({ "zenVoice.pseudonym": req.zenVoicePseudonym });
+        const isAdmin = user && (user.role === "master_admin" || user.role === "co_admin");
+        const isCreator = room.creatorPseudonym === req.zenVoicePseudonym;
+
+        if (!isAdmin && !isCreator) {
+            return res.status(403).json({ message: "You are not authorized to delete this room." });
+        }
+
+        await ZenVoiceRoom.findByIdAndDelete(room._id);
+        await ZenVoiceMessage.deleteMany({ roomId: room._id });
+
+        const io = req.app.get("io");
+        if (io) {
+            io.of("/zenvoice").to(room._id.toString()).emit("room_deleted", { roomId: room._id });
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error("[ZenVoice] Delete room error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 module.exports = router;
 

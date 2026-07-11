@@ -120,3 +120,92 @@
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
+.heatmap-cell:not(.intensity-0) {
+  cursor: pointer;
+}
+
+.heatmap-cell:not(.intensity-0):hover {
+  transform: scale(1.15);
+  filter: brightness(1.1);
+  box-shadow: 0 0 8px var(--color-primary);
+}
+
+.heatmap-day-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.heatmap-day-modal-card {
+  width: 90%;
+  max-width: 340px;
+  background: var(--color-surface, #0f172a);
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: var(--color-text, #fff);
+  position: relative;
+}
+
+.heatmap-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: var(--color-text-muted, #94a3b8);
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.heatmap-modal-close:hover {
+  color: var(--color-text, #fff);
+}
+
+.heatmap-modal-date {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 16px;
+  color: var(--color-text, #fff);
+  border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.05));
+  padding-bottom: 8px;
+}
+
+.heatmap-modal-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+}
+
+.heatmap-modal-stat-label {
+  color: var(--color-text-muted, #94a3b8);
+}
+
+.heatmap-modal-stat-value {
+  font-weight: 600;
+  color: var(--color-text, #fff);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+

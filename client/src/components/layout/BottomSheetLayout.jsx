@@ -5,6 +5,10 @@ import { useChatStore } from '../../stores/chatStore';
 import { useMomentStore } from '../../stores/momentStore';
 import { useAuthStore } from '../../stores/authStore';
 import ZenTimeDashboard from './ZenTimeDashboard';
+import ZenVoiceVerifyModal from '../zenvoice/ZenVoiceVerifyModal';
+import ZenVoiceRoomBrowser from '../zenvoice/ZenVoiceRoomBrowser';
+import ZenVoiceRoom from '../zenvoice/ZenVoiceRoom';
+import { useZenVoiceStore } from '../../stores/zenVoiceStore';
 
 const QuickAvatarRing = ({ chat }) => {
     const user = useAuthStore(s => s.user);
@@ -70,6 +74,54 @@ const BottomSheetLayout = () => {
     const [sheetHeight, setSheetHeight] = useState('collapsed'); // 'collapsed' | 'mid' | 'full'
     const [isDragging, setIsDragging] = useState(false);
     const [glitchKey, setGlitchKey] = useState(0);
+
+    const [activeView, setActiveView] = useState('zenchat');
+    const [viewTransitioning, setViewTransitioning] = useState(false);
+    const [zvActiveRoomId, setZvActiveRoomId] = useState(null);
+    const [zvShowVerifier, setZvShowVerifier] = useState(false);
+
+    const { isVerified, checkStatus, sessionToken } = useZenVoiceStore();
+
+    const switchToZenVoice = async () => {
+        setViewTransitioning(true);
+        const statusRes = await checkStatus();
+        if (statusRes?.success && statusRes?.isVerified) {
+            setZvShowVerifier(false);
+        } else {
+            setZvShowVerifier(true);
+        }
+        
+        setTimeout(() => {
+            setActiveView('zenvoice');
+            setViewTransitioning(false);
+        }, 150);
+    };
+
+    const switchToZenChat = () => {
+        setViewTransitioning(true);
+        setTimeout(() => {
+            setActiveView('zenchat');
+            setZvActiveRoomId(null);
+            setViewTransitioning(false);
+        }, 150);
+    };
+
+    const handleDMBridgeSuccess = (chatId) => {
+        const { chats } = useChatStore.getState();
+        const found = chats.find(c => c._id === chatId);
+        if (found) {
+            useChatStore.getState().setActiveChat(found);
+            switchToZenChat();
+        }
+    };
+
+    useEffect(() => {
+        const handleSwitchEvent = () => {
+            switchToZenVoice();
+        };
+        window.addEventListener("switch-to-zenvoice", handleSwitchEvent);
+        return () => window.removeEventListener("switch-to-zenvoice", handleSwitchEvent);
+    }, []);
 
     // Use raw px values for inline transform instead of relying purely on classes for smooth drag
     const [dragY, setDragY] = useState(null);
@@ -190,74 +242,104 @@ const BottomSheetLayout = () => {
 
     return (
         <div className="bottom-sheet-layout">
-            {!activeChat && (
+            {(!activeChat || activeView === 'zenvoice') && (
                 <div className="mobile-top-header">
-                    <div
-                        className={`avatar avatar-sm ${hasActiveMoment(user?._id) ? 'moments-halo-thin' : ''}`}
-                        onClick={() => window.dispatchEvent(new CustomEvent("open-profile-modal"))}
-                        style={{
-                            cursor: "pointer",
-                            ...(hasActiveMoment(user?._id) ? { '--halo-color': getHaloColor(user?._id, user?._id) } : {})
-                        }}
-                        title="Edit Profile"
-                    >
-                        {user?.avatar ? (
-                            <img src={user.avatar} alt={user.username} />
-                        ) : (
-                            <span>{getInitials(user?.username)}</span>
-                        )}
-                    </div>
+                    {activeView === 'zenvoice' ? (
+                        <button
+                            onClick={switchToZenChat}
+                            style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px" }}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                        </button>
+                    ) : (
+                        <div
+                            className={`avatar avatar-sm ${hasActiveMoment(user?._id) ? 'moments-halo-thin' : ''}`}
+                            onClick={() => window.dispatchEvent(new CustomEvent("open-profile-modal"))}
+                            style={{
+                                cursor: "pointer",
+                                ...(hasActiveMoment(user?._id) ? { '--halo-color': getHaloColor(user?._id, user?._id) } : {})
+                            }}
+                            title="Edit Profile"
+                        >
+                            {user?.avatar ? (
+                                <img src={user.avatar} alt={user.username} />
+                            ) : (
+                                <span>{getInitials(user?.username)}</span>
+                            )}
+                        </div>
+                    )}
                     <div className="mobile-header-title">
                         <span
-                            key={glitchKey}
-                            className={glitchKey > 0 ? 'glitch-effect' : ''}
-                            onClick={() => setGlitchKey(prev => prev + 1)}
-                            style={{ cursor: 'pointer', display: 'inline-block' }}
+                            key={activeView === 'zenvoice' ? 'title-zv' : 'title-zc'}
+                            className="glitch-effect"
+                            onClick={activeView === 'zenvoice' ? switchToZenChat : switchToZenVoice}
+                            style={{ cursor: 'pointer', display: 'inline-block', color: activeView === 'zenvoice' ? '#f59e0b' : 'inherit' }}
                         >
-                            ZenChat
+                            {activeView === 'zenvoice' ? '#ZenVoice' : 'ZenChat'}
                         </span>
                     </div>
                     <div className="mobile-header-actions">
-                        <button
-                            className="mobile-header-btn"
-                            onClick={() => window.dispatchEvent(new CustomEvent("open-theme-modal"))}
-                            aria-label="Themes"
-                            title="Themes"
-                        >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <circle cx="13.5" cy="6.5" r=".5" /><circle cx="17.5" cy="10.5" r=".5" /><circle cx="8.5" cy="7.5" r=".5" /><circle cx="6.5" cy="12.5" r=".5" />
-                                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
-                            </svg>
-                        </button>
-                        <button
-                            className="mobile-header-btn"
-                            onClick={() => window.dispatchEvent(new CustomEvent("open-mobile-menu"))}
-                            aria-label="Menu"
-                            title="Menu"
-                        >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="3" y1="12" x2="21" y2="12" />
-                                <line x1="3" y1="6" x2="21" y2="6" />
-                                <line x1="3" y1="18" x2="21" y2="18" />
-                            </svg>
-                        </button>
-                        <button
-                            className="mobile-header-btn logout"
-                            onClick={() => window.dispatchEvent(new CustomEvent("confirm-logout"))}
-                            aria-label="Sign out"
-                            title="Sign out"
-                        >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                                <polyline points="16 17 21 12 16 7" />
-                                <line x1="21" y1="12" x2="9" y2="12" />
-                            </svg>
-                        </button>
+                        {activeView === 'zenvoice' ? (
+                            null
+                        ) : (
+                            <>
+                                <button
+                                    className="mobile-header-btn"
+                                    onClick={() => window.dispatchEvent(new CustomEvent("open-theme-modal"))}
+                                    aria-label="Themes"
+                                    title="Themes"
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <circle cx="13.5" cy="6.5" r=".5" /><circle cx="17.5" cy="10.5" r=".5" /><circle cx="8.5" cy="7.5" r=".5" /><circle cx="6.5" cy="12.5" r=".5" />
+                                        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
+                                    </svg>
+                                </button>
+                                <button
+                                    className="mobile-header-btn"
+                                    onClick={() => window.dispatchEvent(new CustomEvent("open-mobile-menu"))}
+                                    aria-label="Menu"
+                                    title="Menu"
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="3" y1="12" x2="21" y2="12" />
+                                        <line x1="3" y1="6" x2="21" y2="6" />
+                                        <line x1="3" y1="18" x2="21" y2="18" />
+                                    </svg>
+                                </button>
+                                <button
+                                    className="mobile-header-btn logout"
+                                    onClick={() => window.dispatchEvent(new CustomEvent("confirm-logout"))}
+                                    aria-label="Sign out"
+                                    title="Sign out"
+                                >
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                        <polyline points="16 17 21 12 16 7" />
+                                        <line x1="21" y1="12" x2="9" y2="12" />
+                                    </svg>
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
             <div className="bottom-sheet-chat-area">
-                {activeChat ? (
+                {activeView === 'zenvoice' ? (
+                    zvShowVerifier ? (
+                        <ZenVoiceVerifyModal
+                            isOpen={true}
+                            onClose={switchToZenChat}
+                            onVerificationSuccess={() => setZvShowVerifier(false)}
+                        />
+                    ) : zvActiveRoomId ? (
+                        <ZenVoiceRoom roomId={zvActiveRoomId} onBack={() => setZvActiveRoomId(null)} onDMBridgeSuccess={handleDMBridgeSuccess} />
+                    ) : (
+                        <ZenVoiceRoomBrowser onBack={switchToZenChat} onRoomSelect={(id) => setZvActiveRoomId(id)} />
+                    )
+                ) : activeChat ? (
                     <ChatWindow onBack={() => useChatStore.getState().setActiveChat(null)} />
                 ) : (
                     <ZenTimeDashboard snapTo={snapTo} />
@@ -275,10 +357,10 @@ const BottomSheetLayout = () => {
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
                 >
-                    <div className="bottom-sheet-handle-bar nudge-icon" style={{ display: "flex", flexDirection: "column", alignItems: "center", background: "none", height: "auto", gap: "2px" }}>
+                    <div className="bottom-sheet-handle-bar nudge-icon" style={{ display: "flex", flexDirection: "column", alignItems: "center", background: "none", height: "auto", gap: "1px", paddingTop: "4px", paddingBottom: "2px", overflow: "visible" }}>
                         <svg
-                            width="12"
-                            height="7"
+                            width="10"
+                            height="6"
                             viewBox="0 0 14 8"
                             fill="none"
                             stroke="currentColor"
@@ -294,8 +376,8 @@ const BottomSheetLayout = () => {
                             <polyline points="1 7 7 1 13 7" />
                         </svg>
                         <svg
-                            width="12"
-                            height="7"
+                            width="10"
+                            height="6"
                             viewBox="0 0 14 8"
                             fill="none"
                             stroke="currentColor"

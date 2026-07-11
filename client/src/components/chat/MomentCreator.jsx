@@ -132,6 +132,51 @@ const compressImage = (file, quality = 0.78) => new Promise((resolve) => {
     reader.readAsDataURL(file);
 });
 
+const uploadVideoInChunks = async (file, uploadPreset, cloudName, signal, onProgress) => {
+    const chunkSize = 6 * 1024 * 1024; // 6MB chunks
+    const totalSize = file.size;
+    const uniqueUploadId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    let start = 0;
+    let secureUrl = "";
+
+    while (start < totalSize) {
+        const end = Math.min(start + chunkSize, totalSize);
+        const chunk = file.slice(start, end);
+        
+        const formData = new FormData();
+        formData.append("file", chunk);
+        formData.append("upload_preset", uploadPreset);
+
+        const uploadEndpoint = `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`;
+        
+        const res = await axios.post(
+            uploadEndpoint,
+            formData,
+            {
+                headers: {
+                    "X-Unique-Upload-Id": uniqueUploadId,
+                    "Content-Range": `bytes ${start}-${end - 1}/${totalSize}`
+                },
+                signal,
+                onUploadProgress: (p) => {
+                    const chunkLoaded = p.loaded;
+                    const overallLoaded = start + chunkLoaded;
+                    const percent = Math.min(Math.round((overallLoaded * 100) / totalSize), 99);
+                    onProgress(percent);
+                }
+            }
+        );
+
+        if (res.data && res.data.secure_url) {
+            secureUrl = res.data.secure_url;
+        }
+
+        start = end;
+    }
+
+    return secureUrl;
+};
+
 const suggestMoodGenre = (text) => {
     const lower = text.toLowerCase();
     if (lower.includes("sad") || lower.includes("cry") || lower.includes("hurt") || lower.includes("alone") || lower.includes("miss")) return "acoustic-sad";
@@ -539,36 +584,38 @@ const MomentCreator = ({ isOpen, onClose }) => {
                     fileToUpload = await compressImage(selectedFile);
                 }
 
-                let uploadEndpoint = `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`;
+                lqip = await generateLQIP(fileToUpload);
 
                 if (isVideo) {
-                    formData.append("file", fileToUpload);
-                    formData.append("upload_preset", uploadPreset);
-                    uploadEndpoint = `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`;
+                    uploadedUrl = await uploadVideoInChunks(
+                        fileToUpload,
+                        uploadPreset,
+                        cloudName,
+                        controller.signal,
+                        setUploadProgress
+                    );
                 } else {
-                    // Perform client-side file encryption for images
+                    const uploadEndpoint = `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`;
                     const { encryptedBlob, keyHex, ivHex } = await encryptFileAES(fileToUpload);
                     fileKey = keyHex;
                     fileIv = ivHex;
 
                     formData.append("file", encryptedBlob, `encrypted_moment.jpg`);
                     formData.append("upload_preset", uploadPreset);
-                }
 
-                lqip = await generateLQIP(fileToUpload);
-
-                const res = await axios.post(
-                    uploadEndpoint,
-                    formData,
-                    {
-                        signal: controller.signal,
-                        onUploadProgress: (p) => {
-                            const percent = Math.round((p.loaded * 100) / p.total);
-                            setUploadProgress(percent);
+                    const res = await axios.post(
+                        uploadEndpoint,
+                        formData,
+                        {
+                            signal: controller.signal,
+                            onUploadProgress: (p) => {
+                                const percent = Math.round((p.loaded * 100) / p.total);
+                                setUploadProgress(percent);
+                            }
                         }
-                    }
-                );
-                uploadedUrl = res.data.secure_url;
+                    );
+                    uploadedUrl = res.data.secure_url;
+                }
             }
 
             // 4. Construct plaintext metadata payload

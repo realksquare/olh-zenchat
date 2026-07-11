@@ -53,7 +53,10 @@ const VideoPlayer = forwardRef(({ src, className = '', style = {}, autoPlay = fa
     }, [onTimeUpdate, onEnded, onLoadedMetadata]);
 
     const togglePlay = (e) => {
-        if (e) e.stopPropagation();
+        if (e) {
+            e.stopPropagation();
+            if (e.target.closest('.video-player-controls')) return;
+        }
         const video = internalRef.current;
         if (!video) return;
         if (video.paused) {
@@ -64,7 +67,10 @@ const VideoPlayer = forwardRef(({ src, className = '', style = {}, autoPlay = fa
     };
 
     const toggleMute = (e) => {
-        if (e) e.stopPropagation();
+        if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
         const video = internalRef.current;
         if (!video) return;
         video.muted = !video.muted;
@@ -81,13 +87,24 @@ const VideoPlayer = forwardRef(({ src, className = '', style = {}, autoPlay = fa
     };
 
     const toggleFullScreen = (e) => {
-        if (e) e.stopPropagation();
+        if (e) {
+            e.stopPropagation();
+            e.preventDefault();
+        }
         const video = internalRef.current;
         if (!video) return;
-        if (video.requestFullscreen) {
-            video.requestFullscreen();
-        } else if (video.webkitRequestFullscreen) {
-            video.webkitRequestFullscreen();
+        try {
+            if (video.requestFullscreen) {
+                video.requestFullscreen().catch((err) => {
+                    console.warn("Fullscreen request failed:", err);
+                });
+            } else if (video.webkitRequestFullscreen) {
+                video.webkitRequestFullscreen();
+            } else if (video.webkitEnterFullscreen) {
+                video.webkitEnterFullscreen();
+            }
+        } catch (err) {
+            console.warn("Fullscreen toggle failed:", err);
         }
     };
 
@@ -97,7 +114,11 @@ const VideoPlayer = forwardRef(({ src, className = '', style = {}, autoPlay = fa
             style={style}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            onClick={onClick || togglePlay}
+            onClick={(e) => {
+                if (e.target.closest('.video-player-controls')) return;
+                if (onClick) onClick(e);
+                else togglePlay(e);
+            }}
         >
             <video
                 ref={internalRef}
