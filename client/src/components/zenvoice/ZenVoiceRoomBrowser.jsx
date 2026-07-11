@@ -146,12 +146,14 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
             {/* Header */}
             <div style={{ padding: "16px", borderBottom: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--color-surface, #0f172a)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
-                    <button
-                        onClick={onBack}
-                        style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px", flexShrink: 0 }}
-                    >
-                        <ArrowLeft size={20} />
-                    </button>
+                    {!(window.innerWidth <= 768) && (
+                        <button
+                            onClick={onBack}
+                            style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px", flexShrink: 0 }}
+                        >
+                            <ArrowLeft size={20} />
+                        </button>
+                    )}
                     
                     {/* Own Profile Chip */}
                     <div

@@ -42,14 +42,24 @@ router.get("/status", authMiddleware, async (req, res) => {
                     status: "approved"
                 });
 
-                if (whitelisted) {
-                    const pseudonym = await generatePseudonym();
+                 if (whitelisted) {
+                    const tempEmail = user.email.toLowerCase();
+                    const existingVerification = await User.findOne({
+                        "zenVoice.collegeEmail": tempEmail,
+                        "zenVoice.isStudentVerified": true
+                    });
+
+                    const pseudonym = existingVerification
+                        ? existingVerification.zenVoice.pseudonym
+                        : await generatePseudonym();
+
                     await User.findByIdAndUpdate(req.user._id, {
                         $set: {
                             "zenVoice.isStudentVerified": true,
                             "zenVoice.verificationMethod": "academic_email",
                             "zenVoice.collegeName": whitelisted.institutionName,
                             "zenVoice.collegeEmailDomain": emailDomain,
+                            "zenVoice.collegeEmail": tempEmail,
                             "zenVoice.pseudonym": pseudonym
                         }
                     });
@@ -119,7 +129,8 @@ router.post("/verify/domain-otp/send", authMiddleware, async (req, res) => {
             $set: {
                 "verificationSession.emailOtpCode": otp,
                 "verificationSession.emailOtpExpires": otpExpires,
-                "verificationSession.tempJwtToken": domain
+                "verificationSession.tempJwtToken": domain,
+                "verificationSession.tempEmail": institutionalEmail.toLowerCase()
             }
         });
 
@@ -166,7 +177,15 @@ router.post("/verify/domain-otp/confirm", authMiddleware, async (req, res) => {
             return res.status(400).json({ message: "Your institution domain is no longer approved." });
         }
 
-        const pseudonym = await generatePseudonym();
+        const tempEmail = session.tempEmail || "";
+        const existingVerification = await User.findOne({
+            "zenVoice.collegeEmail": tempEmail,
+            "zenVoice.isStudentVerified": true
+        });
+
+        const pseudonym = existingVerification
+            ? existingVerification.zenVoice.pseudonym
+            : await generatePseudonym();
 
         await User.findByIdAndUpdate(req.user._id, {
             $set: {
@@ -174,10 +193,12 @@ router.post("/verify/domain-otp/confirm", authMiddleware, async (req, res) => {
                 "zenVoice.verificationMethod": "domain_otp",
                 "zenVoice.collegeName": domainEntry.institutionName,
                 "zenVoice.collegeEmailDomain": domain,
+                "zenVoice.collegeEmail": tempEmail,
                 "zenVoice.pseudonym": pseudonym,
                 "verificationSession.emailOtpCode": null,
                 "verificationSession.emailOtpExpires": null,
-                "verificationSession.tempJwtToken": null
+                "verificationSession.tempJwtToken": null,
+                "verificationSession.tempEmail": null
             }
         });
 

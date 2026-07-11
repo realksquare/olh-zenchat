@@ -63,6 +63,18 @@ db.version(8).stores({
     autocomplete_model: "key, lastSeen",
 });
 
+db.version(9).stores({
+    chats: "_id, updatedAt, lastMessage._id",
+    messages: "_id, chatId, createdAt, senderId",
+    settings: "key",
+    outbox: "++id, chatId, createdAt",
+    keys: "key",
+    vault: "id, name, type, size, date",
+    pendingMediaOutbox: "++id, chatId, createdAt",
+    autocomplete_model: "key, lastSeen",
+    pendingMomentsOutbox: "++id, createdAt",
+});
+
 export const healMessageDate = (message) => {
     if (!message) return message;
     if (message.createdAt) {
@@ -130,6 +142,7 @@ export const clearLocalData = async () => {
     if (db.vault) await db.vault.clear();
     if (db.pendingMediaOutbox) await db.pendingMediaOutbox.clear();
     if (db.autocomplete_model) await db.autocomplete_model.clear();
+    if (db.pendingMomentsOutbox) await db.pendingMomentsOutbox.clear();
 };
 
 export const enqueueOutbox = async (payload) => {
@@ -148,6 +161,48 @@ export const drainOutbox = async () => {
     } catch (err) {
         console.error(err);
         return [];
+    }
+};
+
+export const getPendingOutbox = async () => {
+    try {
+        return await db.outbox.orderBy("createdAt").toArray();
+    } catch (err) {
+        console.error(err);
+        return [];
+    }
+};
+
+export const deleteFromOutbox = async (ids) => {
+    try {
+        await db.outbox.bulkDelete(ids);
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+export const enqueueMomentOutbox = async (payload) => {
+    try {
+        await db.pendingMomentsOutbox.add({ ...payload, createdAt: Date.now() });
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+export const getPendingMoments = async () => {
+    try {
+        return await db.pendingMomentsOutbox.orderBy("createdAt").toArray();
+    } catch (err) {
+        console.error(err);
+        return [];
+    }
+};
+
+export const deleteFromMomentsOutbox = async (ids) => {
+    try {
+        await db.pendingMomentsOutbox.bulkDelete(ids);
+    } catch (err) {
+        console.error(err);
     }
 };
 

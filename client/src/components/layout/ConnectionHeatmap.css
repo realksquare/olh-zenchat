@@ -54,8 +54,13 @@
 }
 
 .heatmap-cell.intensity-4 {
+  background-color: rgba(1, 245, 165, 0.85);
+  box-shadow: 0 0 8px rgba(1, 245, 165, 0.2);
+}
+
+.heatmap-cell.intensity-5 {
   background-color: rgba(1, 245, 165, 1);
-  box-shadow: 0 0 10px rgba(1, 245, 165, 0.3);
+  box-shadow: 0 0 14px rgba(1, 245, 165, 0.5);
 }
 
 .heatmap-legend {

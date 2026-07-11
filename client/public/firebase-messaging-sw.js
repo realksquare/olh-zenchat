@@ -52,6 +52,18 @@ db.version(6).stores({
     pendingMediaOutbox: "++id, chatId, createdAt",
 });
 
+db.version(9).stores({
+    chats: "_id, updatedAt, lastMessage._id",
+    messages: "_id, chatId, createdAt, senderId",
+    settings: "key",
+    outbox: "++id, chatId, createdAt",
+    keys: "key",
+    vault: "id, name, type, size, date",
+    pendingMediaOutbox: "++id, chatId, createdAt",
+    autocomplete_model: "key, lastSeen",
+    pendingMomentsOutbox: "++id, createdAt",
+});
+
 try {
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
@@ -315,7 +327,8 @@ async function flushOutboxInBackground() {
 
         if (response.ok) {
             console.log("[SW] Background sync completed successfully!");
-            await db.outbox.clear();
+            const idsToDelete = queued.map(item => item.id);
+            await db.outbox.bulkDelete(idsToDelete);
         } else {
             console.error("[SW] Background sync response not OK:", response.status);
         }

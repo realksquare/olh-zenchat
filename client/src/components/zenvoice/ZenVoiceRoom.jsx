@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useZenVoiceStore } from "../../stores/zenVoiceStore";
+import { useAuthStore } from "../../stores/authStore";
 import { ArrowLeft, Send, ShieldAlert, Flag, Bell, BellOff, MessageCircle, MoreVertical, Shield, Paperclip, Smile, Loader2, CheckCircle2 } from "lucide-react";
 import GifPicker from "../chat/GifPicker";
 import axios from "axios";
@@ -7,6 +8,12 @@ import axios from "axios";
 const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
     const {
         pseudonym: myPseudonym,
+        pseudonymColor: myPseudonymColor,
+        sessionToken,
+        profileData,
+        fetchMyProfile,
+        updateBio,
+        requestPseudonymChange,
         messages,
         memberCount,
         idleWarning,
@@ -33,6 +40,40 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
 
     const [showRoomOptions, setShowRoomOptions] = useState(false);
     const [isMuted, setIsMuted] = useState(() => localStorage.getItem("zenvoice_mute_" + roomId) === "1");
+
+    const [showMyProfile, setShowMyProfile] = useState(false);
+    const [isEditingBio, setIsEditingBio] = useState(false);
+    const [tempBio, setTempBio] = useState("");
+    const [isRequestingName, setIsRequestingName] = useState(false);
+    const [newName, setNewName] = useState("");
+
+    useEffect(() => {
+        if (sessionToken && showMyProfile) {
+            fetchMyProfile().then(data => {
+                if (data) setTempBio(data.bio || "");
+            });
+        }
+    }, [fetchMyProfile, sessionToken, showMyProfile]);
+
+    const handleSaveBio = async () => {
+        const res = await updateBio(tempBio);
+        if (res.success) {
+            setIsEditingBio(false);
+        } else {
+            alert(res.message || "Failed to update bio");
+        }
+    };
+
+    const handleRequestName = async () => {
+        if (!newName.trim()) return;
+        const res = await requestPseudonymChange(newName.trim());
+        if (res.success) {
+            setIsRequestingName(false);
+            setNewName("");
+        } else {
+            alert(res.message || "Failed to request pseudonym change");
+        }
+    };
 
     useEffect(() => {
         const handleDeletedEvent = (e) => {
@@ -347,12 +388,14 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             {/* Header */}
             <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--color-surface, #0f172a)", zIndex: 10 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <button
-                        onClick={onBack}
-                        style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px", flexShrink: 0 }}
-                    >
-                        <ArrowLeft size={20} />
-                    </button>
+                    {!(window.innerWidth <= 768) && (
+                        <button
+                            onClick={onBack}
+                            style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px", flexShrink: 0 }}
+                        >
+                            <ArrowLeft size={20} />
+                        </button>
+                    )}
                     <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "flex-start" }}>
                         <span style={{ fontWeight: "700", color: "var(--color-text, #fff)", fontSize: "1rem" }}>{activeRoom.name || "Room"}</span>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -367,21 +410,45 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                     </div>
                 </div>
 
-                <button
-                    onClick={() => setShowRoomOptions(true)}
-                    style={{
-                        background: "none",
-                        border: "none",
-                        color: "#94a3b8",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        padding: "6px"
-                    }}
-                    title="Room Options"
-                >
-                    <MoreVertical size={20} />
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    {/* Own Profile Chip */}
+                    <div
+                        onClick={() => setShowMyProfile(true)}
+                        style={{
+                            width: "28px",
+                            height: "28px",
+                            borderRadius: "50%",
+                            background: myPseudonymColor || "#f59e0b",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            flexShrink: 0,
+                            border: "2px solid var(--color-border, rgba(255, 255, 255, 0.15))"
+                        }}
+                        title="My ZenVoice Profile"
+                    >
+                        <span style={{ color: "#000", fontSize: "0.72rem", fontWeight: "bold" }}>
+                            {(myPseudonym || "ME").slice(0, 2).toUpperCase()}
+                        </span>
+                    </div>
+
+                    <button
+                        onClick={() => setShowRoomOptions(true)}
+                        style={{
+                            background: "none",
+                            border: "none",
+                            color: "#94a3b8",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            padding: "6px"
+                        }}
+                        title="Room Options"
+                    >
+                        <MoreVertical size={20} />
+                    </button>
+                </div>
             </div>
 
             {/* Countdown / Warning Banners */}
@@ -421,7 +488,9 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                             display: "flex",
                                             alignItems: "center",
                                             justifyContent: "center",
-                                            flexShrink: 0
+                                            flexShrink: 0,
+                                            alignSelf: "flex-end",
+                                            marginBottom: "4px"
                                         }}
                                     >
                                         <span style={{ color: "#000", fontSize: "0.85rem", fontWeight: "bold" }}>
@@ -495,7 +564,9 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                         alignItems: "center",
                                         justifyContent: "center",
                                         cursor: "pointer",
-                                        flexShrink: 0
+                                        flexShrink: 0,
+                                        alignSelf: "flex-end",
+                                        marginBottom: "4px"
                                     }}
                                 >
                                     <span style={{ color: "#000", fontSize: "0.85rem", fontWeight: "bold" }}>
@@ -1571,6 +1642,140 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                         </svg>
                     )}
                     <span>{toast.text}</span>
+                </div>
+            )}
+            {/* My ZenVoice Profile Modal */}
+            {showMyProfile && (
+                <div style={{ position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.6)", zIndex: 110000, display: "flex", alignItems: "center", justifyValue: "center", justifyContent: "center" }}>
+                    <div style={{ width: "100%", maxWidth: "360px", background: "var(--color-surface, #0f172a)", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", padding: "24px", borderRadius: "16px", position: "relative", color: "var(--color-text, #fff)" }}>
+                        <button
+                            onClick={() => setShowMyProfile(false)}
+                            style={{ position: "absolute", right: "20px", top: "20px", background: "none", border: "none", color: "#64748b", cursor: "pointer", fontSize: "1.5rem" }}
+                        >
+                            &times;
+                        </button>
+                        
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", textAlign: "center", marginBottom: "20px" }}>
+                            <div style={{ width: "54px", height: "54px", borderRadius: "50%", background: myPseudonymColor || "#f59e0b", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <span style={{ color: "#000", fontWeight: "bold", fontSize: "1.3rem" }}>{(myPseudonym || "ME").slice(0, 2).toUpperCase()}</span>
+                            </div>
+                            <h3 style={{ margin: "4px 0 2px", fontWeight: "700" }}>{myPseudonym}</h3>
+                            <div style={{ background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.25)", color: "#10b981", fontSize: "0.72rem", padding: "2px 8px", borderRadius: "12px", fontWeight: "600" }}>
+                                Verified Peer
+                            </div>
+                        </div>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "14px", fontSize: "0.85rem", textAlign: "left" }}>
+                            <div>
+                                <span style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.78rem", display: "block" }}>College / Institution</span>
+                                <span style={{ fontWeight: "600" }}>{profileData?.collegeName || "Unknown Institution"}</span>
+                            </div>
+
+                            <div>
+                                <span style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.78rem", display: "block" }}>Student Domain</span>
+                                <span style={{ fontWeight: "600" }}>@{profileData?.collegeEmailDomain || "domain"}</span>
+                            </div>
+
+                            <div>
+                                <span style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.78rem", display: "block", marginBottom: "4px" }}>My Bio</span>
+                                {isEditingBio ? (
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                        <textarea
+                                            value={tempBio}
+                                            onChange={(e) => setTempBio(e.target.value)}
+                                            maxLength={100}
+                                            style={{
+                                                width: "100%",
+                                                padding: "8px",
+                                                borderRadius: "6px",
+                                                border: "1px solid var(--color-border, rgba(255, 255, 255, 0.1))",
+                                                background: "var(--color-surface-offset, #161b22)",
+                                                color: "var(--color-text, #fff)",
+                                                fontSize: "0.85rem",
+                                                minHeight: "44px",
+                                                resize: "vertical",
+                                                fontFamily: "inherit",
+                                                boxSizing: "border-box",
+                                                outline: "none"
+                                            }}
+                                        />
+                                        <div style={{ display: "flex", gap: "8px" }}>
+                                            <button
+                                                onClick={handleSaveBio}
+                                                style={{ padding: "4px 10px", borderRadius: "4px", background: "#f59e0b", border: "none", color: "#000", fontSize: "0.75rem", fontWeight: "600", cursor: "pointer" }}
+                                            >
+                                                Save
+                                            </button>
+                                            <button
+                                                onClick={() => setIsEditingBio(false)}
+                                                style={{ padding: "4px 10px", borderRadius: "4px", background: "transparent", border: "1px solid var(--color-border, rgba(255,255,255,0.1))", color: "#cbd5e1", fontSize: "0.75rem", cursor: "pointer" }}
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", background: "var(--color-surface-offset, #161b22)", padding: "8px 10px", borderRadius: "6px" }}>
+                                        <span style={{ fontStyle: tempBio ? "normal" : "italic", color: tempBio ? "var(--color-text)" : "var(--color-text-muted)" }}>
+                                            {tempBio || "Tell them something sarcastic..."}
+                                        </span>
+                                        <button
+                                            onClick={() => setIsEditingBio(true)}
+                                            style={{ background: "none", border: "none", color: "#f59e0b", cursor: "pointer", fontSize: "0.75rem", padding: "2px" }}
+                                        >
+                                            Edit
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {profileData?.redCardCount > 0 && (
+                                <div style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "8px", padding: "10px", display: "flex", gap: "8px", alignItems: "flex-start" }}>
+                                    <span style={{ fontSize: "1.1rem" }}>⚠️</span>
+                                    <div>
+                                        <div style={{ fontWeight: "700", color: "#ef4444", fontSize: "0.8rem" }}>Red Cards: {profileData.redCardCount}</div>
+                                        <div style={{ fontSize: "0.72rem", color: "var(--color-text-muted, #94a3b8)", marginTop: "2px" }}>You have been flagged for trash content. Exponential timeouts apply. Keep it clean.</div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div style={{ borderTop: "1px solid var(--color-border, rgba(255, 255, 255, 0.05))", paddingTop: "14px", marginTop: "6px" }}>
+                                {profileData?.pseudonymChangeRequest?.requested ? (
+                                    <div style={{ background: "var(--color-surface-offset, #161b22)", padding: "10px", borderRadius: "8px", fontSize: "0.78rem", color: "var(--color-text-muted, #94a3b8)" }}>
+                                        <span>Pseudonym change request to <strong>{profileData.pseudonymChangeRequest.desiredPseudonym}</strong> is <strong>{profileData.pseudonymChangeRequest.status}</strong>.</span>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                        <span style={{ fontSize: "0.78rem", color: "var(--color-text-muted, #94a3b8)" }}>Want a new identity?</span>
+                                        {isRequestingName ? (
+                                            <div style={{ display: "flex", gap: "6px" }}>
+                                                <input
+                                                    type="text"
+                                                    placeholder="Desired pseudonym"
+                                                    value={newName}
+                                                    onChange={(e) => setNewName(e.target.value)}
+                                                    style={{ flex: 1, padding: "6px 8px", borderRadius: "4px", border: "1px solid var(--color-border, rgba(255,255,255,0.1))", background: "var(--color-surface-offset, #161b22)", color: "#fff", fontSize: "0.8rem", outline: "none" }}
+                                                />
+                                                <button
+                                                    onClick={handleRequestName}
+                                                    style={{ padding: "6px 10px", borderRadius: "4px", background: "#f59e0b", border: "none", color: "#000", fontSize: "0.75rem", fontWeight: "600", cursor: "pointer" }}
+                                                >
+                                                    Submit
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => setIsRequestingName(true)}
+                                                style={{ width: "100%", padding: "8px", borderRadius: "6px", background: "transparent", border: "1px dashed var(--color-border, rgba(255,255,255,0.15))", color: "#f59e0b", fontWeight: "600", fontSize: "0.8rem", cursor: "pointer" }}
+                                            >
+                                                Request Pseudonym Change
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

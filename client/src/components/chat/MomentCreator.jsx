@@ -7,6 +7,7 @@ import axios from "axios";
 import { generateLQIP } from "../../utils/lqip";
 import axiosInstance from "../../utils/axios";
 import { encryptForMultipleRecipients, encryptFileAES } from "../../utils/crypto";
+import { enqueueMomentOutbox } from "../../db/zenDB";
 
 const FILTER_PRESETS = [
     { id: "none",      name: "Original" },
@@ -132,7 +133,7 @@ const compressImage = (file, quality = 0.78) => new Promise((resolve) => {
     reader.readAsDataURL(file);
 });
 
-const uploadVideoInChunks = async (file, uploadPreset, cloudName, signal, onProgress) => {
+export const uploadVideoInChunks = async (file, uploadPreset, cloudName, signal, onProgress) => {
     const chunkSize = 6 * 1024 * 1024; // 6MB chunks
     const totalSize = file.size;
     const uniqueUploadId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -548,6 +549,62 @@ const MomentCreator = ({ isOpen, onClose }) => {
 
         setIsUploading(true);
         setUploadProgress(0);
+
+        if (!navigator.onLine) {
+            try {
+                let base64Data = "";
+                let fileName = "";
+                let fileType = "";
+                if (selectedFile) {
+                    base64Data = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.readAsDataURL(selectedFile);
+                        reader.onload = () => resolve(reader.result.split(',')[1]);
+                        reader.onerror = error => reject(error);
+                    });
+                    fileName = selectedFile.name;
+                    fileType = selectedFile.type;
+                }
+
+                const momentItem = {
+                    type: isText ? (music ? "music" : "text") : (selectedFile?.type?.startsWith("video/") ? "video" : "image"),
+                    content: isText ? content : "",
+                    caption: !isText ? caption : "",
+                    filter: !isText ? activeFilter : "none",
+                    locationText: (!isText && showLocationPill) ? locationText : "",
+                    music: music ? {
+                        trackId: music.id || null,
+                        source: music.source || null,
+                        title: music.title,
+                        artist: music.artist,
+                        previewUrl: music.previewUrl,
+                        coverUrl: music.coverUrl,
+                        duration,
+                        startTime
+                    } : null,
+                    disappearHours,
+                    isCaptured,
+                    taggedUsers: selectedTaggedUsers,
+                    base64Data,
+                    fileName,
+                    fileType
+                };
+
+                await enqueueMomentOutbox(momentItem);
+                showToast("Moment enqueued for upload (Offline Mode)");
+                
+                setTimeout(() => { 
+                    handleReset();
+                    onClose(); 
+                }, 1200);
+            } catch (err) {
+                console.error("[MomentCreator] Offline enqueue failed:", err);
+                showToast("Failed to queue moment");
+            } finally {
+                setIsUploading(false);
+            }
+            return;
+        }
 
         const controller = new AbortController();
         abortControllerRef.current = controller;

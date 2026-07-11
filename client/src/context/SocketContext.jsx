@@ -4,10 +4,13 @@ import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { playReceiveSound, getAudioContext } from "../utils/audio";
 import { useMomentStore } from "../stores/momentStore";
-import { enqueueOutbox, drainOutbox, drainPendingMedia } from "../db/zenDB";
+import { enqueueOutbox, drainOutbox, drainPendingMedia, getPendingOutbox, deleteFromOutbox, getPendingMoments, deleteFromMomentsOutbox } from "../db/zenDB";
 import { decryptMessageIfNeeded } from "../utils/e2eeHelper";
-import { encryptMessageContent, encryptMessageContentForBoth } from "../utils/crypto";
+import { encryptMessageContent, encryptMessageContentForBoth, encryptForMultipleRecipients, encryptFileAES } from "../utils/crypto";
+import { generateLQIP } from "../utils/lqip";
+import { uploadVideoInChunks } from "../components/chat/MomentCreator";
 import axiosInstance from "../utils/axios";
+import axios from "axios";
 import { decompressPacket, compressPacket } from "../utils/packetCompressor";
 import { packMessage, unpackMessage, isBinaryPacket, hexToBytes, bytesToHex } from "../utils/binaryPacker";
 
@@ -506,9 +509,10 @@ export const SocketProvider = ({ children }) => {
                 chatStore.fetchMessages(activeChat._id);
             }
             chatStore.fetchChats();
-            setTimeout(() => {
+             setTimeout(() => {
                 flushOutboxRef.current?.();
                 flushMediaOutboxRef.current?.();
+                flushMomentsOutboxRef.current?.();
             }, 300);
         });
 
@@ -686,8 +690,7 @@ export const SocketProvider = ({ children }) => {
     const leaveChat = useCallback((chatId) => {
         socketRef.current?.emit("leave_chat", { chatId });
     }, []);
-
-    const isFlushingRef = useRef(false);
+     const isFlushingRef = useRef(false);
     const flushOutbox = useCallback(async () => {
         if (isFlushingRef.current) return;
         
@@ -696,12 +699,14 @@ export const SocketProvider = ({ children }) => {
         
         isFlushingRef.current = true;
         try {
-            const queued = await drainOutbox();
+            const queued = await getPendingOutbox();
             if (!queued || queued.length === 0) return;
             
             const processedQueue = [];
+            const idsToDelete = [];
             for (const item of queued) {
-                const { id: _id, createdAt: _ts, ...payload } = item;
+                const { id, createdAt: _ts, ...payload } = item;
+                idsToDelete.push(id);
                 if (payload.content && payload.type === "text" && !payload.isEncrypted) {
                     try {
                         const activeChat = useChatStore.getState().chats.find(c => c._id?.toString() === payload.chatId?.toString()) || useChatStore.getState().activeChat;
@@ -734,29 +739,30 @@ export const SocketProvider = ({ children }) => {
                         console.error("[SocketContext] E2EE encryption-on-flush skipped/failed:", err);
                     }
                 }
-                processedQueue.push(payload);
+                processedQueue.push({ ...payload, id });
             }
             
             if (socketRef.current?.connected) {
                 for (const payload of processedQueue) {
-                    const binaryPayload = { ...payload };
-                    if (payload.isEncrypted) {
-                        binaryPayload.content = hexToBytes(payload.content);
-                        binaryPayload.iv = hexToBytes(payload.iv);
+                    const { id, ...cleanPayload } = payload;
+                    const binaryPayload = { ...cleanPayload };
+                    if (cleanPayload.isEncrypted) {
+                        binaryPayload.content = hexToBytes(cleanPayload.content);
+                        binaryPayload.iv = hexToBytes(cleanPayload.iv);
                     }
                     const compressed = compressPacket(binaryPayload);
                     const packed = packMessage(compressed);
                     socketRef.current.emit("send_message", packed);
                 }
+                await deleteFromOutbox(idsToDelete);
             } else {
                 try {
-                    const { data } = await axiosInstance.post("/chats/offline-sync", { messages: processedQueue });
+                    const restPayloads = processedQueue.map(({ id, ...clean }) => clean);
+                    const { data } = await axiosInstance.post("/chats/offline-sync", { messages: restPayloads });
                     console.log("[SocketContext] REST offline outbox sync completed successfully:", data);
+                    await deleteFromOutbox(idsToDelete);
                 } catch (restErr) {
-                    console.error("[SocketContext] REST offline sync failed, re-queueing to outbox:", restErr);
-                    for (const payload of processedQueue) {
-                        await enqueueOutbox(payload);
-                    }
+                    console.error("[SocketContext] REST offline sync failed, keeping in outbox:", restErr);
                 }
             }
         } finally {
@@ -766,7 +772,115 @@ export const SocketProvider = ({ children }) => {
 
     const flushOutboxRef = useRef(null);
     const flushMediaOutboxRef = useRef(null);
+    const flushMomentsOutboxRef = useRef(null);
     useEffect(() => { flushOutboxRef.current = flushOutbox; }, [flushOutbox]);
+
+    const flushMomentsOutbox = useCallback(async () => {
+        if (!navigator.onLine || !useAuthStore.getState().user) return;
+        const pending = await getPendingMoments();
+        if (!pending || pending.length === 0) return;
+
+        for (const item of pending) {
+            try {
+                const { id, ...details } = item;
+                
+                let file = null;
+                if (details.base64Data) {
+                    const byteString = atob(details.base64Data);
+                    const ab = new ArrayBuffer(byteString.length);
+                    const ia = new Uint8Array(ab);
+                    for (let i = 0; i < byteString.length; i++) {
+                        ia[i] = byteString.charCodeAt(i);
+                    }
+                    file = new File([ab], details.fileName, { type: details.fileType });
+                }
+
+                const currentUserId = useAuthStore.getState().user?._id;
+                const contactsRes = await axiosInstance.get("/auth/contacts");
+                const contacts = contactsRes.data?.contacts || [];
+                
+                const recipientIds = Array.from(new Set([
+                    currentUserId,
+                    ...contacts.map(c => (c.userId?._id || c.userId || '').toString()),
+                    ...details.taggedUsers.map(String)
+                ])).filter(Boolean);
+
+                const keysRes = await axiosInstance.post("/auth/users/public-keys", { userIds: recipientIds });
+                const publicKeysMap = keysRes.data?.publicKeys || {};
+
+                let fileKey = "";
+                let fileIv = "";
+                let uploadedUrl = "";
+                let lqip = "";
+
+                if (file) {
+                    const cloudName = "du4nvei7j";
+                    const uploadPreset = "ml_default";
+                    const isVideo = file.type.startsWith("video/");
+
+                    lqip = await generateLQIP(file);
+
+                    if (isVideo) {
+                        uploadedUrl = await uploadVideoInChunks(
+                            file,
+                            uploadPreset,
+                            cloudName,
+                            null,
+                            () => {}
+                        );
+                    } else {
+                        const uploadEndpoint = `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`;
+                        const { encryptedBlob, keyHex, ivHex } = await encryptFileAES(file);
+                        fileKey = keyHex;
+                        fileIv = ivHex;
+
+                        const formData = new FormData();
+                        formData.append("file", encryptedBlob, `encrypted_moment.jpg`);
+                        formData.append("upload_preset", uploadPreset);
+
+                        const res = await axios.post(uploadEndpoint, formData);
+                        uploadedUrl = res.data.secure_url;
+                    }
+                }
+
+                const metadataPayload = {
+                    type: details.type,
+                    content: details.content,
+                    mediaUrl: uploadedUrl,
+                    lqip,
+                    caption: details.caption,
+                    filter: details.filter,
+                    locationTag: details.locationText,
+                    music: details.music,
+                    fileKey,
+                    fileIv
+                };
+
+                const { ciphertext, encryptedKeys, iv } = await encryptForMultipleRecipients(
+                    JSON.stringify(metadataPayload),
+                    publicKeysMap
+                );
+
+                await axiosInstance.post("/moments", {
+                    type: details.type,
+                    isEncrypted: true,
+                    encryptedPayload: ciphertext,
+                    encryptedKeys,
+                    iv,
+                    disappearAfterHours: details.disappearHours,
+                    isCaptured: details.isCaptured,
+                    taggedUsers: details.taggedUsers
+                });
+
+                await deleteFromMomentsOutbox([id]);
+                console.log("[SocketContext] Offline moment synced successfully!");
+            } catch (err) {
+                console.error("[SocketContext] Failed to sync offline moment:", err);
+            }
+        }
+    }, []);
+
+    useEffect(() => { flushMomentsOutboxRef.current = flushMomentsOutbox; }, [flushMomentsOutbox]);
 
     const flushMediaOutbox = useCallback(async () => {
         if (!socketRef.current?.connected) return;
@@ -812,10 +926,11 @@ export const SocketProvider = ({ children }) => {
         const handleOnline = () => {
             flushOutbox();
             flushMediaOutbox();
+            flushMomentsOutbox();
         };
         window.addEventListener("online", handleOnline);
         return () => window.removeEventListener("online", handleOnline);
-    }, [flushOutbox, flushMediaOutbox]);
+    }, [flushOutbox, flushMediaOutbox, flushMomentsOutbox]);
 
     // -- Active Time Tracker --
     const activeTimeAccumulatorRef = useRef({ lastAction: 0, accumulatedSeconds: 0, contactId: null });

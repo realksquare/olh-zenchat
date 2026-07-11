@@ -39,7 +39,8 @@ const userSchema = new mongoose.Schema(
             otpExpires: Date,
             emailOtpCode: String,
             emailOtpExpires: Date,
-            tempJwtToken: String
+            tempJwtToken: String,
+            tempEmail: String
         },
         avatar: {
             type: String,
@@ -215,6 +216,7 @@ const userSchema = new mongoose.Schema(
             },
             collegeName: { type: String, default: "" },
             collegeEmailDomain: { type: String, default: "" },
+            collegeEmail: { type: String, default: "" },
             pseudonym: { type: String, default: "" },
             bio: { type: String, default: "", maxlength: 100 },
             zenVoiceToken: { type: String, default: null },

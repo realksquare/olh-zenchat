@@ -64,9 +64,12 @@ const registerZenVoiceSocketHandlers = (io) => {
                     await room.save();
                 }
 
+                const clients = await zvNamespace.in(roomId.toString()).fetchSockets();
+                const activeCount = clients.length;
+
                 zvNamespace.to(roomId.toString()).emit("member_count", {
                     roomId: roomId.toString(),
-                    memberCount: room.memberCount
+                    memberCount: activeCount
                 });
 
                 socket.emit("room_joined", { roomId: roomId.toString() });
@@ -90,10 +93,13 @@ const registerZenVoiceSocketHandlers = (io) => {
                     room.memberCount = room.members.length;
                     await room.save();
 
+                    const clients = await zvNamespace.in(roomId.toString()).fetchSockets();
+                    const activeCount = clients.length;
+
                     // Emit updated member count
                     zvNamespace.to(roomId.toString()).emit("member_count", {
                         roomId: roomId.toString(),
-                        memberCount: room.memberCount
+                        memberCount: activeCount
                     });
 
                     // Smoking Feature: nuke private room if empty
@@ -261,6 +267,20 @@ const registerZenVoiceSocketHandlers = (io) => {
                 roomId: roomId.toString(),
                 pseudonym: socket.pseudonym
             });
+        });
+
+        socket.on("disconnecting", async () => {
+            const rooms = Array.from(socket.rooms);
+            for (const r of rooms) {
+                if (r !== socket.id) {
+                    const clients = await zvNamespace.in(r).fetchSockets();
+                    const activeCount = Math.max(0, clients.length - 1);
+                    zvNamespace.to(r).emit("member_count", {
+                        roomId: r,
+                        memberCount: activeCount
+                    });
+                }
+            }
         });
 
         socket.on("disconnect", () => {

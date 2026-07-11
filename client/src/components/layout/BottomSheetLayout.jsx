@@ -246,7 +246,7 @@ const BottomSheetLayout = () => {
                 <div className="mobile-top-header">
                     {activeView === 'zenvoice' ? (
                         <button
-                            onClick={switchToZenChat}
+                            onClick={zvActiveRoomId ? () => setZvActiveRoomId(null) : switchToZenChat}
                             style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px" }}
                         >
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -326,7 +326,7 @@ const BottomSheetLayout = () => {
                     </div>
                 </div>
             )}
-            <div className="bottom-sheet-chat-area">
+            <div className={`bottom-sheet-chat-area ${viewTransitioning ? 'transition-fade-out' : 'transition-fade-in'}`}>
                 {activeView === 'zenvoice' ? (
                     zvShowVerifier ? (
                         <ZenVoiceVerifyModal

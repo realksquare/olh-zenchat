@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import "./ConnectionHeatmap.css";
 
 const getIntensity = (minutes) => {
-    if (!minutes || minutes === 0) return 0;
-    if (minutes < 5) return 1;
-    if (minutes < 20) return 2;
+    if (!minutes || minutes < 1) return 0;
+    if (minutes < 10) return 1;
+    if (minutes < 30) return 2;
     if (minutes < 60) return 3;
-    return 4;
+    if (minutes < 180) return 4;
+    return 5;
 };
 
 const ConnectionHeatmap = () => {
@@ -58,8 +59,8 @@ const ConnectionHeatmap = () => {
         days.push(d.toISOString().split('T')[0]);
     }
 
-    const todayStr = new Date().toISOString().split('T')[0];
-    const isTodayEmpty = !(history[todayStr] > 0);
+    const hasAnyHistory = Object.values(history).some(val => val > 0);
+    const isBlurred = !hasAnyHistory;
 
     const handleCellClick = (dateStr) => {
         const mins = history[dateStr] || 0;
@@ -92,7 +93,7 @@ const ConnectionHeatmap = () => {
             </div>
             
             <div className="heatmap-body-wrapper" style={{ position: "relative" }}>
-                <div className={`heatmap-grid ${isTodayEmpty ? 'is-blurred' : ''}`}>
+                <div className={`heatmap-grid ${isBlurred ? 'is-blurred' : ''}`}>
                     {days.map((dateStr) => {
                         const mins = history[dateStr] || 0;
                         const intensity = getIntensity(mins);
