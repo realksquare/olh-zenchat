@@ -249,6 +249,14 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     const needsLoading = isMediaMsg && !isViewOnce && !shouldDelayLoad && status !== "sending";
     const isShown = true;
 
+    useEffect(() => {
+        return () => {
+            if (reactionsTimeoutRef.current) {
+                clearTimeout(reactionsTimeoutRef.current);
+            }
+        };
+    }, []);
+
     const handleMouseEnter = () => {
         if (isMobile) return;
         if (reactionsTimeoutRef.current) {
@@ -260,7 +268,13 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
 
     const handleMouseLeave = () => {
         if (isMobile) return;
-        setShowReactionsPill(false);
+        if (reactionsTimeoutRef.current) {
+            clearTimeout(reactionsTimeoutRef.current);
+        }
+        reactionsTimeoutRef.current = setTimeout(() => {
+            setShowReactionsPill(false);
+            reactionsTimeoutRef.current = null;
+        }, 400); // 400ms buffer time
     };
 
     const handleTouchStart = (e) => {
