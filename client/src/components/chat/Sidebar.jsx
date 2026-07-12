@@ -198,10 +198,14 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const tab = params.get("tab");
+        const zvInvite = params.get("zvInvite");
         if (tab === "contacts" || tab === "recents" || tab === "pulse") {
             setActiveTab(tab);
         }
-    }, []);
+        if (zvInvite || user?.isZenVoiceOnly) {
+            setIsZenVoicePortalOpen(true);
+        }
+    }, [user?.isZenVoiceOnly]);
 
     useEffect(() => {
         if (sessionStorage.getItem("showFAQOnLoad") === "1") {
@@ -769,7 +773,13 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
             />
             <ZenVoicePortal
                 isOpen={isZenVoicePortalOpen}
-                onClose={() => setIsZenVoicePortalOpen(false)}
+                onClose={() => {
+                    if (user?.isZenVoiceOnly) {
+                        window.dispatchEvent(new Event("show-zenvoice-prompt"));
+                    } else {
+                        setIsZenVoicePortalOpen(false);
+                    }
+                }}
             />
 
             {showMobileMenu && createPortal(

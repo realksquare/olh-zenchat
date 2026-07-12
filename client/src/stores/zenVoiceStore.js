@@ -4,6 +4,7 @@ import { io } from "socket.io-client";
 
 const INITIAL_STATE = {
     isVerified: false,
+    isRegistered: false,
     verificationMethod: "none",
     pseudonym: "",
     pseudonymColor: "",
@@ -244,6 +245,7 @@ export const useZenVoiceStore = create((set, get) => ({
                 collegeName: data.collegeName || "",
                 collegeEmailDomain: data.domain || "",
                 sessionToken: data.sessionToken || null,
+                isRegistered: data.isRegistered || false,
                 isLoading: false
             });
             if (data.isVerified && data.sessionToken) {
@@ -267,6 +269,7 @@ export const useZenVoiceStore = create((set, get) => ({
                 collegeName: data.collegeName,
                 collegeEmailDomain: data.domain,
                 sessionToken: data.sessionToken,
+                isRegistered: true,
                 isLoading: false
             });
             if (data.sessionToken) {
@@ -422,6 +425,25 @@ export const useZenVoiceStore = create((set, get) => ({
         }
     },
 
+    revokeInvite: async (roomId) => {
+        const { sessionToken, rooms } = get();
+        if (!sessionToken) return { success: false };
+        try {
+            const { data } = await axiosInstance.put(`/zenvoice/rooms/${roomId}/revoke-invite`, {}, {
+                headers: { Authorization: `Bearer ${sessionToken}` }
+            });
+            if (data.success && data.inviteToken) {
+                set({
+                    rooms: rooms.map(r => String(r._id) === String(roomId) ? { ...r, inviteToken: data.inviteToken } : r)
+                });
+                return { success: true, inviteToken: data.inviteToken };
+            }
+            return { success: false };
+        } catch (err) {
+            return { success: false, message: err.response?.data?.message || "Failed to revoke invite link" };
+        }
+    },
+
     leaveRoom: async (roomId) => {
         const { sessionToken, rooms } = get();
         if (!sessionToken) return;
@@ -482,6 +504,20 @@ export const useZenVoiceStore = create((set, get) => ({
         } catch (err) {
             console.error("Report message error:", err);
             return { success: false, message: err.response?.data?.message || "Failed to submit report" };
+        }
+    },
+
+    appealMessage: async (messageId) => {
+        const { sessionToken } = get();
+        if (!sessionToken) return { success: false };
+        try {
+            const { data } = await axiosInstance.post(`/zenvoice/message/${messageId}/appeal`, {}, {
+                headers: { Authorization: `Bearer ${sessionToken}` }
+            });
+            return { success: true, appealStatus: data.appealStatus };
+        } catch (err) {
+            console.error("Appeal message error:", err);
+            return { success: false, message: err.response?.data?.message || "Failed to appeal message" };
         }
     },
 

@@ -5,6 +5,7 @@ const User = require("../models/User");
 const ZenVoiceDomainWhitelist = require("../models/ZenVoiceDomainWhitelist");
 const { generatePseudonym, getPseudonymColor, issueZenVoiceToken } = require("../utils/zenVoiceHelper");
 const { sendZenVoiceOTP } = require("../utils/mailService");
+const rateLimit = require("express-rate-limit");
 
 /**
  * GET /api/zenvoice/status
@@ -429,11 +430,35 @@ router.post("/rooms/invite/:token", zenVoiceAuth, async (req, res) => {
             }
         }
         if (!room.members.includes(req.zenVoicePseudonym)) {
+            if (room.members.length >= 200) {
+                return res.status(403).json({ message: "This room has reached the maximum capacity of 200 members." });
+            }
             room.members.push(req.zenVoicePseudonym);
             room.memberCount = room.members.length;
             await room.save();
         }
         res.json({ success: true, room });
+    } catch (err) {
+        console.error("[ZenVoice] join invite error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * PUT /api/zenvoice/rooms/:roomId/revoke-invite
+ * Regenerate the invite token for a private room.
+ */
+router.put("/rooms/:roomId/revoke-invite", zenVoiceAuth, async (req, res) => {
+    try {
+        const crypto = require("crypto");
+        const room = await ZenVoiceRoom.findOne({ _id: req.params.roomId, isActive: true, isOfficial: false });
+        if (!room) return res.status(404).json({ message: "Private room not found." });
+        if (room.createdBy !== req.zenVoicePseudonym) {
+            return res.status(403).json({ message: "Only the room creator can revoke the invite link." });
+        }
+        room.inviteToken = crypto.randomBytes(16).toString('hex');
+        await room.save();
+        res.json({ success: true, inviteToken: room.inviteToken });
     } catch (err) {
         console.error("[ZenVoice] join invite error:", err);
         res.status(500).json({ message: "Server error" });
@@ -457,6 +482,11 @@ router.post("/rooms/:roomId/leave", zenVoiceAuth, async (req, res) => {
         if (!room.isOfficial && room.members.length === 0) {
             await ZenVoiceRoom.findByIdAndDelete(room._id);
             await ZenVoiceMessage.deleteMany({ roomId: room._id });
+        } else if (room.isOfficial) {
+            await ZenVoiceMessage.updateMany(
+                { roomId: room._id, pseudonym: req.zenVoicePseudonym },
+                { $set: { pseudonym: "Former Member", pseudonymAvatarColor: "#334155" } }
+            );
         }
         res.json({ success: true });
     } catch (err) {
@@ -596,6 +626,32 @@ router.post("/message/:messageId/report", zenVoiceAuth, async (req, res) => {
 });
 
 /**
+ * POST /api/zenvoice/message/:messageId/appeal
+ * Appeal a globally blurred message.
+ */
+router.post("/message/:messageId/appeal", zenVoiceAuth, async (req, res) => {
+    try {
+        const message = await ZenVoiceMessage.findById(req.params.messageId);
+        if (!message) return res.status(404).json({ message: "Message not found" });
+        if (message.pseudonym !== req.zenVoicePseudonym) {
+            return res.status(403).json({ message: "You can only appeal your own messages." });
+        }
+        if (!message.globalBlur) {
+            return res.status(400).json({ message: "This message is not restricted." });
+        }
+        if (message.appealStatus !== 'none' && message.appealStatus !== 'rejected') {
+            return res.status(400).json({ message: "Appeal already submitted." });
+        }
+        message.appealStatus = 'pending';
+        await message.save();
+        res.json({ success: true, appealStatus: 'pending' });
+    } catch (err) {
+        console.error("[ZenVoice] appeal error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
  * POST /api/zenvoice/report/:reportId/counter
  * Counter-report.
  */
@@ -618,12 +674,18 @@ router.post("/report/:reportId/counter", zenVoiceAuth, async (req, res) => {
     }
 });
 
+const dmBridgeLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 3, // limit each IP/User to 3 requests per windowMs
+    message: { message: "Too many DM requests from this IP, please try again after an hour" }
+});
+
 /**
  * POST /api/zenvoice/bridge-dm/:targetPseudonym
  * Creates a silent DM chat between current user and user of targetPseudonym.
  * Bypasses push notifications.
  */
-router.post("/bridge-dm/:targetPseudonym", zenVoiceAuth, async (req, res) => {
+router.post("/bridge-dm/:targetPseudonym", zenVoiceAuth, dmBridgeLimiter, async (req, res) => {
     try {
         const targetPseudonym = req.params.targetPseudonym;
         const currentPseudonym = req.zenVoicePseudonym;
@@ -931,6 +993,21 @@ router.post("/logout", authMiddleware, async (req, res) => {
         res.json({ success: true, message: "Logged out from ZenVoice successfully." });
     } catch (err) {
         console.error("[ZenVoice] logout error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+/**
+ * GET /api/zenvoice/rooms/invite/:token/preview
+ * Get basic room details without authentication to show on the invite landing page.
+ */
+router.get("/rooms/invite/:token/preview", async (req, res) => {
+    try {
+        const room = await ZenVoiceRoom.findOne({ inviteToken: req.params.token, isActive: true })
+            .select("name description isOfficial allowedDomain memberCount requireVerified");
+        if (!room) return res.status(404).json({ message: "Invalid invite link." });
+        res.json({ success: true, room });
+    } catch (err) {
+        console.error("[ZenVoice] preview invite error:", err);
         res.status(500).json({ message: "Server error" });
     }
 });

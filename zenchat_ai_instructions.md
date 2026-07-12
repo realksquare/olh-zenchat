@@ -24,6 +24,7 @@ These are the core operating principles and coding standards to be followed for 
 - **Professional Typography:** Keep UI text away from fancy dashes (em or en dashes) or excessive punctuation. Use standard hyphens.
 - **Iconography over Emojis:** Avoid emojis in the UI text as much as possible. Use Lucid icons or SVG icons instead, wherever visual representation is needed.
 - **UI Consistency:** When adding new UI elements, ensure the styles and UI of the new elements are consistent with the existing UI elements, unless the component being added is intended to be visually distinct/unique from the components around it.
+- **No AI-SLop styles/typography:** Do not add generally used AI-like styles or wordings in the UI, keep it minimal and simple yet elegant, matching the current ZenChat style (a bit of casual and sarcastic tone in UI texts, and premium UI design that feels ZenChat).
 
 ## 6. Version Control Protocol
 - **Perfectly synced codebase:** Make sure new changes or additions are synced and work together well across all relevant files.

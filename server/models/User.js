@@ -207,6 +207,10 @@ const userSchema = new mongoose.Schema(
             enum: ["default", "zen_oled", "earthy_calm"],
             default: "default"
         },
+        isZenVoiceOnly: {
+            type: Boolean,
+            default: false
+        },
         zenVoice: {
             isStudentVerified: { type: Boolean, default: false },
             verificationMethod: {

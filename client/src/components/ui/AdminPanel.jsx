@@ -32,6 +32,7 @@ const AdminPanel = ({ onClose }) => {
     const [zvLoading, setZvLoading] = useState(false);
     const [zvRejectNote, setZvRejectNote] = useState({});
     const [zvDomainRejectNote, setZvDomainRejectNote] = useState({});
+    const [zvReports, setZvReports] = useState([]);
 
     const showToast = (msg) => {
         setToast(msg);
@@ -161,17 +162,36 @@ const AdminPanel = ({ onClose }) => {
     const fetchZenVoiceRequests = async () => {
         setZvLoading(true);
         try {
-            const [pseudoRes, domainRes] = await Promise.all([
+            const [pseudoRes, domainRes, reportsRes] = await Promise.all([
                 axiosInstance.get("/admin/zenvoice/pseudonym-requests"),
-                axiosInstance.get("/admin/zenvoice/domain-requests")
+                axiosInstance.get("/admin/zenvoice/domain-requests"),
+                axiosInstance.get("/admin/zenvoice/reports")
             ]);
             setZvPseudonymRequests(pseudoRes.data.requests || []);
             setZvDomainRequests(domainRes.data.domains || []);
             setZvApprovedDomains(domainRes.data.approved || []);
+            setZvReports(reportsRes.data.reports || []);
         } catch (err) {
             console.error("ZenVoice admin fetch error:", err);
         } finally {
             setZvLoading(false);
+        }
+    };
+
+    const handleResolveReport = async (reportId, action) => {
+        const confirmMsg = action === "suspend_user" 
+            ? "Are you sure you want to suspend this user for 10 years and delete the message?" 
+            : action === "delete_message" 
+                ? "Are you sure you want to delete this message?" 
+                : "Are you sure you want to dismiss this report?";
+        if (!window.confirm(confirmMsg)) return;
+
+        try {
+            await axiosInstance.post(`/admin/zenvoice/reports/${reportId}/resolve`, { action });
+            setZvReports(prev => prev.filter(r => r._id !== reportId));
+            showToast("Report resolved successfully.");
+        } catch (err) {
+            showToast(err.response?.data?.message || "Failed to resolve report");
         }
     };
 
@@ -544,6 +564,60 @@ const AdminPanel = ({ onClose }) => {
                                                     onClick={() => handleRevokeDomain(dom._id)}
                                                     style={{ padding: '6px 12px', borderRadius: '6px', background: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.8rem' }}
                                                 >Revoke</button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                            {/* Reports List */}
+                            <div style={{ marginTop: '24px' }}>
+                                <h3 style={{ margin: '0 0 12px', color: 'white', fontSize: '1.05rem' }}>Message Reports</h3>
+                                {zvLoading ? (
+                                    <p style={{ color: '#94a3b8' }}>Loading...</p>
+                                ) : zvReports.length === 0 ? (
+                                    <p style={{ color: '#64748b', fontSize: '0.9rem' }}>No pending reports.</p>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        {zvReports.map(report => (
+                                            <div key={report._id} style={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                                                    <div style={{ flex: 1 }}>
+                                                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Reporter</span>
+                                                        <p style={{ margin: '2px 0', color: 'white', fontWeight: '500' }}>{report.reporterPseudonym}</p>
+                                                    </div>
+                                                    <div style={{ flex: 1 }}>
+                                                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Reported Author</span>
+                                                        <p style={{ margin: '2px 0', color: '#ef4444', fontWeight: '500' }}>{report.reportedPseudonym}</p>
+                                                    </div>
+                                                    <div style={{ flex: 2 }}>
+                                                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Reason</span>
+                                                        <p style={{ margin: '2px 0', color: '#cbd5e1' }}>{report.reason}</p>
+                                                    </div>
+                                                </div>
+                                                {report.evidence && (
+                                                    <div>
+                                                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Evidence provided</span>
+                                                        <p style={{ margin: '2px 0', color: '#cbd5e1', fontStyle: 'italic', fontSize: '0.9rem' }}>{report.evidence}</p>
+                                                    </div>
+                                                )}
+                                                <div style={{ background: '#0f172a', padding: '10px', borderRadius: '6px', border: '1px dashed #334155' }}>
+                                                    <span style={{ color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Message Content</span>
+                                                    <p style={{ margin: '4px 0 0', color: 'white', fontSize: '0.95rem' }}>{report.messageContent}</p>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                                                    <button
+                                                        onClick={() => handleResolveReport(report._id, "dismiss")}
+                                                        style={{ flex: 1, padding: '8px', borderRadius: '6px', background: '#334155', color: 'white', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
+                                                    >Dismiss</button>
+                                                    <button
+                                                        onClick={() => handleResolveReport(report._id, "delete_message")}
+                                                        style={{ flex: 1, padding: '8px', borderRadius: '6px', background: '#f59e0b', color: 'white', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}
+                                                    >Delete Message</button>
+                                                    <button
+                                                        onClick={() => handleResolveReport(report._id, "suspend_user")}
+                                                        style={{ flex: 1, padding: '8px', borderRadius: '6px', background: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}
+                                                    >Ban User (10y)</button>
+                                                </div>
                                             </div>
                                         ))}
                                     </div>

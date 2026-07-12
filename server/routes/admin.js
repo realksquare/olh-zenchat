@@ -274,4 +274,64 @@ router.post("/zenvoice/domain-requests/:domainId", authMiddleware, adminCheck, a
     }
 });
 
+const ZenVoiceReport = require("../models/ZenVoiceReport");
+const ZenVoiceMessage = require("../models/ZenVoiceMessage");
+
+// GET /api/admin/zenvoice/reports
+router.get("/zenvoice/reports", authMiddleware, adminCheck, async (req, res) => {
+    try {
+        const reports = await ZenVoiceReport.find({ status: "pending" }).sort({ createdAt: -1 });
+        // We might want to populate the message if needed, but the report usually stores the message content or ID.
+        // Let's attach message data.
+        const populatedReports = await Promise.all(reports.map(async (r) => {
+            const msg = await ZenVoiceMessage.findById(r.messageId);
+            return {
+                ...r.toObject(),
+                messageContent: msg ? msg.content : "[Message Deleted]"
+            };
+        }));
+        res.json({ reports: populatedReports });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+// POST /api/admin/zenvoice/reports/:reportId/resolve
+router.post("/zenvoice/reports/:reportId/resolve", authMiddleware, adminCheck, async (req, res) => {
+    try {
+        const { action } = req.body; // "dismiss", "delete_message", "suspend_user"
+        const report = await ZenVoiceReport.findById(req.params.reportId);
+        if (!report) return res.status(404).json({ message: "Report not found" });
+
+        report.status = "resolved";
+        report.resolvedBy = req.user._id;
+        report.resolvedAt = new Date();
+        report.resolutionAction = action;
+
+        if (action === "delete_message") {
+            await ZenVoiceMessage.findByIdAndDelete(report.messageId);
+        } else if (action === "suspend_user") {
+            const creator = await User.findOne({ "zenVoice.pseudonym": report.reportedPseudonym });
+            if (creator) {
+                creator.zenVoice.zenVoiceSuspendedUntil = new Date(Date.now() + 87600 * 60 * 60 * 1000); // 10 years
+                await creator.save();
+                
+                // Also delete message
+                await ZenVoiceMessage.findByIdAndDelete(report.messageId);
+                
+                const io = req.app.get("io");
+                io.of("/zenvoice").to(creator._id.toString()).emit("red_card_warning", {
+                    redCardCount: 99,
+                    suspendedUntil: creator.zenVoice.zenVoiceSuspendedUntil
+                });
+            }
+        }
+        
+        await report.save();
+        res.json({ message: "Report resolved" });
+    } catch (err) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
 module.exports = router;

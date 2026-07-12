@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useZenVoiceStore } from "../../stores/zenVoiceStore";
 import { useAuthStore } from "../../stores/authStore";
-import { ArrowLeft, ChevronLeft, Send, ShieldAlert, Flag, Bell, BellOff, MessageCircle, MoreVertical, Shield, Paperclip, Smile, Loader2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ChevronLeft, Send, ShieldAlert, Flag, Bell, BellOff, MessageCircle, MoreVertical, Shield, Paperclip, Smile, Loader2, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import GifPicker from "../chat/GifPicker";
 import axios from "axios";
 
@@ -37,7 +37,9 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         toggleBlockPseudonym,
         deleteRoom,
         fetchSubscriptions,
-        toggleSubscription
+        toggleSubscription,
+        revokeInvite,
+        appealMessage
     } = useZenVoiceStore();
 
     const [showRoomOptions, setShowRoomOptions] = useState(false);
@@ -350,6 +352,19 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         setMenuOpenMessage(null);
     };
 
+    const handleAppeal = async (msgId) => {
+        const res = await appealMessage(msgId);
+        if (res.success) {
+            showToast("success", "Appeal submitted successfully.");
+            // We should update the local message state so the button changes immediately
+            useZenVoiceStore.setState(state => ({
+                messages: state.messages.map(m => m._id === msgId ? { ...m, appealStatus: 'pending' } : m)
+            }));
+        } else {
+            showToast("error", res.message || "Failed to submit appeal.");
+        }
+    };
+
     const handleReportSubmit = async (e) => {
         e.preventDefault();
         if (!reportReason) return;
@@ -470,11 +485,16 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
             {/* Countdown / Warning Banners */}
             {(resetCountdown || idleWarning) && (
                 <div style={{ background: "var(--color-surface-offset, #161b22)", borderLeft: "3px solid #f59e0b", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", zIndex: 5 }}>
-                    <span style={{ fontSize: "0.8rem", color: "#f59e0b", fontWeight: "600" }}>
-                        {resetCountdown
-                            ? `⚠️ Clean sweep incoming: All posts get deleted in ${resetCountdown} mins.`
-                            : `⏳ Crickets here: Wiping room in ${idleWarning} mins due to inactivity.`
-                        }
+                    <span style={{ fontSize: "0.8rem", color: "#f59e0b", fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
+                        {resetCountdown ? (
+                            <>
+                                <AlertTriangle size={16} /> Clean sweep incoming: All posts get deleted in {resetCountdown} mins.
+                            </>
+                        ) : (
+                            <>
+                                <Clock size={16} /> Crickets here: Wiping room in {idleWarning} mins due to inactivity.
+                            </>
+                        )}
                     </span>
                 </div>
             )}
@@ -696,6 +716,18 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                                 )}
                                                 {(!msg.type || msg.type === "text") && (
                                                     <span>{msg.content}</span>
+                                                )}
+                                                {isOwn && msg.globalBlur && (
+                                                    <div style={{ marginTop: '8px', borderTop: '1px solid var(--color-border, rgba(255,255,255,0.08))', paddingTop: '8px' }}>
+                                                        {msg.appealStatus === 'none' || msg.appealStatus === 'rejected' ? (
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); handleAppeal(msg._id); }}
+                                                                style={{ background: '#ef4444', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 'bold' }}
+                                                            >Appeal Moderation</button>
+                                                        ) : (
+                                                            <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#f59e0b' }}>Appeal: {msg.appealStatus.toUpperCase()}</span>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </>
                                         )}
@@ -1559,6 +1591,21 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
                                             Copy
                                         </button>
                                     </div>
+                                    {activeRoom.createdBy === myPseudonym && (
+                                        <button
+                                            onClick={async () => {
+                                                const res = await revokeInvite(activeRoom._id);
+                                                if (res.success) {
+                                                    showToast("success", "Invite link revoked and regenerated!");
+                                                } else {
+                                                    showToast("error", res.message || "Failed to revoke link.");
+                                                }
+                                            }}
+                                            style={{ marginTop: "8px", background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "0.75rem", padding: "4px 0", textDecoration: "underline", display: "flex", alignItems: "center", gap: "4px" }}
+                                        >
+                                            Revoke Link
+                                        </button>
+                                    )}
                                 </div>
                             )}
 

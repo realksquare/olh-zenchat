@@ -19,6 +19,11 @@ const zenVoiceMessageSchema = new mongoose.Schema({
     isEdited: { type: Boolean, default: false },
     starredBy: [{ type: String }],
     deletedAt: { type: Date, default: null },
+    appealStatus: {
+        type: String,
+        enum: ['none', 'pending', 'rejected', 'approved'],
+        default: 'none'
+    },
     createdAt: { type: Date, default: Date.now }
 });
 

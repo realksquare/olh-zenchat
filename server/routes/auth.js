@@ -1114,5 +1114,139 @@ router.put("/theme", authMiddleware, async (req, res) => {
         res.status(500).json({ message: "Server error", error: err.message });
     }
 });
+// --- ZenVoice Onboarding Routes ---
+
+// 1. Signup purely for ZenVoice
+router.post("/zenvoice-signup", authLimiter, [
+    body("academicEmail").isEmail().withMessage("Valid academic email is required"),
+    body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters")
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ message: errors.array()[0].msg });
+
+    try {
+        const { academicEmail, password } = req.body;
+        
+        // Generate a random username for ZenVoice-only accounts
+        const tempUsername = `zv_${crypto.randomBytes(4).toString("hex")}`;
+        
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        
+        const user = new User({
+            username: tempUsername,
+            email: academicEmail,
+            password: hashedPassword,
+            isZenVoiceOnly: true,
+            zenVoice: {
+                collegeEmail: academicEmail
+            }
+        });
+        
+        await user.save();
+        
+        const token = generateToken(user);
+        res.status(201).json({
+            success: true,
+            token,
+            user: user.toPrivateJSON ? user.toPrivateJSON() : user
+        });
+    } catch (err) {
+        if (err.code === 11000) {
+            return res.status(400).json({ message: "An account with this email already exists." });
+        }
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+});
+
+// 2. Upgrade ZenVoice account to standard account
+router.post("/upgrade-zenvoice", authMiddleware, [
+    body("username").isLength({ min: 3, max: 20 }).withMessage("Username must be between 3 and 20 characters")
+        .matches(/^[a-zA-Z0-9_]+$/).withMessage("Username can only contain letters, numbers and underscores")
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ message: errors.array()[0].msg });
+
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user || !user.isZenVoiceOnly) {
+            return res.status(400).json({ message: "Account is already a standard account or not found" });
+        }
+
+        const existing = await User.findOne({ username: req.body.username });
+        if (existing) {
+            return res.status(400).json({ message: "Username is already taken" });
+        }
+
+        user.username = req.body.username;
+        user.isZenVoiceOnly = false;
+        await user.save();
+
+        res.json({ success: true, user: user.toPrivateJSON ? user.toPrivateJSON() : user });
+    } catch (err) {
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+});
+
+// 3. Merge ZenVoice account into existing ZenChat account
+router.post("/merge-zenvoice", authMiddleware, [
+    body("username").notEmpty().withMessage("ZenChat Username/Email is required"),
+    body("password").notEmpty().withMessage("Password is required")
+], async (req, res) => {
+    try {
+        const tempUser = await User.findById(req.user._id);
+        if (!tempUser || !tempUser.isZenVoiceOnly) {
+            return res.status(400).json({ message: "Current account cannot be merged" });
+        }
+
+        const { username, password } = req.body;
+        const existingUser = await User.findOne({
+            $or: [{ email: username.toLowerCase() }, { username: username }]
+        });
+
+        if (!existingUser) return res.status(401).json({ message: "Invalid credentials" });
+        
+        const isMatch = await bcrypt.compare(password, existingUser.password);
+        if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
+
+        existingUser.zenVoice = {
+            ...existingUser.zenVoice,
+            ...tempUser.zenVoice
+        };
+        await existingUser.save();
+
+        const mongoose = require("mongoose");
+        const collectionsToUpdate = ["Message", "Moment", "ZenVoiceRoom"];
+        
+        for (const modelName of collectionsToUpdate) {
+            try {
+                if (mongoose.models[modelName]) {
+                    const Model = mongoose.models[modelName];
+                    if (modelName === "Message") {
+                        await Model.updateMany({ senderId: tempUser._id }, { $set: { senderId: existingUser._id } });
+                    } else if (modelName === "Moment") {
+                        await Model.updateMany({ userId: tempUser._id }, { $set: { userId: existingUser._id } });
+                    } else if (modelName === "ZenVoiceRoom") {
+                        await Model.updateMany({ "members.userId": tempUser._id }, { $set: { "members.$.userId": existingUser._id } });
+                    }
+                }
+            } catch (e) {
+                console.error(`Merge error for model ${modelName}:`, e);
+            }
+        }
+
+        await User.findByIdAndDelete(tempUser._id);
+
+        const token = generateToken(existingUser);
+        res.json({
+            success: true,
+            token,
+            user: existingUser.toPrivateJSON ? existingUser.toPrivateJSON() : existingUser
+        });
+    } catch (err) {
+        console.error("Merge error:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+});
 
 module.exports = router;

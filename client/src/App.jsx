@@ -11,6 +11,7 @@ const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const HomePage = lazy(() => import("./pages/HomePage"));
 const ZenPulsePage = lazy(() => import("./pages/ZenPulsePage"));
+const ZenVoiceInvitePage = lazy(() => import("./pages/ZenVoiceInvitePage"));
 import InstallPWA from "./components/ui/InstallPWA";
 import RecoveryKeyModal from "./components/ui/RecoveryKeyModal";
 import { primeAudioContext, getAudioContext } from "./utils/audio";
@@ -871,6 +872,7 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+          <Route path="/zenvoice/invite/:token" element={<ZenVoiceInvitePage />} />
           <Route path="/zenpulse" element={<ZenPulsePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

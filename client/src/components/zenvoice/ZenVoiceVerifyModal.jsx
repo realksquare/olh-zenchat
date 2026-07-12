@@ -181,21 +181,19 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess, isVerifyi
                             <ArrowRight size={18} style={{ color: "#64748b" }} />
                         </div>
 
-                        {/* Option 2: GitHub Student pack */}
+                        {/* Option 2: GitHub Student pack (Coming Soon) */}
                         <div
-                            onClick={handleGitHubAuth}
                             style={{
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "space-between",
                                 padding: "16px",
                                 background: "var(--color-surface-offset, #161b22)",
-                                border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))",
+                                border: "1px solid var(--color-border, rgba(255, 255, 255, 0.04))",
                                 borderRadius: "12px",
-                                cursor: "pointer",
-                                transition: "all 0.2s"
+                                cursor: "not-allowed",
+                                opacity: 0.5
                             }}
-                            className="hover-card"
                         >
                             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                                 <div style={{ width: "40px", height: "40px", borderRadius: "8px", background: "var(--color-surface, #0f172a)", border: "1px solid rgba(56, 189, 248, 0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -205,11 +203,10 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess, isVerifyi
                                     </svg>
                                 </div>
                                 <div style={{ textAlign: "left" }}>
-                                    <h4 style={{ margin: "0 0 2px", fontSize: "0.95rem", fontWeight: "600", color: "var(--color-text, #fff)" }}>GitHub Student Developer Pack</h4>
+                                    <h4 style={{ margin: "0 0 2px", fontSize: "0.95rem", fontWeight: "600", color: "var(--color-text, #fff)" }}>GitHub Student Developer Pack <span style={{ fontSize: "0.75rem", fontWeight: "normal", color: "#f59e0b", marginLeft: "6px" }}>(coming soon)</span></h4>
                                     <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--color-text-muted, #94a3b8)" }}>If you have GitHub Student Developer Pack, you're already verified. Just tap to connect.</p>
                                 </div>
                             </div>
-                            <ArrowRight size={18} style={{ color: "#64748b" }} />
                         </div>
                     </div>
                 </div>

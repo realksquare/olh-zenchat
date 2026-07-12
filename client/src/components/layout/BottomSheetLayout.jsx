@@ -75,7 +75,9 @@ const BottomSheetLayout = () => {
     const [isDragging, setIsDragging] = useState(false);
     const [glitchKey, setGlitchKey] = useState(0);
 
-    const [activeView, setActiveView] = useState('zenchat');
+    const [activeView, setActiveView] = useState(
+        useAuthStore.getState().user?.isZenVoiceOnly ? 'zenvoice' : 'zenchat'
+    );
     const [viewTransitioning, setViewTransitioning] = useState(false);
     const [zvActiveRoomId, setZvActiveRoomId] = useState(null);
     const [zvShowVerifier, setZvShowVerifier] = useState(false);
@@ -112,6 +114,10 @@ const BottomSheetLayout = () => {
     };
 
     const switchToZenChat = () => {
+        if (useAuthStore.getState().user?.isZenVoiceOnly) {
+            window.dispatchEvent(new Event("show-zenvoice-prompt"));
+            return;
+        }
         triggerViewTransition('zenchat', () => {
             setZvActiveRoomId(null);
         });
