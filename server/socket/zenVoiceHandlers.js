@@ -3,6 +3,7 @@ const User = require("../models/User");
 const ZenVoiceRoom = require("../models/ZenVoiceRoom");
 const ZenVoiceMessage = require("../models/ZenVoiceMessage");
 const { getPseudonymColor } = require("../utils/zenVoiceHelper");
+const { sendPushNotification } = require("../utils/firebase");
 
 const socketZenVoiceAuth = async (socket, next) => {
     try {
@@ -153,6 +154,61 @@ const registerZenVoiceSocketHandlers = (io) => {
                 }
 
                 zvNamespace.to(roomId.toString()).emit("new_message", { message: populatedMessage });
+
+                // Send push notifications to subscribers offline or out of room
+                try {
+                    const subscribers = await User.find({
+                        "zenVoice.zenVoiceSubscriptions": {
+                            $elemMatch: {
+                                roomId: room._id,
+                                pseudonym: socket.pseudonym
+                            }
+                        }
+                    }).select("fcmTokens notificationsEnabled");
+
+                    if (subscribers.length > 0) {
+                        const activeSockets = await zvNamespace.in(roomId.toString()).fetchSockets();
+                        const activeUserIds = new Set(activeSockets.map(s => s.userId?.toString()));
+
+                        const offlineSubscribers = subscribers.filter(
+                            sub => sub.notificationsEnabled && !activeUserIds.has(sub._id.toString())
+                        );
+
+                        if (offlineSubscribers.length > 0) {
+                            const title = `#ZenVoice - ${room.name}`;
+                            const body = `${socket.pseudonym}: ${content.trim()}`;
+                            
+                            for (const sub of offlineSubscribers) {
+                                const tokens = sub.fcmTokens || [];
+                                if (tokens.length === 0 && !sub.fcmToken) continue;
+
+                                const pwaTokens = tokens.filter(t => t.deviceType === 'pwa');
+                                const browserTokens = tokens.filter(t => t.deviceType === 'browser');
+
+                                let targetTokens = [];
+                                if (pwaTokens.length > 0) {
+                                    targetTokens = pwaTokens.map(t => t.token);
+                                } else if (browserTokens.length > 0) {
+                                    targetTokens = browserTokens.map(t => t.token);
+                                } else if (sub.fcmToken) {
+                                    targetTokens = [sub.fcmToken];
+                                }
+
+                                for (const tkn of targetTokens) {
+                                    sendPushNotification(sub._id, tkn, title, body, {
+                                        roomId: roomId.toString(),
+                                        type: 'zenvoice_message',
+                                        tag: `zenvoice-${roomId.toString()}`
+                                    }).catch(err => {
+                                        console.error(`[ZenVoice Push] Error sending to ${sub._id}:`, err);
+                                    });
+                                }
+                            }
+                        }
+                    }
+                } catch (pushErr) {
+                    console.error("[ZenVoice Socket] push notifications dispatch error:", pushErr);
+                }
             } catch (err) {
                 console.error("[ZenVoice Socket] send_message error:", err);
                 socket.emit("error", { message: "Failed to send message." });

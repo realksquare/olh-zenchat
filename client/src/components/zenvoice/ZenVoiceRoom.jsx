@@ -35,7 +35,9 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         clearActiveRoom,
         blockedPseudonyms,
         toggleBlockPseudonym,
-        deleteRoom
+        deleteRoom,
+        fetchSubscriptions,
+        toggleSubscription
     } = useZenVoiceStore();
 
     const [showRoomOptions, setShowRoomOptions] = useState(false);
@@ -258,11 +260,18 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
     useEffect(() => {
         fetchMessages(roomId);
         joinRoomSocket(roomId);
+        fetchSubscriptions(roomId).then(subs => {
+            const initialMap = {};
+            subs.forEach(p => {
+                initialMap[p] = true;
+            });
+            setNotifSubscribed(initialMap);
+        });
         return () => {
             // Clear local state only — do NOT emit leave_room, that's only for the explicit Leave button
             clearActiveRoom();
         };
-    }, [roomId, fetchMessages, joinRoomSocket, clearActiveRoom]);
+    }, [roomId, fetchMessages, joinRoomSocket, clearActiveRoom, fetchSubscriptions]);
 
     // Auto scroll to bottom
     useEffect(() => {
@@ -365,11 +374,17 @@ const ZenVoiceRoom = ({ roomId, onBack, onDMBridgeSuccess }) => {
         }
     };
 
-    const toggleNotification = (pName) => {
-        setNotifSubscribed(prev => ({
-            ...prev,
-            [pName]: !prev[pName]
-        }));
+    const toggleNotification = async (pName) => {
+        const res = await toggleSubscription(roomId, pName);
+        if (res.success) {
+            setNotifSubscribed(prev => ({
+                ...prev,
+                [pName]: res.subscribed
+            }));
+            showToast("success", res.subscribed ? `Subscribed to ${pName}` : `Unsubscribed from ${pName}`);
+        } else {
+            showToast("error", res.message || "Failed to update subscription");
+        }
     };
 
     const rooms = useZenVoiceStore(s => s.rooms || []);

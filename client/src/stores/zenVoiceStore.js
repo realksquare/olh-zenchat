@@ -552,6 +552,36 @@ export const useZenVoiceStore = create((set, get) => ({
         }
     },
 
+    fetchSubscriptions: async (roomId) => {
+        const { sessionToken } = get();
+        if (!sessionToken) return [];
+        try {
+            const { data } = await axiosInstance.get(`/zenvoice/rooms/${roomId}/subscriptions`, {
+                headers: { Authorization: `Bearer ${sessionToken}` }
+            });
+            return data.subscriptions || [];
+        } catch (err) {
+            console.error("Fetch subscriptions error:", err);
+            return [];
+        }
+    },
+
+    toggleSubscription: async (roomId, targetPseudonym) => {
+        const { sessionToken } = get();
+        if (!sessionToken) return { success: false };
+        try {
+            const { data } = await axiosInstance.post(
+                `/zenvoice/rooms/${roomId}/subscribe/${targetPseudonym}`,
+                {},
+                { headers: { Authorization: `Bearer ${sessionToken}` } }
+            );
+            return { success: true, subscribed: data.subscribed };
+        } catch (err) {
+            console.error("Toggle subscription error:", err);
+            return { success: false, message: err.response?.data?.message || "Failed to toggle subscription" };
+        }
+    },
+
     toggleBlockPseudonym: (pseudonym) => {
         const { blockedPseudonyms } = get();
         const next = new Set(blockedPseudonyms);
