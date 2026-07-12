@@ -1252,7 +1252,17 @@ const ChatWindow = ({ onBack }) => {
             return isOtherInZen ? "Online - on #ZenMode" : "Online";
         }
         if (otherUser.lastSeen) {
-            return `Last seen ${formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true })}`;
+            const diffMs = Date.now() - new Date(otherUser.lastSeen).getTime();
+            const diffMins = Math.floor(diffMs / 60000);
+            if (diffMins < 1) return "<1 minute";
+            if (diffMins < 60) return `~${diffMins} minutes ago`;
+            const diffHrs = Math.floor(diffMs / 3600000);
+            if (diffHrs === 1) return "~1 hour ago";
+            if (diffHrs < 24) return `~${diffHrs} hours ago`;
+            const diffDays = Math.floor(diffMs / 86400000);
+            if (diffDays === 1) return "~1 day ago";
+            if (diffDays < 7) return `~${diffDays} days ago`;
+            return formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true });
         }
         return "Offline";
     }, [otherUser, isPeerOnline, tick, isOffline, activeChat?.blockStatus?.iBlocked, activeChat?.blockStatus?.theyBlocked, zenUsers]);

@@ -1145,15 +1145,18 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             )}
 
             {showAttachmentSheet && createPortal(
-                <div className="modal-overlay" onClick={() => setShowAttachmentSheet(false)} style={{ zIndex: 10002, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                    <div className="attachment-sheet" onClick={e => e.stopPropagation()} style={{ background: 'var(--color-surface)', width: '100%', maxWidth: '500px', borderTopLeftRadius: '20px', borderTopRightRadius: '20px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <label className="attachment-option" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', background: 'var(--color-overlay, rgba(255, 255, 255, 0.05))', cursor: 'pointer' }}>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="modal-overlay" onClick={() => setShowAttachmentSheet(false)} style={{ zIndex: 10002, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', backdropFilter: 'blur(5px)', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <div className="attachment-sheet" onClick={e => e.stopPropagation()} style={{ background: 'var(--color-surface, #0f172a)', width: '100%', maxWidth: '500px', borderTopLeftRadius: '24px', borderTopRightRadius: '24px', padding: '16px 20px 24px 20px', display: 'flex', flexDirection: 'column', gap: '14px', border: '1px solid rgba(255, 255, 255, 0.08)', borderBottom: 'none', boxShadow: '0 -10px 45px rgba(0, 0, 0, 0.6)', animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}>
+                        {/* Native Handle Bar */}
+                        <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: 'rgba(255, 255, 255, 0.15)', margin: '0 auto 12px auto' }} />
+                        
+                        <label className="attachment-option" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', background: 'var(--color-overlay, rgba(255, 255, 255, 0.03))', border: '1px solid rgba(255, 255, 255, 0.04)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(59, 130, 246, 0.12)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                             </div>
                             <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: '16px', fontWeight: '500', color: 'var(--color-text, #f1f5f9)' }}>Gallery</div>
-                                <div style={{ fontSize: '12px', color: 'var(--color-text-muted, #94a3b8)' }}>Photos and Videos</div>
+                                <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--color-text, #f1f5f9)' }}>Gallery</div>
+                                <div style={{ fontSize: '12px', color: 'var(--color-text-muted, #94a3b8)', marginTop: '2px' }}>Photos and Videos</div>
                             </div>
                             <input 
                                 type="file" 
@@ -1168,13 +1171,13 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
                             />
                         </label>
                         
-                        <label className="attachment-option" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', background: 'var(--color-overlay, rgba(255, 255, 255, 0.05))', cursor: 'pointer' }}>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <label className="attachment-option" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', borderRadius: '12px', background: 'var(--color-overlay, rgba(255, 255, 255, 0.03))', border: '1px solid rgba(255, 255, 255, 0.04)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                             </div>
                             <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: '16px', fontWeight: '500', color: 'var(--color-text, #f1f5f9)' }}>Document</div>
-                                <div style={{ fontSize: '12px', color: 'var(--color-text-muted, #94a3b8)' }}>Files and Archives</div>
+                                <div style={{ fontSize: '15px', fontWeight: '600', color: 'var(--color-text, #f1f5f9)' }}>Document</div>
+                                <div style={{ fontSize: '12px', color: 'var(--color-text-muted, #94a3b8)', marginTop: '2px' }}>Files and Archives</div>
                             </div>
                             <input 
                                 type="file" 
