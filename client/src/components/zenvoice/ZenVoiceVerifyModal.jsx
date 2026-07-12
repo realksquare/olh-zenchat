@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useZenVoiceStore } from "../../stores/zenVoiceStore";
 import { ShieldCheck, Mail, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
 
-const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
+const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess, isVerifyingOnly = false }) => {
     const {
         isVerified,
         pseudonym,
@@ -12,13 +12,15 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
         checkStatus,
         requestDomainOTP,
         confirmDomainOTP,
+        registerPseudonym,
         isLoading,
         error
     } = useZenVoiceStore();
 
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
-    const [step, setStep] = useState(0); // 0: loading/status-check, 1: selection, 2: email-input, 3: otp-input, 4: domain-pending, 5: success
+    const [step, setStep] = useState(0); // 0: loading/status-check, 1: selection, 2: email-input, 3: otp-input, 4: domain-pending, 5: success, 6: register
     const [email, setEmail] = useState("");
+    const [regPseudonym, setRegPseudonym] = useState("");
     const [otp, setOtp] = useState("");
     const [localError, setLocalError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
@@ -37,8 +39,16 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
             checkStatus().then((res) => {
                 if (res?.success && res?.isVerified) {
                     setStep(5);
+                } else if (res?.success && res?.isRegistered) {
+                    if (isVerifyingOnly) {
+                        setStep(1); // Go to verification selection
+                    } else {
+                        // Already registered, bypass modal
+                        if (onVerificationSuccess) onVerificationSuccess();
+                        onClose();
+                    }
                 } else {
-                    setStep(1);
+                    setStep(6); // Registration screen
                 }
             });
         } else {
@@ -47,9 +57,29 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
         return () => {
             document.body.style.overflow = "";
         };
-    }, [isOpen, checkStatus]);
+    }, [isOpen, checkStatus, isVerifyingOnly]);
 
     if (!isOpen) return null;
+
+    const handleRegisterSubmit = async (e) => {
+        e.preventDefault();
+        setLocalError("");
+        if (!email || !email.includes("@")) {
+            setLocalError("Please enter a valid academic email address.");
+            return;
+        }
+        if (!regPseudonym.trim()) {
+            setLocalError("Please enter a pseudonym.");
+            return;
+        }
+        const res = await registerPseudonym(email, regPseudonym.trim());
+        if (res.success) {
+            setSuccessMessage("Pseudonym registered successfully!");
+            setStep(5);
+        } else {
+            setLocalError(res.message || "Failed to register. Pseudonym might be taken.");
+        }
+    };
 
     const handleSendOTP = async (e) => {
         e.preventDefault();
@@ -393,7 +423,10 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                     </div>
 
                     <button
-                        onClick={onClose}
+                        onClick={() => {
+                            if (onVerificationSuccess) onVerificationSuccess();
+                            onClose();
+                        }}
                         style={{
                             width: "100%",
                             padding: "14px",
@@ -409,6 +442,97 @@ const ZenVoiceVerifyModal = ({ isOpen, onClose, onVerificationSuccess }) => {
                         Browse Rooms
                     </button>
                 </div>
+            );
+        }
+
+        if (step === 6) {
+            return (
+                <form onSubmit={handleRegisterSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                        <p style={{ color: "var(--color-text-muted, #94a3b8)", fontSize: "0.9rem", lineHeight: "1.5", margin: 0 }}>
+                            Enter your college email and pick a pseudonym to enter #ZenVoice immediately. No OTP required to start!
+                        </p>
+                    </div>
+
+                    <div style={{ textAlign: "left" }}>
+                        <label style={{ fontSize: "0.85rem", color: "var(--color-text-muted, #94a3b8)", display: "block", marginBottom: "6px" }}>College Email</label>
+                        <input
+                            type="email"
+                            placeholder="you@university.edu"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                            style={{
+                                width: "100%",
+                                padding: "10px 12px",
+                                borderRadius: "8px",
+                                border: "1px solid var(--color-border, rgba(255,255,255,0.08))",
+                                background: "var(--color-surface-offset, #161b22)",
+                                color: "var(--color-text, #fff)",
+                                fontSize: "0.9rem",
+                                outline: "none",
+                                boxSizing: "border-box"
+                            }}
+                        />
+                    </div>
+
+                    <div style={{ textAlign: "left" }}>
+                        <label style={{ fontSize: "0.85rem", color: "var(--color-text-muted, #94a3b8)", display: "block", marginBottom: "6px" }}>Pick a Pseudonym</label>
+                        <input
+                            type="text"
+                            placeholder="e.g. ZenCoder"
+                            value={regPseudonym}
+                            onChange={(e) => setRegPseudonym(e.target.value)}
+                            required
+                            maxLength={25}
+                            style={{
+                                width: "100%",
+                                padding: "10px 12px",
+                                borderRadius: "8px",
+                                border: "1px solid var(--color-border, rgba(255,255,255,0.08))",
+                                background: "var(--color-surface-offset, #161b22)",
+                                color: "var(--color-text, #fff)",
+                                fontSize: "0.9rem",
+                                outline: "none",
+                                boxSizing: "border-box"
+                            }}
+                        />
+                    </div>
+
+                    {localError && (
+                        <div style={{ color: "#ef4444", fontSize: "0.82rem", textAlign: "left" }}>{localError}</div>
+                    )}
+
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        style={{
+                            width: "100%",
+                            padding: "12px",
+                            borderRadius: "8px",
+                            background: "#f59e0b",
+                            border: "none",
+                            color: "#000",
+                            fontWeight: "700",
+                            cursor: isLoading ? "not-allowed" : "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "8px",
+                            fontSize: "0.95rem",
+                            marginTop: "8px"
+                        }}
+                    >
+                        {isLoading ? (
+                            <Loader2 size={18} className="animate-spin" style={{ animation: "spin 1s linear infinite" }} />
+                        ) : (
+                            <>
+                                <span>Enter #ZenVoice</span>
+                                <ArrowRight size={18} />
+                            </>
+                        )}
+                    </button>
+                </form>
             );
         }
     };

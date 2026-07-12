@@ -6,6 +6,7 @@ const zenVoiceRoomSchema = new mongoose.Schema({
     creatorPseudonym: { type: String, required: true },
     isOfficial: { type: Boolean, default: false },
     allowedDomain: { type: String, default: "" },
+    requireVerified: { type: Boolean, default: false },
     inviteToken: { type: String, default: null },
     members: [{ type: String }],
     memberCount: { type: Number, default: 0 },

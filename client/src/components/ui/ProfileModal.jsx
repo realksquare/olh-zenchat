@@ -9,6 +9,8 @@ import { db } from "../../db/zenDB";
 import { generateRecoveryKey, rotateUserRecoveryKey, setupE2EEForUser, getLocalE2EEKeys } from "../../utils/e2eeHelper";
 import { decryptForMultipleRecipients, decryptFileAES } from "../../utils/crypto";
 import MomentViewer from "../chat/MomentViewer";
+import { useZenVoiceStore } from "../../stores/zenVoiceStore";
+import ZenVoiceVerifyModal from "../zenvoice/ZenVoiceVerifyModal";
 
 // Phone parser and country codes removed in favor of Email 2FA
 
@@ -348,6 +350,8 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
     const { chats } = useChatStore();
     const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
 
+    const { isVerified: zvIsVerified, isRegistered: zvIsRegistered } = useZenVoiceStore();
+    const [showVerifyModal, setShowVerifyModal] = useState(false);
     const [activeTab, setActiveTab] = useState("profile");
     const [username, setUsername] = useState(user?.username || "");
     const [fullName, setFullName] = useState(user?.fullName || "");
@@ -1734,6 +1738,41 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                                 )}
                             </div>
                         )}
+                        <div className="profile-setting-item" style={{ padding: "0.9rem 1rem", background: "var(--color-border, rgba(255, 255, 255, 0.08))", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                            <div>
+                                <span style={{ display: "block", fontWeight: "600", fontSize: "0.85rem" }}>ZenVoice Student Verification</span>
+                                <span style={{ fontSize: "0.72rem", color: "#94a3b8", display: "block", marginTop: "4px", lineHeight: "1.3" }}>
+                                    {zvIsVerified ? (
+                                        "Your student ID has been successfully verified! You have full access to official academic channels."
+                                    ) : zvIsRegistered ? (
+                                        "You are registered on ZenVoice, but your student ID is unverified. Verify now to join official verified channels."
+                                    ) : (
+                                        "Claim your anonymous academic pseudonym to join private hideouts and official verified student channels."
+                                    )}
+                                </span>
+                            </div>
+                            
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowVerifyModal(true);
+                                }}
+                                style={{
+                                    background: zvIsVerified ? "rgba(16, 185, 129, 0.15)" : "var(--color-primary)",
+                                    color: zvIsVerified ? "#10b981" : "black",
+                                    border: zvIsVerified ? "1px solid rgba(16, 185, 129, 0.3)" : "none",
+                                    padding: "8px 16px",
+                                    borderRadius: "8px",
+                                    fontSize: "0.78rem",
+                                    fontWeight: "700",
+                                    cursor: "pointer",
+                                    marginTop: "4px",
+                                    width: "100%"
+                                }}
+                            >
+                                {zvIsVerified ? "Verified (Reverify)" : zvIsRegistered ? "Verify Student ID" : "Claim Academic ID"}
+                            </button>
+                        </div>
                     </div>
 
                     <div className="actions-section" style={{ marginTop: "0.75rem", display: "flex", gap: "0.75rem" }}>
@@ -1896,6 +1935,15 @@ const ProfileModal = ({ isOpen, onClose, onSave }) => {
                 onClose={() => setViewerMoment(null)} 
             />
         )}
+        <ZenVoiceVerifyModal
+            isOpen={showVerifyModal}
+            onClose={() => setShowVerifyModal(false)}
+            onVerificationSuccess={() => {
+                setShowVerifyModal(false);
+                useZenVoiceStore.getState().checkStatus();
+            }}
+            isVerifyingOnly={zvIsRegistered}
+        />
         </>,
         document.body
     );

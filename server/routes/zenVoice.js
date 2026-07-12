@@ -79,7 +79,21 @@ router.get("/status", authMiddleware, async (req, res) => {
             }
         }
 
-        res.json({ isVerified: false, verificationMethod: zv.verificationMethod || "none" });
+        if (zv.pseudonym) {
+            const token = issueZenVoiceToken(zv.pseudonym, zv.collegeEmailDomain);
+            return res.json({
+                isVerified: false,
+                isRegistered: true,
+                verificationMethod: zv.verificationMethod,
+                pseudonym: zv.pseudonym,
+                pseudonymColor: getPseudonymColor(zv.pseudonym),
+                collegeName: zv.collegeName,
+                domain: zv.collegeEmailDomain,
+                sessionToken: token
+            });
+        }
+
+        res.json({ isVerified: false, isRegistered: false, verificationMethod: zv.verificationMethod || "none" });
     } catch (err) {
         console.error("[ZenVoice] /status error:", err);
         res.status(500).json({ message: "Server error" });
@@ -284,7 +298,7 @@ router.get("/rooms", zenVoiceAuth, async (req, res) => {
  */
 router.post("/rooms", zenVoiceAuth, async (req, res) => {
     try {
-        const { name, description, lockToDomain, isOfficial } = req.body;
+        const { name, description, lockToDomain, isOfficial, requireVerified } = req.body;
         if (!name || name.trim().length === 0) {
             return res.status(400).json({ message: "Room name is required." });
         }
@@ -310,6 +324,7 @@ router.post("/rooms", zenVoiceAuth, async (req, res) => {
             creatorPseudonym: req.zenVoicePseudonym,
             isOfficial: officialValue,
             allowedDomain,
+            requireVerified: !!requireVerified,
             inviteToken,
             members: [req.zenVoicePseudonym],
             memberCount: 1
@@ -353,6 +368,12 @@ router.get("/rooms/:roomId", zenVoiceAuth, async (req, res) => {
         if (room.allowedDomain && room.allowedDomain !== req.zenVoiceDomain) {
             return res.status(403).json({ message: "Access denied: Restricted domain." });
         }
+        if (room.isOfficial || room.requireVerified) {
+            const user = await User.findOne({ "zenVoice.pseudonym": req.zenVoicePseudonym });
+            if (!user || !user.zenVoice.isStudentVerified) {
+                return res.status(403).json({ message: "Verification required: You must verify your student ID to access this room." });
+            }
+        }
         res.json({ room });
     } catch (err) {
         console.error("[ZenVoice] get room error:", err);
@@ -370,6 +391,10 @@ router.post("/rooms/:roomId/join", zenVoiceAuth, async (req, res) => {
         if (!room) return res.status(404).json({ message: "Room not found" });
         if (!room.isOfficial) {
             return res.status(400).json({ message: "Private rooms can only be joined via invite link." });
+        }
+        const user = await User.findOne({ "zenVoice.pseudonym": req.zenVoicePseudonym });
+        if (!user || !user.zenVoice.isStudentVerified) {
+            return res.status(403).json({ message: "Verification required: You must verify your student ID to join official rooms." });
         }
         if (room.allowedDomain && room.allowedDomain !== req.zenVoiceDomain) {
             return res.status(403).json({ message: "Access denied: Restricted domain." });
@@ -396,6 +421,12 @@ router.post("/rooms/invite/:token", zenVoiceAuth, async (req, res) => {
         if (!room) return res.status(404).json({ message: "Invalid invite link." });
         if (room.allowedDomain && room.allowedDomain !== req.zenVoiceDomain) {
             return res.status(403).json({ message: "Access denied: Restricted domain." });
+        }
+        if (room.requireVerified) {
+            const user = await User.findOne({ "zenVoice.pseudonym": req.zenVoicePseudonym });
+            if (!user || !user.zenVoice.isStudentVerified) {
+                return res.status(403).json({ message: "Verification required: This private room requires a verified student ID." });
+            }
         }
         if (!room.members.includes(req.zenVoicePseudonym)) {
             room.members.push(req.zenVoicePseudonym);
@@ -824,6 +855,82 @@ router.get("/rooms/:roomId/subscriptions", zenVoiceAuth, async (req, res) => {
         res.json({ success: true, subscriptions: subs });
     } catch (err) {
         console.error("[ZenVoice] Get subscriptions error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * POST /api/zenvoice/register
+ * Allow user to enter college email and pick pseudonym to access ZenVoice immediately (isStudentVerified = false).
+ */
+router.post("/register", authMiddleware, async (req, res) => {
+    try {
+        const { collegeEmail, pseudonym } = req.body;
+        if (!collegeEmail || !pseudonym) {
+            return res.status(400).json({ message: "College email and pseudonym are required." });
+        }
+
+        const domain = collegeEmail.split("@")[1]?.toLowerCase();
+        if (!domain) {
+            return res.status(400).json({ message: "Invalid academic email domain." });
+        }
+
+        // Check pseudonym uniqueness
+        const existing = await User.findOne({ "zenVoice.pseudonym": pseudonym });
+        if (existing && existing._id.toString() !== req.user._id.toString()) {
+            return res.status(400).json({ message: "Pseudonym already taken." });
+        }
+
+        const whitelisted = await ZenVoiceDomainWhitelist.findOne({ domain, status: "approved" });
+        const collegeName = whitelisted ? whitelisted.institutionName : "Unverified Institution";
+
+        await User.findByIdAndUpdate(req.user._id, {
+            $set: {
+                "zenVoice.isStudentVerified": false,
+                "zenVoice.verificationMethod": "none",
+                "zenVoice.collegeEmail": collegeEmail.toLowerCase(),
+                "zenVoice.collegeEmailDomain": domain,
+                "zenVoice.collegeName": collegeName,
+                "zenVoice.pseudonym": pseudonym
+            }
+        });
+
+        const token = issueZenVoiceToken(pseudonym, domain);
+        res.json({
+            success: true,
+            isVerified: false,
+            pseudonym,
+            pseudonymColor: getPseudonymColor(pseudonym),
+            collegeName,
+            domain,
+            sessionToken: token
+        });
+    } catch (err) {
+        console.error("[ZenVoice] registration error:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
+
+/**
+ * POST /api/zenvoice/logout
+ * Deactivates user's ZenVoice pseudonym session.
+ */
+router.post("/logout", authMiddleware, async (req, res) => {
+    try {
+        await User.findByIdAndUpdate(req.user._id, {
+            $set: {
+                "zenVoice.isStudentVerified": false,
+                "zenVoice.verificationMethod": "none",
+                "zenVoice.collegeEmail": "",
+                "zenVoice.collegeEmailDomain": "",
+                "zenVoice.collegeName": "",
+                "zenVoice.pseudonym": "",
+                "zenVoice.bio": ""
+            }
+        });
+        res.json({ success: true, message: "Logged out from ZenVoice successfully." });
+    } catch (err) {
+        console.error("[ZenVoice] logout error:", err);
         res.status(500).json({ message: "Server error" });
     }
 });

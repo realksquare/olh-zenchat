@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useZenVoiceStore } from "../../stores/zenVoiceStore";
 import { useAuthStore } from "../../stores/authStore";
-import { Plus, Search, Globe, Lock, Users, ArrowLeft, Copy, Check, MessageSquare, Loader2 } from "lucide-react";
+import { Plus, Search, Globe, Lock, Users, ArrowLeft, Copy, Check, MessageSquare, Loader2, LogOut } from "lucide-react";
+import ZenVoiceVerifyModal from "./ZenVoiceVerifyModal";
 
 const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
     const {
@@ -19,7 +21,9 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
         profileData,
         fetchMyProfile,
         updateBio,
-        requestPseudonymChange
+        requestPseudonymChange,
+        isVerified,
+        logoutZenVoice
     } = useZenVoiceStore();
 
     const { user } = useAuthStore();
@@ -28,6 +32,16 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
     const [activeTab, setActiveTab] = useState(() => localStorage.getItem("zenvoice_active_tab") || "official"); // "official" | "private"
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState([]);
+    const [requireVerified, setRequireVerified] = useState(false);
+    const [showVerifyOnlyModal, setShowVerifyOnlyModal] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
     const [isSearching, setIsSearching] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isCreatingOfficial, setIsCreatingOfficial] = useState(false);
@@ -114,12 +128,13 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
             return;
         }
 
-        const res = await createRoom(newRoomName.trim(), newRoomDesc.trim(), isCreatingOfficial ? true : lockToDomain, isCreatingOfficial);
+        const res = await createRoom(newRoomName.trim(), newRoomDesc.trim(), isCreatingOfficial ? true : lockToDomain, isCreatingOfficial, isCreatingOfficial ? false : requireVerified);
         if (res.success) {
             setCreatedRoom(res.room);
             setNewRoomName("");
             setNewRoomDesc("");
             setLockToDomain(false);
+            setRequireVerified(false);
         } else {
             setFormError(res.message || "Failed to create room.");
         }
@@ -183,52 +198,74 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                         </span>
                     </div>
 
-                    <h1 style={{ fontSize: "1.2rem", fontWeight: "700", margin: 0, color: "var(--color-text, #fff)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>#ZenVoice</h1>
+                    <h1 style={{ fontSize: "1.2rem", fontWeight: "700", margin: 0, color: "var(--color-text, #fff)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pseudonym || "ZenVoice"}</h1>
                 </div>
 
-                {activeTab === "private" ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+                    {activeTab === "private" ? (
+                        <button
+                            onClick={() => { setIsCreateOpen(true); setIsCreatingOfficial(false); setCreatedRoom(null); setFormError(""); }}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                padding: "6px 10px",
+                                borderRadius: "6px",
+                                background: "#f59e0b",
+                                border: "none",
+                                color: "#000",
+                                fontWeight: "600",
+                                fontSize: "0.78rem",
+                                cursor: "pointer",
+                                flexShrink: 0
+                            }}
+                        >
+                            <Plus size={14} />
+                            <span>New Private</span>
+                        </button>
+                    ) : isAdmin ? (
+                        <button
+                            onClick={() => { setIsCreateOpen(true); setIsCreatingOfficial(true); setCreatedRoom(null); setFormError(""); }}
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                padding: "6px 10px",
+                                borderRadius: "6px",
+                                background: "var(--color-primary, #3da5d9)",
+                                border: "none",
+                                color: "#fff",
+                                fontWeight: "600",
+                                fontSize: "0.78rem",
+                                cursor: "pointer",
+                                flexShrink: 0
+                            }}
+                        >
+                            <Plus size={14} />
+                            <span>New Official</span>
+                        </button>
+                    ) : null}
+
+                    {/* ZenVoice LogOut Button */}
                     <button
-                        onClick={() => { setIsCreateOpen(true); setIsCreatingOfficial(false); setCreatedRoom(null); setFormError(""); }}
+                        onClick={() => setShowLogoutConfirm(true)}
                         style={{
                             display: "flex",
                             alignItems: "center",
-                            gap: "4px",
-                            padding: "6px 10px",
+                            justifyContent: "center",
+                            padding: "6px",
                             borderRadius: "6px",
-                            background: "#f59e0b",
-                            border: "none",
-                            color: "#000",
-                            fontWeight: "600",
-                            fontSize: "0.78rem",
+                            background: "rgba(239, 68, 68, 0.1)",
+                            border: "1px solid rgba(239, 68, 68, 0.2)",
+                            color: "#ef4444",
                             cursor: "pointer",
-                            flexShrink: 0
+                            transition: "0.2s"
                         }}
+                        title="Deactivate ZenVoice Account"
                     >
-                        <Plus size={14} />
-                        <span>New Private</span>
+                        <LogOut size={16} />
                     </button>
-                ) : isAdmin ? (
-                    <button
-                        onClick={() => { setIsCreateOpen(true); setIsCreatingOfficial(true); setCreatedRoom(null); setFormError(""); }}
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "4px",
-                            padding: "6px 10px",
-                            borderRadius: "6px",
-                            background: "var(--color-primary, #3da5d9)",
-                            border: "none",
-                            color: "#fff",
-                            fontWeight: "600",
-                            fontSize: "0.78rem",
-                            cursor: "pointer",
-                            flexShrink: 0
-                        }}
-                    >
-                        <Plus size={14} />
-                        <span>New Official</span>
-                    </button>
-                ) : null}
+                </div>
             </div>
 
             {/* Tabs */}
@@ -464,17 +501,32 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                 </div>
 
                                 {!isCreatingOfficial && (
-                                    <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "transparent", padding: "10px 0" }}>
-                                        <input
-                                            type="checkbox"
-                                            id="lockDomain"
-                                            checked={lockToDomain}
-                                            onChange={(e) => setLockToDomain(e.target.checked)}
-                                            style={{ cursor: "pointer" }}
-                                        />
-                                        <label htmlFor="lockDomain" style={{ fontSize: "0.8rem", color: "var(--color-text, #cbd5e1)", cursor: "pointer", textAlign: "left", userSelect: "none" }}>
-                                            Only let people from @{collegeEmailDomain || "domain"} join
-                                        </label>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "10px 0" }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "transparent" }}>
+                                            <input
+                                                type="checkbox"
+                                                id="lockDomain"
+                                                checked={lockToDomain}
+                                                onChange={(e) => setLockToDomain(e.target.checked)}
+                                                style={{ cursor: "pointer" }}
+                                            />
+                                            <label htmlFor="lockDomain" style={{ fontSize: "0.8rem", color: "var(--color-text, #cbd5e1)", cursor: "pointer", textAlign: "left", userSelect: "none" }}>
+                                                Only let people from @{collegeEmailDomain || "domain"} join
+                                            </label>
+                                        </div>
+
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "transparent" }}>
+                                            <input
+                                                type="checkbox"
+                                                id="requireVerified"
+                                                checked={requireVerified}
+                                                onChange={(e) => setRequireVerified(e.target.checked)}
+                                                style={{ cursor: "pointer" }}
+                                            />
+                                            <label htmlFor="requireVerified" style={{ fontSize: "0.8rem", color: "var(--color-text, #cbd5e1)", cursor: "pointer", textAlign: "left", userSelect: "none" }}>
+                                                Only allow verified student IDs to join
+                                            </label>
+                                        </div>
                                     </div>
                                 )}
 
@@ -523,9 +575,15 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                 <span style={{ color: "#000", fontWeight: "bold", fontSize: "1.3rem" }}>{(pseudonym || "ME").slice(0, 2).toUpperCase()}</span>
                             </div>
                             <h3 style={{ margin: "4px 0 2px", fontWeight: "700" }}>{pseudonym}</h3>
-                            <div style={{ background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.25)", color: "#10b981", fontSize: "0.72rem", padding: "2px 8px", borderRadius: "12px", fontWeight: "600" }}>
-                                Verified Peer
-                            </div>
+                            {isVerified ? (
+                                <div style={{ background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.25)", color: "#10b981", fontSize: "0.72rem", padding: "2px 8px", borderRadius: "12px", fontWeight: "600" }}>
+                                    Verified Peer
+                                </div>
+                            ) : (
+                                <div style={{ background: "rgba(245, 158, 11, 0.12)", border: "1px solid rgba(245, 158, 11, 0.25)", color: "#f59e0b", fontSize: "0.72rem", padding: "2px 8px", borderRadius: "12px", fontWeight: "600" }}>
+                                    Unverified Student
+                                </div>
+                            )}
                         </div>
 
                         <div style={{ display: "flex", flexDirection: "column", gap: "14px", fontSize: "0.85rem", textAlign: "left" }}>
@@ -637,9 +695,100 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
                                     </div>
                                 )}
                             </div>
+
+                            {!isVerified && (
+                                <div style={{ borderTop: "1px solid var(--color-border, rgba(255, 255, 255, 0.05))", paddingTop: "14px", marginTop: "12px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                                    <span style={{ fontSize: "0.78rem", color: "var(--color-text-muted, #94a3b8)", textAlign: "left" }}>Access to Official Rooms is restricted.</span>
+                                    <button
+                                        onClick={() => {
+                                            setShowMyProfile(false);
+                                            setShowVerifyOnlyModal(true);
+                                        }}
+                                        style={{ width: "100%", padding: "8px", borderRadius: "6px", background: "#f59e0b", border: "none", color: "#000", fontWeight: "700", fontSize: "0.8rem", cursor: "pointer" }}
+                                    >
+                                        Verify Student ID
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Verification Only Modal */}
+            <ZenVoiceVerifyModal
+                isOpen={showVerifyOnlyModal}
+                onClose={() => setShowVerifyOnlyModal(false)}
+                onVerificationSuccess={() => {
+                    setShowVerifyOnlyModal(false);
+                    fetchMyProfile();
+                }}
+                isVerifyingOnly={true}
+            />
+
+            {/* ZenVoice Deactivation Confirmation Modal */}
+            {showLogoutConfirm && (
+                isMobile ? (
+                    createPortal(
+                        <div className="mobile-bottom-sheet-overlay" style={{ zIndex: 20000 }}>
+                            <div className="mobile-bottom-sheet" onClick={(e) => e.stopPropagation()} style={{ padding: "20px 0 32px" }}>
+                                <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#f8fafc", marginBottom: "8px", textAlign: "center", padding: "0 20px" }}>Deactivate ZenVoice</h3>
+                                <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "24px", lineHeight: "1.5", textAlign: "center", padding: "0 20px" }}>Are you sure you want to deactivate your ZenVoice pseudonym? This will clear your pseudonym and verification history.</p>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%", padding: "0 20px", boxSizing: "border-box" }}>
+                                    <button
+                                        className="btn"
+                                        onClick={async () => {
+                                            setShowLogoutConfirm(false);
+                                            await logoutZenVoice();
+                                            onBack();
+                                        }}
+                                        style={{ width: "100%", padding: "12px", borderRadius: "12px", background: "#ef4444", border: "none", color: "var(--color-text, #fff)", cursor: "pointer", fontWeight: "600", fontSize: "0.95rem" }}
+                                    >
+                                        Deactivate
+                                    </button>
+                                    <button
+                                        className="btn"
+                                        onClick={() => setShowLogoutConfirm(false)}
+                                        style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "transparent", color: "#cbd5e1", cursor: "pointer", fontSize: "0.95rem" }}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
+                    )
+                ) : (
+                    createPortal(
+                        <div className="modal-backdrop" style={{ display: "flex", alignItems: "center", justifyContent: "center", position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.4)", zIndex: 20000 }}>
+                            <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "380px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "var(--color-surface, rgba(15, 23, 42, 0.9))", backdropFilter: "blur(20px)", padding: "24px", borderRadius: "16px", textAlign: "center" }}>
+                                <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#f8fafc", marginBottom: "12px" }}>Deactivate ZenVoice</h3>
+                                <p style={{ fontSize: "0.9rem", color: "#94a3b8", marginBottom: "24px", lineHeight: "1.5" }}>Are you sure you want to deactivate your ZenVoice pseudonym? This will clear your pseudonym and verification history.</p>
+                                <div style={{ display: "flex", gap: "12px" }}>
+                                    <button
+                                        className="btn"
+                                        onClick={() => setShowLogoutConfirm(false)}
+                                        style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid var(--color-border, rgba(255, 255, 255, 0.08))", background: "transparent", color: "#cbd5e1", cursor: "pointer" }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        className="btn"
+                                        onClick={async () => {
+                                            setShowLogoutConfirm(false);
+                                            await logoutZenVoice();
+                                            onBack();
+                                        }}
+                                        style={{ flex: 1, padding: "10px", borderRadius: "8px", background: "#ef4444", border: "none", color: "var(--color-text, #fff)", cursor: "pointer", fontWeight: "600" }}
+                                    >
+                                        Deactivate
+                                    </button>
+                                </div>
+                            </div>
+                        </div>,
+                        document.body
+                    )
+                )
             )}
             {/* Custom Toast Alert */}
             {toast && (

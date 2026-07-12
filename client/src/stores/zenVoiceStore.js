@@ -249,10 +249,47 @@ export const useZenVoiceStore = create((set, get) => ({
             if (data.isVerified && data.sessionToken) {
                 get().connectSocket(data.sessionToken);
             }
-            return { success: true, isVerified: data.isVerified };
+            return { success: true, isVerified: data.isVerified, isRegistered: data.isRegistered };
         } catch (err) {
             set({ isLoading: false, error: err.response?.data?.message || "Failed to check status" });
             return { success: false };
+        }
+    },
+
+    registerPseudonym: async (collegeEmail, pseudonym) => {
+        set({ isLoading: true, error: null });
+        try {
+            const { data } = await axiosInstance.post("/zenvoice/register", { collegeEmail, pseudonym });
+            set({
+                isVerified: false,
+                pseudonym: data.pseudonym,
+                pseudonymColor: data.pseudonymColor,
+                collegeName: data.collegeName,
+                collegeEmailDomain: data.domain,
+                sessionToken: data.sessionToken,
+                isLoading: false
+            });
+            if (data.sessionToken) {
+                get().connectSocket(data.sessionToken);
+            }
+            return { success: true };
+        } catch (err) {
+            const msg = err.response?.data?.message || "Failed to register pseudonym";
+            set({ isLoading: false, error: msg });
+            return { success: false, message: msg };
+        }
+    },
+
+    logoutZenVoice: async () => {
+        set({ isLoading: true, error: null });
+        try {
+            await axiosInstance.post("/zenvoice/logout");
+            get().resetStore();
+            return { success: true };
+        } catch (err) {
+            const msg = err.response?.data?.message || "Failed to logout from ZenVoice";
+            set({ isLoading: false, error: msg });
+            return { success: false, message: msg };
         }
     },
 
@@ -323,14 +360,14 @@ export const useZenVoiceStore = create((set, get) => ({
         }
     },
 
-    createRoom: async (name, description, lockToDomain, isOfficial = false) => {
+    createRoom: async (name, description, lockToDomain, isOfficial = false, requireVerified = false) => {
         const { sessionToken, rooms } = get();
         if (!sessionToken) return { success: false };
         set({ isLoading: true, error: null });
         try {
             const { data } = await axiosInstance.post(
                 "/zenvoice/rooms",
-                { name, description, lockToDomain, isOfficial },
+                { name, description, lockToDomain, isOfficial, requireVerified },
                 { headers: { Authorization: `Bearer ${sessionToken}` } }
             );
             set({ rooms: [data.room, ...rooms], isLoading: false });

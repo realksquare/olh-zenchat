@@ -13,7 +13,7 @@ const ZenVoicePortal = ({ isOpen, onClose }) => {
     useEffect(() => {
         if (isOpen) {
             checkStatus().then((res) => {
-                if (res?.success && res?.isVerified) {
+                if (res?.success && (res?.isVerified || res?.isRegistered)) {
                     setShowVerifier(false);
                 } else {
                     setShowVerifier(true);

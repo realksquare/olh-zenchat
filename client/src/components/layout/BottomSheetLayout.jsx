@@ -104,7 +104,7 @@ const BottomSheetLayout = () => {
 
     const switchToZenVoice = async () => {
         const statusRes = await checkStatus();
-        const nextShowVerifier = !(statusRes?.success && statusRes?.isVerified);
+        const nextShowVerifier = !(statusRes?.success && (statusRes?.isVerified || statusRes?.isRegistered));
         
         triggerViewTransition('zenvoice', () => {
             setZvShowVerifier(nextShowVerifier);
