@@ -1628,6 +1628,13 @@ select {
   background: rgba(224, 92, 106, 0.1);
 }
 
+.bulk-action-btn {
+  transition: background 0.15s, color 0.15s;
+}
+.bulk-action-btn:hover {
+  background: var(--color-overlay, rgba(255, 255, 255, 0.05)) !important;
+}
+
 .deleted-bubble {
   background: transparent !important;
   border: 1px dashed var(--color-border, rgba(255, 255, 255, 0.08)) !important;

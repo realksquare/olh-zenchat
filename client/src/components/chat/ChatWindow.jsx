@@ -1806,16 +1806,32 @@ const ChatWindow = ({ onBack }) => {
                 const selectedMsgs = messages.filter(m => selectedMessageIds.has(m._id));
                 const allMine = selectedMsgs.every(m => m.senderId?._id === user?._id || m.senderId === user?._id);
                 const tooMany = selectedMsgs.length > 5;
+                const isMobile = window.innerWidth <= 768;
                 return createPortal(
                     <div
                         onClick={() => setShowForwardModal(false)}
-                        style={{ position: 'fixed', inset: 0, background: 'rgba(9,13,20,0.75)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', zIndex: 9999999, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', animation: 'fadeIn 0.2s ease-out' }}
+                        style={{ position: 'fixed', inset: 0, background: 'rgba(9,13,20,0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 9999999, display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', animation: 'fadeIn 0.2s ease-out' }}
                     >
                         <div
                             onClick={e => e.stopPropagation()}
-                            style={{ width: '100%', maxWidth: '500px', background: "var(--color-surface, linear-gradient(180deg, #1a2030 0%, #161b22 100%))", borderTopLeftRadius: '24px', borderTopRightRadius: '24px', padding: '0 0 env(safe-area-inset-bottom, 28px)', boxShadow: '0 -12px 48px rgba(0,0,0,0.6)', animation: 'slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                            style={{
+                                width: '100%',
+                                maxWidth: '460px',
+                                background: "var(--color-surface, #1e2530)",
+                                borderTopLeftRadius: '24px',
+                                borderTopRightRadius: '24px',
+                                borderBottomLeftRadius: isMobile ? '0' : '24px',
+                                borderBottomRightRadius: isMobile ? '0' : '24px',
+                                margin: isMobile ? '0' : '20px',
+                                padding: '16px 0 env(safe-area-inset-bottom, 20px) 0',
+                                border: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))',
+                                boxShadow: '0 12px 48px rgba(0,0,0,0.5)',
+                                animation: isMobile
+                                    ? 'slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1)'
+                                    : 'dropdownPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
+                            }}
                         >
-                            <div style={{ padding: '16px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ padding: '4px 20px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--color-border, rgba(255, 255, 255, 0.08))' }}>
                                 <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text, #fff)' }}>
                                     {selectedMsgs.length} message{selectedMsgs.length !== 1 ? 's' : ''} selected
                                 </span>
@@ -1824,17 +1840,16 @@ const ChatWindow = ({ onBack }) => {
                                 )}
                             </div>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', padding: '4px 0 8px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', marginTop: '6px' }}>
                                 {/* Forward */}
                                 <button
+                                    className="bulk-action-btn"
                                     onClick={async () => {
                                         if (tooMany) { showToast('Max 5 messages per forward', 'error'); return; }
                                         setShowForwardModal(false);
                                         setShowActualForwardModal(true);
                                     }}
-                                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: tooMany ? '#64748b' : '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: tooMany ? 'not-allowed' : 'pointer', transition: 'background 0.15s' }}
-                                    onTouchStart={e => !tooMany && (e.currentTarget.style.background = 'var(--color-border, rgba(255, 255, 255, 0.08))')}
-                                    onTouchEnd={e => (e.currentTarget.style.background = 'transparent')}
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: tooMany ? 'var(--color-text-faint, #64748b)' : 'var(--color-text, #c9d1d9)', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: tooMany ? 'not-allowed' : 'pointer', transition: 'background 0.15s, color 0.15s' }}
                                 >
                                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <polyline points="15 10 20 15 15 20" /><path d="M4 4v7a4 4 0 0 0 4 4h12" />
@@ -1844,6 +1859,7 @@ const ChatWindow = ({ onBack }) => {
 
                                 {/* Mark as Fav */}
                                 <button
+                                    className="bulk-action-btn"
                                     onClick={async () => {
                                         const { toggleStarMessage } = useChatStore.getState();
                                         for (const msg of selectedMsgs) {
@@ -1856,9 +1872,7 @@ const ChatWindow = ({ onBack }) => {
                                         handleExitMultiSelect();
                                         showToast(`${selectedMsgs.length} message${selectedMsgs.length !== 1 ? 's' : ''} marked as Fav`, 'success');
                                     }}
-                                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
-                                    onTouchStart={e => (e.currentTarget.style.background = 'var(--color-border, rgba(255, 255, 255, 0.08))')}
-                                    onTouchEnd={e => (e.currentTarget.style.background = 'transparent')}
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: 'var(--color-text, #c9d1d9)', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s, color 0.15s' }}
                                 >
                                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -1868,6 +1882,7 @@ const ChatWindow = ({ onBack }) => {
 
                                 {/* Delete for Me */}
                                 <button
+                                    className="bulk-action-btn"
                                     onClick={() => {
                                         selectedMsgs.forEach(msg => {
                                             const msgId = msg._id || msg.cid;
@@ -1878,9 +1893,7 @@ const ChatWindow = ({ onBack }) => {
                                         handleExitMultiSelect();
                                         showToast('Deleted for you', 'success');
                                     }}
-                                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: '#f87171', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
-                                    onTouchStart={e => (e.currentTarget.style.background = 'rgba(248,113,113,0.07)')}
-                                    onTouchEnd={e => (e.currentTarget.style.background = 'transparent')}
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: 'var(--color-danger, #ef4444)', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s, color 0.15s' }}
                                 >
                                     <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -1891,6 +1904,7 @@ const ChatWindow = ({ onBack }) => {
                                 {/* Delete for Everyone — only if all selected are mine */}
                                 {allMine && (
                                     <button
+                                        className="bulk-action-btn"
                                         onClick={() => {
                                             selectedMsgs.forEach(msg => {
                                                 const msgId = msg._id || msg.cid;
@@ -1901,9 +1915,7 @@ const ChatWindow = ({ onBack }) => {
                                             handleExitMultiSelect();
                                             showToast('Deleted for everyone', 'success');
                                         }}
-                                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: '#f85149', fontSize: '0.93rem', fontWeight: 600, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
-                                        onTouchStart={e => (e.currentTarget.style.background = 'rgba(248,81,73,0.07)')}
-                                        onTouchEnd={e => (e.currentTarget.style.background = 'transparent')}
+                                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', color: 'var(--color-danger, #ef4444)', fontSize: '0.93rem', fontWeight: 600, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s, color 0.15s' }}
                                     >
                                         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
