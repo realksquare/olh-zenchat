@@ -1109,7 +1109,7 @@ const MessageInput = ({ chatId, editingMessage, replyingTo, onCancelEdit, onCanc
             </div>
 
             <div className="input-hint-row">
-                <span className="input-hint desktop-only" style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', opacity: 0.7 }}>
+                <span className="input-hint desktop-only" style={{ opacity: 0.7 }}>
                     <span>Enter to send · Shift+Enter for new line{!content.trim() && !hasMedia ? " · Space: hold to record" : ""}</span>
                     <span>· Right-click on message to access options</span>
                     {editingMessage && <span>· Esc to cancel</span>}

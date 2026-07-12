@@ -259,12 +259,42 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
         }, 80);
     };
 
+    // Parse chatId query parameter on startup/cold load and open the corresponding chat
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const urlChatId = params.get("chatId");
+        if (urlChatId && chats.length > 0) {
+            const chat = chats.find(c => c._id === urlChatId);
+            if (chat) {
+                setActiveChat(chat);
+                if (onChatSelect) {
+                    onChatSelect();
+                }
+                // Clear the query parameters to prevent re-opening on manual page refresh
+                const newParams = new URLSearchParams(window.location.search);
+                newParams.delete("chatId");
+                newParams.delete("focus");
+                const newSearch = newParams.toString();
+                window.history.replaceState(
+                    {},
+                    "",
+                    newSearch ? `/?${newSearch}` : "/"
+                );
+            }
+        }
+    }, [chats, setActiveChat, onChatSelect]);
+
     // Handle notification deep-link: open chat when user taps "Open & Reply" on a push notification
     useEffect(() => {
-        const handler = (e) => {
+        const handler = async (e) => {
             const { chatId } = e.detail || {};
             if (!chatId) return;
-            const chat = useChatStore.getState().chats.find(c => c._id === chatId);
+            let chat = useChatStore.getState().chats.find(c => c._id === chatId);
+            if (!chat) {
+                // Fetch/sync chats list to see if the new chat is now available
+                await useChatStore.getState().fetchChats();
+                chat = useChatStore.getState().chats.find(c => c._id === chatId);
+            }
             if (chat) {
                 setActiveChat(chat);
                 onChatSelect();

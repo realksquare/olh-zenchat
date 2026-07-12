@@ -116,7 +116,7 @@ export const setupForegroundNotifications = () => {
                 window.focus();
                 const chatId = event.target.data?.chatId;
                 if (chatId) {
-                    window.dispatchEvent(new CustomEvent("open-chat-from-notif", { detail: chatId }));
+                    window.dispatchEvent(new CustomEvent("sw-open-chat", { detail: { chatId } }));
                 }
             };
         }

@@ -2350,11 +2350,17 @@ select {
   opacity: 0.65;
 }
 
+.input-hint.desktop-only {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 /* Hide the hint text on mobile/touch devices */
 @media (hover: none),
-(max-width: 640px) {
+(max-width: 768px) {
   .desktop-only {
-    display: none;
+    display: none !important;
   }
 }
 
@@ -4803,7 +4809,8 @@ select {
   background: rgba(0, 0, 0, 0.95);
   backdrop-filter: blur(10px);
   z-index: 2000;
-  transition: opacity 0.35s ease;
+  opacity: 1;
+  transition: opacity 0.35s ease, backdrop-filter 0.35s ease;
   overflow: hidden !important;
   padding: 0 !important;
 }
@@ -4811,6 +4818,7 @@ select {
 .moments-aura-viewer-overlay.fading-out {
   opacity: 0;
   pointer-events: none;
+  backdrop-filter: blur(0px);
 }
 
 .moments-aura-viewer-content {
@@ -4828,6 +4836,14 @@ select {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65);
   border-left: 1px solid rgba(255, 255, 255, 0.05);
   border-right: 1px solid rgba(255, 255, 255, 0.05);
+  opacity: 1;
+  transform: translateY(0);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+}
+
+.moments-aura-viewer-overlay.fading-out .moments-aura-viewer-content {
+  transform: translateY(40px);
+  opacity: 0;
 }
 
 .aura-blur-backdrop {
