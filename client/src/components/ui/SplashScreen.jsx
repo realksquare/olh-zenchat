@@ -19,7 +19,7 @@ const SplashScreen = ({ isReady }) => {
             <div className="splash-content">
                 <div className="splash-logo">
                     {/* Inline SVG logo - zero network requests, instant render */}
-                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: '80px', height: '80px', display: 'block' }}>
                         <rect width="80" height="80" rx="22" fill="#1e2530" />
                         <line x1="20" y1="27" x2="60" y2="27" stroke="#3da5d9" strokeWidth="5.5" strokeLinecap="round" />
                         <line x1="20" y1="40" x2="50" y2="40" stroke="#3da5d9" strokeWidth="5.5" strokeLinecap="round" />

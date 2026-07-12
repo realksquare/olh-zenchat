@@ -2959,6 +2959,9 @@ select {
   position: relative;
   width: 120px;
   height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .splash-logo img,
@@ -2966,7 +2969,7 @@ select {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 0 20px rgba(61, 165, 217, 0.4));
+  filter: drop-shadow(0 0 20px var(--color-primary, rgba(61, 165, 217, 0.4)));
 }
 
 .splash-glow {
@@ -3005,10 +3008,12 @@ select {
 .splash-title {
   font-size: 2rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #fff 0%, #3da5d9 100%);
+  background: linear-gradient(135deg, var(--color-text, #fff) 0%, var(--color-primary, #3da5d9) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.02em;
+  margin: 0;
+  text-align: center;
 }
 
 .splash-status {
@@ -3054,10 +3059,12 @@ select {
 
 .splash-status p {
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--color-text-muted, #64748b);
   font-weight: 500;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  margin: 0;
+  text-align: center;
 }
 
 /* ── Message Progress Bar ────────────────────────────── */
