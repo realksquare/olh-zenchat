@@ -5,13 +5,14 @@ import { useAuthStore } from "../../stores/authStore";
 import { Plus, Search, Globe, Lock, Users, ArrowLeft, Copy, Check, MessageSquare, Loader2, LogOut } from "lucide-react";
 import ZenVoiceVerifyModal from "./ZenVoiceVerifyModal";
 
-const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
+const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect, inviteToken, onInviteConsumed }) => {
     const {
         rooms,
         fetchRooms,
         createRoom,
         searchRooms,
         joinRoom,
+        joinInvite,
         isLoading,
         collegeEmailDomain,
         sessionToken,
@@ -101,6 +102,25 @@ const ZenVoiceRoomBrowser = ({ onBack, onRoomSelect }) => {
             fetchRooms();
         }
     }, [fetchRooms, sessionToken]);
+
+    // Auto-join and navigate to the invited room once rooms are loaded
+    useEffect(() => {
+        if (!inviteToken || !sessionToken) return;
+        const process = async () => {
+            const res = await joinInvite(inviteToken);
+            if (res?.success && res?.room) {
+                setActiveTab("private");
+                localStorage.setItem("zenvoice_active_tab", "private");
+                onRoomSelect(res.room._id);
+            } else {
+                showToast("error", res?.message || "Invite link is invalid or expired.");
+            }
+            if (onInviteConsumed) onInviteConsumed();
+        };
+        process();
+    // Only run when a new token arrives - rooms are fetched separately
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [inviteToken, sessionToken]);
 
     // Handle search query
     useEffect(() => {

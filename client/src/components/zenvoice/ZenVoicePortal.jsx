@@ -5,10 +5,11 @@ import ZenVoiceVerifyModal from "./ZenVoiceVerifyModal";
 import ZenVoiceRoomBrowser from "./ZenVoiceRoomBrowser";
 import ZenVoiceRoom from "./ZenVoiceRoom";
 
-const ZenVoicePortal = ({ isOpen, onClose }) => {
+const ZenVoicePortal = ({ isOpen, onClose, inviteToken }) => {
     const { isVerified, checkStatus } = useZenVoiceStore();
     const [activeRoomId, setActiveRoomId] = useState(null);
     const [showVerifier, setShowVerifier] = useState(false);
+    const [pendingInviteToken, setPendingInviteToken] = useState(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -21,8 +22,14 @@ const ZenVoicePortal = ({ isOpen, onClose }) => {
             });
         } else {
             setActiveRoomId(null);
+            setPendingInviteToken(null);
         }
     }, [isOpen, checkStatus]);
+
+    // Store the invite token when it arrives so it survives verification flow
+    useEffect(() => {
+        if (inviteToken) setPendingInviteToken(inviteToken);
+    }, [inviteToken]);
 
     if (!isOpen) return null;
 
@@ -65,7 +72,12 @@ const ZenVoicePortal = ({ isOpen, onClose }) => {
                 {activeRoomId ? (
                     <ZenVoiceRoom roomId={activeRoomId} onBack={handleBackToBrowser} />
                 ) : (
-                    <ZenVoiceRoomBrowser onBack={onClose} onRoomSelect={handleRoomSelect} />
+                    <ZenVoiceRoomBrowser
+                        onBack={onClose}
+                        onRoomSelect={handleRoomSelect}
+                        inviteToken={pendingInviteToken}
+                        onInviteConsumed={() => setPendingInviteToken(null)}
+                    />
                 )}
             </div>
         </div>,

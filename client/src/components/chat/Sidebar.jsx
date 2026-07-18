@@ -27,6 +27,7 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
     const user = useAuthStore((s) => s.user);
     const isAdmin = user?.role === "master_admin" || user?.role === "co_admin";
     const [isZenVoicePortalOpen, setIsZenVoicePortalOpen] = useState(false);
+    const [zvInviteToken, setZvInviteToken] = useState(null);
     const logout = useAuthStore((s) => s.logout);
     const { hasActiveMoment, getHaloColor } = useMomentStore.getState();
     const { 
@@ -203,6 +204,14 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
             setActiveTab(tab);
         }
         if (zvInvite || user?.isZenVoiceOnly) {
+            if (zvInvite) {
+                setZvInviteToken(zvInvite);
+                // Clean up URL so it doesn't re-trigger on re-render
+                const newParams = new URLSearchParams(window.location.search);
+                newParams.delete("zvInvite");
+                const newSearch = newParams.toString();
+                window.history.replaceState({}, "", newSearch ? `/?${newSearch}` : "/");
+            }
             setIsZenVoicePortalOpen(true);
         }
     }, [user?.isZenVoiceOnly]);
@@ -773,7 +782,9 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
             />
             <ZenVoicePortal
                 isOpen={isZenVoicePortalOpen}
+                inviteToken={zvInviteToken}
                 onClose={() => {
+                    setZvInviteToken(null);
                     if (user?.isZenVoiceOnly) {
                         window.dispatchEvent(new Event("show-zenvoice-prompt"));
                     } else {

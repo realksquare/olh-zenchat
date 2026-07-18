@@ -18,13 +18,13 @@ These are the core operating principles and coding standards to be followed for 
 
 ## 4. Error Handling
 - **Graceful Failures:** Handle errors gracefully and provide meaningful feedback to the user. Do not leave the application in an inconsistent state.
-- **Different POVs:** If you cannot resolve an issue with usual approaches, try to resolve it from different POVs - think about what could have gone wrong from frontend, backend, database, network, etc. and try to fix it from that POV. Also search the internet for potential solutions.
+- **Different POVs:** If you cannot resolve an issue with usual approaches, try to resolve it from different POVs - think about what could have gone wrong from frontend, backend, database, network, etc. and try to fix it from that perspective. Also search the internet for potential solutions.
 
 ## 5. UI & Aesthetics
 - **Professional Typography:** Keep UI text away from fancy dashes (em or en dashes) or excessive punctuation. Use standard hyphens.
 - **Iconography over Emojis:** Avoid emojis in the UI text as much as possible. Use Lucid icons or SVG icons instead, wherever visual representation is needed.
 - **UI Consistency:** When adding new UI elements, ensure the styles and UI of the new elements are consistent with the existing UI elements, unless the component being added is intended to be visually distinct/unique from the components around it.
-- **No AI-SLop styles/typography:** Do not add generally used AI-like styles or wordings in the UI, keep it minimal and simple yet elegant, matching the current ZenChat style (a bit of casual and sarcastic tone in UI texts, and premium UI design that feels ZenChat).
+- **No AI-Slop styles/typography:** Do not add generally used AI-like styles or wordings in the UI, keep it minimal and simple yet elegant, matching the current ZenChat style (a bit of casual and sarcastic tone in UI texts, and premium UI design that feels ZenChat).
 
 ## 6. Version Control Protocol
 - **Perfectly synced codebase:** Make sure new changes or additions are synced and work together well across all relevant files.
