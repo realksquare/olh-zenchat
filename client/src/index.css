@@ -7051,37 +7051,7 @@ select {
   transition: mask-image 1.5s ease, -webkit-mask-image 1.5s ease;
 }
 
-/* Caption styles in Moment Viewer */
-.aura-image-caption-pill {
-  position: absolute;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 8px 18px;
-  border-radius: 24px;
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
-  color: var(--color-text, #fff)fff;
-  font-size: 0.95rem;
-  font-weight: 500;
-  text-align: center;
-  max-width: 85%;
-  pointer-events: none;
-  z-index: 10;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-}
 
-/* Mobile responsive styles for caption */
-@media (max-width: 768px) {
-  .aura-image-caption-pill {
-    bottom: 72px;
-    padding: 6px 14px;
-    font-size: 0.85rem;
-    max-width: 90%;
-  }
-}
 
 /* ──────────────────────────────────────────────────────────
    #ZenMode Custom Popups & Bottom Sheets
