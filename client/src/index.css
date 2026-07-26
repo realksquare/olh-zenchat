@@ -4896,7 +4896,7 @@ select {
 
 .aura-viewer-header {
   position: relative;
-  padding: 50px 16px 24px 16px;
+  padding: 24px 16px 10px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -8169,7 +8169,7 @@ select {
 /* ── Moments DM Reply Bar ────────────────────────────── */
 .aura-reply-container {
   position: relative;
-  padding: 16px 20px 24px;
+  padding: 10px 20px 14px;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
   z-index: 1200;
   display: flex;
