@@ -730,6 +730,14 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                 />
                                 <MomentOverlays filter={displayFilter} createdAt={currentMoment.createdAt} locationTag={currentMoment.locationTag || decryptedData?.locationTag} />
                             </div>
+
+                            {displayCaption && displayCaption.trim().length >= 3 && (
+                                <div className="aura-image-caption-container">
+                                    <div className="aura-image-caption-pill">
+                                        {displayCaption}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ) : hasMedia ? (
                         <div className="aura-media-content" key={currentMoment._id} style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -770,8 +778,10 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                             </div>
 
                             {displayCaption && displayCaption.trim().length >= 3 && (
-                                <div className="aura-image-caption-pill" style={{ zIndex: 11 }}>
-                                    {displayCaption}
+                                <div className="aura-image-caption-container">
+                                    <div className="aura-image-caption-pill">
+                                        {displayCaption}
+                                    </div>
                                 </div>
                             )}
                             {hasText && (
