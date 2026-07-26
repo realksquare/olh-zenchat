@@ -1239,9 +1239,26 @@ const ChatWindow = ({ onBack }) => {
     const [tick, setTick] = useState(0);
 
     useEffect(() => {
-        const interval = setInterval(() => setTick(t => t + 1), 60000);
+        const interval = setInterval(() => setTick(t => t + 1), 10000);
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                setTick(t => t + 1);
+                if (activeChat?._id) {
+                    useChatStore.getState().fetchActiveChat(activeChat._id);
+                }
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("focus", handleVisibilityChange);
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("focus", handleVisibilityChange);
+        };
+    }, [activeChat?._id]);
 
     const statusText = useMemo(() => {
         if (!otherUser) return "";
@@ -1251,10 +1268,28 @@ const ChatWindow = ({ onBack }) => {
         if (isPeerOnline) {
             return isOtherInZen ? "Online - on #ZenMode" : "Online";
         }
-        if (otherUser.lastSeen) {
-            const diffMs = Date.now() - new Date(otherUser.lastSeen).getTime();
+
+        let effectiveLastSeen = otherUser.lastSeen;
+        if (rawMessages && rawMessages.length > 0) {
+            const otherUserIdStr = (otherUser._id?._id || otherUser._id || otherUser)?.toString();
+            for (let i = rawMessages.length - 1; i >= 0; i--) {
+                const msg = rawMessages[i];
+                const senderIdStr = (msg.senderId?._id || msg.senderId || "").toString();
+                if (senderIdStr === otherUserIdStr && msg.createdAt) {
+                    const msgTime = new Date(msg.createdAt).getTime();
+                    const currentLastSeenTime = effectiveLastSeen ? new Date(effectiveLastSeen).getTime() : 0;
+                    if (msgTime > currentLastSeenTime) {
+                        effectiveLastSeen = msg.createdAt;
+                    }
+                    break;
+                }
+            }
+        }
+
+        if (effectiveLastSeen) {
+            const diffMs = Date.now() - new Date(effectiveLastSeen).getTime();
             const diffMins = Math.floor(diffMs / 60000);
-            if (diffMins < 1) return "<1 minute";
+            if (diffMins < 1) return "<1 minute ago";
             if (diffMins < 60) return `~${diffMins} minutes ago`;
             const diffHrs = Math.floor(diffMs / 3600000);
             if (diffHrs === 1) return "~1 hour ago";
@@ -1262,10 +1297,10 @@ const ChatWindow = ({ onBack }) => {
             const diffDays = Math.floor(diffMs / 86400000);
             if (diffDays === 1) return "~1 day ago";
             if (diffDays < 7) return `~${diffDays} days ago`;
-            return formatDistanceToNow(new Date(otherUser.lastSeen), { addSuffix: true });
+            return formatDistanceToNow(new Date(effectiveLastSeen), { addSuffix: true });
         }
         return "Offline";
-    }, [otherUser, isPeerOnline, tick, isOffline, activeChat?.blockStatus?.iBlocked, activeChat?.blockStatus?.theyBlocked, zenUsers]);
+    }, [otherUser, isPeerOnline, tick, isOffline, activeChat?.blockStatus?.iBlocked, activeChat?.blockStatus?.theyBlocked, zenUsers, rawMessages]);
 
     const getStatusText = () => statusText;
 

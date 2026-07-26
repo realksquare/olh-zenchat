@@ -189,6 +189,12 @@ export const SocketProvider = ({ children }) => {
                 }
             }
             if (!isFromMe) {
+                const senderIdStr = (decompressed.senderId?._id || decompressed.senderId || '').toString();
+                if (senderIdStr) {
+                    const msgTime = decompressed.createdAt || new Date().toISOString();
+                    useChatStore.getState().updateParticipantStatus(senderIdStr, true, msgTime);
+                }
+
                 const { soundEnabled } = useAuthStore.getState();
                 if (soundEnabled) playReceiveSound();
                 
@@ -219,27 +225,31 @@ export const SocketProvider = ({ children }) => {
         const handleTypingStatus = ({ userId, chatId, isTyping, scramble }) => {
             useChatStore.getState().setTypingUser(chatId, userId, isTyping, scramble);
             if (isTyping) {
+                const now = new Date().toISOString();
                 useChatStore.getState().setUserOnline(userId);
-                useChatStore.getState().updateParticipantStatus(userId, true, null);
+                useChatStore.getState().updateParticipantStatus(userId, true, now);
             }
         };
 
         const handleVoiceRecordingStatus = ({ userId, chatId, isRecording }) => {
             useChatStore.getState().setVoiceRecordingUser(chatId, userId, isRecording);
             if (isRecording) {
+                const now = new Date().toISOString();
                 useChatStore.getState().setUserOnline(userId);
-                useChatStore.getState().updateParticipantStatus(userId, true, null);
+                useChatStore.getState().updateParticipantStatus(userId, true, now);
             }
         };
 
         const handleUserOnline = ({ userId }) => {
+            const now = new Date().toISOString();
             useChatStore.getState().setUserOnline(userId);
-            useChatStore.getState().updateParticipantStatus(userId, true, null);
+            useChatStore.getState().updateParticipantStatus(userId, true, now);
         };
 
         const handleUserOffline = ({ userId, lastSeen }) => {
+            const now = lastSeen || new Date().toISOString();
             useChatStore.getState().setUserOffline(userId);
-            useChatStore.getState().updateParticipantStatus(userId, false, lastSeen);
+            useChatStore.getState().updateParticipantStatus(userId, false, now);
         };
 
         const handleUserZenStatus = ({ userId, isZenMode }) => {
@@ -531,10 +541,11 @@ export const SocketProvider = ({ children }) => {
 
         socket.on("online_users", ({ userIds }) => {
             if (Array.isArray(userIds)) {
+                const now = new Date().toISOString();
                 // Mark confirmed-online users
                 userIds.forEach(id => {
                     useChatStore.getState().setUserOnline(id);
-                    useChatStore.getState().updateParticipantStatus(id, true, null);
+                    useChatStore.getState().updateParticipantStatus(id, true, now);
                 });
                 // Reconcile: mark anyone NOT in the list as offline
                 // (clears stale presence from before reconnect)
@@ -548,7 +559,7 @@ export const SocketProvider = ({ children }) => {
                     knownOnline.forEach(id => {
                         if (!confirmedSet.has(String(id))) {
                             store.setUserOffline(id);
-                            store.updateParticipantStatus(id, false, null);
+                            store.updateParticipantStatus(id, false, now);
                         }
                     });
                 }, 500);

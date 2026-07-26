@@ -856,24 +856,34 @@ export const useChatStore = create(
 
             updateParticipantStatus: (userId, isOnline, lastSeen) => {
                 set((state) => {
+                    const updateParticipant = (p) => {
+                        const pId = (p._id?._id || p._id || p)?.toString();
+                        if (pId === userId?.toString()) {
+                            const currentLastSeenTime = p.lastSeen ? new Date(p.lastSeen).getTime() : 0;
+                            const incomingLastSeenTime = lastSeen ? new Date(lastSeen).getTime() : (isOnline ? Date.now() : 0);
+                            const bestLastSeen = (incomingLastSeenTime > currentLastSeenTime)
+                                ? (lastSeen || new Date(incomingLastSeenTime).toISOString())
+                                : p.lastSeen;
+
+                            return {
+                                ...p,
+                                isOnline: typeof isOnline === "boolean" ? isOnline : p.isOnline,
+                                lastSeen: bestLastSeen
+                            };
+                        }
+                        return p;
+                    };
+
                     const updatedChats = state.chats.map((chat) => ({
                         ...chat,
-                        participants: chat.participants.map((p) =>
-                            p._id?.toString() === userId?.toString()
-                                ? { ...p, isOnline, lastSeen: lastSeen || p.lastSeen }
-                                : p
-                        ),
+                        participants: Array.isArray(chat.participants) ? chat.participants.map(updateParticipant) : chat.participants,
                     }));
 
                     let updatedActiveChat = state.activeChat;
-                    if (state.activeChat) {
+                    if (state.activeChat && Array.isArray(state.activeChat.participants)) {
                         updatedActiveChat = {
                             ...state.activeChat,
-                            participants: state.activeChat.participants.map((p) =>
-                                p._id?.toString() === userId?.toString()
-                                    ? { ...p, isOnline, lastSeen: lastSeen || p.lastSeen }
-                                    : p
-                            ),
+                            participants: state.activeChat.participants.map(updateParticipant),
                         };
                     }
 
