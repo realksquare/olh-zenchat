@@ -4,8 +4,12 @@
  */
 export function getProxyAudioUrl(previewUrl) {
     if (!previewUrl) return null;
-    const base = import.meta.env.VITE_API_URL
-        ? `${import.meta.env.VITE_API_URL}/api`
-        : '/api';
+    const defaultBackend = (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1")
+        ? "https://olh-zenchat.onrender.com"
+        : "";
+    const apiBase = import.meta.env.VITE_API_URL
+        ? import.meta.env.VITE_API_URL.replace(/\/$/, "")
+        : defaultBackend;
+    const base = `${apiBase}/api`;
     return `${base}/music/proxy?url=${encodeURIComponent(previewUrl)}`;
 }

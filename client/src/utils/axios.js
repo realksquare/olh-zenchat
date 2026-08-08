@@ -1,6 +1,18 @@
 import axios from "axios";
 
-const baseURL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : "/api";
+const DEFAULT_BACKEND_URL = "https://olh-zenchat.onrender.com";
+
+const getBaseURL = () => {
+    if (import.meta.env.VITE_API_URL) {
+        return `${import.meta.env.VITE_API_URL.replace(/\/$/, "")}/api`;
+    }
+    if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+        return `${DEFAULT_BACKEND_URL}/api`;
+    }
+    return "/api";
+};
+
+const baseURL = getBaseURL();
 
 const appStartupTime = typeof window !== "undefined" ? Date.now() : 0;
 const STARTUP_GRACE_PERIOD = 8000; // 8 seconds grace period for initial load/refresh

@@ -12,6 +12,14 @@
   ],
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://olh-zenchat.onrender.com/api/:path*"
+    },
+    {
+      "source": "/socket.io/:path*",
+      "destination": "https://olh-zenchat.onrender.com/socket.io/:path*"
+    },
+    {
       "source": "/intro",
       "destination": "/intro.html"
     },

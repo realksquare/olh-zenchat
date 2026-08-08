@@ -129,7 +129,10 @@ export const SocketProvider = ({ children }) => {
     useEffect(() => {
         if (!token || !userId) return;
 
-        const serverUrl = import.meta.env.VITE_API_URL || "/";
+        const defaultBackend = (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1")
+            ? "https://olh-zenchat.onrender.com"
+            : "/";
+        const serverUrl = import.meta.env.VITE_API_URL || defaultBackend;
         const isPWA = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
 
         socketRef.current = io(serverUrl, {

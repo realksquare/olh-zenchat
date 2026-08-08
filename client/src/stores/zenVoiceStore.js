@@ -35,7 +35,10 @@ export const useZenVoiceStore = create((set, get) => ({
         const { socket } = get();
         if (socket) return;
 
-        const socketUrl = import.meta.env.VITE_API_URL || window.location.origin;
+        const defaultBackend = (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1")
+            ? "https://olh-zenchat.onrender.com"
+            : window.location.origin;
+        const socketUrl = import.meta.env.VITE_API_URL || defaultBackend;
         const zvSocket = io(`${socketUrl}/zenvoice`, {
             auth: { token },
             transports: import.meta.env.DEV ? ["polling", "websocket"] : ["websocket"]

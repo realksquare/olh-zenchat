@@ -96,9 +96,13 @@ export const useChatStore = create(
                 try {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 2500);
-                    const healthUrl = import.meta.env.VITE_API_URL
-                        ? `${import.meta.env.VITE_API_URL}/api/health?t=${Date.now()}`
-                        : `/api/health?t=${Date.now()}`;
+                    const defaultBackend = (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1")
+                        ? "https://olh-zenchat.onrender.com"
+                        : "";
+                    const apiBase = import.meta.env.VITE_API_URL
+                        ? import.meta.env.VITE_API_URL.replace(/\/$/, "")
+                        : defaultBackend;
+                    const healthUrl = `${apiBase}/api/health?t=${Date.now()}`;
                     const res = await fetch(healthUrl, {
                         method: "GET",
                         signal: controller.signal,
