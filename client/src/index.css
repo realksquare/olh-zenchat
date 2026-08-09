@@ -159,24 +159,25 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 300%;
-  height: 300%;
+  /* Square so all edges rotate at uniform speed — prevents fast-sweep effect */
+  width: 200%;
+  aspect-ratio: 1;
   transform: translate(-50%, -50%);
   z-index: 0;
-  background: conic-gradient(from 0deg, transparent 60%, var(--color-text-muted) 100%);
-  animation: spin-border 9s linear infinite;
+  background: conic-gradient(from 0deg, transparent 70%, var(--color-text-muted) 100%);
+  animation: spin-border 16s linear infinite;
 }
 
 /* Update glow color based on status */
 [data-theme="zen_oled"] .message-bubble.mine.status-sent::before {
-  background: conic-gradient(from 0deg, transparent 60%, #94a3b8 100%);
+  background: conic-gradient(from 0deg, transparent 70%, #94a3b8 100%);
 }
 [data-theme="zen_oled"] .message-bubble.mine.status-delivered::before {
-  background: conic-gradient(from 0deg, transparent 60%, #3b82f6 100%);
+  background: conic-gradient(from 0deg, transparent 70%, #3b82f6 100%);
 }
 [data-theme="zen_oled"] .message-bubble.mine.status-seen::before,
 [data-theme="zen_oled"] .message-bubble.mine.status-read::before {
-  background: conic-gradient(from 0deg, transparent 60%, var(--color-primary) 100%);
+  background: conic-gradient(from 0deg, transparent 70%, var(--color-primary) 100%);
 }
 
 [data-theme="zen_oled"] .message-bubble.mine::after {
@@ -7116,7 +7117,7 @@ select {
   border-radius: 50%;
   border: 3px solid transparent;
   border-top-color: var(--color-primary);
-  animation: zen-spin 1.2s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+  animation: zen-spin 1.6s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
 }
 
 .zen-countdown-number {
