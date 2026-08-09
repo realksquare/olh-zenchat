@@ -267,7 +267,10 @@ export const useAuthStore = create(
 
     checkAuth: async () => {
         const token = localStorage.getItem(TOKEN_KEY);
-        if (!token) return;
+        if (!token) {
+            set({ isLoading: false });
+            return;
+        }
         try {
             const { data } = await axiosInstance.get("/auth/me");
             localStorage.setItem(USER_KEY, JSON.stringify(data.user));
@@ -275,9 +278,10 @@ export const useAuthStore = create(
                 await db.settings.put({ key: "token", value: token });
                 await db.settings.put({ key: "apiUrl", value: import.meta.env.VITE_API_URL || "" });
             }
-            set({ user: data.user, token });
+            set({ user: data.user, token, isLoading: false });
         } catch (err) {
             console.error("Auth check failed:", err);
+            set({ isLoading: false });
             if (err.response?.status === 401) {
                 localStorage.removeItem(TOKEN_KEY);
                 localStorage.removeItem(USER_KEY);
@@ -287,6 +291,8 @@ export const useAuthStore = create(
     },
 
     clearError: () => set({ error: null }),
+
+    clearLoading: () => set({ isLoading: false }),
 
     updateProfile: async (formData) => {
         set({ isLoading: true, error: null });

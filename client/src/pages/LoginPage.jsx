@@ -22,7 +22,8 @@ const LoginPage = () => {
         mfaMaskedValue,
         isLoading,
         error,
-        clearError
+        clearError,
+        clearLoading
     } = useAuthStore();
 
     const [form, setForm] = useState({ email: "", password: "" });
@@ -44,7 +45,8 @@ const LoginPage = () => {
     useEffect(() => {
         resetMfaState();
         clearError();
-    }, [resetMfaState, clearError]);
+        clearLoading();
+    }, [resetMfaState, clearError, clearLoading]);
 
     useEffect(() => {
         const stateStr = localStorage.getItem("login_mfa_resend");
