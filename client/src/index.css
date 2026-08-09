@@ -133,8 +133,11 @@
 
 /* Animated Border for ZenOLED Message Bubble */
 @keyframes spin-border {
-  100% {
-    transform: rotate(360deg);
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
   }
 }
 
@@ -142,9 +145,13 @@
   position: relative;
   background: var(--color-surface-offset);
   border: none;
-  z-index: 1;
+  isolation: isolate;
   overflow: hidden;
-  -webkit-mask-image: -webkit-radial-gradient(white, black);
+}
+
+[data-theme="zen_oled"] .message-bubble.mine > * {
+  position: relative;
+  z-index: 2;
 }
 
 [data-theme="zen_oled"] .message-bubble.mine::before {
@@ -152,11 +159,10 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 150vmax;
-  height: 150vmax;
-  margin-top: -75vmax;
-  margin-left: -75vmax;
-  z-index: -1;
+  width: 300%;
+  height: 300%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
   background: conic-gradient(from 0deg, transparent 60%, var(--color-text-muted) 100%);
   animation: spin-border 9s linear infinite;
 }
@@ -179,7 +185,7 @@
   inset: 1.5px;
   background: var(--color-surface-offset);
   border-radius: inherit;
-  z-index: -1;
+  z-index: 1;
 }
 
 /* ───────────────────────────────────────────────────────── */
