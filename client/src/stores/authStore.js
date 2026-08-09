@@ -399,5 +399,10 @@ export const useAuthStore = create(
     }),
     {
         name: "zenchat-auth",
+        partialize: (state) => ({
+            token: state.token,
+            user: state.user,
+            soundEnabled: state.soundEnabled
+        }),
     }
 ));
