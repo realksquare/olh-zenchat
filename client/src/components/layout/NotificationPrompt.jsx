@@ -237,7 +237,7 @@ const NotificationPrompt = () => {
                                         width: 44, height: 44, borderRadius: '50%',
                                         border: '3px solid rgba(59,130,246,0.15)',
                                         borderTopColor: '#3b82f6',
-                                        animation: 'spin 0.9s linear infinite'
+                                        animation: 'spin 1.5s linear infinite'
                                     }} />
                                     <span style={{ color: '#e2e8f0', fontSize: '0.9rem', fontWeight: 600 }}>Subscribing…</span>
                                 </div>

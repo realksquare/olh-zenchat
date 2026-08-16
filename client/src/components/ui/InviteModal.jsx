@@ -169,7 +169,7 @@ const InviteModal = ({ isOpen, onClose, username }) => {
                     border: 2px solid rgba(255,255,255,0.3);
                     border-top-color: var(--color-text, #fff);
                     border-radius: 50%;
-                    animation: spin 0.8s linear infinite;
+                    animation: spin 1.5s linear infinite;
                 }
                 @keyframes spin { to { transform: rotate(360deg); } }
             `}</style>
