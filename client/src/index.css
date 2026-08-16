@@ -164,26 +164,58 @@
   height: 200%;
   transform: translate(-50%, -50%);
   z-index: 0;
-  background: conic-gradient(from 0deg, transparent 65%, rgba(148, 163, 184, 0.3) 85%, var(--color-text-muted) 100%);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 75%,
+    rgba(148, 163, 184, 0.2) 85%,
+    var(--color-text-muted) 93%,
+    rgba(148, 163, 184, 0.2) 97%,
+    transparent 100%
+  );
   animation: spin-border 18s linear infinite;
 }
 
 @media (max-width: 768px) {
   [data-theme="zen_oled"] .message-bubble.mine::before {
-    animation: spin-border 8s linear infinite;
+    animation: spin-border 10s linear infinite;
   }
 }
 
 /* Update glow color based on status */
 [data-theme="zen_oled"] .message-bubble.mine.status-sent::before {
-  background: conic-gradient(from 0deg, transparent 65%, rgba(148, 163, 184, 0.3) 85%, #94a3b8 100%);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 75%,
+    rgba(148, 163, 184, 0.2) 85%,
+    #94a3b8 93%,
+    rgba(148, 163, 184, 0.2) 97%,
+    transparent 100%
+  );
 }
 [data-theme="zen_oled"] .message-bubble.mine.status-delivered::before {
-  background: conic-gradient(from 0deg, transparent 65%, rgba(59, 130, 246, 0.3) 85%, #3b82f6 100%);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 75%,
+    rgba(59, 130, 246, 0.25) 85%,
+    #3b82f6 93%,
+    rgba(59, 130, 246, 0.25) 97%,
+    transparent 100%
+  );
 }
 [data-theme="zen_oled"] .message-bubble.mine.status-seen::before,
 [data-theme="zen_oled"] .message-bubble.mine.status-read::before {
-  background: conic-gradient(from 0deg, transparent 65%, rgba(13, 148, 136, 0.35) 85%, var(--color-primary) 100%);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 75%,
+    rgba(13, 148, 136, 0.25) 85%,
+    var(--color-primary) 93%,
+    rgba(13, 148, 136, 0.25) 97%,
+    transparent 100%
+  );
 }
 
 [data-theme="zen_oled"] .message-bubble.mine::after {
