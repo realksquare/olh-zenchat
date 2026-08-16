@@ -93,7 +93,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     const locationContentRef = useRef(null);
     const [locMarqueeDist, setLocMarqueeDist] = useState(0);
 
-    // Make the viewer reactive by pulling the latest moments for this user
     const allMoments = useMomentStore((s) => s.moments);
     const currentUserId = useAuthStore((s) => s.user?._id);
     const isZenMode = useChatStore((s) => s.isZenMode);
@@ -101,9 +100,8 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
 
     const moments = useMemo(() => {
         if (!initialMoments || initialMoments.length === 0) return [];
-        // Cast to string to avoid object comparison issues
         const targetUserId = (initialMoments[0].userId?._id || initialMoments[0].userId)?.toString();
-        if (!targetUserId) return initialMoments; // Fallback to initial if ID extraction fails
+        if (!targetUserId) return initialMoments;
 
         const filtered = allMoments.filter(m => (m.userId?._id || m.userId)?.toString() === targetUserId);
         return filtered.length > 0 ? filtered : initialMoments;
@@ -158,7 +156,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                     ? Object.fromEntries(currentMoment.encryptedKeys)
                     : currentMoment.encryptedKeys || {};
                 
-                // Ensure case-insensitive match for uploader's ObjectId
                 const userIdStr = currentUserId?.toString().toLowerCase();
                 const matchedKey = Object.keys(rawEncryptedKeysMap).find(k => k.toLowerCase() === userIdStr);
                 const ourEncryptedKeyHex = matchedKey ? rawEncryptedKeysMap[matchedKey] : null;
@@ -167,7 +164,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                     throw new Error("Symmetric key not encrypted for this user.");
                 }
 
-                // Create a temporary map strictly for decryption
                 const encryptedKeysMap = { [currentUserId?.toString()]: ourEncryptedKeyHex };
 
                 const decryptedPayloadStr = await decryptForMultipleRecipients(
@@ -237,7 +233,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         }
     }, [displayLocationTag, currentIndex, isOpen]);
 
-    // Handle array shrinking (deletion)
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = "hidden";
@@ -249,8 +244,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
 
     useEffect(() => {
         if (isOpen) {
-            // Only close if we had moments and they were all removed
-            // We check allMoments.length to ensure we don't close prematurely during sync
             if (moments.length === 0) {
                 onClose();
             } else if (currentIndex >= moments.length && moments.length > 0) {
@@ -311,13 +304,10 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         }
     };
 
-
-    // Duration and time reset when moment changes
     useEffect(() => {
         if (isOpen && currentMoment) {
             let duration = 10;
             if (displayType === "video") {
-                // Will be updated by onLoadedMetadata
             } else if (displayMusic && displayMusic.duration) {
                 duration = displayMusic.duration;
             }
@@ -326,7 +316,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         }
     }, [currentIndex, isOpen, currentMoment?._id, displayType, displayMusic]);
 
-    // Timer effect that respects input focus (pausing)
     useEffect(() => {
         if (!isOpen || !currentMoment || showDeleteConfirm || isDecrypting) return;
 
@@ -424,7 +413,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         };
     }, [currentIndex, isOpen, currentMoment?._id, showDeleteConfirm, isDecrypting]);
 
-    // Handle audio/video pausing while user is typing a reply or holding pause
     useEffect(() => {
         if (videoRef.current) {
             if (isInputFocused || isPaused) {
@@ -509,11 +497,9 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
             const targetUserId = (currentMoment.userId?._id || currentMoment.userId)?.toString();
             if (!targetUserId) return;
 
-            // Fetch or create the chat session
             const { data } = await axiosInstance.post("/chats", { userId: targetUserId });
             const chatId = data.chat._id;
 
-            // Send the reply message with moment context attached
             const targetUsername = currentMoment.userId?.username || "";
             await sendMessage(chatId, replyText, "text", "", null, false, null, false, "", currentMoment, targetUsername);
 
@@ -561,7 +547,6 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
     if (!isOpen || !currentMoment) return null;
 
     const user = currentMoment.userId;
-    // Fix display logic: media should ALWAYS show if mediaUrl exists
     const hasMedia = !!displayMediaUrl;
     const hasText = !!displayContent;
     const isOwn = (user?._id || user) === currentUserId;
@@ -618,7 +603,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                             return `${Math.floor(diff / 86400)}d ago`;
                                         })()}
                                     </span>
-                                    {currentMoment.music && (
+                                    {displayMusic && (
                                         <div className={`aura-music-line ${showMusicInfo ? 'fade-in' : 'fade-out'}`}>
                                             <div className={isLongMetadata ? "marquee-text" : ""}>
                                                 {songMetadata}

@@ -159,9 +159,9 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  /* Square so all edges rotate at uniform speed — prevents fast-sweep effect */
+  /* Square element — all edges rotate at identical angular speed */
   width: 200%;
-  aspect-ratio: 1;
+  height: 200%;
   transform: translate(-50%, -50%);
   z-index: 0;
   background: conic-gradient(from 0deg, transparent 70%, var(--color-text-muted) 100%);
