@@ -279,7 +279,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         }
         const interval = setInterval(() => {
             setShowMusicInfo(prev => !prev);
-        }, 5000);
+        }, 10000);
         return () => clearInterval(interval);
     }, [isOpen, currentIndex, displayMusic]);
 
