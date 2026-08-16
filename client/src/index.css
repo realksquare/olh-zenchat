@@ -165,7 +165,13 @@
   transform: translate(-50%, -50%);
   z-index: 0;
   background: conic-gradient(from 0deg, transparent 65%, rgba(148, 163, 184, 0.3) 85%, var(--color-text-muted) 100%);
-  animation: spin-border 30s linear infinite;
+  animation: spin-border 18s linear infinite;
+}
+
+@media (max-width: 768px) {
+  [data-theme="zen_oled"] .message-bubble.mine::before {
+    animation: spin-border 8s linear infinite;
+  }
 }
 
 /* Update glow color based on status */
