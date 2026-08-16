@@ -433,7 +433,7 @@ const SharePulseModal = ({ isOpen, onClose, question, username }) => {
                     border: 2.5px solid rgba(255,255,255,0.2);
                     border-top-color: #38bdf8;
                     border-radius: 50%;
-                    animation: spin 1.5s linear infinite;
+                    animation: spin 0.8s linear infinite;
                 }
                 @keyframes spin { to { transform: rotate(360deg); } }
             `}</style>

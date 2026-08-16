@@ -164,20 +164,20 @@
   height: 200%;
   transform: translate(-50%, -50%);
   z-index: 0;
-  background: conic-gradient(from 0deg, transparent 70%, var(--color-text-muted) 100%);
-  animation: spin-border 16s linear infinite;
+  background: conic-gradient(from 0deg, transparent 65%, rgba(148, 163, 184, 0.3) 85%, var(--color-text-muted) 100%);
+  animation: spin-border 30s linear infinite;
 }
 
 /* Update glow color based on status */
 [data-theme="zen_oled"] .message-bubble.mine.status-sent::before {
-  background: conic-gradient(from 0deg, transparent 70%, #94a3b8 100%);
+  background: conic-gradient(from 0deg, transparent 65%, rgba(148, 163, 184, 0.3) 85%, #94a3b8 100%);
 }
 [data-theme="zen_oled"] .message-bubble.mine.status-delivered::before {
-  background: conic-gradient(from 0deg, transparent 70%, #3b82f6 100%);
+  background: conic-gradient(from 0deg, transparent 65%, rgba(59, 130, 246, 0.3) 85%, #3b82f6 100%);
 }
 [data-theme="zen_oled"] .message-bubble.mine.status-seen::before,
 [data-theme="zen_oled"] .message-bubble.mine.status-read::before {
-  background: conic-gradient(from 0deg, transparent 70%, var(--color-primary) 100%);
+  background: conic-gradient(from 0deg, transparent 65%, rgba(13, 148, 136, 0.35) 85%, var(--color-primary) 100%);
 }
 
 [data-theme="zen_oled"] .message-bubble.mine::after {
@@ -207,7 +207,7 @@
 }
 
 .marquee-active {
-  animation: marquee-subtle 8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  animation: marquee-subtle 14s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
 
 @keyframes marquee-subtle {
@@ -226,7 +226,7 @@
 }
 
 .marquee-active-v2 {
-  animation: marquee-scroll 10s linear infinite;
+  animation: marquee-scroll 16s linear infinite;
 }
 
 *,
@@ -1005,7 +1005,7 @@ select {
 }
 
 .ptr-arc-spin {
-  animation: ptr-spin 1.2s linear infinite;
+  animation: ptr-spin 0.7s linear infinite;
 }
 
 .chats-section {
@@ -1705,7 +1705,7 @@ select {
   height: 4px;
   border-radius: var(--radius-full);
   background: var(--color-primary);
-  animation: wave 1.5s ease-in-out infinite;
+  animation: wave 1s ease-in-out infinite;
   transform-origin: bottom;
 }
 
@@ -2279,7 +2279,7 @@ select {
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   border-top-color: var(--color-text, #fff);
-  animation: spin 1.0s linear infinite;
+  animation: spin 0.6s linear infinite;
 }
 
 @keyframes spin {
@@ -4256,7 +4256,7 @@ select {
 }
 
 .music-icon.pulse svg {
-  animation: music-pulse 2.5s ease-in-out infinite;
+  animation: music-pulse 1.5s infinite;
 }
 
 @keyframes music-pulse {
@@ -5006,7 +5006,7 @@ select {
   left: 0;
   font-size: 0.8rem;
   white-space: nowrap;
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .aura-music-line {
@@ -5020,7 +5020,7 @@ select {
 .marquee-text {
   display: inline-block;
   white-space: nowrap;
-  animation: marquee 12s linear infinite;
+  animation: marquee 14s linear infinite;
 }
 
 @keyframes marquee {
@@ -5036,17 +5036,17 @@ select {
 .marquee-bidirectional {
   display: inline-block;
   white-space: nowrap;
-  animation: marquee-bidirectional-scroll 10s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  animation: marquee-bidirectional-scroll 16s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
 
 @keyframes marquee-bidirectional-scroll {
-  0%, 15% {
+  0%, 20% {
     transform: translateX(0);
   }
-  45%, 60% {
+  50%, 70% {
     transform: translateX(var(--marquee-dist, 0px));
   }
-  90%, 100% {
+  95%, 100% {
     transform: translateX(0);
   }
 }
@@ -5059,7 +5059,7 @@ select {
 
 .fade-out {
   opacity: 0;
-  transform: translateY(5px);
+  transform: translateY(4px);
   pointer-events: none;
 }
 
@@ -6143,7 +6143,7 @@ select {
   border-top-color: var(--color-text, #fff);
   border-radius: 50%;
   display: inline-block;
-  animation: spin 1.5s linear infinite;
+  animation: spin 1.2s linear infinite;
 }
 
 @keyframes spin {
@@ -6277,7 +6277,7 @@ select {
 .track-name-scroll .marquee-text,
 .track-artist-scroll .marquee-text {
   display: inline-block;
-  animation: marquee-scroll 8s linear infinite;
+  animation: marquee-scroll 15s linear infinite;
   padding-right: 40px;
 }
 
@@ -8290,7 +8290,7 @@ select {
   border: 2px solid rgba(0, 0, 0, 0.1);
   border-top-color: #000;
   border-radius: 50%;
-  animation: aura-spin 1.8s linear infinite;
+  animation: aura-spin 1.4s linear infinite;
 }
 
 @keyframes aura-spin {

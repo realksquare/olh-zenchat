@@ -279,7 +279,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
         }
         const interval = setInterval(() => {
             setShowMusicInfo(prev => !prev);
-        }, 5000);
+        }, 7500);
         return () => clearInterval(interval);
     }, [isOpen, currentIndex, displayMusic]);
 
@@ -685,7 +685,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                 <div className="aura-viewer-media">
                     {isDecrypting ? (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', gap: '12px', color: '#cbd5e1' }}>
-                            <div className="aura-mini-spinner" style={{ width: '28px', height: '28px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--color-primary, #3b82f6)', borderRadius: '50%', animation: 'aura-spin 1.8s linear infinite' }} />
+                            <div className="aura-mini-spinner" style={{ width: '28px', height: '28px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--color-primary, #3b82f6)', borderRadius: '50%', animation: 'aura-spin 1s linear infinite' }} />
                             <span style={{ fontSize: '0.8rem', fontWeight: '500', color: '#94a3b8' }}>Decrypting secure #moment...</span>
                         </div>
                     ) : decryptionError ? (
@@ -858,7 +858,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                         style={{ marginRight: '6px' }}
                                     >
                                         {isSendingReply ? (
-                                            <div className="aura-mini-spinner" style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopcolor: 'var(--color-text, #fff)', borderRadius: '50%', animation: 'aura-spin 1.8s linear infinite' }} />
+                                            <div className="aura-mini-spinner" style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopcolor: 'var(--color-text, #fff)', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
                                         ) : (
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                                 <line x1="22" y1="2" x2="11" y2="13" />
@@ -877,7 +877,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                         title={reshared ? "Already reshared" : "Reshare to your feed"}
                                     >
                                         {isResharing ? (
-                                            <div className="aura-mini-spinner" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopcolor: 'var(--color-text, #fff)', borderRadius: '50%', animation: 'aura-spin 1.8s linear infinite' }} />
+                                            <div className="aura-mini-spinner" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopcolor: 'var(--color-text, #fff)', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
                                         ) : (
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <polyline points="17 1 21 5 17 9" />
