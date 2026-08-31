@@ -1242,31 +1242,30 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                 </button>
                             )}
 
-                            {isMe && canDelete && !isZenMode && (
-                                <>
-                                    {isWithinEditWindow && message.type !== "voice" && (
-                                        <button className="bottom-sheet-item" onClick={() => { setMobileSheet(false); onEdit(message); }}
-                                            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', borderRadius: 0, color: '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
-                                            onTouchStart={e => e.currentTarget.style.background = 'var(--color-border, rgba(255, 255, 255, 0.08))'}
-                                            onTouchEnd={e => e.currentTarget.style.background = 'transparent'}
-                                        >
-                                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                            </svg>
-                                            <span>Edit</span>
-                                        </button>
-                                    )}
-                                    <button className="bottom-sheet-item" onClick={() => { setMobileSheet(false); onDelete(message); }}
-                                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', borderRadius: 0, color: '#f85149', fontSize: '0.93rem', fontWeight: 600, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
-                                        onTouchStart={e => e.currentTarget.style.background = 'rgba(248,81,73,0.07)'}
-                                        onTouchEnd={e => e.currentTarget.style.background = 'transparent'}
-                                    >
-                                        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
-                                        </svg>
-                                        <span>Delete</span>
-                                    </button>
-                                </>
+                            {isMe && isWithinEditWindow && message.type !== "voice" && !isZenMode && (
+                                <button className="bottom-sheet-item" onClick={() => { setMobileSheet(false); onEdit(message); }}
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', borderRadius: 0, color: '#c9d1d9', fontSize: '0.93rem', fontWeight: 500, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
+                                    onTouchStart={e => e.currentTarget.style.background = 'var(--color-border, rgba(255, 255, 255, 0.08))'}
+                                    onTouchEnd={e => e.currentTarget.style.background = 'transparent'}
+                                >
+                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                    </svg>
+                                    <span>Edit</span>
+                                </button>
+                            )}
+
+                            {canDelete && !isZenMode && (
+                                <button className="bottom-sheet-item" onClick={() => { setMobileSheet(false); onDelete(message); }}
+                                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 20px', background: 'transparent', border: 'none', borderRadius: 0, color: '#f85149', fontSize: '0.93rem', fontWeight: 600, textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}
+                                    onTouchStart={e => e.currentTarget.style.background = 'rgba(248,81,73,0.07)'}
+                                    onTouchEnd={e => e.currentTarget.style.background = 'transparent'}
+                                >
+                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
+                                    </svg>
+                                    <span>Delete</span>
+                                </button>
                             )}
                         </div>
                     </div>
@@ -1333,16 +1332,16 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                             {message.starredBy?.includes(user?._id) ? "Unfavorite" : "Favorite"}
                         </button>
                     )}
-                    {isMe && canDelete && !isZenMode && (
+                    {isMe && isWithinEditWindow && message.type !== "voice" && !isZenMode && (
+                        <button onClick={() => { setDesktopMenu(null); onEdit(message); }} style={desktopMenuItemStyle}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                            Edit
+                        </button>
+                    )}
+                    {canDelete && !isZenMode && (
                         <>
-                            {isWithinEditWindow && message.type !== "voice" && (
-                                <button onClick={() => { setDesktopMenu(null); onEdit(message); }} style={desktopMenuItemStyle}>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                    </svg>
-                                    Edit
-                                </button>
-                            )}
                             <div style={{ height: '1px', background: 'var(--color-overlay, rgba(255, 255, 255, 0.07))', margin: '4px 8px' }} />
                             <button onClick={() => { setDesktopMenu(null); onDelete(message); }} style={{ ...desktopMenuItemStyle, color: '#f85149' }}>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>

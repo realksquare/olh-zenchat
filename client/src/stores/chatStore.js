@@ -614,8 +614,8 @@ export const useChatStore = create(
                     const updatedMessages = (state.messages[chatId] || []).map((msg) => {
                         const mId = (msg._id || msg.cid)?.toString();
                         if (mId !== messageId?.toString()) return msg;
-                        // For 'delete for self' or local/ghost messages: fully remove
-                        if (deleteFor === "self" || msg.status === 'sending' || !msg._id) {
+                        // For 'delete for self' or 'me' or local/ghost messages: fully remove
+                        if (deleteFor === "self" || deleteFor === "me" || msg.status === 'sending' || !msg._id) {
                             if (msg._id) db.messages.delete(msg._id).catch(() => {});
                             return null;
                         }

@@ -1,10 +1,39 @@
 let sharedCtx = null;
+let hasUserGesture = false;
 
-export function getAudioContext() {
+if (typeof window !== "undefined") {
+    const unlockAudio = () => {
+        hasUserGesture = true;
+        if (sharedCtx && sharedCtx.state === "suspended") {
+            sharedCtx.resume().catch(() => {});
+        }
+        window.removeEventListener("pointerdown", unlockAudio);
+        window.removeEventListener("keydown", unlockAudio);
+        window.removeEventListener("touchstart", unlockAudio);
+        window.removeEventListener("click", unlockAudio);
+    };
+    window.addEventListener("pointerdown", unlockAudio, { once: true, passive: true });
+    window.addEventListener("keydown", unlockAudio, { once: true, passive: true });
+    window.addEventListener("touchstart", unlockAudio, { once: true, passive: true });
+    window.addEventListener("click", unlockAudio, { once: true, passive: true });
+}
+
+export function getAudioContext(force = false) {
+    if (typeof window === "undefined") return null;
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return null;
+
     if (!sharedCtx || sharedCtx.state === "closed") {
-        sharedCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (!hasUserGesture && !force) {
+            return null;
+        }
+        try {
+            sharedCtx = new AudioContextClass();
+        } catch (e) {
+            return null;
+        }
     }
-    if (sharedCtx.state === "suspended") {
+    if (sharedCtx && sharedCtx.state === "suspended" && (hasUserGesture || force)) {
         sharedCtx.resume().catch(() => {});
     }
     return sharedCtx;
@@ -13,6 +42,7 @@ export function getAudioContext() {
 function playTone({ startFreq, endFreq, duration = 0.12, type = "sine", volume = 0.15 }) {
     try {
         const ctx = getAudioContext();
+        if (!ctx || ctx.state === "suspended") return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
 
@@ -40,6 +70,7 @@ export const playSendSound = () => {
 export const playReceiveSound = () => {
     try {
         const ctx = getAudioContext();
+        if (!ctx || ctx.state === "suspended") return;
         const osc1 = ctx.createOscillator();
         const gain1 = ctx.createGain();
         osc1.connect(gain1);
@@ -67,7 +98,8 @@ export const playReceiveSound = () => {
 };
 
 export const primeAudioContext = () => {
-    try { getAudioContext(); } catch (e) {}
+    hasUserGesture = true;
+    try { getAudioContext(true); } catch (e) {}
 };
 
 let currentIntroNodes = [];

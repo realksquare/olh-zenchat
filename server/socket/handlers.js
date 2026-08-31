@@ -853,9 +853,9 @@ const registerSocketHandlers = (io) => {
                     socket.emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "self" });
                     return;
                 }
-                if (message.senderId.toString() !== userId) return;
-
                 if (deleteFor === "everyone") {
+                    if (message.senderId.toString() !== userId) return;
+
                     // Soft tombstone: preserve the record so it survives refresh
                     await Message.findByIdAndUpdate(messageId, {
                         deletedForEveryone: true,
@@ -865,15 +865,17 @@ const registerSocketHandlers = (io) => {
                     io.to(chatId).emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "everyone" });
 
                     const chat = await Chat.findById(chatId);
-                    chat.participants.filter(p => p.toString() !== userId).forEach(participantId => {
-                        const userData = onlineUsers.get(participantId.toString());
-                        if (userData && userData.sockets) {
-                            userData.sockets.forEach((sData, socketId) => {
-                                const room = io.sockets.adapter.rooms.get(chatId);
-                                if (!room?.has(socketId)) io.to(socketId).emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "everyone" });
-                            });
-                        }
-                    });
+                    if (chat?.participants) {
+                        chat.participants.filter(p => p.toString() !== userId).forEach(participantId => {
+                            const userData = onlineUsers.get(participantId.toString());
+                            if (userData && userData.sockets) {
+                                userData.sockets.forEach((sData, socketId) => {
+                                    const room = io.sockets.adapter.rooms.get(chatId);
+                                    if (!room?.has(socketId)) io.to(socketId).emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "everyone" });
+                                });
+                            }
+                        });
+                    }
 
                     const myData = onlineUsers.get(userId);
                     if (myData && myData.sockets) {
@@ -882,8 +884,16 @@ const registerSocketHandlers = (io) => {
                         });
                     }
                 } else {
+                    // Delete for self/me: any participant can delete for themselves
                     await Message.findByIdAndUpdate(messageId, { $addToSet: { deletedFor: userId } });
                     socket.emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "self" });
+
+                    const myData = onlineUsers.get(userId);
+                    if (myData && myData.sockets) {
+                        myData.sockets.forEach((sData, socketId) => {
+                            if (socketId !== socket.id) io.to(socketId).emit("message_deleted", { messageId: messageId.toString(), chatId: chatId.toString(), deleteFor: "self" });
+                        });
+                    }
                 }
             } catch (err) {
                 socket.emit("message_error", { error: "Failed to delete message" });

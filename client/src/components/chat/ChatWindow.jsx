@@ -1738,7 +1738,7 @@ const ChatWindow = ({ onBack }) => {
                             <button className="delete-modal-btn self" onClick={() => handleDeleteConfirm("self")}>
                                 Delete for me
                             </button>
-                            {!isDeleted && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked && (
+                            {(deletingMessage?.senderId?._id === user?._id || deletingMessage?.senderId === user?._id) && !isDeleted && !activeChat?.blockStatus?.iBlocked && !activeChat?.blockStatus?.theyBlocked && (
                                 <button className="delete-modal-btn everyone" onClick={() => handleDeleteConfirm("everyone")}>
                                     Delete for everyone
                                 </button>
@@ -1921,8 +1921,8 @@ const ChatWindow = ({ onBack }) => {
                                     onClick={() => {
                                         selectedMsgs.forEach(msg => {
                                             const msgId = msg._id || msg.cid;
-                                            useChatStore.getState().deleteMessage(activeChat._id, msgId, 'me');
-                                            if (msg._id) deleteMessage(activeChat._id, msgId, 'me');
+                                            useChatStore.getState().deleteMessage(activeChat._id, msgId, 'self');
+                                            if (msg._id) deleteMessage(activeChat._id, msgId, 'self');
                                         });
                                         setShowForwardModal(false);
                                         handleExitMultiSelect();
