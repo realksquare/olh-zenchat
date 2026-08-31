@@ -93,8 +93,13 @@ export const useAuthStore = create(
             return { success: true };
         } catch (err) {
             const message = err.response?.data?.message || "Login failed";
-            set({ error: message, isLoading: false });
-            return { success: false, message };
+            const isSuspended = err.response?.data?.isSuspended || false;
+            const suspendedUser = isSuspended ? {
+                username: err.response?.data?.username || "",
+                email: err.response?.data?.email || ""
+            } : null;
+            set({ error: message, isLoading: false, suspendedUser });
+            return { success: false, message, isSuspended, suspendedUser };
         }
     },
 

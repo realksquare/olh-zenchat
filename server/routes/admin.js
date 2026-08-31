@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Message = require("../models/Message");
 const authMiddleware = require("../middleware/auth");
 const { sendPushNotification } = require("../utils/firebase");
+const { sendAccountSuspensionEmail, sendAccountUnsuspendedEmail } = require("../utils/mailService");
 
 const router = express.Router();
 
@@ -107,6 +108,17 @@ router.post("/suspend/:userId", authMiddleware, adminCheck, async (req, res) => 
         if (targetUser.isSuspended) {
             const io = req.app.get("io");
             io.to(targetUser._id.toString()).emit("force_logout", { reason: "account_suspended" });
+            if (targetUser.email) {
+                sendAccountSuspensionEmail(targetUser.email, targetUser.username).catch(err =>
+                    console.error("[Admin] Failed to send suspension email:", err)
+                );
+            }
+        } else {
+            if (targetUser.email) {
+                sendAccountUnsuspendedEmail(targetUser.email, targetUser.username).catch(err =>
+                    console.error("[Admin] Failed to send unsuspension email:", err)
+                );
+            }
         }
 
         res.json({ user: { ...targetUser.toPublicJSON(), isSuspended: targetUser.isSuspended } });

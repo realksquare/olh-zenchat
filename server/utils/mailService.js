@@ -283,6 +283,8 @@ module.exports = {
     sendZenVoicePseudonymResult,
     sendZenVoiceDomainResult,
     sendZenVoiceSuspensionEmail,
+    sendAccountSuspensionEmail,
+    sendAccountUnsuspendedEmail,
 };
 
 async function _sendViaBrevo(to, subject, html) {
@@ -359,17 +361,119 @@ async function sendZenVoiceDomainResult(email, username, domain, approved, admin
     return _sendViaBrevo(email, subject, html);
 }
 
-async function sendZenVoiceSuspensionEmail(email, username, pseudonym) {
-    console.log(`[ZenVoice Suspension] ${username} (${email}) — Pseudonym: ${pseudonym}`);
-    const subject = "#ZenVoice: Account Suspended";
-    const html = `${ZV_HEADER}
-        <h2 style="color:#f1f5f9;font-size:18px;font-weight:600;margin:0 0 12px;">Hello ${username},</h2>
-        <p style="color:#cbd5e1;font-size:15px;line-height:1.6;margin-bottom:16px;">
-            Your ZenChat account has been suspended because your #ZenVoice pseudonym (<strong style="color:#ef4444;">${pseudonym}</strong>) has accumulated multiple formal community reports.
-        </p>
-        <p style="color:#cbd5e1;font-size:15px;line-height:1.6;margin-bottom:16px;">
-            To appeal this suspension, you can reply to this email with your explanation, which will be reviewed by our administration team.
-        </p>
-    ${ZV_FOOTER}`;
-    return _sendViaBrevo(email, subject, html);
+async function sendAccountSuspensionEmail(email, username) {
+    console.log(`[Account Suspension] ${username} (${email}) — Account Suspended`);
+    const subject = "ZenChat: Account Suspended";
+    const supportEmail = "onlinelearninghubteam@gmail.com";
+    const mailtoLink = `mailto:${supportEmail}?subject=${encodeURIComponent("ZenChat Account Suspension Help - " + username)}&body=${encodeURIComponent("Hey,\n\nMy ZenChat account (@" + username + ") has been suspended. Could you please look into this and help me get it sorted?\n\nThanks,\n" + username)}`;
+    const html = `
+        <div style="background-color: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px 20px; text-align: center; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+            <div style="margin-bottom: 24px;">
+                <h1 style="color: #38bdf8; font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">ZenChat</h1>
+                <p style="color: #94a3b8; font-size: 14px; margin-top: 4px;">Account Notification</p>
+            </div>
+            <div style="background-color: #1e293b; padding: 32px; border-radius: 12px; text-align: left; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+                <h2 style="color: #f1f5f9; font-size: 20px; font-weight: 600; margin-top: 0; margin-bottom: 16px;">Hello ${username},</h2>
+                <p style="color: #cbd5e1; font-size: 15px; line-height: 1.6; margin-bottom: 20px;">
+                    Your ZenChat account is suspended due to long-term inactivity.
+                </p>
+                <p style="color: #cbd5e1; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+                    Send an email to <a href="${mailtoLink}" style="color: #38bdf8; font-weight: 600; text-decoration: underline;">onlinelearninghubteam@gmail.com</a> for help.
+                </p>
+                <div style="text-align: center; margin: 28px 0 12px;">
+                    <a href="${mailtoLink}" style="display: inline-block; background: #ef4444; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px;">Contact Support</a>
+                </div>
+            </div>
+            <div style="margin-top: 24px; color: #64748b; font-size: 12px;">
+                &copy; ${new Date().getFullYear()} ZenChat. All rights reserved.
+            </div>
+        </div>
+    `;
+    return _sendGeneralEmail(email, subject, html);
+}
+
+async function sendAccountUnsuspendedEmail(email, username) {
+    console.log(`[Account Unsuspension] ${username} (${email}) — Account Unsuspended`);
+    const subject = "ZenChat: Account Unsuspended";
+    const clientUrl = (process.env.CLIENT_URL || "https://olh-zenchat.vercel.app").replace(/\/$/, "");
+    const loginUrl = `${clientUrl}/login`;
+    const html = `
+        <div style="background-color: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px 20px; text-align: center; border-radius: 8px; max-width: 600px; margin: 0 auto;">
+            <div style="margin-bottom: 24px;">
+                <h1 style="color: #38bdf8; font-size: 28px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">ZenChat</h1>
+                <p style="color: #94a3b8; font-size: 14px; margin-top: 4px;">Account Notification</p>
+            </div>
+            <div style="background-color: #1e293b; padding: 32px; border-radius: 12px; text-align: left; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+                <h2 style="color: #f1f5f9; font-size: 20px; font-weight: 600; margin-top: 0; margin-bottom: 16px;">Hello ${username},</h2>
+                <p style="color: #cbd5e1; font-size: 15px; line-height: 1.6; margin-bottom: 20px;">
+                    Your ZenChat account is unsuspended by the administrator.
+                </p>
+                <p style="color: #cbd5e1; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+                    Use this <a href="${loginUrl}" style="color: #38bdf8; font-weight: 600; text-decoration: underline;">link</a> to login.
+                </p>
+                <div style="text-align: center; margin: 28px 0 12px;">
+                    <a href="${loginUrl}" style="display: inline-block; background: #10b981; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 14px;">Sign In to ZenChat</a>
+                </div>
+            </div>
+            <div style="margin-top: 24px; color: #64748b; font-size: 12px;">
+                &copy; ${new Date().getFullYear()} ZenChat. All rights reserved.
+            </div>
+        </div>
+    `;
+    return _sendGeneralEmail(email, subject, html);
+}
+
+async function _sendGeneralEmail(to, subject, html) {
+    const brevoApiKey = (process.env.BREVO_API_KEY || "").trim();
+    const resendApiKey = (process.env.RESEND_API_KEY || "").trim();
+    const transporter = getTransporter();
+    const from = process.env.SMTP_FROM || '"ZenChat" <onlinelearninghubteam@gmail.com>';
+
+    // 1. Brevo
+    if (brevoApiKey) {
+        try {
+            const senderEmail = process.env.SMTP_FROM ? process.env.SMTP_FROM : "onlinelearninghubteam@gmail.com";
+            const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+                method: "POST",
+                headers: { "accept": "application/json", "api-key": brevoApiKey, "content-type": "application/json" },
+                body: JSON.stringify({ sender: { name: "ZenChat", email: senderEmail }, to: [{ email: to }], subject, htmlContent: html })
+            });
+            if (response.ok) {
+                console.log(`[Brevo] Dispatched "${subject}" to ${to}`);
+                return true;
+            }
+        } catch (err) {
+            console.error("[Brevo] Error dispatching email:", err);
+        }
+    }
+
+    // 2. Resend
+    if (resendApiKey) {
+        try {
+            const fromEmail = process.env.SMTP_FROM ? process.env.SMTP_FROM : "onboarding@resend.dev";
+            const response = await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${resendApiKey}` },
+                body: JSON.stringify({ from: fromEmail, to, subject, html })
+            });
+            if (response.ok) {
+                console.log(`[Resend] Dispatched "${subject}" to ${to}`);
+                return true;
+            }
+        } catch (err) {
+            console.error("[Resend] Error dispatching email:", err);
+        }
+    }
+
+    // 3. SMTP Transporter
+    if (transporter) {
+        try {
+            await transporter.sendMail({ from, to, subject, html });
+            console.log(`[SMTP] Dispatched "${subject}" to ${to}`);
+            return true;
+        } catch (err) {
+            console.error("[SMTP] Error dispatching email:", err);
+        }
+    }
+    return false;
 }

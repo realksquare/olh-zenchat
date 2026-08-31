@@ -326,7 +326,9 @@ router.post(
             if (user.isSuspended) {
                 return res.status(403).json({ 
                     message: "Account Suspended", 
-                    isSuspended: true 
+                    isSuspended: true,
+                    username: user.username,
+                    email: user.email
                 });
             }
 

@@ -39,6 +39,9 @@ const LoginPage = () => {
     const [resendCooldown, setResendCooldown] = useState(0);
     const [isLocked, setIsLocked] = useState(false);
 
+    const [showSuspendedModal, setShowSuspendedModal] = useState(false);
+    const [suspendedUsername, setSuspendedUsername] = useState("");
+
     const otpInputRef = useRef(null);
     const recoveryInputRef = useRef(null);
 
@@ -112,6 +115,11 @@ const LoginPage = () => {
             } else {
                 setSuccessMessage("Credentials verified! Please complete 2FA.");
             }
+        } else if (result.isSuspended) {
+            if (result.suspendedUser?.username) {
+                setSuspendedUsername(result.suspendedUser.username);
+            }
+            setShowSuspendedModal(true);
         }
     };
 
@@ -404,10 +412,37 @@ const LoginPage = () => {
                         {error === "Account Suspended" ? (
                             <>
                                 <strong>Account Suspended</strong>
-                                <p style={{ fontSize: '0.85rem', marginTop: '4px' }}>
-                                    Your account has been suspended.
-                                    Contact admin for further details.
+                                <p style={{ fontSize: '0.85rem', marginTop: '4px', marginBottom: '12px' }}>
+                                    Your ZenChat account is currently suspended.
                                 </p>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowSuspendedModal(true)}
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: "6px",
+                                        background: "rgba(245, 158, 11, 0.2)",
+                                        border: "1px solid rgba(245, 158, 11, 0.4)",
+                                        color: "#f59e0b",
+                                        padding: "7px 14px",
+                                        borderRadius: "8px",
+                                        fontSize: "0.82rem",
+                                        fontWeight: 600,
+                                        cursor: "pointer",
+                                        transition: "all 0.15s ease",
+                                        width: "100%"
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.background = "rgba(245, 158, 11, 0.3)"}
+                                    onMouseLeave={(e) => e.currentTarget.style.background = "rgba(245, 158, 11, 0.2)"}
+                                >
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                        <polyline points="22,6 12,13 2,6" />
+                                    </svg>
+                                    Contact Admin
+                                </button>
                             </>
                         ) : error}
                     </div>
@@ -485,6 +520,133 @@ const LoginPage = () => {
                     <Link to="/register">Create one!</Link>
                 </p>
             </div>
+
+            {showSuspendedModal && (
+                <div
+                    className="modal-overlay"
+                    onClick={() => setShowSuspendedModal(false)}
+                    style={{
+                        position: "fixed",
+                        inset: 0,
+                        backgroundColor: "rgba(0, 0, 0, 0.65)",
+                        backdropFilter: "blur(8px)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 10000,
+                        padding: "16px"
+                    }}
+                >
+                    <div
+                        className="modal-content"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            background: "rgba(15, 23, 42, 0.95)",
+                            border: "1px solid rgba(245, 158, 11, 0.3)",
+                            borderRadius: "16px",
+                            padding: "24px",
+                            maxWidth: "420px",
+                            width: "100%",
+                            boxShadow: "0 20px 40px rgba(0, 0, 0, 0.5)",
+                            textAlign: "center",
+                            animation: "scaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: "52px",
+                                height: "52px",
+                                borderRadius: "50%",
+                                background: "rgba(245, 158, 11, 0.15)",
+                                border: "1px solid rgba(245, 158, 11, 0.3)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                margin: "0 auto 16px",
+                                color: "#f59e0b"
+                            }}
+                        >
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
+                        </div>
+
+                        <h2 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#f8fafc", marginBottom: "8px" }}>
+                            Account Suspended
+                        </h2>
+
+                        <p style={{ fontSize: "0.88rem", color: "#cbd5e1", lineHeight: 1.6, marginBottom: "16px" }}>
+                            Your ZenChat account {suspendedUsername ? <strong style={{ color: "var(--color-primary)" }}>@{suspendedUsername}</strong> : "associated with this email"} is suspended due to long-term inactivity.
+                        </p>
+
+                        <p style={{ fontSize: "0.82rem", color: "#94a3b8", lineHeight: 1.5, marginBottom: "24px" }}>
+                            You can reach out directly to the administration team to request an unsuspension.
+                        </p>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                            {(() => {
+                                const uname = suspendedUsername || form.email.split("@")[0] || "user";
+                                const subject = encodeURIComponent(`ZenChat Account Unsuspension Request - ${uname}`);
+                                const body = encodeURIComponent(
+                                    `Hey admin,\n\nMy ZenChat account (@${uname}) is currently suspended. Could you please look into this and unsuspend my account?\n\nEmail: ${form.email}\nUsername: @${uname}\n\nThanks,\n${uname}`
+                                );
+                                const mailtoUrl = `mailto:onlinelearninghubteam@gmail.com?subject=${subject}&body=${body}`;
+
+                                return (
+                                    <a
+                                        href={mailtoUrl}
+                                        onClick={() => setShowSuspendedModal(false)}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: "8px",
+                                            background: "var(--color-primary)",
+                                            color: "#ffffff",
+                                            padding: "12px 20px",
+                                            borderRadius: "10px",
+                                            fontWeight: 600,
+                                            fontSize: "0.92rem",
+                                            textDecoration: "none",
+                                            transition: "opacity 0.2s ease"
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.opacity = "0.9"}
+                                        onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
+                                    >
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                            <polyline points="22,6 12,13 2,6" />
+                                        </svg>
+                                        Contact Admin
+                                    </a>
+                                );
+                            })()}
+
+                            <button
+                                type="button"
+                                onClick={() => setShowSuspendedModal(false)}
+                                style={{
+                                    background: "rgba(255, 255, 255, 0.06)",
+                                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                                    color: "#94a3b8",
+                                    padding: "10px 16px",
+                                    borderRadius: "10px",
+                                    fontWeight: 500,
+                                    fontSize: "0.88rem",
+                                    cursor: "pointer",
+                                    transition: "background 0.2s ease"
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)"}
+                                onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255, 255, 255, 0.06)"}
+                            >
+                                Dismiss
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
