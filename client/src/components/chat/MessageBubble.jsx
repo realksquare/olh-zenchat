@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, memo, useMemo, useContext } from "react";
+import { useState, useRef, useEffect, memo, useMemo, useContext } from "react";
 import { createPortal } from "react-dom";
 import { Trash2, Reply, X, Lock, Play, ExternalLink } from "lucide-react";
 import { useAuthStore } from "../../stores/authStore";
@@ -650,7 +650,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                                                alignItems: 'center',
                                                                justifyContent: 'center'
                                                            }}>
-                                                               <div className="loader-sm" style={{ width: '16px', height: '16px', border: '2px solid var(--color-border, rgba(255, 255, 255, 0.08))', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
+                                                               <div className="loader-sm" style={{ width: '16px', height: '16px', border: '2px solid var(--color-border, rgba(255, 255, 255, 0.08))', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'aura-spin 1.2s linear infinite' }} />
                                                            </div>
                                                            <div style={{ flex: 1, minWidth: 0 }}>
                                                                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1290,7 +1290,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                 <h3 className="download-modal-title">Downloading...</h3>
                                 <p className="download-modal-subtitle">Fetching file from server...</p>
                                 <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0' }}>
-                                    <div className="animate-spin" style={{ width: '28px', height: '28px', borderRadius: '50%', border: '3px solid var(--color-primary, #f59e0b)', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }}></div>
+                                    <div className="animate-spin" style={{ width: '28px', height: '28px', borderRadius: '50%', border: '3px solid var(--color-primary, #f59e0b)', borderTopColor: 'transparent', animation: 'spin 1.2s linear infinite' }}></div>
                                 </div>
                             </>
                         )}

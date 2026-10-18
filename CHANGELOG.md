@@ -9,6 +9,22 @@
 
 ---
 
+### [3629f28] - 2026-10-18 - `fix-site-wide-fast-spinner-animation-speeds`
+
+**Type:** Bugfix / UI Polish
+**Files affected:** `client/src/index.css`, `client/src/components/chat/MessageBubble.jsx`, `client/src/components/chat/VoiceMessageBubble.jsx`, `client/src/components/chat/MomentViewer.jsx`, `client/src/components/ui/InviteModal.jsx`, `client/src/components/ui/SharePulseModal.jsx`, `client/src/components/layout/NotificationPrompt.jsx`
+
+| Date & Day | Time (IST) | Change / Fix / Addition / Removal Done | Antigravity Version | Agent Model Name |
+| :--- | :--- | :--- | :--- | :--- |
+| 2026-10-18 (Sunday) | 07:25 PM | **Fix / Style:** Slowed down all site-wide fast loading spinners: `.loader-sm` 0.6s to 1.2s, `.aura-loader` 0.8s to 1.2s, `.ptr-arc-spin` 0.7s to 1.1s, and all inline `aura-spin 0.8s`/`spin 0.8-0.9s` in JSX files to 1.2s. | Antigravity 2.0 | Claude Sonnet |
+
+**Changes:**
+- Unified all loading spinner animation durations to a consistent 1.1s-1.2s range site-wide.
+- Fixed fast spinner durations in CSS classes (`.loader-sm`, `.aura-loader`, `.ptr-arc-spin`) in `index.css`.
+- Fixed inline `animation` style props in `MessageBubble.jsx`, `VoiceMessageBubble.jsx`, `MomentViewer.jsx`, `InviteModal.jsx`, `SharePulseModal.jsx`, and `NotificationPrompt.jsx`.
+
+---
+
 ### [eafde74] - 2026-10-18 - `fix-zen-oled-adaptive-calm-border-glow-for-media-messages`
 
 **Type:** Bugfix / UI Polish

@@ -858,7 +858,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                         style={{ marginRight: '6px' }}
                                     >
                                         {isSendingReply ? (
-                                            <div className="aura-mini-spinner" style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopcolor: 'var(--color-text, #fff)', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
+                                            <div className="aura-mini-spinner" style={{ width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopcolor: 'var(--color-text, #fff)', borderRadius: '50%', animation: 'aura-spin 1.2s linear infinite' }} />
                                         ) : (
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                                 <line x1="22" y1="2" x2="11" y2="13" />
@@ -877,7 +877,7 @@ const MomentViewer = ({ moments: initialMoments, isOpen, onClose }) => {
                                         title={reshared ? "Already reshared" : "Reshare to your feed"}
                                     >
                                         {isResharing ? (
-                                            <div className="aura-mini-spinner" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopcolor: 'var(--color-text, #fff)', borderRadius: '50%', animation: 'aura-spin 0.8s linear infinite' }} />
+                                            <div className="aura-mini-spinner" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTopcolor: 'var(--color-text, #fff)', borderRadius: '50%', animation: 'aura-spin 1.2s linear infinite' }} />
                                         ) : (
                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                 <polyline points="17 1 21 5 17 9" />
