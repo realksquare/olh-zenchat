@@ -9,6 +9,22 @@
 
 ---
 
+### [eafde74] - 2026-10-18 - `fix-zen-oled-adaptive-calm-border-glow-for-media-messages`
+
+**Type:** Bugfix / UI Polish
+**Files affected:** `client/src/index.css`
+
+| Date & Day | Time (IST) | Change / Fix / Addition / Removal Done | Antigravity Version | Agent Model Name |
+| :--- | :--- | :--- | :--- | :--- |
+| 2026-10-18 (Sunday) | 02:25 PM | **Fix / Style:** Implemented adaptive calm border glow: 60s for standard text and 90s for large media/image bubbles on desktop (14s for media on mobile) to eliminate fast perimeter whipping. | Antigravity 2.0 | Gemini 3.8 Flash |
+
+**Changes:**
+- Decoupled media message bubbles (`.message-bubble.mine:has(.message-media-wrap)`) from regular text bubbles, giving them a 90s rotation duration to prevent high linear velocity on large 1000px+ media elements.
+- Slowed standard message bubbles on desktop to a calm 60s rotation.
+- Added proportionate mobile media bubble duration (14s) while maintaining snappy 6s for compact text bubbles.
+
+---
+
 ### [4b54538] - 2026-10-18 - `fix-zen-oled-responsive-border-beam-animation-speeds`
 
 **Type:** Bugfix / UI Style
