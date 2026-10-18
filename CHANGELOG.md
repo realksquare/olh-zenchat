@@ -9,6 +9,21 @@
 
 ---
 
+### [4b54538] - 2026-10-18 - `fix-zen-oled-responsive-border-beam-animation-speeds`
+
+**Type:** Bugfix / UI Style
+**Files affected:** `client/src/index.css`
+
+| Date & Day | Time (IST) | Change / Fix / Addition / Removal Done | Antigravity Version | Agent Model Name |
+| :--- | :--- | :--- | :--- | :--- |
+| 2026-10-18 (Sunday) | 01:34 PM | **Fix / Style:** Tuned `#ZenOLED` message bubble status border beam animation speed - slowed down on desktop to 28s (calm and subtle) and sped up on mobile to 6s (responsive and visible). | Antigravity 2.0 | Gemini 3.8 Flash |
+
+**Changes:**
+- Adjusted `.message-bubble.mine::before` border animation on desktop from 18s to 28s to eliminate visually distracting high-speed rotation on wide screens.
+- Adjusted mobile breakpoint (`max-width: 768px`) animation duration from 10s to 6s so the glowing border beam travels around smaller phone bubbles at an engaging, responsive pace.
+
+---
+
 ### [86a1e3b] - 2026-10-18 - `refactor-chunk-chat-components-and-cleanup-redundant-scripts`
 
 **Type:** Refactor / Cleanup / Maintenance

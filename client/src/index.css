@@ -173,12 +173,12 @@
     rgba(148, 163, 184, 0.2) 97%,
     transparent 100%
   );
-  animation: spin-border 18s linear infinite;
+  animation: spin-border 28s linear infinite;
 }
 
 @media (max-width: 768px) {
   [data-theme="zen_oled"] .message-bubble.mine::before {
-    animation: spin-border 10s linear infinite;
+    animation: spin-border 6s linear infinite;
   }
 }
 
