@@ -20,6 +20,7 @@ const ZenVaultModal = lazy(() => import("../ui/ZenVaultModal"));
 const YourTimeDashboard = lazy(() => import("../ui/YourTimeDashboard"));
 const ThemeSwitcherModal = lazy(() => import("../ui/ThemeSwitcherModal"));
 const ZenVoicePortal = lazy(() => import("../zenvoice/ZenVoicePortal"));
+const BurnerBridgeModal = lazy(() => import("../ui/BurnerBridgeModal"));
 import { usePulseStore } from "../../stores/pulseStore";
 import { useMomentStore } from "../../stores/momentStore";
 import { VerifiedTick, AdminIcon, HelpIcon, InviteIcon } from "../ui/Icons";
@@ -65,6 +66,7 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
     const [isVaultOpen, setIsVaultOpen] = useState(false);
     const [isYourTimeOpen, setIsYourTimeOpen] = useState(false);
     const [isThemeOpen, setIsThemeOpen] = useState(false);
+    const [isBurnerOpen, setIsBurnerOpen] = useState(false);
     const [showMobileMenu, setShowMobileMenu] = useState(false);
     const [zenVoiceToast, setZenVoiceToast] = useState(false);
     const zenVoiceToastTimer = useRef(null);
@@ -107,12 +109,14 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
         const openMenu = () => setShowMobileMenu(true);
         const confirmLogout = () => setShowLogoutConfirm(true);
         const openTimeDashboard = () => setIsYourTimeOpen(true);
+        const openBurner = () => setIsBurnerOpen(true);
 
         window.addEventListener("open-profile-modal", openProfile);
         window.addEventListener("open-theme-modal", openTheme);
         window.addEventListener("open-mobile-menu", openMenu);
         window.addEventListener("confirm-logout", confirmLogout);
         window.addEventListener("open-time-dashboard", openTimeDashboard);
+        window.addEventListener("open-burner-modal", openBurner);
 
         return () => {
             window.removeEventListener("pwa-prompt-available", handlePrompt);
@@ -121,6 +125,7 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
             window.removeEventListener("open-mobile-menu", openMenu);
             window.removeEventListener("confirm-logout", confirmLogout);
             window.removeEventListener("open-time-dashboard", openTimeDashboard);
+            window.removeEventListener("open-burner-modal", openBurner);
         };
     }, []);
 
@@ -751,10 +756,16 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
 
             {(user?.role === "master_admin" || user?.role === "co_admin") ? (
                 <div className="sidebar-footer-container">
-                    <button className="sidebar-admin-btn" style={{ margin: 0, background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.2)' }} onClick={handleInviteClick}>
-                        <InviteIcon size={18} />
-                        Invite People
-                    </button>
+                    <div className="sidebar-footer-dual" style={{ margin: 0, gap: '8px' }}>
+                        <button className="sidebar-admin-btn" style={{ flex: 1, margin: 0, background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.2)' }} onClick={handleInviteClick}>
+                            <InviteIcon size={16} />
+                            Invite
+                        </button>
+                        <button className="sidebar-admin-btn" style={{ flex: 1, margin: 0, background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', border: '1px solid rgba(249, 115, 22, 0.2)' }} onClick={() => setIsBurnerOpen(true)}>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" /></svg>
+                            Burner
+                        </button>
+                    </div>
                     <div className="sidebar-footer-dual" style={{ margin: 0 }}>
                         <button className="footer-btn admin-btn" onClick={() => setIsAdminOpen(true)}>
                             <AdminIcon size={16} />
@@ -767,13 +778,17 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
                     </div>
                 </div>
             ) : (
-                <div className="sidebar-footer-container sidebar-footer-container-dual">
-                    <button className="footer-btn" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.2)' }} onClick={handleInviteClick}>
-                        <InviteIcon size={16} />
+                <div className="sidebar-footer-container sidebar-footer-container-dual" style={{ gap: '6px' }}>
+                    <button className="footer-btn" style={{ flex: 1, background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59,130,246,0.2)' }} onClick={handleInviteClick}>
+                        <InviteIcon size={15} />
                         Invite
                     </button>
-                    <button className="footer-btn faq-btn" onClick={() => setIsFAQOpen(true)}>
-                        <HelpIcon size={16} />
+                    <button className="footer-btn" style={{ flex: 1, background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', border: '1px solid rgba(249, 115, 22, 0.2)' }} onClick={() => setIsBurnerOpen(true)}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" /></svg>
+                        Burner
+                    </button>
+                    <button className="footer-btn faq-btn" style={{ flex: 1 }} onClick={() => setIsFAQOpen(true)}>
+                        <HelpIcon size={15} />
                         FAQ
                     </button>
                 </div>
@@ -816,6 +831,12 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
                         }}
                     />
                 )}
+                {isBurnerOpen && (
+                    <BurnerBridgeModal
+                        isOpen={isBurnerOpen}
+                        onClose={() => setIsBurnerOpen(false)}
+                    />
+                )}
             </Suspense>
 
             {showMobileMenu && createPortal(
@@ -851,6 +872,13 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
                             <button className="mobile-menu-btn" onClick={() => { setShowMobileMenu(false); setIsVaultOpen(true); }}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
                                 <span>ZenVault Local Safe</span>
+                            </button>
+                            <div className="mobile-menu-divider" />
+                            <button className="mobile-menu-btn" onClick={() => { setShowMobileMenu(false); setIsBurnerOpen(true); }}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+                                </svg>
+                                <span>Burner Bridge (24h Chat)</span>
                             </button>
                             <div className="mobile-menu-divider" />
                              <div

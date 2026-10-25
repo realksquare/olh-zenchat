@@ -9,6 +9,26 @@
 
 ---
 
+### [cf5de0c] - 2026-10-25 - `feat-24h-ephemeral-burner-bridge-links`
+
+**Type:** Feature / Ephemeral E2EE Sessions
+**Files affected:** `server/models/BurnerBridge.js`, `server/models/BurnerMessage.js`, `server/routes/burner.js`, `server/socket/burnerHandlers.js`, `server/index.js`, `client/src/utils/burnerCrypto.js`, `client/src/components/ui/BurnerBridgeModal.jsx`, `client/src/pages/BurnerChatPage.jsx`, `client/src/components/chat/Sidebar.jsx`, `client/src/App.jsx`, `client/src/index.css`
+
+| Date & Day | Time (IST) | Change / Fix / Addition / Removal Done | Antigravity Version | Agent Model Name |
+| :--- | :--- | :--- | :--- | :--- |
+| 2026-10-25 (Sunday) | 08:05 PM | **Feature:** Implemented 24-Hour Ephemeral Burner Bridge Links with Zero-Knowledge client-side AES-256-GCM encryption, zero-login guest chat at `/burner/:token#key`, real-time Socket.IO room messaging, MongoDB TTL auto-purge, and instant self-destruct incineration. | Antigravity 2.0 | Gemini 3.8 Flash |
+
+**Changes:**
+- Created `BurnerBridge` and `BurnerMessage` Mongoose models with automated MongoDB TTL index expiration.
+- Built `/api/burner` REST endpoints (`create`, `preview`, `join`, `messages`, `burn`, `my-bridges`) with guest JWT issuance and creator authorization.
+- Added `/burner` Socket.IO namespace supporting real-time end-to-end messaging, live typing status, peer join announcements, and instant broadcast incineration.
+- Implemented `burnerCrypto.js` zero-knowledge Web Crypto AES-256-GCM symmetric encryption: keys are stored in the URL `#hash` fragment and never transmitted to the server.
+- Built `BurnerBridgeModal.jsx` in the client with duration selector (1h, 8h, 24h), message limit controls, 1-tap link copying, and active bridge monitoring.
+- Built standalone zero-login `BurnerChatPage.jsx` at `/burner/:token` with live self-destruct countdown, real-time message stream, typing indicators, and confirmation-protected manual burn.
+- Integrated Burner Bridge entry points into `Sidebar.jsx` footer and mobile drawer menu, with code-splitting via `React.lazy` and `Suspense`.
+
+---
+
 ### [b6c0c7d] - 2026-10-25 - `feat-in-chat-search-and-bundle-code-splitting`
 
 **Type:** Feature / Performance Optimization

@@ -89,9 +89,11 @@ app.use("/api/analytics", apiLimiter, require("./routes/analytics"));
 app.use("/api/messages/bulk", apiLimiter, require("./routes/bulkMessage"));
 app.use("/api/user-media", apiLimiter, require("./routes/userMedia"));
 app.use("/api/zenvoice", apiLimiter, require("./routes/zenVoice"));
+app.use("/api/burner", apiLimiter, require("./routes/burner"));
 
 registerSocketHandlers(io);
 require("./socket/zenVoiceHandlers")(io);
+require("./socket/burnerHandlers")(io);
 
 const PORT = process.env.PORT || 5000;
 
