@@ -10042,3 +10042,169 @@ input, textarea {
   -ms-user-select: auto !important;
   user-select: auto !important;
 }
+
+/* ── In-Chat Message Search Bar ──────────────────────── */
+.in-chat-search-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--color-surface, #161b22);
+  border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  position: sticky;
+  top: 57px;
+  z-index: 45;
+  animation: search-bar-slide-down 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes search-bar-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.in-chat-search-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-surface-offset, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 8px);
+  padding: 5px 10px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.in-chat-search-input-wrap:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(61, 165, 217, 0.2);
+}
+
+.search-icon-muted {
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.45));
+  flex-shrink: 0;
+}
+
+.in-chat-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text, #fff);
+  font-size: 0.88rem;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.in-chat-search-input::placeholder {
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.4));
+}
+
+.in-chat-search-clear {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.45));
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.in-chat-search-clear:hover {
+  color: var(--color-text, #fff);
+}
+
+.in-chat-search-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.in-chat-search-counter {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.6));
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+.in-chat-search-nav-btn {
+  background: var(--color-surface-offset, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+  color: var(--color-text, #fff);
+  border-radius: var(--radius-sm, 6px);
+  padding: 5px 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.in-chat-search-nav-btn:hover:not(:disabled) {
+  background: rgba(61, 165, 217, 0.15);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.in-chat-search-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.in-chat-search-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted, rgba(255, 255, 255, 0.55));
+  cursor: pointer;
+  padding: 5px;
+  border-radius: var(--radius-sm, 6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.in-chat-search-close-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Highlight inside message bubble */
+mark.in-chat-search-highlight {
+  background: rgba(234, 179, 8, 0.38);
+  color: #fff;
+  padding: 1px 3px;
+  border-radius: 3px;
+  box-shadow: 0 0 6px rgba(234, 179, 8, 0.4);
+}
+
+/* Active targeted bubble pulse */
+.message-row.search-match-active-target .message-bubble {
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: 3px !important;
+  animation: search-target-pulse 1.8s ease-out;
+}
+
+@keyframes search-target-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(61, 165, 217, 0.8);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(61, 165, 217, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(61, 165, 217, 0);
+  }
+}

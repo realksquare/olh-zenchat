@@ -9,7 +9,7 @@ import DecryptedText from "./DecryptedText";
 import VoiceMessageBubble from "./VoiceMessageBubble";
 import VideoPlayer from "../ui/VideoPlayer";
 import { REACTIONS_MAP, getFileName, triggerDownload } from "./MessageBubbleUtils";
-const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick, canDelete = true, canReply = true, zenFadeClass = "", isSelected = false, isMultiSelectMode = false, onSelect }) => {
+const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete, onMediaClick, canDelete = true, canReply = true, zenFadeClass = "", isSelected = false, isMultiSelectMode = false, onSelect, searchQuery = "", isCurrentSearchMatch = false }) => {
     const user = useAuthStore((s) => s.user);
     const { toggleStarMessage, markViewOnceAsViewed } = useChatStore.getState();
     const isLowBandwidth = useChatStore((s) => s.isLowBandwidth);
@@ -398,7 +398,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
     return (
         <div
             id={`msg-${message._id}`}
-            className={`message-row ${isMe ? "mine" : "theirs"} ${isNew ? "message-slide-up" : ""} ${zenFadeClass} ${isSelected ? "message-row--selected" : ""} ${isMultiSelectMode ? "message-row--selectable" : ""}`}
+            className={`message-row ${isMe ? "mine" : "theirs"} ${isNew ? "message-slide-up" : ""} ${zenFadeClass} ${isSelected ? "message-row--selected" : ""} ${isMultiSelectMode ? "message-row--selectable" : ""} ${isCurrentSearchMatch ? "search-match-active-target" : ""}`}
             style={!isShown ? { visibility: 'hidden', height: 0, overflow: 'hidden' } : {}}
             onClick={isMultiSelectMode ? (e) => { e.preventDefault(); e.stopPropagation(); if (onSelect) onSelect(message._id); } : undefined}
         >
@@ -889,6 +889,7 @@ const MessageBubble = ({ message, isMe, showAvatar, otherUser, onEdit, onDelete,
                                     <DecryptedText
                                         text={message.content}
                                         animate={isNew && !isMe && !isLowBandwidth && !message.isLowBandwidth}
+                                        searchQuery={searchQuery}
                                     />
                                 </span>
                             )}

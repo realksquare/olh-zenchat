@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState, useMemo, memo, useCallback } from "react";
+import { useEffect, useRef, useState, useMemo, memo, useCallback, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "../../stores/authStore";
@@ -9,16 +9,17 @@ import MessageInput from "./MessageInput";
 import TypingIndicator from "./TypingIndicator";
 import { formatDistanceToNow } from "date-fns";
 import { VerifiedTick } from "../ui/Icons";
-import UserCardModal from "../ui/UserCardModal";
 import { useMomentStore } from "../../stores/momentStore";
-import MediaViewerModal from "../ui/MediaViewerModal";
-import DocViewerModal from "../ui/DocViewerModal";
-import MomentViewer from "./MomentViewer";
 import axiosInstance from "../../utils/axios";
 import { startZenIntroAudio, stopZenIntroAudio, setRecordingDestination, getAudioContext } from "../../utils/audio";
-import ForwardModal from "./ForwardModal";
 import { addFavMedia } from "../../utils/mediaStorage";
 import { EMPTY_MESSAGES, EMPTY_CONTACTS, getMysteryQuote, OnlineDot, ScrollDownBtn, MODE_LABELS, DisappearingBanner, DELETED_PHRASES, ZenParticleCanvas } from "./ChatWindowUtils";
+
+const UserCardModal = lazy(() => import("../ui/UserCardModal"));
+const MediaViewerModal = lazy(() => import("../ui/MediaViewerModal"));
+const DocViewerModal = lazy(() => import("../ui/DocViewerModal"));
+const MomentViewer = lazy(() => import("./MomentViewer"));
+const ForwardModal = lazy(() => import("./ForwardModal"));
 
 const ChatWindow = ({ onBack }) => {
     const user = useAuthStore((s) => s.user);
@@ -189,6 +190,86 @@ const ChatWindow = ({ onBack }) => {
     const bioContainerRef = useRef(null);
     const bioContentRef = useRef(null);
     const [bioMarqueeDist, setBioMarqueeDist] = useState(0);
+
+    // In-chat message search state
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
+    const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
+    const searchInputRef = useRef(null);
+
+    const scrollToMatch = useCallback((msgId) => {
+        if (!msgId) return;
+        requestAnimationFrame(() => {
+            const el = document.getElementById(`msg-${msgId}`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    }, []);
+
+    const handleSearchChange = useCallback((val) => {
+        setSearchQuery(val);
+        const trimmed = val.trim().toLowerCase();
+        if (!trimmed) {
+            setSearchResults([]);
+            setCurrentMatchIndex(-1);
+            return;
+        }
+        const matchingIds = [];
+        messages.forEach((m) => {
+            if (!m.deletedForEveryone && m.content && typeof m.content === 'string') {
+                if (m.content.toLowerCase().includes(trimmed)) {
+                    matchingIds.push(m._id);
+                }
+            }
+        });
+        setSearchResults(matchingIds);
+        if (matchingIds.length > 0) {
+            const lastIdx = matchingIds.length - 1;
+            setCurrentMatchIndex(lastIdx);
+            scrollToMatch(matchingIds[lastIdx]);
+        } else {
+            setCurrentMatchIndex(-1);
+        }
+    }, [messages, scrollToMatch]);
+
+    const goToNextMatch = useCallback(() => {
+        if (searchResults.length === 0) return;
+        const nextIdx = (currentMatchIndex + 1) % searchResults.length;
+        setCurrentMatchIndex(nextIdx);
+        scrollToMatch(searchResults[nextIdx]);
+    }, [searchResults, currentMatchIndex, scrollToMatch]);
+
+    const goToPrevMatch = useCallback(() => {
+        if (searchResults.length === 0) return;
+        const prevIdx = (currentMatchIndex - 1 + searchResults.length) % searchResults.length;
+        setCurrentMatchIndex(prevIdx);
+        scrollToMatch(searchResults[prevIdx]);
+    }, [searchResults, currentMatchIndex, scrollToMatch]);
+
+    const handleSearchKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (e.shiftKey) {
+                goToPrevMatch();
+            } else {
+                goToNextMatch();
+            }
+        } else if (e.key === 'Escape') {
+            setIsSearchOpen(false);
+            setSearchQuery("");
+            setSearchResults([]);
+            setCurrentMatchIndex(-1);
+        }
+    };
+
+    useEffect(() => {
+        setIsSearchOpen(false);
+        setSearchQuery("");
+        setSearchResults([]);
+        setCurrentMatchIndex(-1);
+    }, [activeChat?._id]);
 
     // Native Android Chrome and iOS Safari PWA already handle viewport resizing, 
     // so we don't need a manual visualViewport offset here.
@@ -970,8 +1051,112 @@ const ChatWindow = ({ onBack }) => {
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                         </svg>
                     </button>
+
+                    <button
+                        className={`header-action-btn ${isSearchOpen ? 'active' : ''}`}
+                        onClick={() => {
+                            setIsSearchOpen(prev => {
+                                const next = !prev;
+                                if (next) {
+                                    setTimeout(() => searchInputRef.current?.focus(), 60);
+                                } else {
+                                    setSearchQuery("");
+                                    setSearchResults([]);
+                                    setCurrentMatchIndex(-1);
+                                }
+                                return next;
+                            });
+                        }}
+                        title={isSearchOpen ? "Close search" : "Search in conversation"}
+                        aria-label="Search conversation"
+                        style={{ flexShrink: 0 }}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isSearchOpen ? "var(--color-primary)" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                    </button>
                 </div>
             </div>
+
+            {isSearchOpen && (
+                <div className="in-chat-search-bar">
+                    <div className="in-chat-search-input-wrap">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="search-icon-muted">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <input
+                            ref={searchInputRef}
+                            type="text"
+                            className="in-chat-search-input"
+                            placeholder="Search conversation..."
+                            value={searchQuery}
+                            onChange={(e) => handleSearchChange(e.target.value)}
+                            onKeyDown={handleSearchKeyDown}
+                        />
+                        {searchQuery && (
+                            <button
+                                className="in-chat-search-clear"
+                                onClick={() => handleSearchChange("")}
+                                aria-label="Clear search"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                            </button>
+                        )}
+                    </div>
+                    <div className="in-chat-search-actions">
+                        {searchQuery.trim() && (
+                            <span className="in-chat-search-counter">
+                                {searchResults.length === 0
+                                    ? "No matches"
+                                    : `${currentMatchIndex + 1} of ${searchResults.length}`}
+                            </span>
+                        )}
+                        <button
+                            className="in-chat-search-nav-btn"
+                            onClick={goToPrevMatch}
+                            disabled={searchResults.length === 0}
+                            title="Previous match (Shift+Enter)"
+                            aria-label="Previous match"
+                        >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="18 15 12 9 6 15" />
+                            </svg>
+                        </button>
+                        <button
+                            className="in-chat-search-nav-btn"
+                            onClick={goToNextMatch}
+                            disabled={searchResults.length === 0}
+                            title="Next match (Enter)"
+                            aria-label="Next match"
+                        >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </button>
+                        <button
+                            className="in-chat-search-close-btn"
+                            onClick={() => {
+                                setIsSearchOpen(false);
+                                setSearchQuery("");
+                                setSearchResults([]);
+                                setCurrentMatchIndex(-1);
+                            }}
+                            title="Close search (Esc)"
+                            aria-label="Close search"
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <div className="chat-messages" ref={messagesContainerRef} onScroll={handleScroll} style={{ position: "relative", zIndex: 1, background: "transparent" }}>
                 {!isZenMode && (hasMoreMessages[activeChat?._id] || isLoadingOlderMessages) && !isLoadingMessages && (!showOnlyStarred || messages.length > 18) && !showOnlyMedia && (
@@ -1065,6 +1250,8 @@ const ChatWindow = ({ onBack }) => {
                                 isMultiSelectMode={isMultiSelectMode}
                                 isSelected={selectedMessageIds.has(msg._id)}
                                 onSelect={handleToggleSelect}
+                                searchQuery={isSearchOpen ? searchQuery : ""}
+                                isCurrentSearchMatch={searchResults[currentMatchIndex] === msg._id}
                                 onMediaClick={(url, type, isViewOnce) => {
                                     if (isMultiSelectMode) return;
                                     if (type === "file") {
@@ -1219,66 +1406,72 @@ const ChatWindow = ({ onBack }) => {
                 </div>
             )}
 
-            <UserCardModal
-                isOpen={showUserCard}
-                onClose={() => setShowUserCard(false)}
-                user={otherUser}
-                isOnline={isPeerOnline}
-                isSPOp={isOtherUserLowBandwidth}
-                hasMoments={hasMoments}
-                isContact={isContact}
-                iBlocked={activeChat?.blockStatus?.iBlocked}
-                theyBlocked={activeChat?.blockStatus?.theyBlocked}
-                onViewMoments={() => {
-                    const moments = useMomentStore.getState().moments.filter(m => (m.userId?._id || m.userId)?.toString() === otherUser?._id?.toString());
-                    setActiveViewerMoments(moments);
-                    setShowUserCard(false);
-                }}
-            />
+            <Suspense fallback={null}>
+                {showUserCard && (
+                    <UserCardModal
+                        isOpen={showUserCard}
+                        onClose={() => setShowUserCard(false)}
+                        user={otherUser}
+                        isOnline={isPeerOnline}
+                        isSPOp={isOtherUserLowBandwidth}
+                        hasMoments={hasMoments}
+                        isContact={isContact}
+                        iBlocked={activeChat?.blockStatus?.iBlocked}
+                        theyBlocked={activeChat?.blockStatus?.theyBlocked}
+                        onViewMoments={() => {
+                            const moments = useMomentStore.getState().moments.filter(m => (m.userId?._id || m.userId)?.toString() === otherUser?._id?.toString());
+                            setActiveViewerMoments(moments);
+                            setShowUserCard(false);
+                        }}
+                    />
+                )}
 
-            <MomentViewer
-                moments={activeViewerMoments || []}
-                isOpen={!!activeViewerMoments}
-                onClose={() => setActiveViewerMoments(null)}
-            />
+                {!!activeViewerMoments && (
+                    <MomentViewer
+                        moments={activeViewerMoments || []}
+                        isOpen={!!activeViewerMoments}
+                        onClose={() => setActiveViewerMoments(null)}
+                    />
+                )}
 
-            {selectedMedia && (
-                <MediaViewerModal
-                    url={selectedMedia.url}
-                    type={selectedMedia.type}
-                    username={selectedMedia.username}
-                    isViewOnce={selectedMedia.isViewOnce}
-                    onClose={() => setSelectedMedia(null)}
-                    onPrev={hasPrevMedia ? handlePrevMedia : null}
-                    onNext={hasNextMedia ? handleNextMedia : null}
-                />
-            )}
+                {selectedMedia && (
+                    <MediaViewerModal
+                        url={selectedMedia.url}
+                        type={selectedMedia.type}
+                        username={selectedMedia.username}
+                        isViewOnce={selectedMedia.isViewOnce}
+                        onClose={() => setSelectedMedia(null)}
+                        onPrev={hasPrevMedia ? handlePrevMedia : null}
+                        onNext={hasNextMedia ? handleNextMedia : null}
+                    />
+                )}
 
-            {selectedDoc && (
-                <DocViewerModal
-                    url={selectedDoc.url}
-                    fileName={selectedDoc.fileName}
-                    onClose={() => setSelectedDoc(null)}
-                />
-            )}
+                {selectedDoc && (
+                    <DocViewerModal
+                        url={selectedDoc.url}
+                        fileName={selectedDoc.fileName}
+                        onClose={() => setSelectedDoc(null)}
+                    />
+                )}
 
-            {showActualForwardModal && (
-                <ForwardModal
-                    onClose={() => setShowActualForwardModal(false)}
-                    onForward={async (targetChatIds) => {
-                        const { forwardMessages } = useChatStore.getState();
-                        setShowActualForwardModal(false);
-                        handleExitMultiSelect();
-                        const selectedMsgArray = Array.from(selectedMessageIds);
-                        const success = await forwardMessages(selectedMsgArray, targetChatIds);
-                        if (success) {
-                            showToast('Messages forwarded', 'success');
-                        } else {
-                            showToast('Failed to forward', 'error');
-                        }
-                    }}
-                />
-            )}
+                {showActualForwardModal && (
+                    <ForwardModal
+                        onClose={() => setShowActualForwardModal(false)}
+                        onForward={async (targetChatIds) => {
+                            const { forwardMessages } = useChatStore.getState();
+                            setShowActualForwardModal(false);
+                            handleExitMultiSelect();
+                            const selectedMsgArray = Array.from(selectedMessageIds);
+                            const success = await forwardMessages(selectedMsgArray, targetChatIds);
+                            if (success) {
+                                showToast('Messages forwarded', 'success');
+                            } else {
+                                showToast('Failed to forward', 'error');
+                            }
+                        }}
+                    />
+                )}
+            </Suspense>
 
             {/* Cinematic overlay commented out — preserved for future use
             {cinematicPhase && (

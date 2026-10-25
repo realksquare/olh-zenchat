@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "../../stores/authStore";
@@ -6,19 +6,20 @@ import { useChatStore } from "../../stores/chatStore";
 
 import axiosInstance from "../../utils/axios";
 import ChatCard from "./ChatCard";
-import ProfileModal from "../ui/ProfileModal";
-import AdminPanel from "../ui/AdminPanel";
-import FAQModal from "../ui/FAQModal";
-import E2EEInfoModal from "../ui/E2EEInfoModal";
-import InviteModal from "../ui/InviteModal";
 import MomentsRow from "./MomentsRow";
-import MomentCreator from "./MomentCreator";
-import MomentViewer from "./MomentViewer";
-import ZenVaultModal from "../ui/ZenVaultModal";
-import YourTimeDashboard from "../ui/YourTimeDashboard";
-import ThemeSwitcherModal from "../ui/ThemeSwitcherModal";
 import ZenPulseTab from "../layout/ZenPulseTab";
-import ZenVoicePortal from "../zenvoice/ZenVoicePortal";
+
+const ProfileModal = lazy(() => import("../ui/ProfileModal"));
+const AdminPanel = lazy(() => import("../ui/AdminPanel"));
+const FAQModal = lazy(() => import("../ui/FAQModal"));
+const E2EEInfoModal = lazy(() => import("../ui/E2EEInfoModal"));
+const InviteModal = lazy(() => import("../ui/InviteModal"));
+const MomentCreator = lazy(() => import("./MomentCreator"));
+const MomentViewer = lazy(() => import("./MomentViewer"));
+const ZenVaultModal = lazy(() => import("../ui/ZenVaultModal"));
+const YourTimeDashboard = lazy(() => import("../ui/YourTimeDashboard"));
+const ThemeSwitcherModal = lazy(() => import("../ui/ThemeSwitcherModal"));
+const ZenVoicePortal = lazy(() => import("../zenvoice/ZenVoicePortal"));
 import { usePulseStore } from "../../stores/pulseStore";
 import { useMomentStore } from "../../stores/momentStore";
 import { VerifiedTick, AdminIcon, HelpIcon, InviteIcon } from "../ui/Icons";
@@ -511,21 +512,33 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
                 onViewMoment={(moments) => setActiveViewerMoments(moments)} 
             />
 
-            <MomentCreator 
-                isOpen={isMomentCreatorOpen} 
-                onClose={() => setIsMomentCreatorOpen(false)} 
-            />
+            {isMomentCreatorOpen && (
+                <Suspense fallback={null}>
+                    <MomentCreator 
+                        isOpen={isMomentCreatorOpen} 
+                        onClose={() => setIsMomentCreatorOpen(false)} 
+                    />
+                </Suspense>
+            )}
 
-            <MomentViewer 
-                moments={activeViewerMoments || []}
-                isOpen={!!activeViewerMoments}
-                onClose={() => setActiveViewerMoments(null)}
-            />
+            {!!activeViewerMoments && (
+                <Suspense fallback={null}>
+                    <MomentViewer 
+                        moments={activeViewerMoments || []}
+                        isOpen={!!activeViewerMoments}
+                        onClose={() => setActiveViewerMoments(null)}
+                    />
+                </Suspense>
+            )}
 
-            <ThemeSwitcherModal 
-                isOpen={isThemeOpen} 
-                onClose={() => setIsThemeOpen(false)} 
-            />
+            {isThemeOpen && (
+                <Suspense fallback={null}>
+                    <ThemeSwitcherModal 
+                        isOpen={isThemeOpen} 
+                        onClose={() => setIsThemeOpen(false)} 
+                    />
+                </Suspense>
+            )}
 
             <div className="sidebar-search-wrap">
                 <div className="sidebar-search">
@@ -727,11 +740,13 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
             )}
 
             {isProfileOpen && (
-                <ProfileModal
-                    isOpen={isProfileOpen}
-                    onClose={() => setIsProfileOpen(false)}
-                    onSave={() => setIsProfileOpen(false)}
-                />
+                <Suspense fallback={null}>
+                    <ProfileModal
+                        isOpen={isProfileOpen}
+                        onClose={() => setIsProfileOpen(false)}
+                        onSave={() => setIsProfileOpen(false)}
+                    />
+                </Suspense>
             )}
 
             {(user?.role === "master_admin" || user?.role === "co_admin") ? (
@@ -764,34 +779,44 @@ const Sidebar = ({ onChatSelect, insideSheet = false }) => {
                 </div>
             )}
 
-            {isAdminOpen && <AdminPanel onClose={() => setIsAdminOpen(false)} />}
-            {isFAQOpen && <FAQModal isOpen={isFAQOpen} onClose={() => setIsFAQOpen(false)} />}
-            {isE2EEInfoOpen && <E2EEInfoModal isOpen={isE2EEInfoOpen} onClose={() => setIsE2EEInfoOpen(false)} />}
-            <InviteModal 
-                isOpen={isInviteOpen} 
-                onClose={() => setIsInviteOpen(false)} 
-                username={user?.username} 
-            />
-            <ZenVaultModal 
-                isOpen={isVaultOpen} 
-                onClose={() => setIsVaultOpen(false)} 
-            />
-            <YourTimeDashboard
-                isOpen={isYourTimeOpen}
-                onClose={() => setIsYourTimeOpen(false)}
-            />
-            <ZenVoicePortal
-                isOpen={isZenVoicePortalOpen}
-                inviteToken={zvInviteToken}
-                onClose={() => {
-                    setZvInviteToken(null);
-                    if (user?.isZenVoiceOnly) {
-                        window.dispatchEvent(new Event("show-zenvoice-prompt"));
-                    } else {
-                        setIsZenVoicePortalOpen(false);
-                    }
-                }}
-            />
+            <Suspense fallback={null}>
+                {isAdminOpen && <AdminPanel onClose={() => setIsAdminOpen(false)} />}
+                {isFAQOpen && <FAQModal isOpen={isFAQOpen} onClose={() => setIsFAQOpen(false)} />}
+                {isE2EEInfoOpen && <E2EEInfoModal isOpen={isE2EEInfoOpen} onClose={() => setIsE2EEInfoOpen(false)} />}
+                {isInviteOpen && (
+                    <InviteModal 
+                        isOpen={isInviteOpen} 
+                        onClose={() => setIsInviteOpen(false)} 
+                        username={user?.username} 
+                    />
+                )}
+                {isVaultOpen && (
+                    <ZenVaultModal 
+                        isOpen={isVaultOpen} 
+                        onClose={() => setIsVaultOpen(false)} 
+                    />
+                )}
+                {isYourTimeOpen && (
+                    <YourTimeDashboard
+                        isOpen={isYourTimeOpen}
+                        onClose={() => setIsYourTimeOpen(false)}
+                    />
+                )}
+                {isZenVoicePortalOpen && (
+                    <ZenVoicePortal
+                        isOpen={isZenVoicePortalOpen}
+                        inviteToken={zvInviteToken}
+                        onClose={() => {
+                            setZvInviteToken(null);
+                            if (user?.isZenVoiceOnly) {
+                                window.dispatchEvent(new Event("show-zenvoice-prompt"));
+                            } else {
+                                setIsZenVoicePortalOpen(false);
+                            }
+                        }}
+                    />
+                )}
+            </Suspense>
 
             {showMobileMenu && createPortal(
                 <div className={isMobile ? "mobile-bottom-sheet-overlay" : "modal-backdrop"} style={{ display: "flex", alignItems: isMobile ? "flex-end" : "center", justifyContent: "center", position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.4)", zIndex: 20000 }} onClick={() => setShowMobileMenu(false)}>

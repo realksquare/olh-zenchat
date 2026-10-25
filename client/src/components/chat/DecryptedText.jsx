@@ -1,6 +1,25 @@
 import { useState, useEffect, memo } from "react";
 
-const DecryptedText = ({ text, animate = false }) => {
+const renderHighlighted = (str, query) => {
+    if (!query || !query.trim() || !str) return str;
+    const trimmed = query.trim();
+    const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escaped})`, 'gi');
+    const parts = str.split(regex);
+    if (parts.length === 1) return str;
+    return parts.map((sub, i) => {
+        if (sub.toLowerCase() === trimmed.toLowerCase()) {
+            return (
+                <mark key={i} className="in-chat-search-highlight">
+                    {sub}
+                </mark>
+            );
+        }
+        return sub;
+    });
+};
+
+const DecryptedText = ({ text, animate = false, searchQuery = "" }) => {
     const [displayText, setDisplayText] = useState(animate ? "" : text);
     const [isAnimating, setIsAnimating] = useState(animate);
 
@@ -97,7 +116,7 @@ const DecryptedText = ({ text, animate = false }) => {
                         </span>
                     );
                 }
-                return part;
+                return <span key={index}>{renderHighlighted(part, searchQuery)}</span>;
             })}
         </span>
     );

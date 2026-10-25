@@ -9,6 +9,24 @@
 
 ---
 
+### [b6c0c7d] - 2026-10-25 - `feat-in-chat-search-and-bundle-code-splitting`
+
+**Type:** Feature / Performance Optimization
+**Files affected:** `client/src/components/chat/ChatWindow.jsx`, `client/src/components/chat/DecryptedText.jsx`, `client/src/components/chat/MessageBubble.jsx`, `client/src/components/chat/Sidebar.jsx`, `client/src/index.css`
+
+| Date & Day | Time (IST) | Change / Fix / Addition / Removal Done | Antigravity Version | Agent Model Name |
+| :--- | :--- | :--- | :--- | :--- |
+| 2026-10-25 (Sunday) | 06:45 PM | **Feature & Performance:** Added client-side in-chat message search with match counter, keyboard navigation (Enter / Shift+Enter / Esc), and animated highlight pulse; implemented modal code-splitting with React.lazy and Suspense, reducing initial bundle by 56% (523 KB down to 227 KB). | Antigravity 2.0 | Gemini 3.8 Flash |
+
+**Changes:**
+- Added client-side in-chat message search in `ChatWindow.jsx` with search bar toggle, match indexing, next/previous navigation buttons, and match count indicator.
+- Updated `DecryptedText.jsx` with substring match highlighting (`<mark className="in-chat-search-highlight">`) without affecting embedded links or decryption effects.
+- Added smooth target scroll-into-view and active target pulse effect in `MessageBubble.jsx` and `index.css`.
+- Code-split heavy modals in `Sidebar.jsx` and `ChatWindow.jsx` (`ProfileModal`, `ZenVoicePortal`, `ZenVaultModal`, `AdminPanel`, `MomentCreator`, `MomentViewer`, `YourTimeDashboard`, `InviteModal`, `ThemeSwitcherModal`, `FAQModal`, `E2EEInfoModal`, `UserCardModal`, `MediaViewerModal`, `DocViewerModal`, `ForwardModal`) with `lazy` and `Suspense`.
+- Slashed initial `HomePage` bundle from 523 KB (gzip 118 KB) down to 227 KB (gzip 58 KB), speeding up initial paint and mobile launch significantly.
+
+---
+
 ### [3629f28] - 2026-10-18 - `fix-site-wide-fast-spinner-animation-speeds`
 
 **Type:** Bugfix / UI Polish
