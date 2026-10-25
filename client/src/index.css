@@ -351,7 +351,33 @@ select {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .loader,
+  .loader-sm,
+  .loading-spinner,
+  .loading-progress-bar,
+  .banner-spinner,
+  .aura-loader,
+  .aura-mini-spinner,
+  .ptr-arc-spin,
+  .splash-loader,
+  .zen-waiting-loader,
+  .animate-spin,
+  .spinner,
+  [class*="spinner"],
+  [class*="loader"],
+  [class*="animate-spin"] {
+    animation-duration: 1.2s !important;
+    animation-iteration-count: infinite !important;
+  }
+
+  [data-theme="zen_oled"] .message-bubble.mine::before,
+  [data-theme="zen_oled"] .message-bubble.mine:has(.message-media-wrap)::before {
+    animation: none !important;
   }
 }
 

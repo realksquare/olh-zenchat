@@ -9,6 +9,22 @@
 
 ---
 
+### [acfc0d1] - 2026-10-25 - `fix-prefers-reduced-motion-spinner-and-border-frenzy`
+
+**Type:** Bugfix / Accessibility / Performance
+**Files affected:** `client/src/index.css`
+
+| Date & Day | Time (IST) | Change / Fix / Addition / Removal Done | Antigravity Version | Agent Model Name |
+| :--- | :--- | :--- | :--- | :--- |
+| 2026-10-25 (Sunday) | 11:22 PM | **Fix / Accessibility:** Fixed site-wide loader, spinner, and glowing border animation frenzy under `prefers-reduced-motion: reduce`: capped non-essential animations to `animation-iteration-count: 1`, exempted essential status loaders to maintain calm 1.2s spin, and halted ZenOLED rotating border in reduced motion mode. | Antigravity 2.0 | Gemini 3.8 Flash |
+
+**Changes:**
+- Added `animation-iteration-count: 1 !important` and `scroll-behavior: auto !important` to `@media (prefers-reduced-motion: reduce)` wildcard block, eliminating infinite 0.01ms ultra-fast rotation loops.
+- Explicitly preserved standard 1.2s infinite rotation for functional loaders (`.loader`, `.loader-sm`, `.loading-spinner`, `.loading-progress-bar`, `.banner-spinner`, `.aura-mini-spinner`, `.ptr-arc-spin`, `.splash-loader`, `.zen-waiting-loader`, `.animate-spin`, `.spinner`).
+- Stopped ZenOLED message bubble rotating border gradient (`animation: none !important`) when reduced motion is preferred, preventing large spinning graphics while keeping static clean border styling.
+
+---
+
 ### [cf5de0c] - 2026-10-25 - `feat-24h-ephemeral-burner-bridge-links`
 
 **Type:** Feature / Ephemeral E2EE Sessions
